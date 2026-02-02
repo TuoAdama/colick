@@ -1,0 +1,27 @@
+---
+alwaysApply: true
+---
+
+# Design System
+## Brand Colors
+Use these exact colors throughout the application:
+- **Primary**: #3B82F6 (blue-500)
+- **Secondary**: #10B981 (green-500)
+- **Accent**: #F59E0B (amber-500)
+- **Error**: #EF4444 (red-500)
+- **Success**: #22C55E (green-500)
+- **Warning**: #F97316 (orange-500)
+## Background Colors
+- **Background Primary**: #FFFFFF (white)
+- **Background Secondary**: #F9FAFB (gray-50)
+- **Background Dark**: #111827 (gray-900)
+## Text Colors
+- **Text Primary**: #111827 (gray-900)
+- **Text Secondary**: #6B7280 (gray-500)
+- **Text Muted**: #9CA3AF (gray-400)
+## Usage
+Always use these color variables when:
+- Creating new components
+- Styling UI elements
+- Defining themes
+- Writing CSS/Tailwind classes
