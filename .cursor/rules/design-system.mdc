@@ -19,6 +19,10 @@ Use these exact colors throughout the application:
 - **Text Primary**: #111827
 - **Text Secondary**: #6B7280
 - **Text Muted**: #9CA3AF
+
+## Font
+- **Font**: Poppins
+
 ## Usage
 Always use these color variables when:
 - Creating new components
