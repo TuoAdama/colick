@@ -1,0 +1,33 @@
+# Docker Compose configuration for Colick development environment
+# This file orchestrates the front-office Angular application
+
+version: '3.8'
+
+services:
+  # Front-office Angular application
+  front-office:
+    build:
+      context: ./front-office
+      dockerfile: Dockerfile
+    container_name: colick-front-office
+    ports:
+      - "4200:4200"
+    volumes:
+      # Mount source code for hot reload
+      - ./front-office/src:/app/src
+      # Mount Angular config files
+      - ./front-office/angular.json:/app/angular.json
+      - ./front-office/tailwind.config.js:/app/tailwind.config.js
+      - ./front-office/postcss.config.js:/app/postcss.config.js
+      - ./front-office/tsconfig.json:/app/tsconfig.json
+      - ./front-office/tsconfig.app.json:/app/tsconfig.app.json
+      # Use named volume for node_modules to improve performance
+      - front-office-node-modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    restart: unless-stopped
+
+volumes:
+  front-office-node-modules:
+    name: colick-front-office-node-modules
