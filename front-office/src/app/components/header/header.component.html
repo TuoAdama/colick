@@ -1,0 +1,83 @@
+<!-- Header - Fixed navigation -->
+<header class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-sm z-40" role="banner">
+  <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between" aria-label="Navigation principale">
+    <!-- Logo -->
+    <a href="#" class="text-2xl font-bold text-primary">
+      <span class="text-accent">Co</span>lick
+    </a>
+
+    <!-- Desktop Navigation -->
+    <ul class="hidden md:flex items-center gap-8">
+      @for (link of navLinks; track link.href) {
+        <li>
+          <a
+            [href]="link.href"
+            class="text-text-secondary hover:text-primary transition font-medium"
+          >
+            {{ link.label }}
+          </a>
+        </li>
+      }
+    </ul>
+
+    <!-- Auth Buttons -->
+    <div class="flex items-center gap-3">
+      <a
+        href="#connexion"
+        class="hidden sm:inline-block text-primary font-medium hover:text-secondary transition"
+      >
+        Connexion
+      </a>
+      <a
+        href="#inscription"
+        class="bg-accent text-white font-semibold px-5 py-2.5 rounded-full hover:bg-opacity-90 transition shadow-lg shadow-accent/30"
+      >
+        S'inscrire
+      </a>
+    </div>
+
+    <!-- Mobile Menu Button -->
+    <button
+      class="md:hidden p-2"
+      (click)="toggleMobileMenu()"
+      [attr.aria-expanded]="isMobileMenuOpen"
+      aria-label="Menu mobile"
+    >
+      <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        @if (!isMobileMenuOpen) {
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        } @else {
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        }
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Mobile Navigation -->
+  @if (isMobileMenuOpen) {
+    <div class="md:hidden bg-white border-t border-gray-100 py-4">
+      <ul class="flex flex-col gap-4 px-4">
+        @for (link of navLinks; track link.href) {
+          <li>
+            <a
+              [href]="link.href"
+              class="block text-text-secondary hover:text-primary transition font-medium py-2"
+              (click)="toggleMobileMenu()"
+            >
+              {{ link.label }}
+            </a>
+          </li>
+        }
+        <li>
+          <a
+            href="#connexion"
+            class="block text-primary font-medium py-2"
+            (click)="toggleMobileMenu()"
+          >
+            Connexion
+          </a>
+        </li>
+      </ul>
+    </div>
+  }
+</header>

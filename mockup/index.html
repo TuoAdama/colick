@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Colick - Mise en relation voyageurs et expéditeurs pour transporter vos colis" />
+  <title>Colick - Envoyez vos colis avec des voyageurs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#023047',
+            secondary: '#219ebc',
+            accent: '#fb8500',
+            'bg-primary': '#f5f5f5',
+            'bg-secondary': '#F9FAFB',
+          },
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+  </style>
+</head>
+<body class="bg-bg-primary text-[#111827] antialiased min-h-screen">
+  <!-- Skip link for accessibility -->
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-accent text-white px-4 py-2 rounded-lg z-50">
+    Aller au contenu principal
+  </a>
+
+  <!-- Header -->
+  <header class="bg-white shadow-sm sticky top-0 z-40" role="banner">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between" aria-label="Navigation principale">
+      <a href="#" class="text-xl font-bold text-primary">Colick</a>
+      <ul class="flex items-center gap-4">
+        <li><a href="#accueil" class="text-[#6B7280] hover:text-primary transition">Accueil</a></li>
+        <li><a href="#recherche" class="text-[#6B7280] hover:text-primary transition">Rechercher un voyage</a></li>
+        <li><a href="#proposer" class="text-[#6B7280] hover:text-primary transition">Proposer un voyage</a></li>
+        <li><a href="#connexion" class="bg-secondary text-white px-4 py-2 rounded-lg hover:opacity-90 transition">Connexion</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+    <!-- Hero -->
+    <section id="accueil" class="mb-16" aria-labelledby="hero-title">
+      <div class="text-center max-w-3xl mx-auto">
+        <h1 id="hero-title" class="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary mb-4">
+          Envoyez vos colis avec des voyageurs de confiance
+        </h1>
+        <p class="text-[#6B7280] text-lg mb-8">
+          Mettez en relation des personnes qui voyagent et des personnes qui souhaitent faire transporter leurs colis. Paris → Abidjan, ou partout ailleurs.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="#recherche" class="inline-flex items-center justify-center bg-accent text-white font-semibold px-6 py-3 rounded-lg hover:opacity-90 transition focus:ring-2 focus:ring-accent focus:ring-offset-2">
+            Rechercher un voyage
+          </a>
+          <a href="#proposer" class="inline-flex items-center justify-center bg-secondary text-white font-semibold px-6 py-3 rounded-lg hover:opacity-90 transition focus:ring-2 focus:ring-secondary focus:ring-offset-2">
+            Proposer un voyage
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search form (Sender) -->
+    <section id="recherche" class="mb-16" aria-labelledby="search-title">
+      <h2 id="search-title" class="text-2xl font-bold text-primary mb-6">Rechercher un voyage pour envoyer un colis</h2>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form class="grid grid-cols-1 md:grid-cols-3 gap-4" aria-label="Formulaire de recherche de voyage">
+          <div>
+            <label for="departure" class="block text-sm font-medium text-[#111827] mb-1">Adresse de départ</label>
+            <input id="departure" type="text" placeholder="Ex: Paris" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div>
+            <label for="destination" class="block text-sm font-medium text-[#111827] mb-1">Destination</label>
+            <input id="destination" type="text" placeholder="Ex: Abidjan" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="w-full bg-secondary text-white font-semibold py-2.5 px-4 rounded-lg hover:opacity-90 transition focus:ring-2 focus:ring-secondary focus:ring-offset-2">
+              Rechercher
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Results list -->
+      <h3 class="text-lg font-semibold text-primary mt-8 mb-4">Résultats correspondants</h3>
+      <ul class="space-y-4" role="list">
+        <li class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:border-secondary transition">
+          <div class="flex flex-wrap justify-between gap-4">
+            <div>
+              <p class="font-medium text-primary">Paris → Abidjan</p>
+              <p class="text-[#6B7280] text-sm mt-1">Départ le 15 mars 2025</p>
+            </div>
+            <div class="flex flex-wrap gap-4 text-sm">
+              <span><strong class="text-primary">Prix:</strong> 12 €/kg</span>
+              <span><strong class="text-primary">Poids max:</strong> 23 kg</span>
+              <span><strong class="text-primary">Kg disponibles:</strong> 15 kg</span>
+              <span><strong class="text-primary">Voyageurs:</strong> 2</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center justify-between">
+            <p class="text-[#9CA3AF] text-sm">★ 4.8 — Avis voyageur</p>
+            <button type="button" class="bg-accent text-white font-medium px-4 py-2 rounded-lg hover:opacity-90 transition">
+              Choisir ce voyage
+            </button>
+          </div>
+        </li>
+        <li class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:border-secondary transition">
+          <div class="flex flex-wrap justify-between gap-4">
+            <div>
+              <p class="font-medium text-primary">Lyon → Abidjan</p>
+              <p class="text-[#6B7280] text-sm mt-1">Départ le 22 mars 2025</p>
+            </div>
+            <div class="flex flex-wrap gap-4 text-sm">
+              <span><strong class="text-primary">Prix:</strong> 10 €/kg</span>
+              <span><strong class="text-primary">Poids max:</strong> 20 kg</span>
+              <span><strong class="text-primary">Kg disponibles:</strong> 20 kg</span>
+              <span><strong class="text-primary">Voyageurs:</strong> 1</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center justify-between">
+            <p class="text-[#9CA3AF] text-sm">★ 4.5 — Avis voyageur</p>
+            <button type="button" class="bg-accent text-white font-medium px-4 py-2 rounded-lg hover:opacity-90 transition">
+              Choisir ce voyage
+            </button>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Trip proposal form (Traveler) -->
+    <section id="proposer" class="mb-16" aria-labelledby="trip-title">
+      <h2 id="trip-title" class="text-2xl font-bold text-primary mb-6">Proposer un voyage</h2>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form class="grid grid-cols-1 md:grid-cols-2 gap-6" aria-label="Formulaire d’informations de voyage">
+          <div>
+            <label for="trip-departure" class="block text-sm font-medium text-[#111827] mb-1">Adresse de départ</label>
+            <input id="trip-departure" type="text" placeholder="Ex: Paris" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div>
+            <label for="trip-destination" class="block text-sm font-medium text-[#111827] mb-1">Destination</label>
+            <input id="trip-destination" type="text" placeholder="Ex: Abidjan" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div>
+            <label for="max-weight" class="block text-sm font-medium text-[#111827] mb-1">Poids maximum (kg)</label>
+            <input id="max-weight" type="number" min="1" placeholder="23" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div>
+            <label for="price-per-kg" class="block text-sm font-medium text-[#111827] mb-1">Montant par kilo (€)</label>
+            <input id="price-per-kg" type="number" min="0" step="0.01" placeholder="12" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div class="md:col-span-2">
+            <button type="submit" class="bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg hover:opacity-90 transition focus:ring-2 focus:ring-secondary focus:ring-offset-2">
+              Publier mon voyage
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Request submission (Sender - after choosing a trip) -->
+    <section class="mb-16" aria-labelledby="request-title">
+      <h2 id="request-title" class="text-2xl font-bold text-primary mb-6">Soumettre une demande</h2>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form class="grid grid-cols-1 gap-6" aria-label="Formulaire de demande d’envoi">
+          <div>
+            <label for="request-weight" class="block text-sm font-medium text-[#111827] mb-1">Poids (kg) <span class="text-[#6B7280]">(optionnel)</span></label>
+            <input id="request-weight" type="number" min="0" step="0.1"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div>
+            <label for="request-description" class="block text-sm font-medium text-[#111827] mb-1">Description détaillée</label>
+            <textarea id="request-description" rows="4" required placeholder="Décrivez votre colis..."
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary"></textarea>
+          </div>
+          <div>
+            <label for="request-photo" class="block text-sm font-medium text-[#111827] mb-1">Photo du colis <span class="text-[#6B7280]">(optionnel)</span></label>
+            <input id="request-photo" type="file" accept="image/*"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div class="flex flex-wrap gap-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="reservation-type" value="instant" class="text-secondary focus:ring-secondary" />
+              <span>Réservation instantanée</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="reservation-type" value="approval" class="text-secondary focus:ring-secondary" checked />
+              <span>Demande d’approbation par le voyageur</span>
+            </label>
+          </div>
+          <p class="text-sm text-[#6B7280]">Un prélèvement de 7% sera effectué sur chaque transaction.</p>
+          <button type="submit" class="bg-accent text-white font-semibold px-6 py-2.5 rounded-lg hover:opacity-90 transition focus:ring-2 focus:ring-accent focus:ring-offset-2 w-fit">
+            Envoyer la demande
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Sign up form -->
+    <section id="connexion" class="mb-16" aria-labelledby="signup-title">
+      <h2 id="signup-title" class="text-2xl font-bold text-primary mb-6">Créer un compte</h2>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-xl">
+        <form class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="Formulaire de création de compte">
+          <div>
+            <label for="lastname" class="block text-sm font-medium text-[#111827] mb-1">Nom</label>
+            <input id="lastname" type="text" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div>
+            <label for="firstname" class="block text-sm font-medium text-[#111827] mb-1">Prénom</label>
+            <input id="firstname" type="text" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div class="sm:col-span-2">
+            <label for="email" class="block text-sm font-medium text-[#111827] mb-1">Adresse e-mail</label>
+            <input id="email" type="email" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div class="sm:col-span-2">
+            <label for="phone" class="block text-sm font-medium text-[#111827] mb-1">Numéro de téléphone <span class="text-[#6B7280]">(optionnel)</span></label>
+            <input id="phone" type="tel"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div class="sm:col-span-2">
+            <label for="id-document" class="block text-sm font-medium text-[#111827] mb-1">Pièce d’identité <span class="text-[#EF4444]">*</span></label>
+            <input id="id-document" type="file" accept=".pdf,image/*" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+            <p class="text-xs text-[#6B7280] mt-1">Élément obligatoire pour la création du compte (vérification d’identité).</p>
+          </div>
+          <div class="sm:col-span-2">
+            <label for="password" class="block text-sm font-medium text-[#111827] mb-1">Mot de passe</label>
+            <input id="password" type="password" required minlength="8"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary" />
+          </div>
+          <div class="sm:col-span-2">
+            <button type="submit" class="bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg hover:opacity-90 transition focus:ring-2 focus:ring-secondary focus:ring-offset-2">
+              Créer mon compte
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 pt-8 mt-8 text-center text-[#6B7280] text-sm" role="contentinfo">
+      <p>Colick — Mise en relation voyageurs et expéditeurs. Prélèvement de 7% sur chaque transaction.</p>
+    </footer>
+  </main>
+</body>
+</html>

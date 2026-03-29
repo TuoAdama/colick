@@ -1,0 +1,50 @@
+/* Google Fonts - Poppins (must be first) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* Tailwind CSS imports */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Custom utility classes */
+@layer components {
+  /* Hero gradient background */
+  .hero-gradient {
+    background: linear-gradient(135deg, #023047 0%, #219ebc 100%);
+  }
+
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .card-hover:hover {
+    @apply -translate-y-1;
+    box-shadow: 0 20px 40px rgba(2, 48, 71, 0.15);
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center bg-accent text-white font-bold px-8 py-4 rounded-full hover:bg-opacity-90 transition shadow-xl;
+    box-shadow: 0 10px 25px rgba(251, 133, 0, 0.4);
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center bg-white text-primary font-bold px-8 py-4 rounded-full hover:bg-opacity-90 transition shadow-xl;
+  }
+
+  /* Outline button */
+  .btn-outline {
+    @apply inline-flex items-center justify-center bg-white text-primary font-bold px-10 py-4 rounded-full border-2 border-primary hover:bg-primary hover:text-white transition;
+  }
+}
