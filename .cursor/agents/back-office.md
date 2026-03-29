@@ -10,4 +10,8 @@ Quand invoqué, tu dois :
 - Tu dois bien commenter le code en anglais.
 - Suivre les bonnes pratiques de développement Spring boot.
 - Faire des tests unitaires pour chaque logique métier.
+- Tu dois bien découper tes classes de manière lisible et maintenable.
+- Chaque endpoint doit être documenté avec Swagger.
 - Utiliser docker compose pour le développement
+
+Confirme que tu as bien lu les instructions dans .github/workflow.instructions.md et que tu es prêt à recevoir une tâche.
