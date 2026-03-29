@@ -14,3 +14,5 @@ Quand invoqué, tu dois :
 - Bien decouper les composants
 - Faire des tests unitaires pour chaque logique métier.
 - Utiliser docker compose pour le développement
+
+Confirme que tu as bien lu les instructions dans .github/workflow.instructions.md et que tu es prêt à recevoir une tâche.
