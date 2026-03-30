@@ -17,6 +17,15 @@ services:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  # MailHog — SMTP server for local email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: colick-mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    restart: unless-stopped
+
   # Back-office Spring Boot API
   back-office:
     build:
@@ -31,8 +40,11 @@ services:
       DB_NAME: colick
       DB_USERNAME: colick
       DB_PASSWORD: colick
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
     depends_on:
       - postgres
+      - mailhog
     restart: unless-stopped
 
   # Front-office Angular application
