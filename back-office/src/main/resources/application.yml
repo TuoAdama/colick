@@ -46,3 +46,9 @@ management:
 jwt:
   secret: ${JWT_SECRET:colick-super-secret-key-must-be-at-least-32-chars}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
