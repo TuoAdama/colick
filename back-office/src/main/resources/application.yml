@@ -1,4 +1,4 @@
-spring:
+gspring:
   application:
     name: colick-back-office
 
