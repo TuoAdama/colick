@@ -1,0 +1,19 @@
+package com.colick.backoffice.trip.repository;
+
+import com.colick.backoffice.trip.entity.Trip;
+import com.colick.backoffice.trip.entity.TripBooking;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+/**
+ * JPA repository for {@link TripBooking} entities.
+ */
+@Repository
+public interface TripBookingRepository extends JpaRepository<TripBooking, Long> {
+
+    List<TripBooking> findByTrip(Trip trip);
+
+    List<TripBooking> findByTripAndStatus(Trip trip, TripBooking.BookingStatus status);
+}
