@@ -5,6 +5,20 @@ module.exports = {
   ],
   theme: {
     extend: {
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(16px) scale(0.97)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+      },
+      animation: {
+        'fade-in': 'fadeIn 200ms ease-out',
+        'slide-up': 'slideUp 300ms ease-out',
+      },
       colors: {
         // Brand colors
         primary: '#023047',

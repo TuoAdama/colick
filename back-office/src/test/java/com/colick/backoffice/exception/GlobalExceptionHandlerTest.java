@@ -39,4 +39,16 @@ class GlobalExceptionHandlerTest {
         assertEquals(500, response.getBody().getStatus());
         assertEquals("An unexpected error occurred", response.getBody().getMessage());
     }
+
+    @Test
+    void handleIllegalArgument_shouldReturn400WithMessage() {
+        IllegalArgumentException ex = new IllegalArgumentException("Requested weight exceeds available weight");
+
+        ResponseEntity<ApiError> response = handler.handleIllegalArgument(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(400, response.getBody().getStatus());
+        assertEquals("Requested weight exceeds available weight", response.getBody().getMessage());
+    }
 }

@@ -105,6 +105,12 @@ public class TripServiceImpl implements TripService {
     public TripBookingResponse createBooking(Long tripId, CreateBookingRequest request, User sender) {
         Trip trip = findTripOrThrow(tripId);
 
+        // Validate that the requested weight does not exceed the available weight
+        BigDecimal availableWeight = computeAvailableWeight(trip);
+        if (request.getWeight() != null && request.getWeight().compareTo(availableWeight) > 0) {
+            throw new IllegalArgumentException("Requested weight exceeds available weight");
+        }
+
         TripBooking.BookingStatus initialStatus = trip.isInstantAcceptance()
                 ? TripBooking.BookingStatus.ACCEPTED
                 : TripBooking.BookingStatus.PENDING;
@@ -112,9 +118,11 @@ public class TripServiceImpl implements TripService {
         TripBooking booking = TripBooking.builder()
                 .trip(trip)
                 .sender(sender)
+                .title(request.getTitle())
                 .weight(request.getWeight())
                 .description(request.getDescription())
                 .packagePhotoUrl(request.getPackagePhotoUrl())
+                .recipientContact(request.getRecipientContact())
                 .status(initialStatus)
                 .build();
 

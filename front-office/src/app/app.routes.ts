@@ -19,4 +19,18 @@ export const routes: Routes = [
         (m) => m.SearchPageComponent
       ),
   },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./pages/login/login-page.component').then(
+        (m) => m.LoginPageComponent
+      ),
+  },
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./pages/register/register-page.component').then(
+        (m) => m.RegisterPageComponent
+      ),
+  },
 ];

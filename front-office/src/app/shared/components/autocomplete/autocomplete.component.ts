@@ -41,6 +41,9 @@ export class AutocompleteComponent implements OnInit, OnDestroy {
   /** Emits the selected location */
   @Output() selected = new EventEmitter<Location>();
 
+  /** Emits when the input is cleared */
+  @Output() cleared = new EventEmitter<void>();
+
   @ViewChild('inputRef') inputRef!: ElementRef<HTMLInputElement>;
 
   private readonly locationService = inject(LocationService);
@@ -167,12 +170,24 @@ export class AutocompleteComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Clear the input and notify parent
+   */
+  clearInput(): void {
+    this.query = '';
+    this.suggestions = [];
+    this.isOpen = false;
+    this.hasSelected = false;
+    this.cleared.emit();
+  }
+
+  /**
    * Close dropdown when clicking outside the component
    */
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement;
-    if (!this.inputRef?.nativeElement?.closest('.autocomplete-wrapper')?.contains(target)) {
+    const wrapper = this.inputRef?.nativeElement?.closest('.autocomplete-wrapper');
+    if (wrapper && !wrapper.contains(target)) {
       this.close();
     }
   }
