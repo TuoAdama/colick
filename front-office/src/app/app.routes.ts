@@ -33,4 +33,11 @@ export const routes: Routes = [
         (m) => m.RegisterPageComponent
       ),
   },
+  {
+    path: 'messages',
+    loadComponent: () =>
+      import('./pages/messages/messages-page.component').then(
+        (m) => m.MessagesPageComponent
+      ),
+  },
 ];

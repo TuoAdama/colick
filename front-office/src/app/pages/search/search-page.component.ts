@@ -5,6 +5,7 @@ import { AutocompleteComponent } from '../../shared/components/autocomplete/auto
 import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
 import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
+import { MessagingService } from '../../services/messaging.service';
 import { Location } from '../../models/location.model';
 import { Trip } from '../../models/trip.model';
 import { BookingResponse } from '../../models/booking.model';
@@ -23,6 +24,7 @@ import { BookingResponse } from '../../models/booking.model';
 export class SearchPageComponent {
   private readonly tripService = inject(TripService);
   private readonly authService = inject(AuthService);
+  private readonly messagingService = inject(MessagingService);
   private readonly router = inject(Router);
 
   /** Selected departure location */
@@ -156,6 +158,17 @@ export class SearchPageComponent {
     return date.toLocaleTimeString('fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
+    });
+  }
+
+  contactTraveler(trip: Trip): void {
+    if (!this.authService.isLoggedIn()) { this.router.navigate(['/login']); return; }
+    this.messagingService.startConversation({
+      tripId: trip.id, recipientId: trip.travelerId,
+      content: 'Bonjour, je suis interesse par votre voyage ' + trip.departureAddress + ' vers ' + trip.destination + '.',
+    }).subscribe({
+      next: () => this.router.navigate(['/messages']),
+      error: () => { this.errorMessage = 'Impossible de demarrer la conversation.'; },
     });
   }
 }

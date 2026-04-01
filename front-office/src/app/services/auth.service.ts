@@ -43,6 +43,10 @@ export class AuthService {
     this.currentUserSubject.next(null);
   }
 
+  getUser(): UserResponse | null {
+    return this.currentUserSubject.getValue();
+  }
+
   private getStoredUser(): UserResponse | null {
     const raw = localStorage.getItem(this.USER_KEY);
     return raw ? JSON.parse(raw) : null;
