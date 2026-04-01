@@ -2,6 +2,8 @@ package com.colick.backoffice.trip;
 
 import com.colick.backoffice.email.EmailService;
 import com.colick.backoffice.exception.ResourceNotFoundException;
+import com.colick.backoffice.location.entity.LocationType;
+import com.colick.backoffice.location.repository.LocationRepository;
 import com.colick.backoffice.trip.dto.*;
 import com.colick.backoffice.trip.entity.Trip;
 import com.colick.backoffice.trip.entity.TripBooking;
@@ -39,6 +41,9 @@ class TripServiceImplTest {
 
     @Mock
     private EmailService emailService;
+
+    @Mock
+    private LocationRepository locationRepository;
 
     @InjectMocks
     private TripServiceImpl tripService;
@@ -238,5 +243,142 @@ class TripServiceImplTest {
 
         verify(emailService).sendEmail(eq(sender.getEmail()), anyString(), anyString());
         verify(bookingRepository).delete(booking);
+    }
+
+    // ---- Trip search tests -------------------------------------------------
+
+    @Test
+    void searchTrips_shouldReturnMatchingTripsByDeparture() {
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(sampleTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getDepartureAddress()).isEqualTo("Paris");
+    }
+
+    @Test
+    void searchTrips_shouldReturnMatchingTripsByDestination() {
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(sampleTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Abidjan"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips(null, "Abidjan");
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getDestination()).isEqualTo("Abidjan");
+    }
+
+    @Test
+    void searchTrips_shouldReturnEmpty_whenNoMatch() {
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(sampleTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Berlin"))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips("Berlin", null);
+
+        assertThat(results).isEmpty();
+    }
+
+    @Test
+    void searchTrips_shouldExpandCountryToCities() {
+        // "France" is a country → should expand to its cities, including "Paris"
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(sampleTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "France"))
+                .thenReturn(List.of("Paris", "Lyon", "Marseille"));
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips("France", null);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getDepartureAddress()).isEqualTo("Paris");
+    }
+
+    @Test
+    void searchTrips_shouldComputeAvailableWeight() {
+        TripBooking accepted = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .weight(BigDecimal.valueOf(7))
+                .status(TripBooking.BookingStatus.ACCEPTED).build();
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(sampleTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of(accepted));
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null);
+
+        assertThat(results).hasSize(1);
+        // maxWeight (20) - accepted weight (7) = 13
+        assertThat(results.get(0).getAvailableWeight()).isEqualByComparingTo(BigDecimal.valueOf(13));
+    }
+
+    @Test
+    void searchTrips_shouldReturnFullMaxWeight_whenNoAcceptedBookings() {
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(sampleTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getAvailableWeight()).isEqualByComparingTo(BigDecimal.valueOf(20));
+    }
+
+    @Test
+    void searchTrips_shouldFilterByBothDepartureAndDestination() {
+        Trip anotherTrip = Trip.builder()
+                .id(11L).traveler(traveler)
+                .departureAddress("Lyon").destination("Dakar")
+                .departureTime(LocalDateTime.now().plusDays(3))
+                .arrivalTime(LocalDateTime.now().plusDays(4))
+                .maxWeight(BigDecimal.valueOf(15))
+                .pricePerKilo(BigDecimal.valueOf(8))
+                .status(Trip.TripStatus.ACTIVE).build();
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE))
+                .thenReturn(List.of(sampleTrip, anotherTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Abidjan"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips("Paris", "Abidjan");
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getDepartureAddress()).isEqualTo("Paris");
+        assertThat(results.get(0).getDestination()).isEqualTo("Abidjan");
+    }
+
+    @Test
+    void searchTrips_shouldIgnoreBookingsWithNullWeight() {
+        TripBooking acceptedNoWeight = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .weight(null)
+                .status(TripBooking.BookingStatus.ACCEPTED).build();
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(sampleTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of(acceptedNoWeight));
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null);
+
+        assertThat(results).hasSize(1);
+        // Null weights are ignored, so availableWeight = maxWeight = 20
+        assertThat(results.get(0).getAvailableWeight()).isEqualByComparingTo(BigDecimal.valueOf(20));
     }
 }

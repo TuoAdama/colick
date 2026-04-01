@@ -2,6 +2,8 @@ package com.colick.backoffice.trip.service;
 
 import com.colick.backoffice.email.EmailService;
 import com.colick.backoffice.exception.ResourceNotFoundException;
+import com.colick.backoffice.location.entity.LocationType;
+import com.colick.backoffice.location.repository.LocationRepository;
 import com.colick.backoffice.trip.dto.*;
 import com.colick.backoffice.trip.entity.Trip;
 import com.colick.backoffice.trip.entity.TripBooking;
@@ -12,7 +14,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.math.BigDecimal;
+import java.util.*;
 
 /**
  * Implementation of {@link TripService}.
@@ -24,13 +27,16 @@ public class TripServiceImpl implements TripService {
     private final TripRepository tripRepository;
     private final TripBookingRepository bookingRepository;
     private final EmailService emailService;
+    private final LocationRepository locationRepository;
 
     public TripServiceImpl(TripRepository tripRepository,
                            TripBookingRepository bookingRepository,
-                           EmailService emailService) {
+                           EmailService emailService,
+                           LocationRepository locationRepository) {
         this.tripRepository = tripRepository;
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
+        this.locationRepository = locationRepository;
     }
 
     @Override
@@ -209,5 +215,71 @@ public class TripServiceImpl implements TripService {
                 && requester.getRole() != User.Role.ADMIN) {
             throw new AccessDeniedException("You are not the owner of this trip");
         }
+    }
+
+    // ---- Trip search -------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TripResponse> searchTrips(String departure, String destination) {
+        List<Trip> activeTrips = tripRepository.findByStatus(Trip.TripStatus.ACTIVE);
+
+        Set<String> departureTerms = expandSearchTerm(departure);
+        Set<String> destinationTerms = expandSearchTerm(destination);
+
+        return activeTrips.stream()
+                .filter(t -> departureTerms == null || matchesAnyTerm(t.getDepartureAddress(), departureTerms))
+                .filter(t -> destinationTerms == null || matchesAnyTerm(t.getDestination(), destinationTerms))
+                .map(t -> TripResponse.from(t, computeAvailableWeight(t)))
+                .toList();
+    }
+
+    /**
+     * Expands a search term into a set of lower-case strings to match against.
+     * If the term corresponds to a country name, all city names in that country are included.
+     *
+     * @return {@code null} when no filter should be applied (term is blank),
+     *         otherwise a non-empty set of lower-case match terms
+     */
+    private Set<String> expandSearchTerm(String term) {
+        if (term == null || term.isBlank()) {
+            return null;
+        }
+        Set<String> terms = new LinkedHashSet<>();
+        terms.add(term.toLowerCase());
+
+        // Country-expansion: if the term matches a country, include its cities
+        List<String> cityNames = locationRepository.findNamesByTypeAndCountryContaining(
+                LocationType.CITY, term);
+        cityNames.forEach(city -> terms.add(city.toLowerCase()));
+
+        return terms;
+    }
+
+    /**
+     * Returns {@code true} when the given value partially matches at least one of the terms
+     * (case-insensitive, bi-directional contains).
+     */
+    private boolean matchesAnyTerm(String value, Set<String> terms) {
+        if (value == null) {
+            return false;
+        }
+        String lowerValue = value.toLowerCase();
+        return terms.stream()
+                .anyMatch(term -> lowerValue.contains(term) || term.contains(lowerValue));
+    }
+
+    /**
+     * Computes the available weight for a trip:
+     * {@code maxWeight − sum(weight of ACCEPTED bookings)}.
+     */
+    private BigDecimal computeAvailableWeight(Trip trip) {
+        List<TripBooking> accepted = bookingRepository.findByTripAndStatus(
+                trip, TripBooking.BookingStatus.ACCEPTED);
+        BigDecimal totalBooked = accepted.stream()
+                .map(TripBooking::getWeight)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return trip.getMaxWeight().subtract(totalBooked);
     }
 }

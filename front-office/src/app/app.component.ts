@@ -1,32 +1,16 @@
 import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
-import { HeroComponent } from './components/hero/hero.component';
-import { StatsComponent } from './components/stats/stats.component';
-import { HowItWorksComponent } from './components/how-it-works/how-it-works.component';
-import { AdvantagesComponent } from './components/advantages/advantages.component';
-import { SecurityComponent } from './components/security/security.component';
-import { TestimonialsComponent } from './components/testimonials/testimonials.component';
-import { CtaComponent } from './components/cta/cta.component';
 import { FooterComponent } from './components/footer/footer.component';
 
 /**
  * AppComponent - Root component for the Colick front-office application.
- * Assembles all landing page sections into a complete page.
+ * Renders the shared header, router outlet, and footer.
  */
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [
-    HeaderComponent,
-    HeroComponent,
-    StatsComponent,
-    HowItWorksComponent,
-    AdvantagesComponent,
-    SecurityComponent,
-    TestimonialsComponent,
-    CtaComponent,
-    FooterComponent,
-  ],
+  imports: [RouterOutlet, HeaderComponent, FooterComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })

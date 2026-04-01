@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -33,6 +34,23 @@ public class TripController {
             @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(tripService.createTrip(request, currentUser));
+    }
+
+    /**
+     * Public search endpoint.
+     * At least one of {@code departure} or {@code destination} must be provided.
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<TripResponse>> searchTrips(
+            @RequestParam(required = false) String departure,
+            @RequestParam(required = false) String destination) {
+
+        if ((departure == null || departure.isBlank())
+                && (destination == null || destination.isBlank())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "At least one of 'departure' or 'destination' is required");
+        }
+        return ResponseEntity.ok(tripService.searchTrips(departure, destination));
     }
 
     /** List all active trips (public). */

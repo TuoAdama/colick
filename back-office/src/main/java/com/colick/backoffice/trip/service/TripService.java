@@ -39,4 +39,15 @@ public interface TripService {
 
     /** Removes a booking request from the list (sends email notification). */
     void removeBooking(Long tripId, Long bookingId, User requester);
+
+    /**
+     * Searches active trips by departure and/or destination.
+     * <p>If a search term matches a country name, all cities in that country are included
+     * in the matching set (country-expansion).</p>
+     *
+     * @param departure   departure filter (optional)
+     * @param destination destination filter (optional)
+     * @return matching trips with their available weight computed
+     */
+    List<TripResponse> searchTrips(String departure, String destination);
 }

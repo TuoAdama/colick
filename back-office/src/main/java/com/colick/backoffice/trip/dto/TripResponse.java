@@ -26,10 +26,24 @@ public class TripResponse {
     private boolean instantAcceptance;
     private Trip.TripStatus status;
 
+    /** Available weight (maxWeight minus sum of accepted bookings). May be null when not computed. */
+    private BigDecimal availableWeight;
+
     /**
      * Maps a {@link Trip} entity to a {@link TripResponse} DTO.
+     * {@code availableWeight} will be {@code null} (omitted from JSON by Jackson non_null policy).
      */
     public static TripResponse from(Trip trip) {
+        return from(trip, null);
+    }
+
+    /**
+     * Maps a {@link Trip} entity to a {@link TripResponse} DTO, including the computed available weight.
+     *
+     * @param trip            the trip entity
+     * @param availableWeight pre-computed available weight (may be {@code null})
+     */
+    public static TripResponse from(Trip trip, BigDecimal availableWeight) {
         return TripResponse.builder()
                 .id(trip.getId())
                 .travelerId(trip.getTraveler().getId())
@@ -42,6 +56,7 @@ public class TripResponse {
                 .pricePerKilo(trip.getPricePerKilo())
                 .instantAcceptance(trip.isInstantAcceptance())
                 .status(trip.getStatus())
+                .availableWeight(availableWeight)
                 .build();
     }
 }
