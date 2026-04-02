@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
+import { AutocompleteComponent } from '../../shared/components/autocomplete/autocomplete.component';
+import { Location } from '../../models/location.model';
 
 /**
  * HeroComponent - Main hero section with title, description, CTAs, and search preview card.
@@ -9,10 +11,32 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-hero',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, AutocompleteComponent],
   templateUrl: './hero.component.html',
 })
 export class HeroComponent {
+  private readonly router = inject(Router);
+
+  departure: Location | null = null;
+  destination: Location | null = null;
+
+  onDepartureSelected(location: Location): void {
+    this.departure = location;
+  }
+
+  onDestinationSelected(location: Location): void {
+    this.destination = location;
+  }
+
+  search(): void {
+    this.router.navigate(['/search'], {
+      queryParams: {
+        ...(this.departure && { from: this.departure.name }),
+        ...(this.destination && { to: this.destination.name }),
+      },
+    });
+  }
+
   /**
    * Trust badges displayed below the CTA buttons
    */
