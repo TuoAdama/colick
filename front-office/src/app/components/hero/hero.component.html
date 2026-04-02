@@ -72,25 +72,19 @@
 
             <!-- Search Form Preview -->
             <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-text-secondary mb-1">Départ</label>
-                <div class="flex items-center gap-3 bg-bg-secondary rounded-xl px-4 py-3">
-                  <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  </svg>
-                  <span class="text-primary font-medium">Paris, France</span>
-                </div>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-text-secondary mb-1">Destination</label>
-                <div class="flex items-center gap-3 bg-bg-secondary rounded-xl px-4 py-3">
-                  <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  </svg>
-                  <span class="text-primary font-medium">Abidjan, Côte d'Ivoire</span>
-                </div>
-              </div>
-              <button class="w-full bg-accent text-white font-bold py-4 rounded-xl hover:bg-opacity-90 transition mt-2">
+              <app-autocomplete
+                label="Départ"
+                placeholder="Ex: Paris, France"
+                (selected)="onDepartureSelected($event)"
+              />
+              <app-autocomplete
+                label="Destination"
+                placeholder="Ex: Abidjan, Côte d'Ivoire"
+                (selected)="onDestinationSelected($event)"
+              />
+              <button
+                (click)="search()"
+                class="w-full bg-accent text-white font-bold py-4 rounded-xl hover:bg-opacity-90 transition mt-2">
                 Rechercher
               </button>
             </div>
