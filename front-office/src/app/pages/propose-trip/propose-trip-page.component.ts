@@ -45,6 +45,13 @@ export class ProposeTripPageComponent {
   /** Whether the traveler accepts bookings instantly */
   instantAcceptance = false;
 
+  /** Minimum selectable datetime (now, in local time, formatted for datetime-local input). */
+  get minDateTime(): string {
+    const now = new Date();
+    const tzOffset = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+  }
+
   // --- UI state ---
 
   /** Whether the form submission is in progress */
@@ -99,8 +106,8 @@ export class ProposeTripPageComponent {
     const payload: CreateTripDto = {
       departureAddress: `${this.departure!.name}, ${this.departure!.country}`,
       destination: `${this.destination!.name}, ${this.destination!.country}`,
-      departureTime: new Date(this.departureTime).toISOString(),
-      arrivalTime: new Date(this.arrivalTime).toISOString(),
+      departureTime: this.departureTime,
+      arrivalTime: this.arrivalTime,
       maxWeight: this.maxWeight!,
       pricePerKilo: this.pricePerKilo!,
       instantAcceptance: this.instantAcceptance,
