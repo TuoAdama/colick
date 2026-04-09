@@ -20,6 +20,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'propose',
+    loadComponent: () =>
+      import('./pages/propose-trip/propose-trip-page.component').then(
+        (m) => m.ProposeTripPageComponent
+      ),
+  },
+  {
     path: 'login',
     loadComponent: () =>
       import('./pages/login/login-page.component').then(
