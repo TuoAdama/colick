@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/users").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/users/confirm-email").permitAll()
                 .requestMatchers("/locations/**").permitAll()
                 .requestMatchers("/trips/search").permitAll()
                 .requestMatchers(

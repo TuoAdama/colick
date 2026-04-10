@@ -1,0 +1,41 @@
+<div class="min-h-screen bg-background-primary flex items-center justify-center px-4 font-['Poppins']">
+  <div class="bg-white rounded-2xl shadow-sm p-8 max-w-md w-full text-center">
+    @if (state === 'loading') {
+      <div class="flex flex-col items-center gap-4">
+        <div class="w-10 h-10 border-2 border-secondary border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-text-secondary text-sm">Confirmation en cours…</p>
+      </div>
+    }
+    @if (state === 'success') {
+      <div class="flex flex-col items-center gap-4">
+        <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
+          <svg class="w-7 h-7 text-success" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <h1 class="text-xl font-bold text-text-primary">Adresse e-mail confirmée !</h1>
+        <p class="text-text-secondary text-sm">
+          Votre adresse e-mail a bien été mise à jour.
+          @if (newEmail) { <br />Nouvelle adresse : <strong class="text-text-primary">{{ newEmail }}</strong> }
+        </p>
+        <a routerLink="/dashboard" class="mt-2 inline-flex items-center gap-2 bg-primary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200">
+          Retour au tableau de bord
+        </a>
+      </div>
+    }
+    @if (state === 'error') {
+      <div class="flex flex-col items-center gap-4">
+        <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center">
+          <svg class="w-7 h-7 text-error" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </div>
+        <h1 class="text-xl font-bold text-text-primary">Lien invalide ou expiré</h1>
+        <p class="text-text-secondary text-sm">Ce lien de confirmation est invalide ou a expiré (24h). Faites une nouvelle demande depuis votre profil.</p>
+        <a routerLink="/dashboard" class="mt-2 inline-flex items-center gap-2 bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200">
+          Retour au tableau de bord
+        </a>
+      </div>
+    }
+  </div>
+</div>

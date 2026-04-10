@@ -1,5 +1,7 @@
 package com.colick.backoffice.user.controller;
 
+import com.colick.backoffice.user.dto.ChangeEmailRequest;
+import com.colick.backoffice.user.dto.ChangePasswordRequest;
 import com.colick.backoffice.user.dto.CreateUserRequest;
 import com.colick.backoffice.user.dto.UpdateUserRequest;
 import com.colick.backoffice.user.dto.UserResponse;
@@ -9,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -58,5 +61,39 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /** Upload or replace the profile photo. */
+    @PostMapping("/{id}/photo")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserResponse> uploadPhoto(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(userService.uploadPhoto(id, file));
+    }
+
+    /** Initiate an e-mail change (sends a confirmation link to the new address). */
+    @PostMapping("/{id}/change-email")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> requestEmailChange(
+            @PathVariable Long id,
+            @Valid @RequestBody ChangeEmailRequest request) {
+        userService.requestEmailChange(id, request.getNewEmail());
+        return ResponseEntity.accepted().build();
+    }
+
+    /** Confirm an e-mail change via token (public endpoint, called from the front-end link). */
+    @GetMapping("/confirm-email")
+    public ResponseEntity<UserResponse> confirmEmailChange(@RequestParam String token) {
+        return ResponseEntity.ok(userService.confirmEmailChange(token));
+    }
+
+    /** Change the authenticated user's password (requires the current password). */
+    @PutMapping("/{id}/change-password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserResponse> changePassword(
+            @PathVariable Long id,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        return ResponseEntity.ok(userService.changePassword(id, request.getOldPassword(), request.getNewPassword()));
     }
 }

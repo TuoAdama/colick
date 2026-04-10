@@ -45,102 +45,144 @@
 
         <!-- ── Panel: Mon profil ────────────────────────────────────────────── -->
         @if (activeTab === 'profile') {
-          <form
-            (ngSubmit)="saveProfile()"
-            [formGroup]="profileForm"
-            class="max-w-lg space-y-4"
-            id="panel-profile"
-            role="tabpanel"
-            aria-labelledby="tab-profile"
-          >
-            <h2 class="text-lg font-semibold text-text-primary mb-4">Mon profil</h2>
+          <div class="max-w-lg space-y-8" id="panel-profile" role="tabpanel" aria-labelledby="tab-profile">
 
-            <!-- Success / error feedback -->
-            @if (profileSuccess) {
-              <div class="bg-green-50 text-success text-sm px-4 py-3 rounded-lg" role="status">
-                {{ profileSuccess }}
+            <!-- ── Section 1: Photo + Infos générales ─────────────────────── -->
+            <section>
+              <h2 class="text-base font-semibold text-text-primary mb-4 pb-2 border-b border-gray-100">Informations générales</h2>
+
+              <!-- Photo upload -->
+              <div class="flex items-center gap-4 mb-5">
+                <label for="photo-upload" class="relative cursor-pointer group shrink-0" aria-label="Changer la photo de profil">
+                  <div class="w-16 h-16 rounded-full overflow-hidden bg-secondary flex items-center justify-center">
+                    @if (photoPreview) {
+                      <img [src]="photoPreview" alt="Photo de profil" class="w-full h-full object-cover" />
+                    } @else {
+                      <span class="text-white text-xl font-bold uppercase">
+                        {{ (currentUser$ | async)?.firstName?.charAt(0) }}{{ (currentUser$ | async)?.lastName?.charAt(0) }}
+                      </span>
+                    }
+                  </div>
+                  <div class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" aria-hidden="true">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                  </div>
+                  <input id="photo-upload" type="file" accept="image/*" class="sr-only" (change)="onPhotoSelected($event)" />
+                </label>
+                <div>
+                  <p class="text-sm font-medium text-text-primary">Photo de profil</p>
+                  <p class="text-xs text-text-secondary mt-0.5">JPG, PNG — cliquez sur la photo pour modifier</p>
+                  @if (isUploadingPhoto) {
+                    <p class="text-xs text-secondary mt-1">Upload en cours…</p>
+                  }
+                  @if (photoError) {
+                    <p class="text-xs text-error mt-1">{{ photoError }}</p>
+                  }
+                </div>
               </div>
-            }
-            @if (profileError) {
-              <div class="bg-red-50 text-error text-sm px-4 py-3 rounded-lg" role="alert">
-                {{ profileError }}
-              </div>
-            }
 
-            <!-- First name / Last name -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label for="firstName" class="block text-sm font-medium text-text-primary mb-1">Prénom</label>
-                <input
-                  id="firstName"
-                  formControlName="firstName"
-                  type="text"
-                  autocomplete="given-name"
-                  class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label for="lastName" class="block text-sm font-medium text-text-primary mb-1">Nom</label>
-                <input
-                  id="lastName"
-                  formControlName="lastName"
-                  type="text"
-                  autocomplete="family-name"
-                  class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
-                />
-              </div>
-            </div>
+              <!-- Info form -->
+              <form (ngSubmit)="saveInfo()" [formGroup]="infoForm" class="space-y-4">
+                @if (infoSuccess) {
+                  <div class="bg-green-50 text-success text-sm px-4 py-3 rounded-lg" role="status">{{ infoSuccess }}</div>
+                }
+                @if (infoError) {
+                  <div class="bg-red-50 text-error text-sm px-4 py-3 rounded-lg" role="alert">{{ infoError }}</div>
+                }
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label for="firstName" class="block text-sm font-medium text-text-primary mb-1">Prénom</label>
+                    <input id="firstName" formControlName="firstName" type="text" autocomplete="given-name"
+                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label for="lastName" class="block text-sm font-medium text-text-primary mb-1">Nom</label>
+                    <input id="lastName" formControlName="lastName" type="text" autocomplete="family-name"
+                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
+                  </div>
+                </div>
+                <div>
+                  <label for="phone" class="block text-sm font-medium text-text-primary mb-1">Téléphone</label>
+                  <input id="phone" formControlName="phone" type="tel" autocomplete="tel" placeholder="+33 6 00 00 00 00"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
+                </div>
+                <div>
+                  <label for="identityDocument" class="block text-sm font-medium text-text-primary mb-1">Numéro de document d'identité</label>
+                  <input id="identityDocument" formControlName="identityDocument" type="text"
+                    placeholder="Passeport, carte d'identité…"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
+                </div>
+                <button type="submit" [disabled]="infoForm.invalid || isSavingInfo"
+                  class="bg-primary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                  {{ isSavingInfo ? 'Enregistrement…' : 'Enregistrer les informations' }}
+                </button>
+              </form>
+            </section>
 
-            <!-- Email -->
-            <div>
-              <label for="email" class="block text-sm font-medium text-text-primary mb-1">Email</label>
-              <input
-                id="email"
-                formControlName="email"
-                type="email"
-                autocomplete="email"
-                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
-              />
-            </div>
+            <!-- ── Section 2: Changer l'adresse e-mail ────────────────────── -->
+            <section>
+              <h2 class="text-base font-semibold text-text-primary mb-1 pb-2 border-b border-gray-100">Changer l'adresse e-mail</h2>
+              <p class="text-xs text-text-secondary mb-4">
+                Adresse actuelle : <strong class="text-text-primary">{{ (currentUser$ | async)?.email }}</strong>
+              </p>
+              <form (ngSubmit)="sendEmailChange()" [formGroup]="emailForm" class="space-y-4">
+                @if (emailSuccess) {
+                  <div class="bg-green-50 text-success text-sm px-4 py-3 rounded-lg" role="status">{{ emailSuccess }}</div>
+                }
+                @if (emailError) {
+                  <div class="bg-red-50 text-error text-sm px-4 py-3 rounded-lg" role="alert">{{ emailError }}</div>
+                }
+                <div>
+                  <label for="newEmail" class="block text-sm font-medium text-text-primary mb-1">Nouvelle adresse e-mail</label>
+                  <input id="newEmail" formControlName="newEmail" type="email" autocomplete="email"
+                    placeholder="nouvelle@adresse.com"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
+                </div>
+                <button type="submit" [disabled]="emailForm.invalid || isSendingEmail"
+                  class="bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                  {{ isSendingEmail ? 'Envoi…' : 'Envoyer le lien de confirmation' }}
+                </button>
+              </form>
+            </section>
 
-            <!-- Phone -->
-            <div>
-              <label for="phone" class="block text-sm font-medium text-text-primary mb-1">Téléphone</label>
-              <input
-                id="phone"
-                formControlName="phone"
-                type="tel"
-                autocomplete="tel"
-                placeholder="+33 6 00 00 00 00"
-                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
-              />
-            </div>
+            <!-- ── Section 3: Changer le mot de passe ─────────────────────── -->
+            <section>
+              <h2 class="text-base font-semibold text-text-primary mb-4 pb-2 border-b border-gray-100">Changer le mot de passe</h2>
+              <form (ngSubmit)="savePassword()" [formGroup]="passwordForm" class="space-y-4">
+                @if (passwordSuccess) {
+                  <div class="bg-green-50 text-success text-sm px-4 py-3 rounded-lg" role="status">{{ passwordSuccess }}</div>
+                }
+                @if (passwordError) {
+                  <div class="bg-red-50 text-error text-sm px-4 py-3 rounded-lg" role="alert">{{ passwordError }}</div>
+                }
+                <div>
+                  <label for="oldPassword" class="block text-sm font-medium text-text-primary mb-1">Ancien mot de passe</label>
+                  <input id="oldPassword" formControlName="oldPassword" type="password" autocomplete="current-password"
+                    placeholder="••••••••"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
+                </div>
+                <div>
+                  <label for="newPassword" class="block text-sm font-medium text-text-primary mb-1">Nouveau mot de passe <span class="text-text-muted font-normal">(8 caractères min.)</span></label>
+                  <input id="newPassword" formControlName="newPassword" type="password" autocomplete="new-password"
+                    placeholder="••••••••"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
+                </div>
+                <div>
+                  <label for="confirmPassword" class="block text-sm font-medium text-text-primary mb-1">Confirmer le nouveau mot de passe</label>
+                  <input id="confirmPassword" formControlName="confirmPassword" type="password" autocomplete="new-password"
+                    placeholder="••••••••"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
+                </div>
+                <button type="submit" [disabled]="passwordForm.invalid || isSavingPassword"
+                  class="bg-primary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                  {{ isSavingPassword ? 'Mise à jour…' : 'Mettre à jour le mot de passe' }}
+                </button>
+              </form>
+            </section>
 
-            <!-- Password (optional) -->
-            <div>
-              <label for="password" class="block text-sm font-medium text-text-primary mb-1">
-                Nouveau mot de passe
-                <span class="text-text-muted font-normal">(laisser vide pour ne pas changer)</span>
-              </label>
-              <input
-                id="password"
-                formControlName="password"
-                type="password"
-                autocomplete="new-password"
-                placeholder="••••••••"
-                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
-              />
-            </div>
-
-            <!-- Submit -->
-            <button
-              type="submit"
-              [disabled]="profileForm.invalid || isSavingProfile"
-              class="bg-primary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {{ isSavingProfile ? 'Enregistrement…' : 'Enregistrer les modifications' }}
-            </button>
-          </form>
+          </div>
         }
 
         <!-- ── Panel: Mes chats ─────────────────────────────────────────────── -->

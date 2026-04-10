@@ -50,6 +50,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'confirm-email',
+    loadComponent: () =>
+      import('./pages/confirm-email/confirm-email-page.component').then(
+        (m) => m.ConfirmEmailPageComponent
+      ),
+  },
+  {
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () =>
