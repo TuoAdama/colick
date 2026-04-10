@@ -49,6 +49,13 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(HttpStatus.FORBIDDEN.value(), ex.getMessage()));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity
+                .badRequest()
+                .body(new ApiError(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+    }
+
     /**
      * Handles Spring MVC exceptions (NoResourceFoundException, MethodNotAllowedException, etc.)
      * and returns the correct HTTP status code instead of masking them as 500.

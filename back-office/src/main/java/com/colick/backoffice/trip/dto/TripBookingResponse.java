@@ -17,9 +17,11 @@ public class TripBookingResponse {
     private Long tripId;
     private Long senderId;
     private String senderName;
+    private String title;
     private BigDecimal weight;
     private String description;
     private String packagePhotoUrl;
+    private String recipientContact;
     private TripBooking.BookingStatus status;
 
     /**
@@ -31,9 +33,11 @@ public class TripBookingResponse {
                 .tripId(booking.getTrip().getId())
                 .senderId(booking.getSender().getId())
                 .senderName(booking.getSender().getFirstName() + " " + booking.getSender().getLastName())
+                .title(booking.getTitle())
                 .weight(booking.getWeight())
                 .description(booking.getDescription())
                 .packagePhotoUrl(booking.getPackagePhotoUrl())
+                .recipientContact(booking.getRecipientContact())
                 .status(booking.getStatus())
                 .build();
     }

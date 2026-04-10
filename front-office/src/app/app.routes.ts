@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './guards/auth.guard';
 
 /**
  * Application route definitions.
@@ -17,6 +18,28 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/search/search-page.component').then(
         (m) => m.SearchPageComponent
+      ),
+  },
+  {
+    path: 'propose',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/propose-trip/propose-trip-page.component').then(
+        (m) => m.ProposeTripPageComponent
+      ),
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./pages/login/login-page.component').then(
+        (m) => m.LoginPageComponent
+      ),
+  },
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./pages/register/register-page.component').then(
+        (m) => m.RegisterPageComponent
       ),
   },
 ];

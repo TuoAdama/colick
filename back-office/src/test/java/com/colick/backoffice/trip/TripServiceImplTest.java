@@ -153,25 +153,33 @@ class TripServiceImplTest {
     @Test
     void createBooking_shouldSaveWithPendingStatus_whenNotInstantAcceptance() {
         CreateBookingRequest request = new CreateBookingRequest();
+        request.setTitle("Electronics");
         request.setWeight(BigDecimal.valueOf(5));
         request.setDescription("Fragile items");
+        request.setRecipientContact("+225 07 00 00 00");
 
         TripBooking savedBooking = TripBooking.builder()
                 .id(1L)
                 .trip(sampleTrip)
                 .sender(sender)
+                .title("Electronics")
                 .weight(BigDecimal.valueOf(5))
                 .description("Fragile items")
+                .recipientContact("+225 07 00 00 00")
                 .status(TripBooking.BookingStatus.PENDING)
                 .build();
 
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
         doNothing().when(emailService).sendEmail(anyString(), anyString(), anyString());
 
         TripBookingResponse response = tripService.createBooking(10L, request, sender);
 
         assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.PENDING);
+        assertThat(response.getTitle()).isEqualTo("Electronics");
+        assertThat(response.getRecipientContact()).isEqualTo("+225 07 00 00 00");
         verify(emailService).sendEmail(eq(traveler.getEmail()), anyString(), anyString());
     }
 
@@ -180,12 +188,20 @@ class TripServiceImplTest {
         sampleTrip.setInstantAcceptance(true);
 
         CreateBookingRequest request = new CreateBookingRequest();
+        request.setTitle("Clothes");
+        request.setWeight(BigDecimal.valueOf(3));
+        request.setRecipientContact("+225 01 00 00 00");
 
         TripBooking savedBooking = TripBooking.builder()
                 .id(2L).trip(sampleTrip).sender(sender)
+                .title("Clothes")
+                .weight(BigDecimal.valueOf(3))
+                .recipientContact("+225 01 00 00 00")
                 .status(TripBooking.BookingStatus.ACCEPTED).build();
 
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
         doNothing().when(emailService).sendEmail(anyString(), anyString(), anyString());
 
@@ -243,6 +259,30 @@ class TripServiceImplTest {
 
         verify(emailService).sendEmail(eq(sender.getEmail()), anyString(), anyString());
         verify(bookingRepository).delete(booking);
+    }
+
+    @Test
+    void createBooking_shouldThrow_whenWeightExceedsAvailable() {
+        // maxWeight = 20, existing accepted booking weight = 15 → available = 5
+        TripBooking existingAccepted = TripBooking.builder()
+                .id(99L).trip(sampleTrip).sender(sender)
+                .title("Books")
+                .weight(BigDecimal.valueOf(15))
+                .recipientContact("+225 00 00 00 00")
+                .status(TripBooking.BookingStatus.ACCEPTED).build();
+
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setTitle("Heavy package");
+        request.setWeight(BigDecimal.valueOf(10)); // exceeds available 5 kg
+        request.setRecipientContact("+225 07 00 00 00");
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of(existingAccepted));
+
+        assertThatThrownBy(() -> tripService.createBooking(10L, request, sender))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Requested weight exceeds available weight");
     }
 
     // ---- Trip search tests -------------------------------------------------

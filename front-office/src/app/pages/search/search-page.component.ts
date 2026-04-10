@@ -1,22 +1,29 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 import { AutocompleteComponent } from '../../shared/components/autocomplete/autocomplete.component';
+import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
 import { TripService } from '../../services/trip.service';
+import { AuthService } from '../../services/auth.service';
 import { Location } from '../../models/location.model';
 import { Trip } from '../../models/trip.model';
+import { BookingResponse } from '../../models/booking.model';
 
 /**
  * SearchPageComponent - Page for searching trips by departure and destination.
  * Displays search form with auto-complete inputs and trip result cards.
+ * Handles booking modal display and authentication check.
  */
 @Component({
   selector: 'app-search-page',
   standalone: true,
-  imports: [CommonModule, AutocompleteComponent],
+  imports: [CommonModule, RouterLink, AutocompleteComponent, BookingModalComponent],
   templateUrl: './search-page.component.html',
 })
 export class SearchPageComponent {
   private readonly tripService = inject(TripService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   /** Selected departure location */
   departure: Location | null = null;
@@ -35,6 +42,15 @@ export class SearchPageComponent {
 
   /** Error message if search fails */
   errorMessage = '';
+
+  /** The trip currently selected for booking */
+  selectedTrip: Trip | null = null;
+
+  /** Whether the booking modal is open */
+  isBookingModalOpen = false;
+
+  /** Success toast message after booking creation */
+  bookingSuccessMessage = '';
 
   /**
    * Handle departure location selection from autocomplete
@@ -83,6 +99,41 @@ export class SearchPageComponent {
           this.isLoading = false;
         },
       });
+  }
+
+  /**
+   * Open the booking modal for a specific trip.
+   * Redirects to login if the user is not authenticated.
+   */
+  openBookingModal(trip: Trip): void {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.selectedTrip = trip;
+    this.isBookingModalOpen = true;
+  }
+
+  /**
+   * Close the booking modal and reset selected trip.
+   */
+  closeBookingModal(): void {
+    this.isBookingModalOpen = false;
+    this.selectedTrip = null;
+  }
+
+  /**
+   * Handle successful booking creation — show a success toast.
+   */
+  onBookingCreated(booking: BookingResponse): void {
+    this.bookingSuccessMessage = `Demande envoyée avec succès pour "${booking.title}" !`;
+    // Auto-close modal and clear message after delay
+    setTimeout(() => {
+      this.closeBookingModal();
+    }, 2000);
+    setTimeout(() => {
+      this.bookingSuccessMessage = '';
+    }, 5000);
   }
 
   /**

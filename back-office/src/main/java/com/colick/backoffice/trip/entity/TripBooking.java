@@ -30,7 +30,11 @@ public class TripBooking {
     @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
 
-    /** Weight of the parcel in kg (optional). */
+    /** Title / name of the package. */
+    @Column(nullable = false)
+    private String title;
+
+    /** Weight of the parcel in kg. */
     @Column(precision = 10, scale = 2)
     private BigDecimal weight;
 
@@ -40,6 +44,10 @@ public class TripBooking {
     /** Optional URL to the parcel photo. */
     @Column
     private String packagePhotoUrl;
+
+    /** Contact information of the person who will pick up the package. */
+    @Column(nullable = false)
+    private String recipientContact;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
