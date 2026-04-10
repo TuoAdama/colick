@@ -2,6 +2,8 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
 import { Trip } from '../../models/trip.model';
@@ -63,6 +65,8 @@ export class DashboardPageComponent implements OnInit {
 
   // ── Received reservations (my trips + their bookings) ─────────────────────
   myTrips: Trip[] = [];
+  /** Cache: tripId → its bookings (loaded in parallel with the trips). */
+  tripBookingsMap: Record<number, BookingResponse[]> = {};
   selectedTripBookings: BookingResponse[] = [];
   selectedTripId: number | null = null;
   isLoadingTrips = false;
@@ -138,13 +142,26 @@ export class DashboardPageComponent implements OnInit {
     });
   }
 
-  /** Load the trips published by the current user. */
+  /** Load the trips published by the current user, then fetch bookings for all in parallel. */
   loadMyTrips(): void {
     this.isLoadingTrips = true;
     this.tripService.getMyTrips().subscribe({
       next: (trips) => {
         this.myTrips = trips;
-        this.isLoadingTrips = false;
+        if (trips.length === 0) {
+          this.isLoadingTrips = false;
+          return;
+        }
+        // Load bookings for every trip in parallel and cache them.
+        const bookingRequests = trips.map((t) =>
+          this.tripService.getTripBookings(t.id).pipe(catchError(() => of([])))
+        );
+        forkJoin(bookingRequests).subscribe((results) => {
+          trips.forEach((t, i) => {
+            this.tripBookingsMap[t.id] = results[i] as BookingResponse[];
+          });
+          this.isLoadingTrips = false;
+        });
       },
       error: () => {
         this.isLoadingTrips = false;
@@ -152,30 +169,24 @@ export class DashboardPageComponent implements OnInit {
     });
   }
 
-  /** Select a trip and fetch its booking requests. */
+  /** Select a trip and display its cached bookings (no extra HTTP call). */
   selectTrip(tripId: number): void {
     this.selectedTripId = tripId;
-    this.isLoadingBookings = true;
     this.bookingActionError = '';
-    this.tripService.getTripBookings(tripId).subscribe({
-      next: (bookings) => {
-        this.selectedTripBookings = bookings;
-        this.isLoadingBookings = false;
-      },
-      error: () => {
-        this.isLoadingBookings = false;
-      },
-    });
+    this.selectedTripBookings = this.tripBookingsMap[tripId] ?? [];
   }
 
-  /** Accept a pending booking and update the local list. */
+  /** Accept a pending booking and update the local list and cache. */
   acceptBooking(bookingId: number): void {
     if (!this.selectedTripId) return;
     this.bookingActionError = '';
     this.tripService.acceptBooking(this.selectedTripId, bookingId).subscribe({
       next: (updated) => {
         const idx = this.selectedTripBookings.findIndex((x) => x.id === updated.id);
-        if (idx >= 0) this.selectedTripBookings[idx] = updated;
+        if (idx >= 0) {
+          this.selectedTripBookings[idx] = updated;
+          this.tripBookingsMap[this.selectedTripId!][idx] = updated;
+        }
       },
       error: () => {
         this.bookingActionError = "Erreur lors de l'acceptation de la demande.";
@@ -183,14 +194,17 @@ export class DashboardPageComponent implements OnInit {
     });
   }
 
-  /** Reject a pending booking and update the local list. */
+  /** Reject a pending booking and update the local list and cache. */
   rejectBooking(bookingId: number): void {
     if (!this.selectedTripId) return;
     this.bookingActionError = '';
     this.tripService.rejectBooking(this.selectedTripId, bookingId).subscribe({
       next: (updated) => {
         const idx = this.selectedTripBookings.findIndex((x) => x.id === updated.id);
-        if (idx >= 0) this.selectedTripBookings[idx] = updated;
+        if (idx >= 0) {
+          this.selectedTripBookings[idx] = updated;
+          this.tripBookingsMap[this.selectedTripId!][idx] = updated;
+        }
       },
       error: () => {
         this.bookingActionError = 'Erreur lors du refus de la demande.';

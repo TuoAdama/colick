@@ -192,9 +192,21 @@
                     class="text-left bg-background-secondary border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all duration-200"
                     [attr.aria-pressed]="selectedTripId === trip.id"
                   >
-                    <p class="font-semibold text-text-primary text-sm">
-                      {{ trip.departureAddress }} → {{ trip.destination }}
-                    </p>
+                    <div class="flex items-start justify-between gap-2">
+                      <p class="font-semibold text-text-primary text-sm">
+                        {{ trip.departureAddress }} → {{ trip.destination }}
+                      </p>
+                      <!-- Booking count badge -->
+                      @if ((tripBookingsMap[trip.id] || []).length > 0) {
+                        <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-accent text-white text-xs font-bold shrink-0">
+                          {{ tripBookingsMap[trip.id].length }}
+                        </span>
+                      } @else {
+                        <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-gray-200 text-text-muted text-xs font-medium shrink-0">
+                          0
+                        </span>
+                      }
+                    </div>
                     <p class="text-text-secondary text-xs mt-1">
                       {{ trip.departureTime | date:'dd/MM/yyyy HH:mm' }}
                     </p>
