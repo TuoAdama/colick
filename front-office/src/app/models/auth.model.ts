@@ -26,3 +26,12 @@ export interface UserResponse {
   phone?: string;
   role: string;
 }
+
+/** Payload for updating the authenticated user's profile. */
+export interface UpdateProfileRequest {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+}

@@ -277,6 +277,22 @@ public class TripServiceImpl implements TripService {
                 .anyMatch(term -> lowerValue.contains(term) || term.contains(lowerValue));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<TripResponse> getMyTrips(User user) {
+        return tripRepository.findByTraveler(user).stream()
+                .map(TripResponse::from)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TripBookingResponse> getMyBookings(User user) {
+        return bookingRepository.findBySender(user).stream()
+                .map(TripBookingResponse::from)
+                .toList();
+    }
+
     /**
      * Computes the available weight for a trip:
      * {@code maxWeight − sum(weight of ACCEPTED bookings)}.

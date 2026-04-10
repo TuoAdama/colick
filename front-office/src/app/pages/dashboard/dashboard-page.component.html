@@ -1,0 +1,308 @@
+<div class="min-h-screen bg-background-primary pt-20 pb-12 font-['Poppins']">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6">
+
+    <!-- ── Profile header ──────────────────────────────────────────────────── -->
+    <div class="bg-white rounded-2xl shadow-sm p-6 mb-6 flex items-center gap-4">
+      <span
+        class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-secondary text-white text-xl font-bold uppercase shrink-0"
+        aria-hidden="true"
+      >
+        {{ (currentUser$ | async)?.firstName?.charAt(0) }}{{ (currentUser$ | async)?.lastName?.charAt(0) }}
+      </span>
+      <div>
+        <h1 class="text-xl font-bold text-text-primary">
+          {{ (currentUser$ | async)?.firstName }} {{ (currentUser$ | async)?.lastName }}
+        </h1>
+        <p class="text-sm text-text-secondary">{{ (currentUser$ | async)?.email }}</p>
+      </div>
+    </div>
+
+    <!-- ── Tabs container ──────────────────────────────────────────────────── -->
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+
+      <!-- Tab navigation bar -->
+      <div class="flex border-b border-gray-100 overflow-x-auto" role="tablist" aria-label="Sections du tableau de bord">
+        @for (tab of tabs; track tab.id) {
+          <button
+            (click)="setTab(tab.id)"
+            [class.text-primary]="activeTab === tab.id"
+            [class.border-primary]="activeTab === tab.id"
+            [class.border-b-2]="activeTab === tab.id"
+            [class.text-text-secondary]="activeTab !== tab.id"
+            class="flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition-colors duration-200 hover:text-primary shrink-0"
+            role="tab"
+            [attr.aria-selected]="activeTab === tab.id"
+            [attr.aria-controls]="'panel-' + tab.id"
+          >
+            <span [innerHTML]="tab.icon" class="w-4 h-4"></span>
+            {{ tab.label }}
+          </button>
+        }
+      </div>
+
+      <!-- ── Tab panels ────────────────────────────────────────────────────── -->
+      <div class="p-6">
+
+        <!-- ── Panel: Mon profil ────────────────────────────────────────────── -->
+        @if (activeTab === 'profile') {
+          <form
+            (ngSubmit)="saveProfile()"
+            [formGroup]="profileForm"
+            class="max-w-lg space-y-4"
+            id="panel-profile"
+            role="tabpanel"
+            aria-labelledby="tab-profile"
+          >
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Mon profil</h2>
+
+            <!-- Success / error feedback -->
+            @if (profileSuccess) {
+              <div class="bg-green-50 text-success text-sm px-4 py-3 rounded-lg" role="status">
+                {{ profileSuccess }}
+              </div>
+            }
+            @if (profileError) {
+              <div class="bg-red-50 text-error text-sm px-4 py-3 rounded-lg" role="alert">
+                {{ profileError }}
+              </div>
+            }
+
+            <!-- First name / Last name -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="firstName" class="block text-sm font-medium text-text-primary mb-1">Prénom</label>
+                <input
+                  id="firstName"
+                  formControlName="firstName"
+                  type="text"
+                  autocomplete="given-name"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label for="lastName" class="block text-sm font-medium text-text-primary mb-1">Nom</label>
+                <input
+                  id="lastName"
+                  formControlName="lastName"
+                  type="text"
+                  autocomplete="family-name"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div>
+              <label for="email" class="block text-sm font-medium text-text-primary mb-1">Email</label>
+              <input
+                id="email"
+                formControlName="email"
+                type="email"
+                autocomplete="email"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+              />
+            </div>
+
+            <!-- Phone -->
+            <div>
+              <label for="phone" class="block text-sm font-medium text-text-primary mb-1">Téléphone</label>
+              <input
+                id="phone"
+                formControlName="phone"
+                type="tel"
+                autocomplete="tel"
+                placeholder="+33 6 00 00 00 00"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+              />
+            </div>
+
+            <!-- Password (optional) -->
+            <div>
+              <label for="password" class="block text-sm font-medium text-text-primary mb-1">
+                Nouveau mot de passe
+                <span class="text-text-muted font-normal">(laisser vide pour ne pas changer)</span>
+              </label>
+              <input
+                id="password"
+                formControlName="password"
+                type="password"
+                autocomplete="new-password"
+                placeholder="••••••••"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+              />
+            </div>
+
+            <!-- Submit -->
+            <button
+              type="submit"
+              [disabled]="profileForm.invalid || isSavingProfile"
+              class="bg-primary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ isSavingProfile ? 'Enregistrement…' : 'Enregistrer les modifications' }}
+            </button>
+          </form>
+        }
+
+        <!-- ── Panel: Mes chats ─────────────────────────────────────────────── -->
+        @if (activeTab === 'chats') {
+          <div class="text-center py-10" id="panel-chats" role="tabpanel" aria-labelledby="tab-chats">
+            <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+              <svg class="w-8 h-8 text-secondary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+            </div>
+            <h2 class="text-lg font-semibold text-text-primary mb-2">Mes conversations</h2>
+            <p class="text-text-secondary text-sm mb-6">
+              Retrouvez toutes vos conversations avec les voyageurs et expéditeurs.
+            </p>
+            <a
+              routerLink="/messages"
+              class="inline-flex items-center gap-2 bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 shadow-lg shadow-secondary/30"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+              Ouvrir les chats
+            </a>
+          </div>
+        }
+
+        <!-- ── Panel: Réservations reçues ──────────────────────────────────── -->
+        @if (activeTab === 'received') {
+          <div id="panel-received" role="tabpanel" aria-labelledby="tab-received">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Réservations reçues</h2>
+
+            @if (isLoadingTrips) {
+              <!-- Loading spinner -->
+              <div class="flex justify-center py-8" aria-label="Chargement en cours">
+                <div class="w-6 h-6 border-2 border-secondary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            } @else if (myTrips.length === 0) {
+              <div class="text-center py-10 text-text-secondary text-sm">
+                Vous n'avez aucun trajet proposé pour le moment.
+              </div>
+            } @else {
+              <!-- Trip selection grid -->
+              <div class="grid gap-4 sm:grid-cols-2">
+                @for (trip of myTrips; track trip.id) {
+                  <button
+                    (click)="selectTrip(trip.id)"
+                    [class.ring-2]="selectedTripId === trip.id"
+                    [class.ring-secondary]="selectedTripId === trip.id"
+                    class="text-left bg-background-secondary border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all duration-200"
+                    [attr.aria-pressed]="selectedTripId === trip.id"
+                  >
+                    <p class="font-semibold text-text-primary text-sm">
+                      {{ trip.departureAddress }} → {{ trip.destination }}
+                    </p>
+                    <p class="text-text-secondary text-xs mt-1">
+                      {{ trip.departureTime | date:'dd/MM/yyyy HH:mm' }}
+                    </p>
+                    <p class="text-text-muted text-xs mt-1">
+                      Poids max : {{ trip.maxWeight }} kg · {{ trip.pricePerKilo }} €/kg
+                    </p>
+                  </button>
+                }
+              </div>
+
+              <!-- Bookings for the selected trip -->
+              @if (selectedTripId !== null) {
+                <div class="mt-6">
+                  <h3 class="font-semibold text-text-primary text-sm mb-3">Demandes pour ce trajet</h3>
+
+                  @if (bookingActionError) {
+                    <div class="bg-red-50 text-error text-sm px-4 py-3 rounded-lg mb-3" role="alert">
+                      {{ bookingActionError }}
+                    </div>
+                  }
+
+                  @if (isLoadingBookings) {
+                    <div class="flex justify-center py-6" aria-label="Chargement en cours">
+                      <div class="w-6 h-6 border-2 border-secondary border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  } @else if (selectedTripBookings.length === 0) {
+                    <p class="text-text-secondary text-sm">Aucune demande reçue pour ce trajet.</p>
+                  } @else {
+                    <div class="space-y-3">
+                      @for (booking of selectedTripBookings; track booking.id) {
+                        <div class="bg-white border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div>
+                            <p class="font-medium text-text-primary text-sm">{{ booking.senderName }}</p>
+                            <p class="text-text-secondary text-xs">{{ booking.title }} · {{ booking.weight }} kg</p>
+                            @if (booking.description) {
+                              <p class="text-text-muted text-xs mt-1">{{ booking.description }}</p>
+                            }
+                          </div>
+                          <div class="flex items-center gap-2 shrink-0">
+                            <!-- Status badge -->
+                            <span [class]="statusClass(booking.status) + ' text-xs font-medium px-2.5 py-1 rounded-full'">
+                              {{ statusLabel(booking.status) }}
+                            </span>
+                            <!-- Accept / Reject actions (only for pending bookings) -->
+                            @if (booking.status === 'PENDING') {
+                              <button
+                                (click)="acceptBooking(booking.id)"
+                                class="bg-success text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-opacity-90 transition-colors"
+                              >
+                                Accepter
+                              </button>
+                              <button
+                                (click)="rejectBooking(booking.id)"
+                                class="bg-error text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-opacity-90 transition-colors"
+                              >
+                                Refuser
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            }
+          </div>
+        }
+
+        <!-- ── Panel: Mes demandes ──────────────────────────────────────────── -->
+        @if (activeTab === 'sent') {
+          <div id="panel-sent" role="tabpanel" aria-labelledby="tab-sent">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Mes demandes envoyées</h2>
+
+            @if (isLoadingSentBookings) {
+              <div class="flex justify-center py-8" aria-label="Chargement en cours">
+                <div class="w-6 h-6 border-2 border-secondary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            } @else if (myBookings.length === 0) {
+              <div class="text-center py-10 text-text-secondary text-sm">
+                Vous n'avez envoyé aucune demande pour le moment.
+              </div>
+            } @else {
+              <div class="space-y-3">
+                @for (booking of myBookings; track booking.id) {
+                  <div class="bg-background-secondary border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <p class="font-medium text-text-primary text-sm">{{ booking.title }}</p>
+                      <p class="text-text-secondary text-xs">
+                        {{ booking.weight }} kg · Contact : {{ booking.recipientContact }}
+                      </p>
+                      @if (booking.description) {
+                        <p class="text-text-muted text-xs mt-1">{{ booking.description }}</p>
+                      }
+                    </div>
+                    <!-- Status badge -->
+                    <span [class]="statusClass(booking.status) + ' text-xs font-medium px-2.5 py-1 rounded-full shrink-0'">
+                      {{ statusLabel(booking.status) }}
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+      </div><!-- /p-6 -->
+    </div><!-- /tabs container -->
+
+  </div>
+</div>

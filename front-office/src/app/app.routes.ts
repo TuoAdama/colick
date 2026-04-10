@@ -49,4 +49,12 @@ export const routes: Routes = [
         (m) => m.MessagesPageComponent
       ),
   },
+  {
+    path: 'dashboard',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/dashboard/dashboard-page.component').then(
+        (m) => m.DashboardPageComponent
+      ),
+  },
 ];

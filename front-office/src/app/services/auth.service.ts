@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
-import { AuthResponse, LoginRequest, RegisterRequest, UserResponse } from '../models/auth.model';
+import { AuthResponse, LoginRequest, RegisterRequest, UpdateProfileRequest, UserResponse } from '../models/auth.model';
 
 /**
  * Service for authentication operations (login, register, token management).
@@ -27,6 +27,16 @@ export class AuthService {
 
   register(data: RegisterRequest): Observable<UserResponse> {
     return this.http.post<UserResponse>('/api/users', data);
+  }
+
+  /** Update the authenticated user's profile and sync local storage. */
+  updateProfile(id: number, data: UpdateProfileRequest): Observable<UserResponse> {
+    return this.http.put<UserResponse>(`/api/users/${id}`, data).pipe(
+      tap((user) => {
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        this.currentUserSubject.next(user);
+      })
+    );
   }
 
   getToken(): string | null {

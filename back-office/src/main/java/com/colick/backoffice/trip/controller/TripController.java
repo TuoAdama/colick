@@ -133,4 +133,20 @@ public class TripController {
         tripService.removeBooking(id, bookingId, currentUser);
         return ResponseEntity.noContent().build();
     }
+
+    /** Get trips published by the current user (all statuses). */
+    @GetMapping("/mine")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<TripResponse>> getMyTrips(
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(tripService.getMyTrips(currentUser));
+    }
+
+    /** Get booking requests sent by the current user. */
+    @GetMapping("/bookings/mine")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<TripBookingResponse>> getMyBookings(
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(tripService.getMyBookings(currentUser));
+    }
 }
