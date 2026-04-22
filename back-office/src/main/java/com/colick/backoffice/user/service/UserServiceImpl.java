@@ -49,6 +49,7 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserAlreadyExistsException("A user with email " + request.getEmail() + " already exists");
         }
+        String signupToken = UUID.randomUUID().toString();
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -56,9 +57,18 @@ public class UserServiceImpl implements UserService {
                 .phone(request.getPhone())
                 .identityDocument(request.getIdentityDocument())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .enabled(false)
+                .signupConfirmToken(signupToken)
+                .signupConfirmTokenExpiresAt(LocalDateTime.now().plusHours(24))
                 .role(User.Role.USER)
                 .build();
-        return UserResponse.from(userRepository.save(user));
+        User createdUser = userRepository.save(user);
+        emailService.sendHtmlEmail(
+                createdUser.getEmail(),
+                "Confirmez votre compte Colick / Confirm your Colick account",
+                buildSignupConfirmationHtml(createdUser.getFirstName(), buildConfirmEmailUrl(signupToken))
+        );
+        return UserResponse.from(createdUser);
     }
 
     @Override
@@ -160,10 +170,24 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public UserResponse confirmEmailChange(String token) {
+        User signupUser = userRepository.findBySignupConfirmToken(token).orElse(null);
+        if (signupUser != null) {
+            if (isExpired(signupUser.getSignupConfirmTokenExpiresAt())) {
+                throw new ResourceNotFoundException("Token has expired");
+            }
+            signupUser.setEnabled(true);
+            signupUser.setSignupConfirmToken(null);
+            signupUser.setSignupConfirmTokenExpiresAt(null);
+            return UserResponse.from(userRepository.save(signupUser));
+        }
+
         User user = userRepository.findByEmailConfirmToken(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid or expired token"));
-        if (user.getEmailConfirmTokenExpiresAt().isBefore(LocalDateTime.now())) {
+        if (isExpired(user.getEmailConfirmTokenExpiresAt())) {
             throw new ResourceNotFoundException("Token has expired");
+        }
+        if (user.getPendingEmail() == null || user.getPendingEmail().isBlank()) {
+            throw new ResourceNotFoundException("Invalid or expired token");
         }
         user.setEmail(user.getPendingEmail());
         user.setPendingEmail(null);
@@ -192,5 +216,69 @@ public class UserServiceImpl implements UserService {
     private User findOrThrow(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+    }
+
+    private boolean isExpired(LocalDateTime expiresAt) {
+        return expiresAt == null || expiresAt.isBefore(LocalDateTime.now());
+    }
+
+    private String buildSignupConfirmationHtml(String firstName, String confirmUrl) {
+        return String.format(
+                """
+                <!DOCTYPE html>
+                <html lang="fr">
+                <head>
+                  <meta charset="UTF-8" />
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                  <title>Confirmation de compte Colick</title>
+                </head>
+                <body style="margin:0;padding:0;background-color:#f5f5f5;font-family:Poppins,Arial,sans-serif;color:#111827;">
+                  <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:24px 0;">
+                    <tr>
+                      <td align="center">
+                        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;">
+                          <tr>
+                            <td style="background:#023047;padding:20px 24px;color:#ffffff;font-size:20px;font-weight:700;">
+                              Colick
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding:28px 24px;">
+                              <p style="margin:0 0 12px 0;font-size:16px;">Bonjour %s,</p>
+                              <p style="margin:0 0 20px 0;line-height:1.6;">
+                                Merci pour votre inscription sur Colick. Pour activer votre compte, veuillez confirmer votre adresse e-mail.
+                              </p>
+                              <p style="margin:0 0 24px 0;text-align:center;">
+                                <a href="%s" style="display:inline-block;background:#fb8500;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600;">
+                                  Activer mon compte
+                                </a>
+                              </p>
+                              <p style="margin:0 0 10px 0;font-size:14px;color:#6B7280;line-height:1.6;">
+                                Ce lien expire dans 24 heures. Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail.
+                              </p>
+                              <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
+                              <p style="margin:0 0 12px 0;font-size:16px;">Hello %s,</p>
+                              <p style="margin:0 0 20px 0;line-height:1.6;">
+                                Thanks for signing up to Colick. Please confirm your email address to activate your account.
+                              </p>
+                              <p style="margin:0 0 10px 0;font-size:14px;color:#6B7280;line-height:1.6;">
+                                This link expires in 24 hours. If you did not create this account, you can ignore this email.
+                              </p>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="background:#F9FAFB;padding:16px 24px;font-size:12px;color:#6B7280;">
+                              Besoin d'aide / Need help? <span style="color:#219ebc;">support@colick.app</span>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </body>
+                </html>
+                """,
+                firstName, confirmUrl, firstName
+        );
     }
 }

@@ -18,4 +18,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /** Looks up a user by the one-time e-mail confirmation token. */
     Optional<User> findByEmailConfirmToken(String token);
+
+    /** Looks up a user by the signup confirmation token. */
+    Optional<User> findBySignupConfirmToken(String token);
 }

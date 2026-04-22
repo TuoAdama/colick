@@ -39,6 +39,11 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    /** Whether this account is activated and allowed to log in. */
+    @Column
+    @Builder.Default
+    private Boolean enabled = true;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
@@ -59,6 +64,14 @@ public class User {
     /** Expiry timestamp of the e-mail confirmation token (nullable). */
     @Column
     private LocalDateTime emailConfirmTokenExpiresAt;
+
+    /** One-time token used to confirm account signup (nullable). */
+    @Column
+    private String signupConfirmToken;
+
+    /** Expiry timestamp of the signup confirmation token (nullable). */
+    @Column
+    private LocalDateTime signupConfirmTokenExpiresAt;
 
     public enum Role {
         USER, ADMIN

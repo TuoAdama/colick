@@ -16,9 +16,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -80,7 +83,16 @@ class UserServiceImplTest {
 
         assertThat(response.getEmail()).isEqualTo("john@example.com");
         assertThat(response.getFirstName()).isEqualTo("John");
-        verify(userRepository).save(any(User.class));
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getEnabled()).isFalse();
+        assertThat(userCaptor.getValue().getSignupConfirmToken()).isNotBlank();
+        assertThat(userCaptor.getValue().getSignupConfirmTokenExpiresAt()).isAfter(LocalDateTime.now());
+        verify(emailService).sendHtmlEmail(
+                eq("john@example.com"),
+                contains("Confirm"),
+                contains("confirm-email?token=")
+        );
     }
 
     @Test
@@ -169,5 +181,35 @@ class UserServiceImplTest {
                 anyString(),
                 argThat(body -> body.contains("https://app.colick.com/confirm-email?token="))
         );
+    }
+
+    @Test
+    void confirmEmailChange_shouldActivateUser_whenSignupTokenIsValid() {
+        sampleUser.setEnabled(false);
+        sampleUser.setSignupConfirmToken("signup-token");
+        sampleUser.setSignupConfirmTokenExpiresAt(LocalDateTime.now().plusHours(1));
+
+        when(userRepository.findBySignupConfirmToken("signup-token")).thenReturn(Optional.of(sampleUser));
+        when(userRepository.save(any(User.class))).thenReturn(sampleUser);
+
+        UserResponse response = userService.confirmEmailChange("signup-token");
+
+        assertThat(response.getEmail()).isEqualTo("john@example.com");
+        assertThat(sampleUser.getEnabled()).isTrue();
+        assertThat(sampleUser.getSignupConfirmToken()).isNull();
+        assertThat(sampleUser.getSignupConfirmTokenExpiresAt()).isNull();
+    }
+
+    @Test
+    void confirmEmailChange_shouldThrow_whenSignupTokenExpired() {
+        sampleUser.setEnabled(false);
+        sampleUser.setSignupConfirmToken("signup-token");
+        sampleUser.setSignupConfirmTokenExpiresAt(LocalDateTime.now().minusMinutes(1));
+
+        when(userRepository.findBySignupConfirmToken("signup-token")).thenReturn(Optional.of(sampleUser));
+
+        assertThatThrownBy(() -> userService.confirmEmailChange("signup-token"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("expired");
     }
 }
