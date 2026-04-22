@@ -1,7 +1,9 @@
 package com.colick.backoffice.user;
 
+import com.colick.backoffice.email.EmailService;
 import com.colick.backoffice.exception.ResourceNotFoundException;
 import com.colick.backoffice.exception.UserAlreadyExistsException;
+import com.colick.backoffice.file.FileStorageService;
 import com.colick.backoffice.user.dto.CreateUserRequest;
 import com.colick.backoffice.user.dto.UpdateUserRequest;
 import com.colick.backoffice.user.dto.UserResponse;
@@ -15,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +25,9 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +38,12 @@ class UserServiceImplTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private FileStorageService fileStorageService;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -142,5 +153,21 @@ class UserServiceImplTest {
 
         assertThatThrownBy(() -> userService.deleteUser(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void requestEmailChange_shouldUseConfiguredFrontendBaseUrlInEmailLink() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+        when(userRepository.existsByEmail("new@example.com")).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenReturn(sampleUser);
+        ReflectionTestUtils.setField(userService, "frontendBaseUrl", "https://app.colick.com/");
+
+        userService.requestEmailChange(1L, "new@example.com");
+
+        verify(emailService).sendEmail(
+                eq("new@example.com"),
+                anyString(),
+                argThat(body -> body.contains("https://app.colick.com/confirm-email?token="))
+        );
     }
 }

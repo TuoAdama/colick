@@ -9,6 +9,7 @@ import com.colick.backoffice.user.dto.UpdateUserRequest;
 import com.colick.backoffice.user.dto.UserResponse;
 import com.colick.backoffice.user.entity.User;
 import com.colick.backoffice.user.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,8 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
     private final EmailService emailService;
+    @Value("${app.frontend.base-url:http://localhost:4200}")
+    private String frontendBaseUrl;
 
     public UserServiceImpl(UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
@@ -126,7 +129,7 @@ public class UserServiceImpl implements UserService {
         user.setEmailConfirmTokenExpiresAt(LocalDateTime.now().plusHours(24));
         userRepository.save(user);
 
-        String confirmUrl = "http://localhost:4200/confirm-email?token=" + token;
+        String confirmUrl = buildConfirmEmailUrl(token);
         emailService.sendEmail(
                 newEmail,
                 "Confirmez votre nouvelle adresse e-mail — Colick",
@@ -139,6 +142,16 @@ public class UserServiceImpl implements UserService {
                         user.getFirstName(), confirmUrl
                 )
         );
+    }
+
+    private String buildConfirmEmailUrl(String token) {
+        String baseUrl = (frontendBaseUrl == null || frontendBaseUrl.isBlank())
+                ? "http://localhost:4200"
+                : frontendBaseUrl.trim();
+        if (baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        }
+        return baseUrl + "/confirm-email?token=" + token;
     }
 
     /**
