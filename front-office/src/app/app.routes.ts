@@ -49,4 +49,19 @@ export const routes: Routes = [
         (m) => m.MessagesPageComponent
       ),
   },
+  {
+    path: 'confirm-email',
+    loadComponent: () =>
+      import('./pages/confirm-email/confirm-email-page.component').then(
+        (m) => m.ConfirmEmailPageComponent
+      ),
+  },
+  {
+    path: 'dashboard',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/dashboard/dashboard-page.component').then(
+        (m) => m.DashboardPageComponent
+      ),
+  },
 ];

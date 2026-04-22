@@ -50,4 +50,10 @@ public interface TripService {
      * @return matching trips with their available weight computed
      */
     List<TripResponse> searchTrips(String departure, String destination);
+
+    /** Returns all trips published by the given user (all statuses). */
+    List<TripResponse> getMyTrips(User user);
+
+    /** Returns all booking requests sent by the given user. */
+    List<TripBookingResponse> getMyBookings(User user);
 }

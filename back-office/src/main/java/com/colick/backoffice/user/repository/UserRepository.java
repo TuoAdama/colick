@@ -15,4 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
     boolean existsByEmail(String email);
+
+    /** Looks up a user by the one-time e-mail confirmation token. */
+    Optional<User> findByEmailConfirmToken(String token);
 }

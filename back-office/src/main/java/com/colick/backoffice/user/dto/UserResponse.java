@@ -17,6 +17,7 @@ public class UserResponse {
     private String email;
     private String phone;
     private String identityDocument;
+    private String photoUrl;
     private User.Role role;
 
     /**
@@ -30,6 +31,7 @@ public class UserResponse {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .identityDocument(user.getIdentityDocument())
+                .photoUrl(user.getPhotoUrl())
                 .role(user.getRole())
                 .build();
     }

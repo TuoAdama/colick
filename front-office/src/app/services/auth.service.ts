@@ -1,11 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
-import { AuthResponse, LoginRequest, RegisterRequest, UserResponse } from '../models/auth.model';
+import {
+  AuthResponse,
+  ChangeEmailRequest,
+  ChangePasswordRequest,
+  LoginRequest,
+  RegisterRequest,
+  UpdateProfileRequest,
+  UserResponse,
+} from '../models/auth.model';
 
-/**
- * Service for authentication operations (login, register, token management).
- */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -45,6 +50,51 @@ export class AuthService {
 
   getUser(): UserResponse | null {
     return this.currentUserSubject.getValue();
+  }
+
+  /** Update basic profile info (firstName, lastName, phone, identityDocument). */
+  updateProfile(id: number, data: UpdateProfileRequest): Observable<UserResponse> {
+    return this.http.put<UserResponse>(`/api/users/${id}`, data).pipe(
+      tap((user) => {
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        this.currentUserSubject.next(user);
+      })
+    );
+  }
+
+  /** Upload a profile photo (multipart). */
+  uploadPhoto(id: number, file: File): Observable<UserResponse> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<UserResponse>(`/api/users/${id}/photo`, form).pipe(
+      tap((user) => {
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        this.currentUserSubject.next(user);
+      })
+    );
+  }
+
+  /** Request an e-mail change (sends confirmation link to the new address). */
+  requestEmailChange(id: number, newEmail: string): Observable<void> {
+    return this.http.post<void>(`/api/users/${id}/change-email`, { newEmail } as ChangeEmailRequest);
+  }
+
+  /** Confirm the e-mail change using the token received by e-mail. */
+  confirmEmailChange(token: string): Observable<UserResponse> {
+    return this.http.get<UserResponse>(`/api/users/confirm-email`, { params: { token } }).pipe(
+      tap((user) => {
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        this.currentUserSubject.next(user);
+      })
+    );
+  }
+
+  /** Change password (requires old password). */
+  changePassword(id: number, oldPassword: string, newPassword: string): Observable<UserResponse> {
+    return this.http.put<UserResponse>(`/api/users/${id}/change-password`, {
+      oldPassword,
+      newPassword,
+    } as ChangePasswordRequest);
   }
 
   private getStoredUser(): UserResponse | null {

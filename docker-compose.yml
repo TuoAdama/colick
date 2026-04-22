@@ -58,6 +58,7 @@ services:
     volumes:
       # Mount source code for hot reload
       - ./front-office/src:/app/src
+      - ./front-office/public:/app/public
       # Mount Angular config files
       - ./front-office/angular.json:/app/angular.json
       - ./front-office/tailwind.config.js:/app/tailwind.config.js

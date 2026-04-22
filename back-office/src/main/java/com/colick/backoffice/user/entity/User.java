@@ -3,6 +3,8 @@ package com.colick.backoffice.user.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 /**
  * Represents an application user (traveler or sender).
  */
@@ -41,6 +43,22 @@ public class User {
     @Column(nullable = false)
     @Builder.Default
     private Role role = Role.USER;
+
+    /** URL path to the user's profile photo (nullable). */
+    @Column
+    private String photoUrl;
+
+    /** Pending new e-mail address waiting for token confirmation (nullable). */
+    @Column
+    private String pendingEmail;
+
+    /** One-time token used to confirm an e-mail change request (nullable). */
+    @Column
+    private String emailConfirmToken;
+
+    /** Expiry timestamp of the e-mail confirmation token (nullable). */
+    @Column
+    private LocalDateTime emailConfirmTokenExpiresAt;
 
     public enum Role {
         USER, ADMIN

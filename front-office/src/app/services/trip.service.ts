@@ -5,7 +5,7 @@ import { Trip, CreateTripDto } from '../models/trip.model';
 import { CreateBookingRequest, BookingResponse } from '../models/booking.model';
 
 /**
- * Service responsible for trip search and booking operations.
+ * Service responsible for trip search, creation, and booking operations.
  */
 @Injectable({
   providedIn: 'root',
@@ -30,5 +30,30 @@ export class TripService {
   /** Create a booking request for a specific trip. */
   createBooking(tripId: number, request: CreateBookingRequest): Observable<BookingResponse> {
     return this.http.post<BookingResponse>(`${this.baseUrl}/${tripId}/bookings`, request);
+  }
+
+  /** Get trips published by the current user. */
+  getMyTrips(): Observable<Trip[]> {
+    return this.http.get<Trip[]>(`${this.baseUrl}/mine`);
+  }
+
+  /** Get booking requests sent by the current user. */
+  getMyBookings(): Observable<BookingResponse[]> {
+    return this.http.get<BookingResponse[]>(`${this.baseUrl}/bookings/mine`);
+  }
+
+  /** Get bookings for a specific trip (received reservations). */
+  getTripBookings(tripId: number): Observable<BookingResponse[]> {
+    return this.http.get<BookingResponse[]>(`${this.baseUrl}/${tripId}/bookings`);
+  }
+
+  /** Accept a booking. */
+  acceptBooking(tripId: number, bookingId: number): Observable<BookingResponse> {
+    return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/accept`, {});
+  }
+
+  /** Reject a booking. */
+  rejectBooking(tripId: number, bookingId: number): Observable<BookingResponse> {
+    return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/reject`, {});
   }
 }
