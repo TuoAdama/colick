@@ -38,9 +38,9 @@ export class LoginPageComponent {
         this.isLoading = false;
         this.router.navigate(['/search']);
       },
-      error: () => {
+      error: (err: any) => {
         this.isLoading = false;
-        this.errorMessage = 'Email ou mot de passe incorrect.';
+        this.errorMessage = err?.error?.message || 'Email ou mot de passe incorrect.';
       },
     });
   }

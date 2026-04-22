@@ -79,12 +79,14 @@ export class AuthService {
     return this.http.post<void>(`/api/users/${id}/change-email`, { newEmail } as ChangeEmailRequest);
   }
 
-  /** Confirm the e-mail change using the token received by e-mail. */
-  confirmEmailChange(token: string): Observable<UserResponse> {
+  /** Confirm email token (signup activation or email change). */
+  confirmEmail(token: string): Observable<UserResponse> {
     return this.http.get<UserResponse>(`/api/users/confirm-email`, { params: { token } }).pipe(
       tap((user) => {
-        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-        this.currentUserSubject.next(user);
+        if (this.isLoggedIn()) {
+          localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+          this.currentUserSubject.next(user);
+        }
       })
     );
   }
