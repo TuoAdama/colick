@@ -16,14 +16,14 @@ export class ConfirmEmailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
 
   state: State = 'loading';
-  newEmail = '';
+  email = '';
 
   ngOnInit(): void {
     const token = this.route.snapshot.queryParamMap.get('token');
     if (!token) { this.state = 'error'; return; }
-    this.authService.confirmEmailChange(token).subscribe({
+    this.authService.confirmEmail(token).subscribe({
       next: (user) => {
-        this.newEmail = user.email;
+        this.email = user.email;
         this.state = 'success';
       },
       error: () => { this.state = 'error'; },

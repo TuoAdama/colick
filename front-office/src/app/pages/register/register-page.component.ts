@@ -50,8 +50,8 @@ export class RegisterPageComponent {
     }).subscribe({
       next: () => {
         this.isLoading = false;
-        this.successMessage = 'Compte créé ! Vous pouvez vous connecter.';
-        setTimeout(() => this.router.navigate(['/login']), 2000);
+        this.successMessage = "Compte créé. Vérifiez votre e-mail pour activer votre compte avant de vous connecter.";
+        setTimeout(() => this.router.navigate(['/login']), 2500);
       },
       error: (err: any) => {
         this.isLoading = false;

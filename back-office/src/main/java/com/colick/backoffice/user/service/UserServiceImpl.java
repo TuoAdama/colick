@@ -49,6 +49,7 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserAlreadyExistsException("A user with email " + request.getEmail() + " already exists");
         }
+        String signupToken = UUID.randomUUID().toString();
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -56,9 +57,18 @@ public class UserServiceImpl implements UserService {
                 .phone(request.getPhone())
                 .identityDocument(request.getIdentityDocument())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .enabled(false)
+                .signupConfirmToken(signupToken)
+                .signupConfirmTokenExpiresAt(LocalDateTime.now().plusHours(24))
                 .role(User.Role.USER)
                 .build();
-        return UserResponse.from(userRepository.save(user));
+        User createdUser = userRepository.save(user);
+        emailService.sendSignupActivationEmail(
+                createdUser.getEmail(),
+                createdUser.getFirstName(),
+                buildConfirmEmailUrl(signupToken)
+        );
+        return UserResponse.from(createdUser);
     }
 
     @Override
@@ -130,17 +140,10 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         String confirmUrl = buildConfirmEmailUrl(token);
-        emailService.sendEmail(
+        emailService.sendEmailChangeConfirmationEmail(
                 newEmail,
-                "Confirmez votre nouvelle adresse e-mail — Colick",
-                String.format(
-                        "Bonjour %s,%n%nVous avez demandé à modifier votre adresse e-mail sur Colick.%n%n"
-                                + "Cliquez sur le lien ci-dessous pour confirmer :%n%s%n%n"
-                                + "Ce lien expire dans 24 heures.%n%n"
-                                + "Si vous n'avez pas fait cette demande, ignorez cet e-mail.%n%n"
-                                + "Cordialement,%nL'équipe Colick",
-                        user.getFirstName(), confirmUrl
-                )
+                user.getFirstName(),
+                confirmUrl
         );
     }
 
@@ -160,10 +163,24 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public UserResponse confirmEmailChange(String token) {
+        User signupUser = userRepository.findBySignupConfirmToken(token).orElse(null);
+        if (signupUser != null) {
+            if (isExpired(signupUser.getSignupConfirmTokenExpiresAt())) {
+                throw new ResourceNotFoundException("Token has expired");
+            }
+            signupUser.setEnabled(true);
+            signupUser.setSignupConfirmToken(null);
+            signupUser.setSignupConfirmTokenExpiresAt(null);
+            return UserResponse.from(userRepository.save(signupUser));
+        }
+
         User user = userRepository.findByEmailConfirmToken(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid or expired token"));
-        if (user.getEmailConfirmTokenExpiresAt().isBefore(LocalDateTime.now())) {
+        if (isExpired(user.getEmailConfirmTokenExpiresAt())) {
             throw new ResourceNotFoundException("Token has expired");
+        }
+        if (user.getPendingEmail() == null || user.getPendingEmail().isBlank()) {
+            throw new ResourceNotFoundException("Invalid or expired token");
         }
         user.setEmail(user.getPendingEmail());
         user.setPendingEmail(null);
@@ -193,4 +210,9 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
     }
+
+    private boolean isExpired(LocalDateTime expiresAt) {
+        return expiresAt == null || expiresAt.isBefore(LocalDateTime.now());
+    }
+
 }
