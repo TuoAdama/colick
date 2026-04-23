@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AutocompleteComponent } from '../../shared/components/autocomplete/autocomplete.component';
 import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
 import { TripService } from '../../services/trip.service';
@@ -21,17 +22,24 @@ import { BookingResponse } from '../../models/booking.model';
   imports: [CommonModule, RouterLink, AutocompleteComponent, BookingModalComponent],
   templateUrl: './search-page.component.html',
 })
-export class SearchPageComponent {
+export class SearchPageComponent implements OnInit, OnDestroy {
   private readonly tripService = inject(TripService);
   private readonly authService = inject(AuthService);
   private readonly messagingService = inject(MessagingService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private queryParamsSubscription?: Subscription;
+  private lastAutoSearchKey = '';
 
   /** Selected departure location */
   departure: Location | null = null;
 
   /** Selected destination location */
   destination: Location | null = null;
+
+  /** Initial values prefilled from URL query params */
+  departureQuery = '';
+  destinationQuery = '';
 
   /** Search results */
   trips: Trip[] = [];
@@ -78,18 +86,60 @@ export class SearchPageComponent {
   /**
    * Execute trip search with selected departure and destination
    */
+  ngOnInit(): void {
+    this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
+      const from = params.get('from')?.trim() ?? '';
+      const to = params.get('to')?.trim() ?? '';
+
+      if (!from && !to) {
+        return;
+      }
+
+      this.departureQuery = from;
+      this.destinationQuery = to;
+
+      if (from) {
+        this.departure = this.createLocationFromQuery(from);
+      }
+      if (to) {
+        this.destination = this.createLocationFromQuery(to);
+      }
+
+      if (!from || !to) {
+        return;
+      }
+
+      const searchKey = `${from}::${to}`;
+      if (searchKey === this.lastAutoSearchKey) {
+        return;
+      }
+
+      this.lastAutoSearchKey = searchKey;
+      this.searchTripsByNames(from, to);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.queryParamsSubscription?.unsubscribe();
+  }
+
   searchTrips(): void {
     if (!this.isFormValid || !this.departure || !this.destination) {
       return;
     }
 
+    this.lastAutoSearchKey = `${this.departure.name}::${this.destination.name}`;
+    this.searchTripsByNames(this.departure.name, this.destination.name);
+  }
+
+  private searchTripsByNames(departure: string, destination: string): void {
     this.isLoading = true;
     this.hasSearched = true;
     this.errorMessage = '';
     this.trips = [];
 
     this.tripService
-      .searchTrips(this.departure.name, this.destination.name)
+      .searchTrips(departure, destination)
       .subscribe({
         next: (results) => {
           this.trips = results;
@@ -101,6 +151,15 @@ export class SearchPageComponent {
           this.isLoading = false;
         },
       });
+  }
+
+  private createLocationFromQuery(name: string): Location {
+    return {
+      id: 0,
+      name,
+      country: '',
+      type: 'city',
+    };
   }
 
   /**
