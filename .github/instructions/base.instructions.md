@@ -1,0 +1,2 @@
+- Ne code jamais en dur une variable qui peut-être utilisée par d'autres services dans l'application (comme l'expéditeur d'un mail dans un template, etc)
+- Avant de coder une variable en dur, demande si elle peut être définie dans les configs de Spring ou Angular
