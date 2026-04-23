@@ -6,6 +6,8 @@ import {
   inject,
   OnInit,
   OnDestroy,
+  OnChanges,
+  SimpleChanges,
   ElementRef,
   ViewChild,
   HostListener,
@@ -28,12 +30,15 @@ import { Location } from '../../../models/location.model';
   imports: [CommonModule, FormsModule],
   templateUrl: './autocomplete.component.html',
 })
-export class AutocompleteComponent implements OnInit, OnDestroy {
+export class AutocompleteComponent implements OnInit, OnDestroy, OnChanges {
   /** Label text displayed above the input */
   @Input() label = '';
 
   /** Placeholder text for the input field */
   @Input() placeholder = '';
+
+  /** Optional initial query text provided by parent */
+  @Input() initialQuery = '';
 
   /** SVG path for the icon displayed in the input */
   @Input() icon = '';
@@ -96,6 +101,22 @@ export class AutocompleteComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.searchSubscription?.unsubscribe();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!changes['initialQuery']) {
+      return;
+    }
+
+    const nextQuery = this.initialQuery ?? '';
+    if (nextQuery === this.query) {
+      return;
+    }
+
+    this.query = nextQuery;
+    this.suggestions = [];
+    this.isOpen = false;
+    this.hasSelected = nextQuery.length > 0;
   }
 
   /**
