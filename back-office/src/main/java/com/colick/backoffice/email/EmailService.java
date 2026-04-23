@@ -3,6 +3,7 @@ package com.colick.backoffice.email;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -19,10 +20,17 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
+    private final String fromAddress;
+    private final String supportEmail;
 
-    public EmailService(JavaMailSender mailSender, SpringTemplateEngine templateEngine) {
+    public EmailService(JavaMailSender mailSender,
+                        SpringTemplateEngine templateEngine,
+                        @Value("${app.mail.from-address:noreply@colick.app}") String fromAddress,
+                        @Value("${app.mail.support-email:support@colick.app}") String supportEmail) {
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
+        this.fromAddress = fromAddress;
+        this.supportEmail = supportEmail;
     }
 
     public void sendEmail(String to, String subject, String body) {
@@ -30,7 +38,7 @@ public class EmailService {
         message.setTo(to);
         message.setSubject(subject);
         message.setText(body);
-        message.setFrom("noreply@colick.app");
+        message.setFrom(fromAddress);
         mailSender.send(message);
     }
 
@@ -39,7 +47,7 @@ public class EmailService {
                 to,
                 "Confirmez votre compte Colick / Confirm your Colick account",
                 "email/signup-activation",
-                Map.of("firstName", firstName, "confirmUrl", confirmUrl)
+                Map.of("firstName", firstName, "confirmUrl", confirmUrl, "supportEmail", supportEmail)
         );
     }
 
@@ -48,7 +56,7 @@ public class EmailService {
                 to,
                 "Confirmez votre nouvelle adresse e-mail / Confirm your new email address",
                 "email/change-email-confirmation",
-                Map.of("firstName", firstName, "confirmUrl", confirmUrl)
+                Map.of("firstName", firstName, "confirmUrl", confirmUrl, "supportEmail", supportEmail)
         );
     }
 
@@ -63,7 +71,7 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlBody, true);
-            helper.setFrom("noreply@colick.app");
+            helper.setFrom(fromAddress);
             mailSender.send(message);
         } catch (MessagingException ex) {
             throw new IllegalStateException("Unable to send HTML email", ex);
