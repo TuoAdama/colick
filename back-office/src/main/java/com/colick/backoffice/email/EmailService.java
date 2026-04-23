@@ -6,6 +6,10 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+
+import java.util.Map;
 
 /**
  * Service for sending transactional emails.
@@ -14,18 +18,13 @@ import jakarta.mail.internet.MimeMessage;
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final SpringTemplateEngine templateEngine;
 
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(JavaMailSender mailSender, SpringTemplateEngine templateEngine) {
         this.mailSender = mailSender;
+        this.templateEngine = templateEngine;
     }
 
-    /**
-     * Sends a plain-text email.
-     *
-     * @param to      recipient email address
-     * @param subject email subject
-     * @param body    email body
-     */
     public void sendEmail(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
@@ -35,14 +34,29 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    /**
-     * Sends an HTML email.
-     *
-     * @param to       recipient email address
-     * @param subject  email subject
-     * @param htmlBody HTML body
-     */
-    public void sendHtmlEmail(String to, String subject, String htmlBody) {
+    public void sendSignupActivationEmail(String to, String firstName, String confirmUrl) {
+        sendTemplateEmail(
+                to,
+                "Confirmez votre compte Colick / Confirm your Colick account",
+                "email/signup-activation",
+                Map.of("firstName", firstName, "confirmUrl", confirmUrl)
+        );
+    }
+
+    public void sendEmailChangeConfirmationEmail(String to, String firstName, String confirmUrl) {
+        sendTemplateEmail(
+                to,
+                "Confirmez votre nouvelle adresse e-mail / Confirm your new email address",
+                "email/change-email-confirmation",
+                Map.of("firstName", firstName, "confirmUrl", confirmUrl)
+        );
+    }
+
+    private void sendTemplateEmail(String to, String subject, String templateName, Map<String, Object> variables) {
+        Context context = new Context();
+        variables.forEach(context::setVariable);
+        String htmlBody = templateEngine.process(templateName, context);
+
         MimeMessage message = mailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");

@@ -27,8 +27,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -88,9 +86,9 @@ class UserServiceImplTest {
         assertThat(userCaptor.getValue().getEnabled()).isFalse();
         assertThat(userCaptor.getValue().getSignupConfirmToken()).isNotBlank();
         assertThat(userCaptor.getValue().getSignupConfirmTokenExpiresAt()).isAfter(LocalDateTime.now());
-        verify(emailService).sendHtmlEmail(
+        verify(emailService).sendSignupActivationEmail(
                 eq("john@example.com"),
-                contains("Confirm"),
+                eq("John"),
                 contains("confirm-email?token=")
         );
     }
@@ -176,10 +174,10 @@ class UserServiceImplTest {
 
         userService.requestEmailChange(1L, "new@example.com");
 
-        verify(emailService).sendEmail(
+        verify(emailService).sendEmailChangeConfirmationEmail(
                 eq("new@example.com"),
-                anyString(),
-                argThat(body -> body.contains("https://app.colick.com/confirm-email?token="))
+                eq("John"),
+                contains("https://app.colick.com/confirm-email?token=")
         );
     }
 
