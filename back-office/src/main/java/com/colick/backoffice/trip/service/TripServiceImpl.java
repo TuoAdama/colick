@@ -105,6 +105,10 @@ public class TripServiceImpl implements TripService {
     public TripBookingResponse createBooking(Long tripId, CreateBookingRequest request, User sender) {
         Trip trip = findTripOrThrow(tripId);
 
+        if (trip.getTraveler().getId().equals(sender.getId())) {
+            throw new IllegalArgumentException("You cannot create a booking request for your own trip");
+        }
+
         // Validate that the requested weight does not exceed the available weight
         BigDecimal availableWeight = computeAvailableWeight(trip);
         if (request.getWeight() != null && request.getWeight().compareTo(availableWeight) > 0) {

@@ -10,6 +10,7 @@ import { MessagingService } from '../../services/messaging.service';
 import { Location } from '../../models/location.model';
 import { Trip } from '../../models/trip.model';
 import { BookingResponse } from '../../models/booking.model';
+import { UserResponse } from '../../models/auth.model';
 
 /**
  * SearchPageComponent - Page for searching trips by departure and destination.
@@ -171,6 +172,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       this.router.navigate(['/login']);
       return;
     }
+    if (this.isOwnTrip(trip)) {
+      return;
+    }
     this.selectedTrip = trip;
     this.isBookingModalOpen = true;
   }
@@ -222,6 +226,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
   contactTraveler(trip: Trip): void {
     if (!this.authService.isLoggedIn()) { this.router.navigate(['/login']); return; }
+    if (this.isOwnTrip(trip)) {
+      return;
+    }
     this.messagingService.startConversation({
       tripId: trip.id, recipientId: trip.travelerId,
       content: 'Bonjour, je suis interesse par votre voyage ' + trip.departureAddress + ' vers ' + trip.destination + '.',
@@ -229,5 +236,10 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       next: () => this.router.navigate(['/messages']),
       error: () => { this.errorMessage = 'Impossible de demarrer la conversation.'; },
     });
+  }
+
+  isOwnTrip(trip: Trip): boolean {
+    const currentUser: UserResponse | null = this.authService.getUser();
+    return !!currentUser && currentUser.id === trip.travelerId;
   }
 }

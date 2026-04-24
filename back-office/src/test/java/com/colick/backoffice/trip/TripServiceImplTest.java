@@ -210,6 +210,23 @@ class TripServiceImplTest {
         assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
     }
 
+        @Test
+        void createBooking_shouldThrow_whenSenderIsTripOwner() {
+                CreateBookingRequest request = new CreateBookingRequest();
+                request.setTitle("My own trip booking");
+                request.setWeight(BigDecimal.valueOf(1));
+                request.setRecipientContact("+225 07 00 00 00");
+
+                when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+
+                assertThatThrownBy(() -> tripService.createBooking(10L, request, traveler))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessage("You cannot create a booking request for your own trip");
+
+                verify(bookingRepository, never()).save(any(TripBooking.class));
+                verify(emailService, never()).sendEmail(anyString(), anyString(), anyString());
+        }
+
     @Test
     void acceptBooking_shouldSetAcceptedAndSendEmail() {
         TripBooking booking = TripBooking.builder()
@@ -221,7 +238,7 @@ class TripServiceImplTest {
         when(bookingRepository.save(any())).thenReturn(booking);
         doNothing().when(emailService).sendEmail(anyString(), anyString(), anyString());
 
-        TripBookingResponse response = tripService.acceptBooking(10L, 1L, traveler);
+        tripService.acceptBooking(10L, 1L, traveler);
 
         assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
         verify(emailService).sendEmail(eq(sender.getEmail()), anyString(), anyString());
