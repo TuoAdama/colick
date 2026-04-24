@@ -60,6 +60,20 @@ public class EmailService {
         );
     }
 
+    public void sendPasswordResetEmail(String to, String firstName, String resetUrl, long expirationMinutes) {
+        sendTemplateEmail(
+                to,
+                "Réinitialisez votre mot de passe Colick / Reset your Colick password",
+                "email/password-reset",
+                Map.of(
+                        "firstName", firstName,
+                        "resetUrl", resetUrl,
+                        "supportEmail", supportEmail,
+                        "expirationMinutes", expirationMinutes
+                )
+        );
+    }
+
     private void sendTemplateEmail(String to, String subject, String templateName, Map<String, Object> variables) {
         Context context = new Context();
         variables.forEach(context::setVariable);

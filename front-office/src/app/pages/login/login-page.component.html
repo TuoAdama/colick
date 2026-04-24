@@ -28,6 +28,9 @@
           @if (loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')) {
             <p class="mt-1 text-xs text-error">Le mot de passe est requis</p>
           }
+          <div class="mt-2 text-right">
+            <a routerLink="/forgot-password" class="text-sm text-secondary font-medium hover:underline">Mot de passe oublié ?</a>
+          </div>
         </div>
 
         <button type="submit" [disabled]="loginForm.invalid || isLoading"
