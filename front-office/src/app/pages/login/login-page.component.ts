@@ -40,6 +40,7 @@ export class LoginPageComponent {
       },
       error: (err: any) => {
         this.isLoading = false;
+        this.loginForm.patchValue({ password: '' });
         this.errorMessage = err?.error?.message || 'Email ou mot de passe incorrect.';
       },
     });

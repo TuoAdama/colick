@@ -10,11 +10,7 @@ describe('LoginPageComponent', () => {
   let component: LoginPageComponent;
   let router: Router;
   const authServiceMock = {
-    login: jasmine.createSpy('login').and.returnValue(
-      throwError(() => ({
-        error: { message: 'Votre compte n\'est pas encore activé.' },
-      }))
-    ),
+    login: jasmine.createSpy('login'),
   };
 
   beforeEach(async () => {
@@ -33,6 +29,12 @@ describe('LoginPageComponent', () => {
   });
 
   it('shows backend activation error message', () => {
+    authServiceMock.login.and.returnValue(
+      throwError(() => ({
+        error: { message: 'Votre compte n\'est pas encore activé.' },
+      }))
+    );
+
     component.loginForm.setValue({
       email: 'john@example.com',
       password: 'password123',
@@ -40,6 +42,23 @@ describe('LoginPageComponent', () => {
 
     component.onSubmit();
 
+    expect(component.loginForm.get('password')?.value).toBe('');
+    expect(component.loginForm.get('email')?.value).toBe('john@example.com');
     expect(component.errorMessage).toContain('pas encore activé');
+  });
+
+  it('clears password and uses fallback message when backend message is missing', () => {
+    authServiceMock.login.and.returnValue(throwError(() => ({ error: {} })));
+
+    component.loginForm.setValue({
+      email: 'john@example.com',
+      password: 'password123',
+    });
+
+    component.onSubmit();
+
+    expect(component.loginForm.get('password')?.value).toBe('');
+    expect(component.loginForm.get('email')?.value).toBe('john@example.com');
+    expect(component.errorMessage).toBe('Email ou mot de passe incorrect.');
   });
 });
