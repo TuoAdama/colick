@@ -6,6 +6,7 @@ import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 import { LocationService } from '../../services/location.service';
+import { Trip } from '../../models/trip.model';
 
 describe('SearchPageComponent', () => {
   let fixture: ComponentFixture<SearchPageComponent>;
@@ -19,6 +20,7 @@ describe('SearchPageComponent', () => {
 
   const authServiceMock = {
     isLoggedIn: jasmine.createSpy('isLoggedIn').and.returnValue(false),
+    getUser: jasmine.createSpy('getUser').and.returnValue(null),
   };
 
   const messagingServiceMock = {
@@ -78,5 +80,40 @@ describe('SearchPageComponent', () => {
     queryParamMapSubject.next(convertToParamMap({ from: 'Paris', to: 'Abidjan' }));
 
     expect(tripServiceMock.searchTrips).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns true for own trip and false for other trip', () => {
+    authServiceMock.getUser.and.returnValue({ id: 7 });
+    const ownTrip = { id: 1, travelerId: 7 } as Trip;
+    const otherTrip = { id: 2, travelerId: 9 } as Trip;
+
+    expect(component.isOwnTrip(ownTrip)).toBeTrue();
+    expect(component.isOwnTrip(otherTrip)).toBeFalse();
+  });
+
+  it('does not open booking modal for own trip', () => {
+    authServiceMock.isLoggedIn.and.returnValue(true);
+    authServiceMock.getUser.and.returnValue({ id: 3 });
+    const ownTrip = { id: 10, travelerId: 3 } as Trip;
+
+    component.openBookingModal(ownTrip);
+
+    expect(component.isBookingModalOpen).toBeFalse();
+    expect(component.selectedTrip).toBeNull();
+  });
+
+  it('does not start conversation for own trip', () => {
+    authServiceMock.isLoggedIn.and.returnValue(true);
+    authServiceMock.getUser.and.returnValue({ id: 3 });
+    const ownTrip = {
+      id: 10,
+      travelerId: 3,
+      departureAddress: 'Paris',
+      destination: 'Abidjan',
+    } as Trip;
+
+    component.contactTraveler(ownTrip);
+
+    expect(messagingServiceMock.startConversation).not.toHaveBeenCalled();
   });
 });
