@@ -5,8 +5,10 @@ import {
   AuthResponse,
   ChangeEmailRequest,
   ChangePasswordRequest,
+  ForgotPasswordRequest,
   LoginRequest,
   RegisterRequest,
+  ResetPasswordRequest,
   UpdateProfileRequest,
   UserResponse,
 } from '../models/auth.model';
@@ -97,6 +99,20 @@ export class AuthService {
       oldPassword,
       newPassword,
     } as ChangePasswordRequest);
+  }
+
+  /** Request a password reset link. */
+  forgotPassword(email: string): Observable<void> {
+    return this.http.post<void>('/api/auth/forgot-password', { email } as ForgotPasswordRequest);
+  }
+
+  /** Confirm password reset with token and new password. */
+  resetPassword(token: string, newPassword: string, confirmPassword: string): Observable<void> {
+    return this.http.post<void>('/api/auth/reset-password', {
+      token,
+      newPassword,
+      confirmPassword,
+    } as ResetPasswordRequest);
   }
 
   private getStoredUser(): UserResponse | null {

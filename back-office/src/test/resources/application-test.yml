@@ -39,3 +39,7 @@ app:
     base-url: http://localhost:4200
   cors:
     allowed-origins: http://localhost:4200
+  auth:
+    password-reset:
+      base-url: http://localhost:4200/reset-password
+      expiration-minutes: 60
