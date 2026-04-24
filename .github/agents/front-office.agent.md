@@ -14,7 +14,7 @@ You are an Angular expert responsible for all frontend development of the Colick
 - Do NOT touch `back-office/` files.
 
 ## Approach
-1. Before each implementation, read .github/instructions/workflow.instructions.md to understand the requirements.
+1. Before each implementation, if not already done, read .github/instructions/workflow.instructions.md to understand the requirements.
 2. Analyse the feature requirement: identify which components, services, and routes are needed.
 3. Decompose the UI into small, focused, reusable Angular components (single responsibility).
 4. For visual implementation of any component, delegate to the **ui-design** agent.
