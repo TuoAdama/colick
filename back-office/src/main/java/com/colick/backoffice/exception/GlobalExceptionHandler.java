@@ -1,6 +1,5 @@
 package com.colick.backoffice.exception;
 
-import com.colick.backoffice.exception.UserAlreadyExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -35,8 +34,8 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
     }
 
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ApiError> handleConflict(UserAlreadyExistsException ex) {
+    @ExceptionHandler({UserAlreadyExistsException.class, TripBookingConflictException.class})
+    public ResponseEntity<ApiError> handleConflict(RuntimeException ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(new ApiError(HttpStatus.CONFLICT.value(), ex.getMessage()));

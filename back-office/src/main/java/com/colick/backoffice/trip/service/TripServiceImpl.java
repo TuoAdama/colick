@@ -1,6 +1,7 @@
 package com.colick.backoffice.trip.service;
 
 import com.colick.backoffice.email.EmailService;
+import com.colick.backoffice.exception.TripBookingConflictException;
 import com.colick.backoffice.exception.ResourceNotFoundException;
 import com.colick.backoffice.location.entity.LocationType;
 import com.colick.backoffice.location.repository.LocationRepository;
@@ -107,6 +108,14 @@ public class TripServiceImpl implements TripService {
 
         if (trip.getTraveler().getId().equals(sender.getId())) {
             throw new IllegalArgumentException("You cannot create a booking request for your own trip");
+        }
+
+        if (bookingRepository.existsByTripAndSenderAndStatusNot(
+                trip,
+                sender,
+                TripBooking.BookingStatus.REJECTED
+        )) {
+            throw new TripBookingConflictException("Vous avez deja une demande en cours pour ce trajet");
         }
 
         // Validate that the requested weight does not exceed the available weight

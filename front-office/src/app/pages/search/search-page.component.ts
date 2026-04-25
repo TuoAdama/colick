@@ -45,6 +45,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   /** Search results */
   trips: Trip[] = [];
 
+  /** Booking requests already sent by the current user */
+  myBookings: BookingResponse[] = [];
+
   /** Whether a search has been performed */
   hasSearched = false;
 
@@ -88,6 +91,10 @@ export class SearchPageComponent implements OnInit, OnDestroy {
    * Execute trip search with selected departure and destination
    */
   ngOnInit(): void {
+    if (this.authService.isLoggedIn()) {
+      this.loadSentBookings();
+    }
+
     this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
       const from = params.get('from')?.trim() ?? '';
       const to = params.get('to')?.trim() ?? '';
@@ -191,6 +198,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
    * Handle successful booking creation — show a success toast.
    */
   onBookingCreated(booking: BookingResponse): void {
+    this.myBookings = [...this.myBookings, booking];
     this.bookingSuccessMessage = `Demande envoyée avec succès pour "${booking.title}" !`;
     // Auto-close modal and clear message after delay
     setTimeout(() => {
@@ -235,6 +243,21 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: () => this.router.navigate(['/messages']),
       error: () => { this.errorMessage = 'Impossible de demarrer la conversation.'; },
+    });
+  }
+
+  hasActiveBookingForTrip(tripId: number): boolean {
+    return this.myBookings.some((booking) => booking.tripId === tripId && booking.status !== 'REJECTED');
+  }
+
+  private loadSentBookings(): void {
+    this.tripService.getMyBookings().subscribe({
+      next: (bookings) => {
+        this.myBookings = bookings;
+      },
+      error: () => {
+        this.myBookings = [];
+      },
     });
   }
 
