@@ -9,13 +9,14 @@ import { TripService } from '../../services/trip.service';
 import { Trip } from '../../models/trip.model';
 import { BookingResponse } from '../../models/booking.model';
 import { UpdateProfileRequest } from '../../models/auth.model';
+import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
 
 type Tab = 'profile' | 'chats' | 'received' | 'sent';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink, ConfirmModalComponent],
   templateUrl: './dashboard-page.component.html',
 })
 export class DashboardPageComponent implements OnInit {
@@ -77,6 +78,12 @@ export class DashboardPageComponent implements OnInit {
   isLoadingTrips = false;
   isLoadingBookings = false;
   bookingActionError = '';
+  isCancellingTrip = false;
+
+  // ── Remove booking confirmation modal ─────────────────────────────────────
+  isRemoveModalOpen = false;
+  pendingRemoveBookingId: number | null = null;
+  isRemoving = false;
 
   // ── Sent requests ─────────────────────────────────────────────────────────
   myBookings: BookingResponse[] = [];
@@ -241,6 +248,57 @@ export class DashboardPageComponent implements OnInit {
     });
   }
 
+  removeBooking(bookingId: number): void {
+    if (!this.selectedTripId) return;
+    this.pendingRemoveBookingId = bookingId;
+    this.isRemoveModalOpen = true;
+  }
+
+  confirmRemoveBooking(): void {
+    if (!this.selectedTripId || this.pendingRemoveBookingId === null) return;
+    this.isRemoving = true;
+    this.bookingActionError = '';
+    this.tripService.removeBooking(this.selectedTripId, this.pendingRemoveBookingId).subscribe({
+      next: () => {
+        this.selectedTripBookings = this.selectedTripBookings.filter(
+          (b) => b.id !== this.pendingRemoveBookingId
+        );
+        this.tripBookingsMap[this.selectedTripId!] = this.selectedTripBookings;
+        this.isRemoveModalOpen = false;
+        this.pendingRemoveBookingId = null;
+        this.isRemoving = false;
+      },
+      error: () => {
+        this.bookingActionError = 'Erreur lors du retrait du demandeur.';
+        this.isRemoveModalOpen = false;
+        this.pendingRemoveBookingId = null;
+        this.isRemoving = false;
+      },
+    });
+  }
+
+  cancelRemoveBooking(): void {
+    this.isRemoveModalOpen = false;
+    this.pendingRemoveBookingId = null;
+  }
+
+  cancelTrip(tripId: number): void {
+    if (!confirm('Êtes-vous sûr de vouloir annuler ce trajet ? Tous les demandeurs seront notifiés.')) return;
+    this.isCancellingTrip = true;
+    this.bookingActionError = '';
+    this.tripService.cancelTrip(tripId).subscribe({
+      next: () => {
+        this.myTrips = this.myTrips.filter((t) => t.id !== tripId);
+        if (this.selectedTripId === tripId) {
+          this.selectedTripId = null;
+          this.selectedTripBookings = [];
+        }
+        this.isCancellingTrip = false;
+      },
+      error: () => { this.bookingActionError = "Erreur lors de l'annulation du trajet."; this.isCancellingTrip = false; },
+    });
+  }
+
   loadSentBookings(): void {
     this.isLoadingSentBookings = true;
     this.tripService.getMyBookings().subscribe({
@@ -249,11 +307,22 @@ export class DashboardPageComponent implements OnInit {
     });
   }
 
+  cancelMyBooking(booking: BookingResponse): void {
+    if (!confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) return;
+    this.tripService.cancelBooking(booking.tripId, booking.id).subscribe({
+      next: (updated) => {
+        const idx = this.myBookings.findIndex((b) => b.id === updated.id);
+        if (idx >= 0) { this.myBookings[idx] = updated; }
+      },
+      error: () => { /* no-op: UX handled by status staying unchanged */ },
+    });
+  }
+
   statusLabel(status: string): string {
-    return ({ PENDING: 'En attente', ACCEPTED: 'Acceptée', REJECTED: 'Refusée' } as Record<string, string>)[status] ?? status;
+    return ({ PENDING: 'En attente', ACCEPTED: 'Acceptée', REJECTED: 'Refusée', CANCELLED: 'Annulée' } as Record<string, string>)[status] ?? status;
   }
 
   statusClass(status: string): string {
-    return ({ PENDING: 'bg-yellow-100 text-yellow-800', ACCEPTED: 'bg-green-100 text-green-800', REJECTED: 'bg-red-100 text-red-800' } as Record<string, string>)[status] ?? 'bg-gray-100 text-gray-800';
+    return ({ PENDING: 'bg-yellow-100 text-yellow-800', ACCEPTED: 'bg-green-100 text-green-800', REJECTED: 'bg-red-100 text-red-800', CANCELLED: 'bg-gray-100 text-gray-500' } as Record<string, string>)[status] ?? 'bg-gray-100 text-gray-800';
   }
 }

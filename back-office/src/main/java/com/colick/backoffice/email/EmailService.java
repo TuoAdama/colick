@@ -144,6 +144,42 @@ public class EmailService {
             );
             }
 
+    public void sendTripCancelledEmail(String to,
+                                       String senderFirstName,
+                                       String departureAddress,
+                                       String destination) {
+        sendTemplateEmail(
+            to,
+            "Trajet annulé - Colick",
+            "email/trip-cancelled",
+            Map.of(
+                "firstName", senderFirstName,
+                "departureAddress", departureAddress,
+                "destination", destination,
+                "supportEmail", supportEmail
+            )
+        );
+    }
+
+    public void sendBookingCancelledBySenderEmail(String to,
+                                                  String travelerFirstName,
+                                                  String senderFirstName,
+                                                  String departureAddress,
+                                                  String destination) {
+        sendTemplateEmail(
+            to,
+            "Réservation annulée - Colick",
+            "email/booking-cancelled-by-sender",
+            Map.of(
+                "firstName", travelerFirstName,
+                "senderFirstName", senderFirstName,
+                "departureAddress", departureAddress,
+                "destination", destination,
+                "supportEmail", supportEmail
+            )
+        );
+    }
+
     private void sendTemplateEmail(String to, String subject, String templateName, Map<String, Object> variables) {
         Context context = new Context();
         variables.forEach(context::setVariable);

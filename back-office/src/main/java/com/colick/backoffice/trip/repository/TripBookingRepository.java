@@ -18,7 +18,9 @@ public interface TripBookingRepository extends JpaRepository<TripBooking, Long> 
 
     List<TripBooking> findByTripAndStatus(Trip trip, TripBooking.BookingStatus status);
 
-    boolean existsByTripAndSenderAndStatusNot(Trip trip, User sender, TripBooking.BookingStatus status);
+    List<TripBooking> findByTripAndStatusIn(Trip trip, List<TripBooking.BookingStatus> statuses);
+
+    boolean existsByTripAndSenderAndStatusIn(Trip trip, User sender, List<TripBooking.BookingStatus> statuses);
 
     /** Returns all booking requests submitted by the given user. */
     List<TripBooking> findBySender(User sender);

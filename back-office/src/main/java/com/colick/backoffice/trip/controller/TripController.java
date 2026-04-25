@@ -134,6 +134,16 @@ public class TripController {
         return ResponseEntity.noContent().build();
     }
 
+    /** Cancel a booking. Only the sender of the booking can do this. */
+    @PutMapping("/{id}/bookings/{bookingId}/cancel")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TripBookingResponse> cancelBooking(
+            @PathVariable Long id,
+            @PathVariable Long bookingId,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(tripService.cancelBooking(id, bookingId, currentUser));
+    }
+
     /** Get trips published by the current user (all statuses). */
     @GetMapping("/mine")
     @PreAuthorize("isAuthenticated()")

@@ -41,6 +41,12 @@ public interface TripService {
     void removeBooking(Long tripId, Long bookingId, User requester);
 
     /**
+     * Cancels a booking. Only the sender of the booking can cancel.
+     * Booking must be in PENDING or ACCEPTED status.
+     */
+    TripBookingResponse cancelBooking(Long tripId, Long bookingId, User requester);
+
+    /**
      * Searches active trips by departure and/or destination.
      * <p>If a search term matches a country name, all cities in that country are included
      * in the matching set (country-expansion).</p>

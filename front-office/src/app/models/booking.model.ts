@@ -16,5 +16,5 @@ export interface BookingResponse {
   description?: string;
   packagePhotoUrl?: string;
   recipientContact: string;
-  status: string;
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
 }
