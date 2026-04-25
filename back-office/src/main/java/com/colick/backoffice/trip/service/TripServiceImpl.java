@@ -91,6 +91,17 @@ public class TripServiceImpl implements TripService {
         assertTripOwner(trip, requester);
         trip.setStatus(Trip.TripStatus.CANCELLED);
         tripRepository.save(trip);
+
+        // Notify all senders with PENDING or ACCEPTED bookings
+        List<TripBooking.BookingStatus> activeStatuses = List.of(
+                TripBooking.BookingStatus.PENDING,
+                TripBooking.BookingStatus.ACCEPTED);
+        bookingRepository.findByTripAndStatusIn(trip, activeStatuses)
+                .forEach(b -> emailService.sendTripCancelledEmail(
+                        b.getSender().getEmail(),
+                        b.getSender().getFirstName(),
+                        trip.getDepartureAddress(),
+                        trip.getDestination()));
     }
 
     @Override
@@ -110,11 +121,10 @@ public class TripServiceImpl implements TripService {
             throw new IllegalArgumentException("You cannot create a booking request for your own trip");
         }
 
-        if (bookingRepository.existsByTripAndSenderAndStatusNot(
-                trip,
-                sender,
-                TripBooking.BookingStatus.REJECTED
-        )) {
+        List<TripBooking.BookingStatus> activeStatuses = List.of(
+                TripBooking.BookingStatus.PENDING,
+                TripBooking.BookingStatus.ACCEPTED);
+        if (bookingRepository.existsByTripAndSenderAndStatusIn(trip, sender, activeStatuses)) {
             throw new TripBookingConflictException("Vous avez deja une demande en cours pour ce trajet");
         }
 
@@ -201,6 +211,32 @@ public class TripServiceImpl implements TripService {
         );
 
         bookingRepository.delete(booking);
+    }
+
+    @Override
+    public TripBookingResponse cancelBooking(Long tripId, Long bookingId, User requester) {
+        TripBooking booking = findBookingOrThrow(tripId, bookingId);
+
+        if (!booking.getSender().getId().equals(requester.getId())) {
+            throw new AccessDeniedException("You are not the sender of this booking");
+        }
+
+        if (booking.getStatus() != TripBooking.BookingStatus.PENDING
+                && booking.getStatus() != TripBooking.BookingStatus.ACCEPTED) {
+            throw new IllegalStateException("Only PENDING or ACCEPTED bookings can be cancelled");
+        }
+
+        booking.setStatus(TripBooking.BookingStatus.CANCELLED);
+        TripBooking saved = bookingRepository.save(booking);
+
+        emailService.sendBookingCancelledBySenderEmail(
+                booking.getTrip().getTraveler().getEmail(),
+                booking.getTrip().getTraveler().getFirstName(),
+                requester.getFirstName(),
+                booking.getTrip().getDepartureAddress(),
+                booking.getTrip().getDestination());
+
+        return TripBookingResponse.from(saved);
     }
 
     private Trip findTripOrThrow(Long id) {

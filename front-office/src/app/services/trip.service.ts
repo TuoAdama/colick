@@ -56,4 +56,14 @@ export class TripService {
   rejectBooking(tripId: number, bookingId: number): Observable<BookingResponse> {
     return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/reject`, {});
   }
+
+  /** Cancel a trip (traveler only). */
+  cancelTrip(tripId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${tripId}`);
+  }
+
+  /** Cancel a booking (sender only). */
+  cancelBooking(tripId: number, bookingId: number): Observable<BookingResponse> {
+    return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/cancel`, {});
+  }
 }

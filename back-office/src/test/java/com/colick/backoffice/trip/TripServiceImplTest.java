@@ -136,11 +136,121 @@ class TripServiceImplTest {
     void deleteTrip_shouldCancelTrip_whenOwner() {
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(tripRepository.save(any(Trip.class))).thenReturn(sampleTrip);
+        when(bookingRepository.findByTripAndStatusIn(eq(sampleTrip), anyList())).thenReturn(List.of());
 
         tripService.deleteTrip(10L, traveler);
 
         assertThat(sampleTrip.getStatus()).isEqualTo(Trip.TripStatus.CANCELLED);
         verify(tripRepository).save(sampleTrip);
+    }
+
+    @Test
+    void deleteTrip_shouldNotifyAllActiveBookingSenders() {
+        TripBooking pending = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.PENDING).build();
+        User anotherSender = User.builder().id(3L).firstName("Claire")
+                .email("claire@example.com").role(User.Role.USER).build();
+        TripBooking accepted = TripBooking.builder()
+                .id(2L).trip(sampleTrip).sender(anotherSender)
+                .status(TripBooking.BookingStatus.ACCEPTED).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.save(any(Trip.class))).thenReturn(sampleTrip);
+        when(bookingRepository.findByTripAndStatusIn(eq(sampleTrip), anyList()))
+                .thenReturn(List.of(pending, accepted));
+        doNothing().when(emailService).sendTripCancelledEmail(anyString(), anyString(), anyString(), anyString());
+
+        tripService.deleteTrip(10L, traveler);
+
+        verify(emailService).sendTripCancelledEmail(
+                eq(sender.getEmail()), eq(sender.getFirstName()),
+                eq(sampleTrip.getDepartureAddress()), eq(sampleTrip.getDestination()));
+        verify(emailService).sendTripCancelledEmail(
+                eq(anotherSender.getEmail()), eq(anotherSender.getFirstName()),
+                eq(sampleTrip.getDepartureAddress()), eq(sampleTrip.getDestination()));
+    }
+
+    @Test
+    void cancelBooking_shouldSetCancelledAndNotifyTraveler_whenStatusIsAccepted() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .title("Box").recipientContact("+225 00").weight(BigDecimal.valueOf(2))
+                .status(TripBooking.BookingStatus.ACCEPTED).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any())).thenReturn(booking);
+        doNothing().when(emailService).sendBookingCancelledBySenderEmail(
+                anyString(), anyString(), anyString(), anyString(), anyString());
+
+        TripBookingResponse response = tripService.cancelBooking(10L, 1L, sender);
+
+        assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.CANCELLED);
+        verify(emailService).sendBookingCancelledBySenderEmail(
+                eq(traveler.getEmail()), eq(traveler.getFirstName()), eq(sender.getFirstName()),
+                eq(sampleTrip.getDepartureAddress()), eq(sampleTrip.getDestination()));
+    }
+
+    @Test
+    void cancelBooking_shouldSetCancelledAndNotifyTraveler_whenStatusIsPending() {
+        TripBooking booking = TripBooking.builder()
+                .id(2L).trip(sampleTrip).sender(sender)
+                .title("Box").recipientContact("+225 00").weight(BigDecimal.valueOf(2))
+                .status(TripBooking.BookingStatus.PENDING).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(2L)).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any())).thenReturn(booking);
+        doNothing().when(emailService).sendBookingCancelledBySenderEmail(
+                anyString(), anyString(), anyString(), anyString(), anyString());
+
+        tripService.cancelBooking(10L, 2L, sender);
+
+        assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.CANCELLED);
+    }
+
+    @Test
+    void cancelBooking_shouldThrow_whenRequesterIsNotSender() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.ACCEPTED).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> tripService.cancelBooking(10L, 1L, traveler))
+                .isInstanceOf(AccessDeniedException.class);
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelBooking_shouldThrow_whenBookingIsAlreadyCancelled() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.CANCELLED).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> tripService.cancelBooking(10L, 1L, sender))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("PENDING or ACCEPTED");
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelBooking_shouldThrow_whenBookingIsRejected() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.REJECTED).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> tripService.cancelBooking(10L, 1L, sender))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("PENDING or ACCEPTED");
     }
 
     @Test
@@ -224,12 +334,11 @@ class TripServiceImplTest {
         request.setWeight(BigDecimal.valueOf(5));
         request.setRecipientContact("+225 07 00 00 00");
 
+        List<TripBooking.BookingStatus> activeStatuses = List.of(
+                TripBooking.BookingStatus.PENDING, TripBooking.BookingStatus.ACCEPTED);
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
-        when(bookingRepository.existsByTripAndSenderAndStatusNot(
-                sampleTrip,
-                sender,
-                TripBooking.BookingStatus.REJECTED
-        )).thenReturn(true);
+        when(bookingRepository.existsByTripAndSenderAndStatusIn(
+                sampleTrip, sender, activeStatuses)).thenReturn(true);
 
         assertThatThrownBy(() -> tripService.createBooking(10L, request, sender))
                 .isInstanceOf(TripBookingConflictException.class)
@@ -240,7 +349,7 @@ class TripServiceImplTest {
     }
 
     @Test
-    void createBooking_shouldAllowNewRequest_whenPreviousBookingWasRejected() {
+    void createBooking_shouldAllowNewRequest_whenPreviousBookingWasCancelledOrRejected() {
         CreateBookingRequest request = new CreateBookingRequest();
         request.setTitle("Electronics");
         request.setWeight(BigDecimal.valueOf(5));
@@ -256,12 +365,11 @@ class TripServiceImplTest {
                 .status(TripBooking.BookingStatus.PENDING)
                 .build();
 
+        List<TripBooking.BookingStatus> activeStatuses = List.of(
+                TripBooking.BookingStatus.PENDING, TripBooking.BookingStatus.ACCEPTED);
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
-        when(bookingRepository.existsByTripAndSenderAndStatusNot(
-                sampleTrip,
-                sender,
-                TripBooking.BookingStatus.REJECTED
-        )).thenReturn(false);
+        when(bookingRepository.existsByTripAndSenderAndStatusIn(
+                sampleTrip, sender, activeStatuses)).thenReturn(false);
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);

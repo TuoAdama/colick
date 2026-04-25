@@ -55,6 +55,6 @@ public class TripBooking {
     private BookingStatus status = BookingStatus.PENDING;
 
     public enum BookingStatus {
-        PENDING, ACCEPTED, REJECTED
+        PENDING, ACCEPTED, REJECTED, CANCELLED
     }
 }
