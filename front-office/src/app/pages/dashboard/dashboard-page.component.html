@@ -389,3 +389,15 @@
 
   </div>
 </div>
+
+<!-- ── Confirm remove booking modal ──────────────────────────────────────── -->
+<app-confirm-modal
+  [isOpen]="isRemoveModalOpen"
+  title="Retirer ce demandeur ?"
+  message="Cette action retirera définitivement ce demandeur de votre trajet. Il recevra une notification par email."
+  confirmLabel="Retirer"
+  variant="danger"
+  [isLoading]="isRemoving"
+  (confirmed)="confirmRemoveBooking()"
+  (cancelled)="cancelRemoveBooking()"
+/>

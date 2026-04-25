@@ -9,13 +9,14 @@ import { TripService } from '../../services/trip.service';
 import { Trip } from '../../models/trip.model';
 import { BookingResponse } from '../../models/booking.model';
 import { UpdateProfileRequest } from '../../models/auth.model';
+import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
 
 type Tab = 'profile' | 'chats' | 'received' | 'sent';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink, ConfirmModalComponent],
   templateUrl: './dashboard-page.component.html',
 })
 export class DashboardPageComponent implements OnInit {
@@ -78,6 +79,11 @@ export class DashboardPageComponent implements OnInit {
   isLoadingBookings = false;
   bookingActionError = '';
   isCancellingTrip = false;
+
+  // ── Remove booking confirmation modal ─────────────────────────────────────
+  isRemoveModalOpen = false;
+  pendingRemoveBookingId: number | null = null;
+  isRemoving = false;
 
   // ── Sent requests ─────────────────────────────────────────────────────────
   myBookings: BookingResponse[] = [];
@@ -244,15 +250,36 @@ export class DashboardPageComponent implements OnInit {
 
   removeBooking(bookingId: number): void {
     if (!this.selectedTripId) return;
-    if (!confirm('Retirer ce demandeur ? Il sera notifié par email.')) return;
+    this.pendingRemoveBookingId = bookingId;
+    this.isRemoveModalOpen = true;
+  }
+
+  confirmRemoveBooking(): void {
+    if (!this.selectedTripId || this.pendingRemoveBookingId === null) return;
+    this.isRemoving = true;
     this.bookingActionError = '';
-    this.tripService.removeBooking(this.selectedTripId, bookingId).subscribe({
+    this.tripService.removeBooking(this.selectedTripId, this.pendingRemoveBookingId).subscribe({
       next: () => {
-        this.selectedTripBookings = this.selectedTripBookings.filter((b) => b.id !== bookingId);
+        this.selectedTripBookings = this.selectedTripBookings.filter(
+          (b) => b.id !== this.pendingRemoveBookingId
+        );
         this.tripBookingsMap[this.selectedTripId!] = this.selectedTripBookings;
+        this.isRemoveModalOpen = false;
+        this.pendingRemoveBookingId = null;
+        this.isRemoving = false;
       },
-      error: () => { this.bookingActionError = 'Erreur lors du retrait du demandeur.'; },
+      error: () => {
+        this.bookingActionError = 'Erreur lors du retrait du demandeur.';
+        this.isRemoveModalOpen = false;
+        this.pendingRemoveBookingId = null;
+        this.isRemoving = false;
+      },
     });
+  }
+
+  cancelRemoveBooking(): void {
+    this.isRemoveModalOpen = false;
+    this.pendingRemoveBookingId = null;
   }
 
   cancelTrip(tripId: number): void {
