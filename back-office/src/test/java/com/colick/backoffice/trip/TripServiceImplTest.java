@@ -173,14 +173,20 @@ class TripServiceImplTest {
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
-        doNothing().when(emailService).sendEmail(anyString(), anyString(), anyString());
+        doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
 
         TripBookingResponse response = tripService.createBooking(10L, request, sender);
 
         assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.PENDING);
         assertThat(response.getTitle()).isEqualTo("Electronics");
         assertThat(response.getRecipientContact()).isEqualTo("+225 07 00 00 00");
-        verify(emailService).sendEmail(eq(traveler.getEmail()), anyString(), anyString());
+        verify(emailService).sendTripBookingCreatedEmail(
+                eq(traveler.getEmail()),
+                eq(traveler.getFirstName()),
+                eq(sender.getFirstName()),
+                eq(sampleTrip.getDepartureAddress()),
+                eq(sampleTrip.getDestination())
+        );
     }
 
     @Test
@@ -203,7 +209,7 @@ class TripServiceImplTest {
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
-        doNothing().when(emailService).sendEmail(anyString(), anyString(), anyString());
+        doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
 
         TripBookingResponse response = tripService.createBooking(10L, request, sender);
 
@@ -224,7 +230,7 @@ class TripServiceImplTest {
                                 .hasMessage("You cannot create a booking request for your own trip");
 
                 verify(bookingRepository, never()).save(any(TripBooking.class));
-                verify(emailService, never()).sendEmail(anyString(), anyString(), anyString());
+                verify(emailService, never()).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
         }
 
     @Test
@@ -236,12 +242,17 @@ class TripServiceImplTest {
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(bookingRepository.save(any())).thenReturn(booking);
-        doNothing().when(emailService).sendEmail(anyString(), anyString(), anyString());
+        doNothing().when(emailService).sendTripBookingAcceptedEmail(anyString(), anyString(), anyString(), anyString());
 
         tripService.acceptBooking(10L, 1L, traveler);
 
         assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
-        verify(emailService).sendEmail(eq(sender.getEmail()), anyString(), anyString());
+        verify(emailService).sendTripBookingAcceptedEmail(
+                eq(sender.getEmail()),
+                eq(sender.getFirstName()),
+                eq(sampleTrip.getDepartureAddress()),
+                eq(sampleTrip.getDestination())
+        );
     }
 
     @Test
@@ -253,12 +264,17 @@ class TripServiceImplTest {
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(bookingRepository.save(any())).thenReturn(booking);
-        doNothing().when(emailService).sendEmail(anyString(), anyString(), anyString());
+        doNothing().when(emailService).sendTripBookingRejectedEmail(anyString(), anyString(), anyString(), anyString());
 
         tripService.rejectBooking(10L, 1L, traveler);
 
         assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.REJECTED);
-        verify(emailService).sendEmail(eq(sender.getEmail()), anyString(), anyString());
+        verify(emailService).sendTripBookingRejectedEmail(
+                eq(sender.getEmail()),
+                eq(sender.getFirstName()),
+                eq(sampleTrip.getDepartureAddress()),
+                eq(sampleTrip.getDestination())
+        );
     }
 
     @Test
@@ -269,12 +285,17 @@ class TripServiceImplTest {
 
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        doNothing().when(emailService).sendEmail(anyString(), anyString(), anyString());
+        doNothing().when(emailService).sendTripBookingRemovedEmail(anyString(), anyString(), anyString(), anyString());
         doNothing().when(bookingRepository).delete(booking);
 
         tripService.removeBooking(10L, 1L, traveler);
 
-        verify(emailService).sendEmail(eq(sender.getEmail()), anyString(), anyString());
+        verify(emailService).sendTripBookingRemovedEmail(
+                eq(sender.getEmail()),
+                eq(sender.getFirstName()),
+                eq(sampleTrip.getDepartureAddress()),
+                eq(sampleTrip.getDestination())
+        );
         verify(bookingRepository).delete(booking);
     }
 
