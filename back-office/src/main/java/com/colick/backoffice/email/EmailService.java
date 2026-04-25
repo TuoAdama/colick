@@ -74,6 +74,76 @@ public class EmailService {
         );
     }
 
+            public void sendTripBookingCreatedEmail(String to,
+                                String travelerFirstName,
+                                String senderFirstName,
+                                String departureAddress,
+                                String destination) {
+            sendTemplateEmail(
+                to,
+                "Nouvelle demande de transport - Colick",
+                "email/trip-booking-created",
+                Map.of(
+                    "firstName", travelerFirstName,
+                    "senderFirstName", senderFirstName,
+                    "departureAddress", departureAddress,
+                    "destination", destination,
+                    "supportEmail", supportEmail
+                )
+            );
+            }
+
+            public void sendTripBookingAcceptedEmail(String to,
+                                 String senderFirstName,
+                                 String departureAddress,
+                                 String destination) {
+            sendTemplateEmail(
+                to,
+                "Votre demande a ete acceptee - Colick",
+                "email/trip-booking-accepted",
+                Map.of(
+                    "firstName", senderFirstName,
+                    "departureAddress", departureAddress,
+                    "destination", destination,
+                    "supportEmail", supportEmail
+                )
+            );
+            }
+
+            public void sendTripBookingRejectedEmail(String to,
+                                 String senderFirstName,
+                                 String departureAddress,
+                                 String destination) {
+            sendTemplateEmail(
+                to,
+                "Votre demande a ete refusee - Colick",
+                "email/trip-booking-rejected",
+                Map.of(
+                    "firstName", senderFirstName,
+                    "departureAddress", departureAddress,
+                    "destination", destination,
+                    "supportEmail", supportEmail
+                )
+            );
+            }
+
+            public void sendTripBookingRemovedEmail(String to,
+                                String senderFirstName,
+                                String departureAddress,
+                                String destination) {
+            sendTemplateEmail(
+                to,
+                "Vous avez ete retire d'un trajet - Colick",
+                "email/trip-booking-removed",
+                Map.of(
+                    "firstName", senderFirstName,
+                    "departureAddress", departureAddress,
+                    "destination", destination,
+                    "supportEmail", supportEmail
+                )
+            );
+            }
+
     private void sendTemplateEmail(String to, String subject, String templateName, Map<String, Object> variables) {
         Context context = new Context();
         variables.forEach(context::setVariable);

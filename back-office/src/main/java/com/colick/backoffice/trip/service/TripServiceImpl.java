@@ -132,16 +132,12 @@ public class TripServiceImpl implements TripService {
 
         TripBooking saved = bookingRepository.save(booking);
 
-        // Notify the traveler about the new booking request
-        emailService.sendEmail(
-                trip.getTraveler().getEmail(),
-                "Nouvelle demande de transport — Colick",
-                String.format(
-                        "Bonjour %s,%n%nUne nouvelle demande a été soumise pour votre trajet %s → %s.%n%nConnectez-vous à Colick pour la traiter.%n%nCordialement,%nL'équipe Colick",
-                        trip.getTraveler().getFirstName(),
-                        trip.getDepartureAddress(),
-                        trip.getDestination()
-                )
+        emailService.sendTripBookingCreatedEmail(
+            trip.getTraveler().getEmail(),
+            trip.getTraveler().getFirstName(),
+            sender.getFirstName(),
+            trip.getDepartureAddress(),
+            trip.getDestination()
         );
 
         return TripBookingResponse.from(saved);
@@ -155,15 +151,11 @@ public class TripServiceImpl implements TripService {
         booking.setStatus(TripBooking.BookingStatus.ACCEPTED);
         TripBooking saved = bookingRepository.save(booking);
 
-        emailService.sendEmail(
-                booking.getSender().getEmail(),
-                "Votre demande a été acceptée — Colick",
-                String.format(
-                        "Bonjour %s,%n%nVotre demande pour le trajet %s → %s a été acceptée.%n%nCordialement,%nL'équipe Colick",
-                        booking.getSender().getFirstName(),
-                        booking.getTrip().getDepartureAddress(),
-                        booking.getTrip().getDestination()
-                )
+        emailService.sendTripBookingAcceptedEmail(
+            booking.getSender().getEmail(),
+            booking.getSender().getFirstName(),
+            booking.getTrip().getDepartureAddress(),
+            booking.getTrip().getDestination()
         );
 
         return TripBookingResponse.from(saved);
@@ -177,15 +169,11 @@ public class TripServiceImpl implements TripService {
         booking.setStatus(TripBooking.BookingStatus.REJECTED);
         TripBooking saved = bookingRepository.save(booking);
 
-        emailService.sendEmail(
-                booking.getSender().getEmail(),
-                "Votre demande a été refusée — Colick",
-                String.format(
-                        "Bonjour %s,%n%nNous sommes désolés, votre demande pour le trajet %s → %s a été refusée.%n%nCordialement,%nL'équipe Colick",
-                        booking.getSender().getFirstName(),
-                        booking.getTrip().getDepartureAddress(),
-                        booking.getTrip().getDestination()
-                )
+        emailService.sendTripBookingRejectedEmail(
+            booking.getSender().getEmail(),
+            booking.getSender().getFirstName(),
+            booking.getTrip().getDepartureAddress(),
+            booking.getTrip().getDestination()
         );
 
         return TripBookingResponse.from(saved);
@@ -196,15 +184,11 @@ public class TripServiceImpl implements TripService {
         TripBooking booking = findBookingOrThrow(tripId, bookingId);
         assertTripOwner(booking.getTrip(), requester);
 
-        emailService.sendEmail(
-                booking.getSender().getEmail(),
-                "Vous avez été retiré d'un trajet — Colick",
-                String.format(
-                        "Bonjour %s,%n%nVous avez été retiré de la liste pour le trajet %s → %s.%n%nCordialement,%nL'équipe Colick",
-                        booking.getSender().getFirstName(),
-                        booking.getTrip().getDepartureAddress(),
-                        booking.getTrip().getDestination()
-                )
+        emailService.sendTripBookingRemovedEmail(
+            booking.getSender().getEmail(),
+            booking.getSender().getFirstName(),
+            booking.getTrip().getDepartureAddress(),
+            booking.getTrip().getDestination()
         );
 
         bookingRepository.delete(booking);
