@@ -2,6 +2,7 @@ package com.colick.backoffice.trip;
 
 import com.colick.backoffice.email.EmailService;
 import com.colick.backoffice.exception.ResourceNotFoundException;
+import com.colick.backoffice.exception.TripBookingConflictException;
 import com.colick.backoffice.location.entity.LocationType;
 import com.colick.backoffice.location.repository.LocationRepository;
 import com.colick.backoffice.trip.dto.*;
@@ -214,6 +215,63 @@ class TripServiceImplTest {
         TripBookingResponse response = tripService.createBooking(10L, request, sender);
 
         assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
+    }
+
+    @Test
+    void createBooking_shouldThrow_whenSenderAlreadyHasActiveBookingForTrip() {
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setTitle("Electronics");
+        request.setWeight(BigDecimal.valueOf(5));
+        request.setRecipientContact("+225 07 00 00 00");
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.existsByTripAndSenderAndStatusNot(
+                sampleTrip,
+                sender,
+                TripBooking.BookingStatus.REJECTED
+        )).thenReturn(true);
+
+        assertThatThrownBy(() -> tripService.createBooking(10L, request, sender))
+                .isInstanceOf(TripBookingConflictException.class)
+                .hasMessage("Vous avez deja une demande en cours pour ce trajet");
+
+        verify(bookingRepository, never()).save(any(TripBooking.class));
+        verify(emailService, never()).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void createBooking_shouldAllowNewRequest_whenPreviousBookingWasRejected() {
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setTitle("Electronics");
+        request.setWeight(BigDecimal.valueOf(5));
+        request.setRecipientContact("+225 07 00 00 00");
+
+        TripBooking savedBooking = TripBooking.builder()
+                .id(3L)
+                .trip(sampleTrip)
+                .sender(sender)
+                .title("Electronics")
+                .weight(BigDecimal.valueOf(5))
+                .recipientContact("+225 07 00 00 00")
+                .status(TripBooking.BookingStatus.PENDING)
+                .build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.existsByTripAndSenderAndStatusNot(
+                sampleTrip,
+                sender,
+                TripBooking.BookingStatus.REJECTED
+        )).thenReturn(false);
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+        when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
+        doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
+
+        TripBookingResponse response = tripService.createBooking(10L, request, sender);
+
+        assertThat(response.getId()).isEqualTo(3L);
+        assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.PENDING);
+        verify(bookingRepository).save(any(TripBooking.class));
     }
 
         @Test
