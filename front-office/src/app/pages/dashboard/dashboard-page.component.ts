@@ -242,6 +242,19 @@ export class DashboardPageComponent implements OnInit {
     });
   }
 
+  removeBooking(bookingId: number): void {
+    if (!this.selectedTripId) return;
+    if (!confirm('Retirer ce demandeur ? Il sera notifié par email.')) return;
+    this.bookingActionError = '';
+    this.tripService.removeBooking(this.selectedTripId, bookingId).subscribe({
+      next: () => {
+        this.selectedTripBookings = this.selectedTripBookings.filter((b) => b.id !== bookingId);
+        this.tripBookingsMap[this.selectedTripId!] = this.selectedTripBookings;
+      },
+      error: () => { this.bookingActionError = 'Erreur lors du retrait du demandeur.'; },
+    });
+  }
+
   cancelTrip(tripId: number): void {
     if (!confirm('Êtes-vous sûr de vouloir annuler ce trajet ? Tous les demandeurs seront notifiés.')) return;
     this.isCancellingTrip = true;

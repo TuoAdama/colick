@@ -317,6 +317,15 @@
                                 Refuser
                               </button>
                             }
+                            <!-- Remove action (only for accepted bookings) -->
+                            @if (booking.status === 'ACCEPTED') {
+                              <button
+                                (click)="removeBooking(booking.id)"
+                                class="bg-gray-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-opacity-90 transition-colors"
+                              >
+                                Retirer
+                              </button>
+                            }
                           </div>
                         </div>
                       }
