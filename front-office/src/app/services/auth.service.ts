@@ -18,6 +18,7 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly TOKEN_KEY = 'colick_token';
   private readonly USER_KEY = 'colick_user';
+  private readonly API_PREFIX = '/api';
 
   private currentUserSubject = new BehaviorSubject<UserResponse | null>(this.getStoredUser());
   currentUser$ = this.currentUserSubject.asObservable();
@@ -26,8 +27,7 @@ export class AuthService {
     return this.http.post<AuthResponse>('/api/auth/login', { email, password } as LoginRequest).pipe(
       tap((res) => {
         localStorage.setItem(this.TOKEN_KEY, res.token);
-        localStorage.setItem(this.USER_KEY, JSON.stringify(res.user));
-        this.currentUserSubject.next(res.user);
+        this.persistUser(res.user);
       })
     );
   }
@@ -58,8 +58,7 @@ export class AuthService {
   updateProfile(id: number, data: UpdateProfileRequest): Observable<UserResponse> {
     return this.http.put<UserResponse>(`/api/users/${id}`, data).pipe(
       tap((user) => {
-        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-        this.currentUserSubject.next(user);
+        this.persistUser(user);
       })
     );
   }
@@ -70,8 +69,7 @@ export class AuthService {
     form.append('file', file);
     return this.http.post<UserResponse>(`/api/users/${id}/photo`, form).pipe(
       tap((user) => {
-        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-        this.currentUserSubject.next(user);
+        this.persistUser(user);
       })
     );
   }
@@ -86,8 +84,7 @@ export class AuthService {
     return this.http.get<UserResponse>(`/api/users/confirm-email`, { params: { token } }).pipe(
       tap((user) => {
         if (this.isLoggedIn()) {
-          localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-          this.currentUserSubject.next(user);
+          this.persistUser(user);
         }
       })
     );
@@ -117,6 +114,41 @@ export class AuthService {
 
   private getStoredUser(): UserResponse | null {
     const raw = localStorage.getItem(this.USER_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const user = JSON.parse(raw) as UserResponse;
+    return this.normalizeUser(user);
+  }
+
+  private persistUser(user: UserResponse): void {
+    const normalizedUser = this.normalizeUser(user);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(normalizedUser));
+    this.currentUserSubject.next(normalizedUser);
+  }
+
+  private normalizeUser(user: UserResponse): UserResponse {
+    return {
+      ...user,
+      photoUrl: this.normalizePhotoUrl(user.photoUrl),
+    };
+  }
+
+  private normalizePhotoUrl(photoUrl?: string): string | undefined {
+    if (!photoUrl) return undefined;
+    if (
+      photoUrl.startsWith('http://')
+      || photoUrl.startsWith('https://')
+      || photoUrl.startsWith('data:')
+      || photoUrl.startsWith('blob:')
+      || photoUrl.startsWith(`${this.API_PREFIX}/`)
+    ) {
+      return photoUrl;
+    }
+    if (photoUrl.startsWith('/uploads/')) {
+      return `${this.API_PREFIX}${photoUrl}`;
+    }
+    if (photoUrl.startsWith('uploads/')) {
+      return `${this.API_PREFIX}/${photoUrl}`;
+    }
+    return photoUrl;
   }
 }

@@ -38,12 +38,22 @@
             aria-haspopup="menu"
             aria-label="Menu profil"
           >
-            <span
-              class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-secondary text-white text-xs font-semibold uppercase shrink-0"
-              aria-hidden="true"
-            >
-              {{ (authService.currentUser$ | async)?.firstName?.charAt(0) }}
-            </span>
+            @if (hasProfilePhoto()) {
+              <img
+                [src]="getProfilePhotoUrl()"
+                (error)="onProfileImageError()"
+                class="w-7 h-7 rounded-full object-cover shrink-0 border border-background-secondary"
+                [alt]="'Photo de profil de ' + ((authService.currentUser$ | async)?.firstName || 'l’utilisateur')"
+                loading="lazy"
+              />
+            } @else {
+              <span
+                class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-secondary text-white text-xs font-semibold uppercase shrink-0"
+                aria-hidden="true"
+              >
+                {{ getUserInitials() }}
+              </span>
+            }
             <span class="text-text-primary text-sm font-medium max-w-[90px] truncate">Profil</span>
             <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -52,6 +62,32 @@
 
           @if (isProfileMenuOpen) {
             <div class="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-lg py-1" role="menu" aria-label="Actions du profil">
+              <div class="px-4 py-3 border-b border-background-secondary">
+                <div class="flex items-center gap-3">
+                  @if (hasProfilePhoto()) {
+                    <img
+                      [src]="getProfilePhotoUrl()"
+                      (error)="onProfileImageError()"
+                      class="w-10 h-10 rounded-full object-cover border border-background-secondary shrink-0"
+                      [alt]="'Photo de profil de ' + ((authService.currentUser$ | async)?.firstName || 'l’utilisateur')"
+                      loading="lazy"
+                    />
+                  } @else {
+                    <span
+                      class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-white text-sm font-semibold uppercase shrink-0"
+                      aria-hidden="true"
+                    >
+                      {{ getUserInitials() }}
+                    </span>
+                  }
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-text-primary truncate">
+                      {{ (authService.currentUser$ | async)?.firstName }} {{ (authService.currentUser$ | async)?.lastName }}
+                    </p>
+                    <p class="text-xs text-text-secondary truncate">{{ (authService.currentUser$ | async)?.email }}</p>
+                  </div>
+                </div>
+              </div>
               <a
                 [routerLink]="['/dashboard']"
                 [queryParams]="{ tab: 'profile' }"
