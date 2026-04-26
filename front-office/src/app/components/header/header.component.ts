@@ -9,6 +9,8 @@ export class HeaderComponent implements OnInit {
   readonly messagingService = inject(MessagingService);
   isMobileMenuOpen = false;
   isProfileMenuOpen = false;
+  private profilePhotoLoadFailed = false;
+  private lastProfilePhotoUrl: string | null = null;
   ngOnInit(): void { if (this.authService.isLoggedIn()) { this.messagingService.refreshUnreadCount(); } }
   toggleMobileMenu(): void {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
@@ -30,5 +32,36 @@ export class HeaderComponent implements OnInit {
   @HostListener('document:click')
   onDocumentClick(): void {
     this.isProfileMenuOpen = false;
+  }
+
+  hasProfilePhoto(): boolean {
+    return !!this.getProfilePhotoUrl();
+  }
+
+  getProfilePhotoUrl(): string | null {
+    const photoUrl = this.authService.getUser()?.photoUrl?.trim() ?? null;
+    if (!photoUrl) {
+      this.profilePhotoLoadFailed = false;
+      this.lastProfilePhotoUrl = null;
+      return null;
+    }
+    if (photoUrl !== this.lastProfilePhotoUrl) {
+      this.profilePhotoLoadFailed = false;
+      this.lastProfilePhotoUrl = photoUrl;
+    }
+    return this.profilePhotoLoadFailed ? null : photoUrl;
+  }
+
+  onProfileImageError(): void {
+    this.profilePhotoLoadFailed = true;
+  }
+
+  getUserInitials(): string {
+    const user = this.authService.getUser();
+    const firstInitial = user?.firstName?.trim().charAt(0) ?? '';
+    const lastInitial = user?.lastName?.trim().charAt(0) ?? '';
+    const initials = `${firstInitial}${lastInitial}`.toUpperCase();
+    if (initials) return initials;
+    return user?.email?.trim().charAt(0).toUpperCase() ?? 'U';
   }
 }

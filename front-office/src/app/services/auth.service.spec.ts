@@ -44,4 +44,56 @@ describe('AuthService', () => {
     });
     req.flush(null);
   });
+
+  it('normalizes relative profile photo URL on login', () => {
+    service.login('john@example.com', 'password123').subscribe();
+
+    const req = httpMock.expectOne('/api/auth/login');
+    expect(req.request.method).toBe('POST');
+    req.flush({
+      token: 'jwt-token',
+      type: 'Bearer',
+      user: {
+        id: 1,
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john@example.com',
+        role: 'USER',
+        photoUrl: '/uploads/avatar.png',
+      },
+    });
+
+    const storedRaw = localStorage.getItem('colick_user');
+    expect(storedRaw).not.toBeNull();
+    const storedUser = JSON.parse(storedRaw!);
+    expect(storedUser.photoUrl).toBe('/api/uploads/avatar.png');
+    expect(service.getUser()?.photoUrl).toBe('/api/uploads/avatar.png');
+  });
+
+  it('normalizes relative profile photo URL after upload', () => {
+    localStorage.setItem('colick_token', 'jwt-token');
+    localStorage.setItem('colick_user', JSON.stringify({
+      id: 1,
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      role: 'USER',
+    }));
+
+    const file = new File(['image-bytes'], 'avatar.png', { type: 'image/png' });
+    service.uploadPhoto(1, file).subscribe();
+
+    const req = httpMock.expectOne('/api/users/1/photo');
+    expect(req.request.method).toBe('POST');
+    req.flush({
+      id: 1,
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      role: 'USER',
+      photoUrl: 'uploads/avatar.png',
+    });
+
+    expect(service.getUser()?.photoUrl).toBe('/api/uploads/avatar.png');
+  });
 });

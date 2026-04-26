@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
+import { UserResponse } from '../../models/auth.model';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 import { HeaderComponent } from './header.component';
@@ -10,15 +11,20 @@ describe('HeaderComponent', () => {
   let component: HeaderComponent;
 
   let loggedIn = false;
-  const currentUser$ = new BehaviorSubject({
+  const currentUser$ = new BehaviorSubject<UserResponse>({
+    id: 1,
     firstName: 'Ada',
     lastName: 'Lovelace',
+    email: 'ada@example.com',
+    role: 'USER',
+    photoUrl: '/api/uploads/avatar.png',
   });
 
   const authServiceMock = {
     isLoggedIn: jasmine.createSpy('isLoggedIn').and.callFake(() => loggedIn),
     logout: jasmine.createSpy('logout'),
     currentUser$,
+    getUser: jasmine.createSpy('getUser').and.callFake(() => currentUser$.getValue()),
   };
 
   const messagingServiceMock = {
@@ -62,6 +68,53 @@ describe('HeaderComponent', () => {
     expect(text).toContain('Mes réservations');
     expect(text).toContain('Profil');
     expect(messagingServiceMock.refreshUnreadCount).toHaveBeenCalled();
+  });
+
+  it('shows profile photo in profile button when available', () => {
+    loggedIn = true;
+    currentUser$.next({
+      ...currentUser$.getValue(),
+      photoUrl: '/api/uploads/avatar.png',
+    });
+
+    fixture.detectChanges();
+
+    const profileImage = fixture.nativeElement.querySelector('button[aria-label="Menu profil"] img') as HTMLImageElement | null;
+    expect(profileImage).not.toBeNull();
+    expect(profileImage?.getAttribute('src')).toBe('/api/uploads/avatar.png');
+  });
+
+  it('falls back to initials when profile photo is missing', () => {
+    loggedIn = true;
+    currentUser$.next({
+      ...currentUser$.getValue(),
+      photoUrl: undefined,
+    });
+
+    fixture.detectChanges();
+
+    const profileImage = fixture.nativeElement.querySelector('button[aria-label="Menu profil"] img') as HTMLImageElement | null;
+    const fallback = fixture.nativeElement.querySelector('button[aria-label="Menu profil"] span[aria-hidden="true"]') as HTMLSpanElement | null;
+    expect(profileImage).toBeNull();
+    expect((fallback?.textContent ?? '').trim()).toBe('AL');
+  });
+
+  it('falls back to initials when profile image loading fails', () => {
+    loggedIn = true;
+    currentUser$.next({
+      ...currentUser$.getValue(),
+      photoUrl: '/api/uploads/broken-avatar.png',
+    });
+
+    fixture.detectChanges();
+
+    const profileImage = fixture.nativeElement.querySelector('button[aria-label="Menu profil"] img') as HTMLImageElement;
+    profileImage.dispatchEvent(new Event('error'));
+    fixture.detectChanges();
+
+    const fallback = fixture.nativeElement.querySelector('button[aria-label="Menu profil"] span[aria-hidden="true"]') as HTMLSpanElement | null;
+    expect(fallback).not.toBeNull();
+    expect((fallback?.textContent ?? '').trim()).toBe('AL');
   });
 
   it('opens profile dropdown with expected links', () => {
