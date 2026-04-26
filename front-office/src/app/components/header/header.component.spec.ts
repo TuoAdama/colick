@@ -74,6 +74,7 @@ describe('HeaderComponent', () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Mon profil');
     expect(text).toContain('Mes demandes');
     expect(text).toContain('Messages');
     expect(text).toContain('Déconnexion');
