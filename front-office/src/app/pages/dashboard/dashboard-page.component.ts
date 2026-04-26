@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
@@ -23,6 +23,7 @@ export class DashboardPageComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly tripService = inject(TripService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
 
   activeTab: Tab = 'profile';
@@ -107,12 +108,21 @@ export class DashboardPageComponent implements OnInit {
       });
       this.photoPreview = user.photoUrl ?? null;
     }
+
+    this.route.queryParamMap.subscribe((params) => {
+      const tab = params.get('tab');
+      if (this.isTab(tab)) this.setTab(tab);
+    });
   }
 
   setTab(tab: Tab): void {
     this.activeTab = tab;
     if (tab === 'received' && this.myTrips.length === 0) this.loadMyTrips();
     if (tab === 'sent' && this.myBookings.length === 0) this.loadSentBookings();
+  }
+
+  private isTab(value: string | null): value is Tab {
+    return value === 'profile' || value === 'chats' || value === 'received' || value === 'sent';
   }
 
   // ── Photo ─────────────────────────────────────────────────────────────────

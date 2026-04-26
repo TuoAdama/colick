@@ -6,77 +6,91 @@
       <span class="text-accent">Co</span>lick
     </a>
 
-    <!-- Desktop Navigation -->
-    <ul class="hidden md:flex items-center gap-8" role="list">
-      @for (link of navLinks; track link.href) {
-        <li>
-          <a
-            [href]="link.href"
-            class="text-text-secondary hover:text-primary transition-colors duration-200 font-medium text-sm"
-          >
-            {{ link.label }}
-          </a>
-        </li>
-      }
-    </ul>
-
-    <!-- Auth Buttons + Search -->
+    <!-- Right actions -->
     <div class="hidden sm:flex items-center gap-3">
+      <a
+        routerLink="/search"
+        class="inline-flex items-center gap-2 bg-secondary text-white font-semibold px-4 py-2 rounded-full hover:bg-opacity-90 transition-all duration-200 shadow-lg shadow-secondary/30 text-sm"
+        aria-label="Rechercher un voyage"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        Recherche
+      </a>
+
       @if (authService.isLoggedIn()) {
-        <!-- Authenticated State -->
-        <div class="flex items-center gap-3">
-          <!-- Messages -->
-          <a routerLink="/messages" class="relative text-text-secondary hover:text-primary transition-colors p-1" aria-label="Messages"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></a>
-          <!-- User Avatar + Name — links to the dashboard -->
-          <a routerLink="/dashboard" class="flex items-center gap-2 hover:opacity-80 transition-opacity" aria-label="Mon espace">
+        <a
+          [routerLink]="['/dashboard']"
+          [queryParams]="{ tab: 'received' }"
+          class="text-primary font-semibold hover:text-secondary transition-colors duration-200 text-sm"
+          aria-label="Mes réservations"
+        >
+          Mes réservations
+        </a>
+
+        <div class="relative" (click)="$event.stopPropagation()">
+          <button
+            (click)="toggleProfileMenu($event)"
+            type="button"
+            class="inline-flex items-center gap-2 border border-gray-200 rounded-full px-3 py-1.5 hover:border-secondary transition-colors"
+            [attr.aria-expanded]="isProfileMenuOpen"
+            aria-haspopup="menu"
+            aria-label="Menu profil"
+          >
             <span
-              class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-white text-sm font-semibold uppercase shrink-0"
+              class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-secondary text-white text-xs font-semibold uppercase shrink-0"
               aria-hidden="true"
             >
               {{ (authService.currentUser$ | async)?.firstName?.charAt(0) }}
             </span>
-            <span class="text-text-primary text-sm font-medium max-w-[120px] truncate">
-              {{ (authService.currentUser$ | async)?.firstName }}
-            </span>
-          </a>
-
-          <!-- Logout Button -->
-          <button
-            (click)="logout()"
-            type="button"
-            class="text-text-secondary hover:text-error transition-colors duration-200 text-sm font-medium"
-            aria-label="Se déconnecter"
-          >
-            Déconnexion
+            <span class="text-text-primary text-sm font-medium max-w-[90px] truncate">Profil</span>
+            <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
           </button>
+
+          @if (isProfileMenuOpen) {
+            <div class="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-lg py-1" role="menu" aria-label="Actions du profil">
+              <a
+                [routerLink]="['/dashboard']"
+                [queryParams]="{ tab: 'sent' }"
+                class="block px-4 py-2.5 text-sm text-text-primary hover:bg-background-secondary"
+                (click)="closeMenus()"
+                role="menuitem"
+              >
+                Mes demandes
+              </a>
+              <a
+                routerLink="/messages"
+                class="flex items-center justify-between px-4 py-2.5 text-sm text-text-primary hover:bg-background-secondary"
+                (click)="closeMenus()"
+                role="menuitem"
+              >
+                <span>Messages</span>
+                <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-accent text-white text-xs font-semibold">
+                  {{ messagingService.unreadCount$ | async }}
+                </span>
+              </a>
+              <button
+                (click)="logout()"
+                type="button"
+                class="w-full text-left px-4 py-2.5 text-sm text-error hover:bg-red-50"
+                role="menuitem"
+              >
+                Déconnexion
+              </button>
+            </div>
+          }
         </div>
       } @else {
-        <!-- Unauthenticated State -->
         <a
           routerLink="/login"
           class="text-primary font-medium hover:text-secondary transition-colors duration-200 text-sm"
         >
           Connexion
         </a>
-        <a
-          routerLink="/register"
-          class="bg-accent text-white font-semibold px-5 py-2.5 rounded-full hover:bg-opacity-90 transition-all duration-200 shadow-lg shadow-accent/30 text-sm"
-        >
-          S'inscrire
-        </a>
       }
-
-      <!-- Search Button (always visible on desktop) -->
-      <a
-        routerLink="/search"
-        class="hidden md:inline-flex items-center gap-2 bg-secondary text-white font-semibold px-5 py-2.5 rounded-full hover:bg-opacity-90 transition-all duration-200 shadow-lg shadow-secondary/30 text-sm"
-        aria-label="Rechercher un voyage"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        Rechercher
-      </a>
     </div>
 
     <!-- Mobile Menu Button -->
@@ -102,56 +116,48 @@
   @if (isMobileMenuOpen) {
     <div id="mobile-menu" class="md:hidden bg-white border-t border-gray-100 shadow-lg" role="navigation" aria-label="Menu mobile">
       <ul class="flex flex-col px-4 py-3" role="list">
-        <!-- Nav Links -->
-        @for (link of navLinks; track link.href) {
-          <li>
-            <a
-              [href]="link.href"
-              class="block text-text-secondary hover:text-primary hover:bg-gray-50 transition-colors duration-200 font-medium py-3 px-2 rounded-lg text-sm"
-              (click)="toggleMobileMenu()"
-            >
-              {{ link.label }}
-            </a>
-          </li>
-        }
-
         <!-- Search Link -->
         <li>
           <a
             routerLink="/search"
             class="flex items-center gap-2 text-secondary font-semibold py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
-            (click)="toggleMobileMenu()"
+            (click)="closeMenus()"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            Rechercher un voyage
+            Recherche
           </a>
         </li>
 
-        <!-- Divider -->
-        <li class="border-t border-gray-100 my-2" role="separator" aria-hidden="true"></li>
-
         @if (authService.isLoggedIn()) {
-          <!-- Mobile: Authenticated State -->
-          <li class="flex items-center gap-3 py-3 px-2">
-            <span
-              class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-white text-sm font-semibold uppercase shrink-0"
-              aria-hidden="true"
+          <li>
+            <a
+              [routerLink]="['/dashboard']"
+              [queryParams]="{ tab: 'received' }"
+              class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
+              (click)="closeMenus()"
             >
-              {{ (authService.currentUser$ | async)?.firstName?.charAt(0) }}
-            </span>
-            <span class="text-text-primary text-sm font-medium truncate">
-              {{ (authService.currentUser$ | async)?.firstName }}
-            </span>
+              Mes réservations
+            </a>
           </li>
           <li>
             <a
-              routerLink="/dashboard"
+              [routerLink]="['/dashboard']"
+              [queryParams]="{ tab: 'sent' }"
               class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
-              (click)="toggleMobileMenu()"
+              (click)="closeMenus()"
             >
-              Mon espace
+              Mes demandes
+            </a>
+          </li>
+          <li>
+            <a
+              routerLink="/messages"
+              class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
+              (click)="closeMenus()"
+            >
+              Messages
             </a>
           </li>
           <li>
@@ -164,23 +170,13 @@
             </button>
           </li>
         } @else {
-          <!-- Mobile: Unauthenticated State -->
           <li>
             <a
               routerLink="/login"
               class="block text-primary font-medium py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
-              (click)="toggleMobileMenu()"
+              (click)="closeMenus()"
             >
               Connexion
-            </a>
-          </li>
-          <li>
-            <a
-              routerLink="/register"
-              class="block bg-accent text-white font-semibold py-3 px-4 rounded-full text-center hover:bg-opacity-90 transition-all duration-200 shadow-lg shadow-accent/30 mt-2 text-sm"
-              (click)="toggleMobileMenu()"
-            >
-              S'inscrire
             </a>
           </li>
         }
