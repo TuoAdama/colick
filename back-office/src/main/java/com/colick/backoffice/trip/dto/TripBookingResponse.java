@@ -29,6 +29,7 @@ public class TripBookingResponse {
     private LocalDateTime validationCodeSentAt;
     private LocalDateTime validationCodeInvalidatedAt;
     private LocalDateTime validationCodeDeliveryFailedAt;
+    private LocalDateTime deliveredAt;
     private boolean validationCodeActive;
 
     /**
@@ -51,6 +52,7 @@ public class TripBookingResponse {
                 .validationCodeSentAt(booking.getValidationCodeSentAt())
                 .validationCodeInvalidatedAt(booking.getValidationCodeInvalidatedAt())
                 .validationCodeDeliveryFailedAt(booking.getValidationCodeDeliveryFailedAt())
+                .deliveredAt(booking.getDeliveredAt())
                 .validationCodeActive(booking.hasActiveValidationCode())
                 .build();
     }

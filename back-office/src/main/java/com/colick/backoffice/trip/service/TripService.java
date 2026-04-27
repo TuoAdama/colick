@@ -22,6 +22,9 @@ public interface TripService {
     /** Updates an existing trip. */
     TripResponse updateTrip(Long id, UpdateTripRequest request, User requester);
 
+    /** Marks a trip as completed once the traveler has finished the route. */
+    TripResponse completeTrip(Long id, User requester);
+
     /** Cancels (soft-deletes) a trip. */
     void deleteTrip(Long id, User requester);
 
@@ -33,6 +36,9 @@ public interface TripService {
 
     /** Accepts a booking request (sends email notification). */
     TripBookingResponse acceptBooking(Long tripId, Long bookingId, User requester);
+
+    /** Confirms parcel handoff by validating the code received by the recipient. */
+    TripBookingResponse confirmBookingDelivery(Long tripId, Long bookingId, ConfirmBookingDeliveryRequest request, User requester);
 
     /** Rejects a booking request (sends email notification). */
     TripBookingResponse rejectBooking(Long tripId, Long bookingId, User requester);

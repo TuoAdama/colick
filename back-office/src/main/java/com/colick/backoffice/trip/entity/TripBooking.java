@@ -75,6 +75,9 @@ public class TripBooking {
     @Column
     private LocalDateTime validationCodeDeliveryFailedAt;
 
+    @Column
+    private LocalDateTime deliveredAt;
+
     public boolean hasActiveValidationCode() {
         return validationCode != null
                 && validationDeliveryStatus == ValidationDeliveryStatus.DELIVERED
@@ -82,7 +85,7 @@ public class TripBooking {
     }
 
     public enum BookingStatus {
-        PENDING, ACCEPTED, REJECTED, CANCELLED, REMOVED
+        PENDING, ACCEPTED, REJECTED, CANCELLED, REMOVED, DELIVERED
     }
 
     public enum ValidationDeliveryChannel {

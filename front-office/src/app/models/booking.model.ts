@@ -6,6 +6,10 @@ export interface CreateBookingRequest {
   recipientContact: string;
 }
 
+export interface ConfirmBookingDeliveryRequest {
+  validationCode: string;
+}
+
 export interface BookingResponse {
   id: number;
   tripId: number;
@@ -22,5 +26,6 @@ export interface BookingResponse {
   validationCodeSentAt?: string;
   validationCodeInvalidatedAt?: string;
   validationCodeDeliveryFailedAt?: string;
+  deliveredAt?: string;
   validationCodeActive: boolean;
 }

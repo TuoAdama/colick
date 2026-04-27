@@ -75,6 +75,15 @@ public class TripController {
         return ResponseEntity.ok(tripService.updateTrip(id, request, currentUser));
     }
 
+    /** Marks a trip as completed once the traveler has performed it. */
+    @PutMapping("/{id}/complete")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TripResponse> completeTrip(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(tripService.completeTrip(id, currentUser));
+    }
+
     /** Cancel a trip. Only the traveler or an admin can do this. */
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
@@ -113,6 +122,17 @@ public class TripController {
             @PathVariable Long bookingId,
             @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(tripService.acceptBooking(id, bookingId, currentUser));
+    }
+
+    /** Confirms that the traveler has delivered the parcel to the recipient. */
+    @PutMapping("/{id}/bookings/{bookingId}/deliver")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TripBookingResponse> confirmBookingDelivery(
+            @PathVariable Long id,
+            @PathVariable Long bookingId,
+            @Valid @RequestBody ConfirmBookingDeliveryRequest request,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(tripService.confirmBookingDelivery(id, bookingId, request, currentUser));
     }
 
     /** Reject a booking request. Only the trip owner can do this. */

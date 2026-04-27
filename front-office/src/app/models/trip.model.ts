@@ -25,6 +25,6 @@ export interface Trip {
   maxWeight: number;
   pricePerKilo: number;
   instantAcceptance: boolean;
-  status: string;
+  status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
   availableWeight: number;
 }
