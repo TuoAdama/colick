@@ -88,8 +88,10 @@ public class TripController {
     /** List all booking requests for a trip. */
     @GetMapping("/{id}/bookings")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<TripBookingResponse>> getBookings(@PathVariable Long id) {
-        return ResponseEntity.ok(tripService.getBookings(id));
+    public ResponseEntity<List<TripBookingResponse>> getBookings(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(tripService.getBookings(id, currentUser));
     }
 
     /** Submit a booking request on a trip. */

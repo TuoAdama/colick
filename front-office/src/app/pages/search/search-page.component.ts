@@ -247,7 +247,10 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   }
 
   hasActiveBookingForTrip(tripId: number): boolean {
-    return this.myBookings.some((booking) => booking.tripId === tripId && booking.status !== 'REJECTED');
+    return this.myBookings.some(
+      (booking) => booking.tripId === tripId
+        && (booking.status === 'PENDING' || booking.status === 'ACCEPTED')
+    );
   }
 
   private loadSentBookings(): void {

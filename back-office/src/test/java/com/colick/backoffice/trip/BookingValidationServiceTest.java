@@ -1,6 +1,7 @@
 package com.colick.backoffice.trip;
 
 import com.colick.backoffice.email.EmailService;
+import com.colick.backoffice.exception.ValidationCodeDeliveryException;
 import com.colick.backoffice.notification.qrcode.QrCodeService;
 import com.colick.backoffice.notification.sms.SmsService;
 import com.colick.backoffice.trip.entity.Trip;
@@ -96,8 +97,10 @@ class BookingValidationServiceTest {
 
         assertThat(booking.getRecipientContact()).isEqualTo("recipient@example.com");
         assertThat(booking.getValidationDeliveryChannel()).isEqualTo(TripBooking.ValidationDeliveryChannel.EMAIL);
+        assertThat(booking.getValidationDeliveryStatus()).isEqualTo(TripBooking.ValidationDeliveryStatus.DELIVERED);
         assertThat(booking.getValidationCode()).matches("\\d{6}");
         assertThat(booking.getValidationCodeSentAt()).isNotNull();
+        assertThat(booking.getValidationCodeDeliveryFailedAt()).isNull();
         assertThat(booking.getValidationCodeInvalidatedAt()).isNull();
 
         ArgumentCaptor<String> qrPayloadCaptor = ArgumentCaptor.forClass(String.class);
@@ -130,6 +133,7 @@ class BookingValidationServiceTest {
 
         assertThat(booking.getRecipientContact()).isEqualTo("+22507000000");
         assertThat(booking.getValidationDeliveryChannel()).isEqualTo(TripBooking.ValidationDeliveryChannel.SMS);
+        assertThat(booking.getValidationDeliveryStatus()).isEqualTo(TripBooking.ValidationDeliveryStatus.DELIVERED);
         assertThat(booking.getValidationCode()).matches("\\d{6}");
         assertThat(booking.getValidationCodeSentAt()).isNotNull();
         verify(smsService).sendValidationCode(
@@ -142,16 +146,60 @@ class BookingValidationServiceTest {
     }
 
     @Test
+    void sendValidationCode_shouldThrowDeliveryException_whenSmsSendFails() {
+        TripBooking booking = TripBooking.builder()
+                .id(21L)
+                .trip(trip)
+                .title("Valise")
+                .recipientContact("+225 07 00 00 00")
+                .status(TripBooking.BookingStatus.ACCEPTED)
+                .build();
+
+        doThrow(new IllegalStateException("SMS delivery is not configured"))
+                .when(smsService).sendValidationCode(anyString(), anyString(), anyString(), anyString());
+
+        assertThatThrownBy(() -> bookingValidationService.sendValidationCode(booking))
+                .isInstanceOf(ValidationCodeDeliveryException.class)
+                .hasMessage("Unable to deliver validation code");
+
+        assertThat(booking.getValidationCode()).isNull();
+        assertThat(booking.getValidationDeliveryStatus()).isNull();
+        assertThat(booking.getValidationCodeSentAt()).isNull();
+    }
+
+    @Test
+    void markValidationCodeDeliveryFailed_shouldPersistFailureMetadata() {
+        TripBooking booking = TripBooking.builder()
+                .trip(trip)
+                .recipientContact("+22507000000")
+                .build();
+
+        bookingValidationService.markValidationCodeDeliveryFailed(
+                booking,
+                "+22507000000",
+                TripBooking.ValidationDeliveryChannel.SMS
+        );
+
+        assertThat(booking.getRecipientContact()).isEqualTo("+22507000000");
+        assertThat(booking.getValidationCode()).isNull();
+        assertThat(booking.getValidationDeliveryChannel()).isEqualTo(TripBooking.ValidationDeliveryChannel.SMS);
+        assertThat(booking.getValidationDeliveryStatus()).isEqualTo(TripBooking.ValidationDeliveryStatus.FAILED);
+        assertThat(booking.getValidationCodeDeliveryFailedAt()).isNotNull();
+    }
+
+    @Test
     void invalidateValidationCode_shouldSetInvalidatedAt_whenCodeIsActive() {
         TripBooking booking = TripBooking.builder()
                 .trip(trip)
                 .recipientContact("recipient@example.com")
                 .validationCode("123456")
+                .validationDeliveryStatus(TripBooking.ValidationDeliveryStatus.DELIVERED)
                 .validationCodeSentAt(LocalDateTime.now())
                 .build();
 
         bookingValidationService.invalidateValidationCode(booking);
 
+        assertThat(booking.getValidationDeliveryStatus()).isEqualTo(TripBooking.ValidationDeliveryStatus.INVALIDATED);
         assertThat(booking.getValidationCodeInvalidatedAt()).isNotNull();
     }
 }

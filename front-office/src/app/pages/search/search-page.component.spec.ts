@@ -117,4 +117,22 @@ describe('SearchPageComponent', () => {
 
     expect(messagingServiceMock.startConversation).not.toHaveBeenCalled();
   });
+
+  it('treats only pending and accepted bookings as active', () => {
+    component.myBookings = [
+      { id: 1, tripId: 10, senderId: 1, senderName: 'Bob', title: 'A', weight: 1, recipientContact: 'a@example.com', status: 'CANCELLED', validationCodeActive: false },
+      { id: 2, tripId: 10, senderId: 1, senderName: 'Bob', title: 'B', weight: 1, recipientContact: 'b@example.com', status: 'REMOVED', validationCodeActive: false },
+      { id: 3, tripId: 10, senderId: 1, senderName: 'Bob', title: 'C', weight: 1, recipientContact: 'c@example.com', status: 'PENDING', validationCodeActive: false },
+    ];
+
+    expect(component.hasActiveBookingForTrip(10)).toBeTrue();
+
+    component.myBookings = [
+      { id: 4, tripId: 11, senderId: 1, senderName: 'Bob', title: 'D', weight: 1, recipientContact: 'd@example.com', status: 'CANCELLED', validationCodeActive: false },
+      { id: 5, tripId: 11, senderId: 1, senderName: 'Bob', title: 'E', weight: 1, recipientContact: 'e@example.com', status: 'REMOVED', validationCodeActive: false },
+      { id: 6, tripId: 11, senderId: 1, senderName: 'Bob', title: 'F', weight: 1, recipientContact: 'f@example.com', status: 'REJECTED', validationCodeActive: false },
+    ];
+
+    expect(component.hasActiveBookingForTrip(11)).toBeFalse();
+  });
 });

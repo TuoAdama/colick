@@ -302,6 +302,10 @@
                                 Code actif envoyé par {{ validationChannelLabel(booking.validationDeliveryChannel) }}
                                 le {{ booking.validationCodeSentAt | date:'dd/MM/yyyy HH:mm' }}
                               </p>
+                            } @else if (booking.validationDeliveryStatus === 'FAILED' && booking.validationCodeDeliveryFailedAt) {
+                              <p class="text-warning text-xs mt-1">
+                                L'envoi du code a échoué le {{ booking.validationCodeDeliveryFailedAt | date:'dd/MM/yyyy HH:mm' }}.
+                              </p>
                             } @else if (booking.validationCodeInvalidatedAt) {
                               <p class="text-warning text-xs mt-1">
                                 Code invalidé le {{ booking.validationCodeInvalidatedAt | date:'dd/MM/yyyy HH:mm' }}
@@ -377,6 +381,10 @@
                         <p class="text-success text-xs mt-1">
                           Code actif envoyé par {{ validationChannelLabel(booking.validationDeliveryChannel) }}
                           le {{ booking.validationCodeSentAt | date:'dd/MM/yyyy HH:mm' }}
+                        </p>
+                      } @else if (booking.validationDeliveryStatus === 'FAILED' && booking.validationCodeDeliveryFailedAt) {
+                        <p class="text-warning text-xs mt-1">
+                          L'envoi du code a échoué le {{ booking.validationCodeDeliveryFailedAt | date:'dd/MM/yyyy HH:mm' }}.
                         </p>
                       } @else if (booking.validationCodeInvalidatedAt) {
                         <p class="text-warning text-xs mt-1">

@@ -25,8 +25,10 @@ public class TripBookingResponse {
     private String recipientContact;
     private TripBooking.BookingStatus status;
     private TripBooking.ValidationDeliveryChannel validationDeliveryChannel;
+    private TripBooking.ValidationDeliveryStatus validationDeliveryStatus;
     private LocalDateTime validationCodeSentAt;
     private LocalDateTime validationCodeInvalidatedAt;
+    private LocalDateTime validationCodeDeliveryFailedAt;
     private boolean validationCodeActive;
 
     /**
@@ -45,8 +47,10 @@ public class TripBookingResponse {
                 .recipientContact(booking.getRecipientContact())
                 .status(booking.getStatus())
                 .validationDeliveryChannel(booking.getValidationDeliveryChannel())
+                .validationDeliveryStatus(booking.getValidationDeliveryStatus())
                 .validationCodeSentAt(booking.getValidationCodeSentAt())
                 .validationCodeInvalidatedAt(booking.getValidationCodeInvalidatedAt())
+                .validationCodeDeliveryFailedAt(booking.getValidationCodeDeliveryFailedAt())
                 .validationCodeActive(booking.hasActiveValidationCode())
                 .build();
     }

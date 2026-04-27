@@ -26,7 +26,7 @@ public interface TripService {
     void deleteTrip(Long id, User requester);
 
     /** Returns all booking requests for a trip. */
-    List<TripBookingResponse> getBookings(Long tripId);
+    List<TripBookingResponse> getBookings(Long tripId, User requester);
 
     /** Submits a booking request on a trip. */
     TripBookingResponse createBooking(Long tripId, CreateBookingRequest request, User sender);

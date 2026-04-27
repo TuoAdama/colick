@@ -62,21 +62,34 @@ public class TripBooking {
     @Column
     private ValidationDeliveryChannel validationDeliveryChannel;
 
+    @Enumerated(EnumType.STRING)
+    @Column
+    private ValidationDeliveryStatus validationDeliveryStatus;
+
     @Column
     private LocalDateTime validationCodeSentAt;
 
     @Column
     private LocalDateTime validationCodeInvalidatedAt;
 
+    @Column
+    private LocalDateTime validationCodeDeliveryFailedAt;
+
     public boolean hasActiveValidationCode() {
-        return validationCode != null && validationCodeInvalidatedAt == null;
+        return validationCode != null
+                && validationDeliveryStatus == ValidationDeliveryStatus.DELIVERED
+                && validationCodeInvalidatedAt == null;
     }
 
     public enum BookingStatus {
-        PENDING, ACCEPTED, REJECTED, CANCELLED
+        PENDING, ACCEPTED, REJECTED, CANCELLED, REMOVED
     }
 
     public enum ValidationDeliveryChannel {
         EMAIL, SMS
+    }
+
+    public enum ValidationDeliveryStatus {
+        DELIVERED, FAILED, INVALIDATED
     }
 }

@@ -1,6 +1,7 @@
 package com.colick.backoffice.trip.service;
 
 import com.colick.backoffice.email.EmailService;
+import com.colick.backoffice.exception.ValidationCodeDeliveryException;
 import com.colick.backoffice.notification.qrcode.QrCodeService;
 import com.colick.backoffice.notification.sms.SmsService;
 import com.colick.backoffice.trip.entity.TripBooking;
@@ -63,42 +64,69 @@ public class BookingValidationService {
         }
 
         String normalizedContact = normalizeRecipientContact(booking.getRecipientContact());
+        TripBooking.ValidationDeliveryChannel channel = resolveDeliveryChannel(normalizedContact);
         String validationCode = "%06d".formatted(secureRandom.nextInt(1_000_000));
-        TripBooking.ValidationDeliveryChannel channel = isEmail(normalizedContact)
-                ? TripBooking.ValidationDeliveryChannel.EMAIL
-                : TripBooking.ValidationDeliveryChannel.SMS;
+
+        try {
+            if (channel == TripBooking.ValidationDeliveryChannel.EMAIL) {
+                emailService.sendBookingValidationCodeEmail(
+                        normalizedContact,
+                        booking.getTitle(),
+                        validationCode,
+                        qrCodeService.generateDataUri(buildQrPayload(booking, validationCode)),
+                        booking.getTrip().getDepartureAddress(),
+                        booking.getTrip().getDestination()
+                );
+            } else {
+                smsService.sendValidationCode(
+                        normalizedContact,
+                        validationCode,
+                        booking.getTrip().getDepartureAddress(),
+                        booking.getTrip().getDestination()
+                );
+            }
+        } catch (RuntimeException ex) {
+            throw new ValidationCodeDeliveryException(
+                    "Unable to deliver validation code",
+                    normalizedContact,
+                    channel,
+                    ex
+            );
+        }
 
         booking.setRecipientContact(normalizedContact);
         booking.setValidationCode(validationCode);
         booking.setValidationDeliveryChannel(channel);
+        booking.setValidationDeliveryStatus(TripBooking.ValidationDeliveryStatus.DELIVERED);
         booking.setValidationCodeSentAt(LocalDateTime.now());
         booking.setValidationCodeInvalidatedAt(null);
+        booking.setValidationCodeDeliveryFailedAt(null);
+    }
 
-        if (channel == TripBooking.ValidationDeliveryChannel.EMAIL) {
-            emailService.sendBookingValidationCodeEmail(
-                    normalizedContact,
-                    booking.getTitle(),
-                    validationCode,
-                    qrCodeService.generateDataUri(buildQrPayload(booking, validationCode)),
-                    booking.getTrip().getDepartureAddress(),
-                    booking.getTrip().getDestination()
-            );
-            return;
-        }
-
-        smsService.sendValidationCode(
-                normalizedContact,
-                validationCode,
-                booking.getTrip().getDepartureAddress(),
-                booking.getTrip().getDestination()
-        );
+    public void markValidationCodeDeliveryFailed(TripBooking booking,
+                                                 String normalizedContact,
+                                                 TripBooking.ValidationDeliveryChannel channel) {
+        booking.setRecipientContact(normalizedContact);
+        booking.setValidationCode(null);
+        booking.setValidationDeliveryChannel(channel);
+        booking.setValidationDeliveryStatus(TripBooking.ValidationDeliveryStatus.FAILED);
+        booking.setValidationCodeSentAt(null);
+        booking.setValidationCodeInvalidatedAt(null);
+        booking.setValidationCodeDeliveryFailedAt(LocalDateTime.now());
     }
 
     public void invalidateValidationCode(TripBooking booking) {
         if (!booking.hasActiveValidationCode()) {
             return;
         }
+        booking.setValidationDeliveryStatus(TripBooking.ValidationDeliveryStatus.INVALIDATED);
         booking.setValidationCodeInvalidatedAt(LocalDateTime.now());
+    }
+
+    private TripBooking.ValidationDeliveryChannel resolveDeliveryChannel(String normalizedContact) {
+        return isEmail(normalizedContact)
+                ? TripBooking.ValidationDeliveryChannel.EMAIL
+                : TripBooking.ValidationDeliveryChannel.SMS;
     }
 
     private boolean isEmail(String contact) {
