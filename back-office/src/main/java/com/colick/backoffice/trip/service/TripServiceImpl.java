@@ -3,6 +3,7 @@ package com.colick.backoffice.trip.service;
 import com.colick.backoffice.email.EmailService;
 import com.colick.backoffice.exception.TripBookingConflictException;
 import com.colick.backoffice.exception.ResourceNotFoundException;
+import com.colick.backoffice.exception.ValidationCodeDeliveryException;
 import com.colick.backoffice.location.entity.LocationType;
 import com.colick.backoffice.location.repository.LocationRepository;
 import com.colick.backoffice.trip.dto.*;
@@ -29,15 +30,18 @@ public class TripServiceImpl implements TripService {
     private final TripBookingRepository bookingRepository;
     private final EmailService emailService;
     private final LocationRepository locationRepository;
+    private final BookingValidationService bookingValidationService;
 
     public TripServiceImpl(TripRepository tripRepository,
                            TripBookingRepository bookingRepository,
                            EmailService emailService,
-                           LocationRepository locationRepository) {
+                           LocationRepository locationRepository,
+                           BookingValidationService bookingValidationService) {
         this.tripRepository = tripRepository;
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
         this.locationRepository = locationRepository;
+        this.bookingValidationService = bookingValidationService;
     }
 
     @Override
@@ -96,19 +100,23 @@ public class TripServiceImpl implements TripService {
         List<TripBooking.BookingStatus> activeStatuses = List.of(
                 TripBooking.BookingStatus.PENDING,
                 TripBooking.BookingStatus.ACCEPTED);
-        bookingRepository.findByTripAndStatusIn(trip, activeStatuses)
-                .forEach(b -> emailService.sendTripCancelledEmail(
-                        b.getSender().getEmail(),
-                        b.getSender().getFirstName(),
-                        trip.getDepartureAddress(),
-                        trip.getDestination()));
+        List<TripBooking> activeBookings = bookingRepository.findByTripAndStatusIn(trip, activeStatuses);
+        activeBookings.forEach(bookingValidationService::invalidateValidationCode);
+        bookingRepository.saveAll(activeBookings);
+        activeBookings.forEach(b -> emailService.sendTripCancelledEmail(
+                b.getSender().getEmail(),
+                b.getSender().getFirstName(),
+                trip.getDepartureAddress(),
+                trip.getDestination()));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<TripBookingResponse> getBookings(Long tripId) {
+    public List<TripBookingResponse> getBookings(Long tripId, User requester) {
         Trip trip = findTripOrThrow(tripId);
+        assertTripOwner(trip, requester);
         return bookingRepository.findByTrip(trip).stream()
+                .filter(booking -> booking.getStatus() != TripBooking.BookingStatus.REMOVED)
                 .map(TripBookingResponse::from)
                 .toList();
     }
@@ -145,11 +153,15 @@ public class TripServiceImpl implements TripService {
                 .weight(request.getWeight())
                 .description(request.getDescription())
                 .packagePhotoUrl(request.getPackagePhotoUrl())
-                .recipientContact(request.getRecipientContact())
+                .recipientContact(bookingValidationService.normalizeRecipientContact(request.getRecipientContact()))
                 .status(initialStatus)
                 .build();
 
         TripBooking saved = bookingRepository.save(booking);
+
+        if (initialStatus == TripBooking.BookingStatus.ACCEPTED) {
+            saved = deliverValidationCodeWithoutBlockingAcceptance(saved);
+        }
 
         emailService.sendTripBookingCreatedEmail(
             trip.getTraveler().getEmail(),
@@ -167,8 +179,16 @@ public class TripServiceImpl implements TripService {
         TripBooking booking = findBookingOrThrow(tripId, bookingId);
         assertTripOwner(booking.getTrip(), requester);
 
+        if (booking.getStatus() == TripBooking.BookingStatus.ACCEPTED) {
+            return TripBookingResponse.from(booking);
+        }
+        if (booking.getStatus() != TripBooking.BookingStatus.PENDING) {
+            throw new IllegalStateException("Only PENDING bookings can be accepted");
+        }
+
         booking.setStatus(TripBooking.BookingStatus.ACCEPTED);
         TripBooking saved = bookingRepository.save(booking);
+        saved = deliverValidationCodeWithoutBlockingAcceptance(saved);
 
         emailService.sendTripBookingAcceptedEmail(
             booking.getSender().getEmail(),
@@ -185,7 +205,15 @@ public class TripServiceImpl implements TripService {
         TripBooking booking = findBookingOrThrow(tripId, bookingId);
         assertTripOwner(booking.getTrip(), requester);
 
+        if (booking.getStatus() == TripBooking.BookingStatus.REJECTED) {
+            return TripBookingResponse.from(booking);
+        }
+        if (booking.getStatus() != TripBooking.BookingStatus.PENDING) {
+            throw new IllegalStateException("Only PENDING bookings can be rejected");
+        }
+
         booking.setStatus(TripBooking.BookingStatus.REJECTED);
+        bookingValidationService.invalidateValidationCode(booking);
         TripBooking saved = bookingRepository.save(booking);
 
         emailService.sendTripBookingRejectedEmail(
@@ -203,14 +231,23 @@ public class TripServiceImpl implements TripService {
         TripBooking booking = findBookingOrThrow(tripId, bookingId);
         assertTripOwner(booking.getTrip(), requester);
 
+        if (booking.getStatus() == TripBooking.BookingStatus.REMOVED) {
+            return;
+        }
+        if (booking.getStatus() != TripBooking.BookingStatus.ACCEPTED) {
+            throw new IllegalStateException("Only ACCEPTED bookings can be removed");
+        }
+
+        booking.setStatus(TripBooking.BookingStatus.REMOVED);
+        bookingValidationService.invalidateValidationCode(booking);
+        bookingRepository.save(booking);
+
         emailService.sendTripBookingRemovedEmail(
             booking.getSender().getEmail(),
             booking.getSender().getFirstName(),
             booking.getTrip().getDepartureAddress(),
             booking.getTrip().getDestination()
         );
-
-        bookingRepository.delete(booking);
     }
 
     @Override
@@ -227,6 +264,7 @@ public class TripServiceImpl implements TripService {
         }
 
         booking.setStatus(TripBooking.BookingStatus.CANCELLED);
+        bookingValidationService.invalidateValidationCode(booking);
         TripBooking saved = bookingRepository.save(booking);
 
         emailService.sendBookingCancelledBySenderEmail(
@@ -256,6 +294,19 @@ public class TripServiceImpl implements TripService {
                 && requester.getRole() != User.Role.ADMIN) {
             throw new AccessDeniedException("You are not the owner of this trip");
         }
+    }
+
+    private TripBooking deliverValidationCodeWithoutBlockingAcceptance(TripBooking booking) {
+        try {
+            bookingValidationService.sendValidationCode(booking);
+        } catch (ValidationCodeDeliveryException ex) {
+            bookingValidationService.markValidationCodeDeliveryFailed(
+                    booking,
+                    ex.getRecipientContact(),
+                    ex.getDeliveryChannel()
+            );
+        }
+        return bookingRepository.save(booking);
     }
 
     // ---- Trip search -------------------------------------------------------

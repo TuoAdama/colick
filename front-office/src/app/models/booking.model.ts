@@ -16,5 +16,11 @@ export interface BookingResponse {
   description?: string;
   packagePhotoUrl?: string;
   recipientContact: string;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'REMOVED';
+  validationDeliveryChannel?: 'EMAIL' | 'SMS';
+  validationDeliveryStatus?: 'DELIVERED' | 'FAILED' | 'INVALIDATED';
+  validationCodeSentAt?: string;
+  validationCodeInvalidatedAt?: string;
+  validationCodeDeliveryFailedAt?: string;
+  validationCodeActive: boolean;
 }

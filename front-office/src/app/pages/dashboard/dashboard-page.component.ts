@@ -329,10 +329,14 @@ export class DashboardPageComponent implements OnInit {
   }
 
   statusLabel(status: string): string {
-    return ({ PENDING: 'En attente', ACCEPTED: 'Acceptée', REJECTED: 'Refusée', CANCELLED: 'Annulée' } as Record<string, string>)[status] ?? status;
+    return ({ PENDING: 'En attente', ACCEPTED: 'Acceptée', REJECTED: 'Refusée', CANCELLED: 'Annulée', REMOVED: 'Retirée' } as Record<string, string>)[status] ?? status;
   }
 
   statusClass(status: string): string {
-    return ({ PENDING: 'bg-yellow-100 text-yellow-800', ACCEPTED: 'bg-green-100 text-green-800', REJECTED: 'bg-red-100 text-red-800', CANCELLED: 'bg-gray-100 text-gray-500' } as Record<string, string>)[status] ?? 'bg-gray-100 text-gray-800';
+    return ({ PENDING: 'bg-yellow-100 text-yellow-800', ACCEPTED: 'bg-green-100 text-green-800', REJECTED: 'bg-red-100 text-red-800', CANCELLED: 'bg-gray-100 text-gray-500', REMOVED: 'bg-slate-100 text-slate-600' } as Record<string, string>)[status] ?? 'bg-gray-100 text-gray-800';
+  }
+
+  validationChannelLabel(channel?: string): string {
+    return channel === 'SMS' ? 'SMS' : 'e-mail';
   }
 }

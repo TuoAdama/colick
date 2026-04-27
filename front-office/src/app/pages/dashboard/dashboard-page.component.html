@@ -293,8 +293,23 @@
                           <div>
                             <p class="font-medium text-text-primary text-sm">{{ booking.senderName }}</p>
                             <p class="text-text-secondary text-xs">{{ booking.title }} · {{ booking.weight }} kg</p>
+                            <p class="text-text-muted text-xs mt-1">Contact destinataire : {{ booking.recipientContact }}</p>
                             @if (booking.description) {
                               <p class="text-text-muted text-xs mt-1">{{ booking.description }}</p>
+                            }
+                            @if (booking.validationCodeActive && booking.validationDeliveryChannel && booking.validationCodeSentAt) {
+                              <p class="text-success text-xs mt-1">
+                                Code actif envoyé par {{ validationChannelLabel(booking.validationDeliveryChannel) }}
+                                le {{ booking.validationCodeSentAt | date:'dd/MM/yyyy HH:mm' }}
+                              </p>
+                            } @else if (booking.validationDeliveryStatus === 'FAILED' && booking.validationCodeDeliveryFailedAt) {
+                              <p class="text-warning text-xs mt-1">
+                                L'envoi du code a échoué le {{ booking.validationCodeDeliveryFailedAt | date:'dd/MM/yyyy HH:mm' }}.
+                              </p>
+                            } @else if (booking.validationCodeInvalidatedAt) {
+                              <p class="text-warning text-xs mt-1">
+                                Code invalidé le {{ booking.validationCodeInvalidatedAt | date:'dd/MM/yyyy HH:mm' }}
+                              </p>
                             }
                           </div>
                           <div class="flex items-center gap-2 shrink-0">
@@ -361,6 +376,24 @@
                       </p>
                       @if (booking.description) {
                         <p class="text-text-muted text-xs mt-1">{{ booking.description }}</p>
+                      }
+                      @if (booking.validationCodeActive && booking.validationDeliveryChannel && booking.validationCodeSentAt) {
+                        <p class="text-success text-xs mt-1">
+                          Code actif envoyé par {{ validationChannelLabel(booking.validationDeliveryChannel) }}
+                          le {{ booking.validationCodeSentAt | date:'dd/MM/yyyy HH:mm' }}
+                        </p>
+                      } @else if (booking.validationDeliveryStatus === 'FAILED' && booking.validationCodeDeliveryFailedAt) {
+                        <p class="text-warning text-xs mt-1">
+                          L'envoi du code a échoué le {{ booking.validationCodeDeliveryFailedAt | date:'dd/MM/yyyy HH:mm' }}.
+                        </p>
+                      } @else if (booking.validationCodeInvalidatedAt) {
+                        <p class="text-warning text-xs mt-1">
+                          Code invalidé le {{ booking.validationCodeInvalidatedAt | date:'dd/MM/yyyy HH:mm' }}
+                        </p>
+                      } @else if (booking.status === 'ACCEPTED') {
+                        <p class="text-text-muted text-xs mt-1">
+                          Le code de validation est en cours d’envoi au destinataire.
+                        </p>
                       }
                     </div>
                     <!-- Status badge + cancel button -->

@@ -3,6 +3,7 @@ package com.colick.backoffice.trip;
 import com.colick.backoffice.email.EmailService;
 import com.colick.backoffice.exception.ResourceNotFoundException;
 import com.colick.backoffice.exception.TripBookingConflictException;
+import com.colick.backoffice.exception.ValidationCodeDeliveryException;
 import com.colick.backoffice.location.entity.LocationType;
 import com.colick.backoffice.location.repository.LocationRepository;
 import com.colick.backoffice.trip.dto.*;
@@ -10,6 +11,7 @@ import com.colick.backoffice.trip.entity.Trip;
 import com.colick.backoffice.trip.entity.TripBooking;
 import com.colick.backoffice.trip.repository.TripBookingRepository;
 import com.colick.backoffice.trip.repository.TripRepository;
+import com.colick.backoffice.trip.service.BookingValidationService;
 import com.colick.backoffice.trip.service.TripServiceImpl;
 import com.colick.backoffice.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +47,9 @@ class TripServiceImplTest {
 
     @Mock
     private LocationRepository locationRepository;
+
+    @Mock
+    private BookingValidationService bookingValidationService;
 
     @InjectMocks
     private TripServiceImpl tripService;
@@ -83,6 +88,9 @@ class TripServiceImplTest {
                 .instantAcceptance(false)
                 .status(Trip.TripStatus.ACTIVE)
                 .build();
+
+        lenient().when(bookingValidationService.normalizeRecipientContact(anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
@@ -169,6 +177,35 @@ class TripServiceImplTest {
         verify(emailService).sendTripCancelledEmail(
                 eq(anotherSender.getEmail()), eq(anotherSender.getFirstName()),
                 eq(sampleTrip.getDepartureAddress()), eq(sampleTrip.getDestination()));
+        verify(bookingValidationService).invalidateValidationCode(pending);
+        verify(bookingValidationService).invalidateValidationCode(accepted);
+    }
+
+    @Test
+    void getBookings_shouldReturnVisibleBookings_whenRequesterOwnsTrip() {
+        TripBooking pending = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.PENDING).build();
+        TripBooking removed = TripBooking.builder()
+                .id(2L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.REMOVED).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findByTrip(sampleTrip)).thenReturn(List.of(pending, removed));
+
+        List<TripBookingResponse> bookings = tripService.getBookings(10L, traveler);
+
+        assertThat(bookings).hasSize(1);
+        assertThat(bookings.get(0).getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void getBookings_shouldThrow_whenRequesterIsNotTripOwner() {
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+
+        assertThatThrownBy(() -> tripService.getBookings(10L, sender))
+                .isInstanceOf(AccessDeniedException.class);
+        verify(bookingRepository, never()).findByTrip(any());
     }
 
     @Test
@@ -187,6 +224,7 @@ class TripServiceImplTest {
         TripBookingResponse response = tripService.cancelBooking(10L, 1L, sender);
 
         assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.CANCELLED);
+        verify(bookingValidationService).invalidateValidationCode(booking);
         verify(emailService).sendBookingCancelledBySenderEmail(
                 eq(traveler.getEmail()), eq(traveler.getFirstName()), eq(sender.getFirstName()),
                 eq(sampleTrip.getDepartureAddress()), eq(sampleTrip.getDestination()));
@@ -208,6 +246,7 @@ class TripServiceImplTest {
         tripService.cancelBooking(10L, 2L, sender);
 
         assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.CANCELLED);
+        verify(bookingValidationService).invalidateValidationCode(booking);
     }
 
     @Test
@@ -291,6 +330,8 @@ class TripServiceImplTest {
         assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.PENDING);
         assertThat(response.getTitle()).isEqualTo("Electronics");
         assertThat(response.getRecipientContact()).isEqualTo("+225 07 00 00 00");
+        verify(bookingValidationService).normalizeRecipientContact("+225 07 00 00 00");
+        verify(bookingValidationService, never()).sendValidationCode(any());
         verify(emailService).sendTripBookingCreatedEmail(
                 eq(traveler.getEmail()),
                 eq(traveler.getFirstName()),
@@ -321,10 +362,55 @@ class TripServiceImplTest {
                 .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
         doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
+        doNothing().when(bookingValidationService).sendValidationCode(any());
 
         TripBookingResponse response = tripService.createBooking(10L, request, sender);
 
         assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
+        verify(bookingValidationService).sendValidationCode(savedBooking);
+    }
+
+    @Test
+    void createBooking_shouldKeepAcceptedStatusAndMarkDeliveryFailed_whenValidationSendFails() {
+        sampleTrip.setInstantAcceptance(true);
+
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setTitle("Clothes");
+        request.setWeight(BigDecimal.valueOf(3));
+        request.setRecipientContact("+225 01 00 00 00");
+
+        TripBooking savedBooking = TripBooking.builder()
+                .id(2L).trip(sampleTrip).sender(sender)
+                .title("Clothes")
+                .weight(BigDecimal.valueOf(3))
+                .recipientContact("+22501000000")
+                .status(TripBooking.BookingStatus.ACCEPTED).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+        when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
+        doThrow(new ValidationCodeDeliveryException(
+                "Unable to deliver validation code",
+                "+22501000000",
+                TripBooking.ValidationDeliveryChannel.SMS,
+                new IllegalStateException("SMS delivery is not configured")
+        )).when(bookingValidationService).sendValidationCode(savedBooking);
+        doNothing().when(bookingValidationService).markValidationCodeDeliveryFailed(
+                savedBooking,
+                "+22501000000",
+                TripBooking.ValidationDeliveryChannel.SMS
+        );
+        doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
+
+        TripBookingResponse response = tripService.createBooking(10L, request, sender);
+
+        assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
+        verify(bookingValidationService).markValidationCodeDeliveryFailed(
+                savedBooking,
+                "+22501000000",
+                TripBooking.ValidationDeliveryChannel.SMS
+        );
     }
 
     @Test
@@ -413,12 +499,71 @@ class TripServiceImplTest {
         tripService.acceptBooking(10L, 1L, traveler);
 
         assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
+        verify(bookingValidationService).sendValidationCode(booking);
         verify(emailService).sendTripBookingAcceptedEmail(
                 eq(sender.getEmail()),
                 eq(sender.getFirstName()),
                 eq(sampleTrip.getDepartureAddress()),
                 eq(sampleTrip.getDestination())
         );
+    }
+
+    @Test
+    void acceptBooking_shouldKeepAcceptedStatusAndMarkDeliveryFailed_whenValidationSendFails() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.PENDING).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any())).thenReturn(booking);
+        doThrow(new ValidationCodeDeliveryException(
+                "Unable to deliver validation code",
+                "+22507000000",
+                TripBooking.ValidationDeliveryChannel.SMS,
+                new IllegalStateException("SMS delivery is not configured")
+        )).when(bookingValidationService).sendValidationCode(booking);
+        doNothing().when(emailService).sendTripBookingAcceptedEmail(anyString(), anyString(), anyString(), anyString());
+
+        TripBookingResponse response = tripService.acceptBooking(10L, 1L, traveler);
+
+        assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
+        verify(bookingValidationService).markValidationCodeDeliveryFailed(
+                booking,
+                "+22507000000",
+                TripBooking.ValidationDeliveryChannel.SMS
+        );
+    }
+
+    @Test
+    void acceptBooking_shouldBeIdempotent_whenAlreadyAccepted() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.ACCEPTED).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        TripBookingResponse response = tripService.acceptBooking(10L, 1L, traveler);
+
+        assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
+        verify(bookingRepository, never()).save(any());
+        verify(bookingValidationService, never()).sendValidationCode(any());
+        verify(emailService, never()).sendTripBookingAcceptedEmail(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void acceptBooking_shouldThrow_whenBookingIsCancelled() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.CANCELLED).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> tripService.acceptBooking(10L, 1L, traveler))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Only PENDING bookings can be accepted");
     }
 
     @Test
@@ -435,6 +580,7 @@ class TripServiceImplTest {
         tripService.rejectBooking(10L, 1L, traveler);
 
         assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.REJECTED);
+        verify(bookingValidationService).invalidateValidationCode(booking);
         verify(emailService).sendTripBookingRejectedEmail(
                 eq(sender.getEmail()),
                 eq(sender.getFirstName()),
@@ -444,25 +590,72 @@ class TripServiceImplTest {
     }
 
     @Test
-    void removeBooking_shouldDeleteAndSendEmail() {
+    void rejectBooking_shouldBeIdempotent_whenAlreadyRejected() {
         TripBooking booking = TripBooking.builder()
                 .id(1L).trip(sampleTrip).sender(sender)
-                .status(TripBooking.BookingStatus.PENDING).build();
+                .status(TripBooking.BookingStatus.REJECTED).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        TripBookingResponse response = tripService.rejectBooking(10L, 1L, traveler);
+
+        assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.REJECTED);
+        verify(bookingRepository, never()).save(any());
+        verify(emailService, never()).sendTripBookingRejectedEmail(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void rejectBooking_shouldThrow_whenBookingIsAccepted() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.ACCEPTED).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> tripService.rejectBooking(10L, 1L, traveler))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Only PENDING bookings can be rejected");
+    }
+
+    @Test
+    void removeBooking_shouldMarkRemovedInvalidateCodeAndSendEmail() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.ACCEPTED).build();
 
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         doNothing().when(emailService).sendTripBookingRemovedEmail(anyString(), anyString(), anyString(), anyString());
-        doNothing().when(bookingRepository).delete(booking);
+        when(bookingRepository.save(booking)).thenReturn(booking);
 
         tripService.removeBooking(10L, 1L, traveler);
 
+        assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.REMOVED);
+        verify(bookingValidationService).invalidateValidationCode(booking);
         verify(emailService).sendTripBookingRemovedEmail(
                 eq(sender.getEmail()),
                 eq(sender.getFirstName()),
                 eq(sampleTrip.getDepartureAddress()),
                 eq(sampleTrip.getDestination())
         );
-        verify(bookingRepository).delete(booking);
+        verify(bookingRepository).save(booking);
+    }
+
+    @Test
+    void removeBooking_shouldThrow_whenBookingIsPending() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.PENDING).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> tripService.removeBooking(10L, 1L, traveler))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Only ACCEPTED bookings can be removed");
+        verify(bookingRepository, never()).save(any());
     }
 
     @Test
