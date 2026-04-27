@@ -16,6 +16,7 @@ describe('SearchPageComponent', () => {
   const tripServiceMock = {
     searchTrips: jasmine.createSpy('searchTrips').and.returnValue(of([])),
     createBooking: jasmine.createSpy('createBooking'),
+    getMyBookings: jasmine.createSpy('getMyBookings').and.returnValue(of([])),
   };
 
   const authServiceMock = {

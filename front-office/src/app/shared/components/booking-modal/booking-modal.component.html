@@ -84,9 +84,9 @@
             <h3 class="text-lg font-semibold text-success mb-1">
               Demande envoyée avec succès !
             </h3>
-            <p class="text-sm text-text-secondary">
-              Le voyageur sera notifié de votre demande.
-            </p>
+             <p class="text-sm text-text-secondary">
+               Le destinataire recevra son code dès que la demande sera acceptée.
+             </p>
           </div>
         }
 
@@ -207,20 +207,31 @@
                 id="booking-recipient"
                 type="text"
                 formControlName="recipientContact"
-                placeholder="Nom, téléphone ou email du destinataire"
+                placeholder="Ex : +22507000000 ou destinataire@email.com"
                 autocomplete="off"
                 [attr.aria-invalid]="bookingForm.get('recipientContact')?.touched && bookingForm.get('recipientContact')?.invalid"
-                aria-describedby="recipient-error"
+                aria-describedby="recipient-hint recipient-error"
                 class="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-text-primary
                        placeholder:text-text-muted bg-white
                        focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary
                        transition-shadow" />
+              <p id="recipient-hint" class="mt-1.5 text-xs text-text-muted">
+                Renseignez un numéro de téléphone ou une adresse e-mail. Le code de validation partira après acceptation.
+              </p>
               @if (bookingForm.get('recipientContact')?.touched && bookingForm.get('recipientContact')?.hasError('required')) {
                 <p id="recipient-error" class="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
                   <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
                   </svg>
                   Le contact du destinataire est requis
+                </p>
+              }
+              @if (bookingForm.get('recipientContact')?.touched && bookingForm.get('recipientContact')?.hasError('recipientContact')) {
+                <p id="recipient-error" class="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                  </svg>
+                  Saisissez un numéro de téléphone ou une adresse e-mail valide
                 </p>
               }
             </div>

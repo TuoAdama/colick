@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * Represents a booking request made by a sender for a specific trip.
@@ -54,7 +55,28 @@ public class TripBooking {
     @Builder.Default
     private BookingStatus status = BookingStatus.PENDING;
 
+    @Column(length = 6)
+    private String validationCode;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private ValidationDeliveryChannel validationDeliveryChannel;
+
+    @Column
+    private LocalDateTime validationCodeSentAt;
+
+    @Column
+    private LocalDateTime validationCodeInvalidatedAt;
+
+    public boolean hasActiveValidationCode() {
+        return validationCode != null && validationCodeInvalidatedAt == null;
+    }
+
     public enum BookingStatus {
         PENDING, ACCEPTED, REJECTED, CANCELLED
+    }
+
+    public enum ValidationDeliveryChannel {
+        EMAIL, SMS
     }
 }

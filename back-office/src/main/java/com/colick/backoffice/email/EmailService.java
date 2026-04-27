@@ -180,6 +180,27 @@ public class EmailService {
         );
     }
 
+    public void sendBookingValidationCodeEmail(String to,
+                                               String packageTitle,
+                                               String validationCode,
+                                               String qrCodeDataUri,
+                                               String departureAddress,
+                                               String destination) {
+        sendTemplateEmail(
+            to,
+            "Code de validation destinataire - Colick",
+            "email/booking-validation-code",
+            Map.of(
+                "packageTitle", packageTitle,
+                "validationCode", validationCode,
+                "qrCodeDataUri", qrCodeDataUri,
+                "departureAddress", departureAddress,
+                "destination", destination,
+                "supportEmail", supportEmail
+            )
+        );
+    }
+
     private void sendTemplateEmail(String to, String subject, String templateName, Map<String, Object> variables) {
         Context context = new Context();
         variables.forEach(context::setVariable);

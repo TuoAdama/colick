@@ -1,9 +1,25 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { AbstractControl, ReactiveFormsModule, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { Trip } from '../../../models/trip.model';
 import { BookingResponse } from '../../../models/booking.model';
 import { TripService } from '../../../services/trip.service';
+
+const EMAIL_PATTERN = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+
+function recipientContactValidator(control: AbstractControl): ValidationErrors | null {
+  const value = `${control.value ?? ''}`.trim();
+  if (!value) {
+    return null;
+  }
+
+  const normalizedPhone = value.replace(/[\s().-]/g, '');
+  if (EMAIL_PATTERN.test(value) || /^\+?[0-9]{6,15}$/.test(normalizedPhone)) {
+    return null;
+  }
+
+  return { recipientContact: true };
+}
 
 /**
  * BookingModalComponent - Modal overlay for submitting a parcel booking request.
@@ -27,7 +43,7 @@ export class BookingModalComponent {
     title: ['', [Validators.required]],
     weight: [null as number | null, [Validators.required, Validators.min(0.1)]],
     description: [''],
-    recipientContact: ['', [Validators.required]],
+    recipientContact: ['', [Validators.required, recipientContactValidator]],
   });
 
   isLoading = false;
@@ -57,7 +73,7 @@ export class BookingModalComponent {
       title: this.bookingForm.value.title!,
       weight,
       description: this.bookingForm.value.description || undefined,
-      recipientContact: this.bookingForm.value.recipientContact!,
+      recipientContact: this.bookingForm.value.recipientContact!.trim(),
     }).subscribe({
       next: (booking: BookingResponse) => {
         this.isLoading = false;

@@ -29,15 +29,18 @@ public class TripServiceImpl implements TripService {
     private final TripBookingRepository bookingRepository;
     private final EmailService emailService;
     private final LocationRepository locationRepository;
+    private final BookingValidationService bookingValidationService;
 
     public TripServiceImpl(TripRepository tripRepository,
                            TripBookingRepository bookingRepository,
                            EmailService emailService,
-                           LocationRepository locationRepository) {
+                           LocationRepository locationRepository,
+                           BookingValidationService bookingValidationService) {
         this.tripRepository = tripRepository;
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
         this.locationRepository = locationRepository;
+        this.bookingValidationService = bookingValidationService;
     }
 
     @Override
@@ -96,12 +99,14 @@ public class TripServiceImpl implements TripService {
         List<TripBooking.BookingStatus> activeStatuses = List.of(
                 TripBooking.BookingStatus.PENDING,
                 TripBooking.BookingStatus.ACCEPTED);
-        bookingRepository.findByTripAndStatusIn(trip, activeStatuses)
-                .forEach(b -> emailService.sendTripCancelledEmail(
-                        b.getSender().getEmail(),
-                        b.getSender().getFirstName(),
-                        trip.getDepartureAddress(),
-                        trip.getDestination()));
+        List<TripBooking> activeBookings = bookingRepository.findByTripAndStatusIn(trip, activeStatuses);
+        activeBookings.forEach(bookingValidationService::invalidateValidationCode);
+        bookingRepository.saveAll(activeBookings);
+        activeBookings.forEach(b -> emailService.sendTripCancelledEmail(
+                b.getSender().getEmail(),
+                b.getSender().getFirstName(),
+                trip.getDepartureAddress(),
+                trip.getDestination()));
     }
 
     @Override
@@ -145,11 +150,16 @@ public class TripServiceImpl implements TripService {
                 .weight(request.getWeight())
                 .description(request.getDescription())
                 .packagePhotoUrl(request.getPackagePhotoUrl())
-                .recipientContact(request.getRecipientContact())
+                .recipientContact(bookingValidationService.normalizeRecipientContact(request.getRecipientContact()))
                 .status(initialStatus)
                 .build();
 
         TripBooking saved = bookingRepository.save(booking);
+
+        if (initialStatus == TripBooking.BookingStatus.ACCEPTED) {
+            bookingValidationService.sendValidationCode(saved);
+            saved = bookingRepository.save(saved);
+        }
 
         emailService.sendTripBookingCreatedEmail(
             trip.getTraveler().getEmail(),
@@ -168,6 +178,7 @@ public class TripServiceImpl implements TripService {
         assertTripOwner(booking.getTrip(), requester);
 
         booking.setStatus(TripBooking.BookingStatus.ACCEPTED);
+        bookingValidationService.sendValidationCode(booking);
         TripBooking saved = bookingRepository.save(booking);
 
         emailService.sendTripBookingAcceptedEmail(
@@ -186,6 +197,7 @@ public class TripServiceImpl implements TripService {
         assertTripOwner(booking.getTrip(), requester);
 
         booking.setStatus(TripBooking.BookingStatus.REJECTED);
+        bookingValidationService.invalidateValidationCode(booking);
         TripBooking saved = bookingRepository.save(booking);
 
         emailService.sendTripBookingRejectedEmail(
@@ -227,6 +239,7 @@ public class TripServiceImpl implements TripService {
         }
 
         booking.setStatus(TripBooking.BookingStatus.CANCELLED);
+        bookingValidationService.invalidateValidationCode(booking);
         TripBooking saved = bookingRepository.save(booking);
 
         emailService.sendBookingCancelledBySenderEmail(

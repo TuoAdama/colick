@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * Read-only view of a trip booking returned by the API.
@@ -23,6 +24,10 @@ public class TripBookingResponse {
     private String packagePhotoUrl;
     private String recipientContact;
     private TripBooking.BookingStatus status;
+    private TripBooking.ValidationDeliveryChannel validationDeliveryChannel;
+    private LocalDateTime validationCodeSentAt;
+    private LocalDateTime validationCodeInvalidatedAt;
+    private boolean validationCodeActive;
 
     /**
      * Maps a {@link TripBooking} entity to a {@link TripBookingResponse} DTO.
@@ -39,6 +44,10 @@ public class TripBookingResponse {
                 .packagePhotoUrl(booking.getPackagePhotoUrl())
                 .recipientContact(booking.getRecipientContact())
                 .status(booking.getStatus())
+                .validationDeliveryChannel(booking.getValidationDeliveryChannel())
+                .validationCodeSentAt(booking.getValidationCodeSentAt())
+                .validationCodeInvalidatedAt(booking.getValidationCodeInvalidatedAt())
+                .validationCodeActive(booking.hasActiveValidationCode())
                 .build();
     }
 }

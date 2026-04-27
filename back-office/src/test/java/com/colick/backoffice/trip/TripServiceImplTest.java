@@ -10,6 +10,7 @@ import com.colick.backoffice.trip.entity.Trip;
 import com.colick.backoffice.trip.entity.TripBooking;
 import com.colick.backoffice.trip.repository.TripBookingRepository;
 import com.colick.backoffice.trip.repository.TripRepository;
+import com.colick.backoffice.trip.service.BookingValidationService;
 import com.colick.backoffice.trip.service.TripServiceImpl;
 import com.colick.backoffice.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +46,9 @@ class TripServiceImplTest {
 
     @Mock
     private LocationRepository locationRepository;
+
+    @Mock
+    private BookingValidationService bookingValidationService;
 
     @InjectMocks
     private TripServiceImpl tripService;
@@ -83,6 +87,9 @@ class TripServiceImplTest {
                 .instantAcceptance(false)
                 .status(Trip.TripStatus.ACTIVE)
                 .build();
+
+        lenient().when(bookingValidationService.normalizeRecipientContact(anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
@@ -169,6 +176,8 @@ class TripServiceImplTest {
         verify(emailService).sendTripCancelledEmail(
                 eq(anotherSender.getEmail()), eq(anotherSender.getFirstName()),
                 eq(sampleTrip.getDepartureAddress()), eq(sampleTrip.getDestination()));
+        verify(bookingValidationService).invalidateValidationCode(pending);
+        verify(bookingValidationService).invalidateValidationCode(accepted);
     }
 
     @Test
@@ -187,6 +196,7 @@ class TripServiceImplTest {
         TripBookingResponse response = tripService.cancelBooking(10L, 1L, sender);
 
         assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.CANCELLED);
+        verify(bookingValidationService).invalidateValidationCode(booking);
         verify(emailService).sendBookingCancelledBySenderEmail(
                 eq(traveler.getEmail()), eq(traveler.getFirstName()), eq(sender.getFirstName()),
                 eq(sampleTrip.getDepartureAddress()), eq(sampleTrip.getDestination()));
@@ -208,6 +218,7 @@ class TripServiceImplTest {
         tripService.cancelBooking(10L, 2L, sender);
 
         assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.CANCELLED);
+        verify(bookingValidationService).invalidateValidationCode(booking);
     }
 
     @Test
@@ -291,6 +302,8 @@ class TripServiceImplTest {
         assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.PENDING);
         assertThat(response.getTitle()).isEqualTo("Electronics");
         assertThat(response.getRecipientContact()).isEqualTo("+225 07 00 00 00");
+        verify(bookingValidationService).normalizeRecipientContact("+225 07 00 00 00");
+        verify(bookingValidationService, never()).sendValidationCode(any());
         verify(emailService).sendTripBookingCreatedEmail(
                 eq(traveler.getEmail()),
                 eq(traveler.getFirstName()),
@@ -321,10 +334,12 @@ class TripServiceImplTest {
                 .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
         doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
+        doNothing().when(bookingValidationService).sendValidationCode(any());
 
         TripBookingResponse response = tripService.createBooking(10L, request, sender);
 
         assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
+        verify(bookingValidationService).sendValidationCode(savedBooking);
     }
 
     @Test
@@ -413,6 +428,7 @@ class TripServiceImplTest {
         tripService.acceptBooking(10L, 1L, traveler);
 
         assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
+        verify(bookingValidationService).sendValidationCode(booking);
         verify(emailService).sendTripBookingAcceptedEmail(
                 eq(sender.getEmail()),
                 eq(sender.getFirstName()),
@@ -435,6 +451,7 @@ class TripServiceImplTest {
         tripService.rejectBooking(10L, 1L, traveler);
 
         assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.REJECTED);
+        verify(bookingValidationService).invalidateValidationCode(booking);
         verify(emailService).sendTripBookingRejectedEmail(
                 eq(sender.getEmail()),
                 eq(sender.getFirstName()),
