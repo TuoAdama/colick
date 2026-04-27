@@ -61,6 +61,6 @@ public class Trip {
     private TripStatus status = TripStatus.ACTIVE;
 
     public enum TripStatus {
-        ACTIVE, CANCELLED
+        ACTIVE, COMPLETED, CANCELLED
     }
 }

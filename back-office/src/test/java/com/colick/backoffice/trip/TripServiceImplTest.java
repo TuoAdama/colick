@@ -620,6 +620,128 @@ class TripServiceImplTest {
     }
 
     @Test
+    void completeTrip_shouldSetCompleted_whenOwnerAndNoPendingBookings() {
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.existsByTripAndStatus(sampleTrip, TripBooking.BookingStatus.PENDING)).thenReturn(false);
+        when(tripRepository.save(sampleTrip)).thenReturn(sampleTrip);
+
+        TripResponse response = tripService.completeTrip(10L, traveler);
+
+        assertThat(sampleTrip.getStatus()).isEqualTo(Trip.TripStatus.COMPLETED);
+        assertThat(response.getStatus()).isEqualTo(Trip.TripStatus.COMPLETED);
+        verify(tripRepository).save(sampleTrip);
+    }
+
+    @Test
+    void completeTrip_shouldThrow_whenPendingBookingsRemain() {
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.existsByTripAndStatus(sampleTrip, TripBooking.BookingStatus.PENDING)).thenReturn(true);
+
+        assertThatThrownBy(() -> tripService.completeTrip(10L, traveler))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("PENDING bookings");
+
+        verify(tripRepository, never()).save(any());
+    }
+
+    @Test
+    void createBooking_shouldThrow_whenTripIsCompleted() {
+        sampleTrip.setStatus(Trip.TripStatus.COMPLETED);
+
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setTitle("Electronics");
+        request.setWeight(BigDecimal.valueOf(5));
+        request.setRecipientContact("+225 07 00 00 00");
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+
+        assertThatThrownBy(() -> tripService.createBooking(10L, request, sender))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("ACTIVE trips");
+
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void confirmBookingDelivery_shouldMarkBookingDelivered_whenCodeMatchesAndTripCompleted() {
+        sampleTrip.setStatus(Trip.TripStatus.COMPLETED);
+        TripBooking booking = TripBooking.builder()
+                .id(1L)
+                .trip(sampleTrip)
+                .sender(sender)
+                .status(TripBooking.BookingStatus.ACCEPTED)
+                .validationCode("123456")
+                .validationDeliveryStatus(TripBooking.ValidationDeliveryStatus.DELIVERED)
+                .validationCodeInvalidatedAt(null)
+                .build();
+        ConfirmBookingDeliveryRequest request = new ConfirmBookingDeliveryRequest();
+        request.setValidationCode("123456");
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(booking)).thenReturn(booking);
+
+        TripBookingResponse response = tripService.confirmBookingDelivery(10L, 1L, request, traveler);
+
+        assertThat(booking.getStatus()).isEqualTo(TripBooking.BookingStatus.DELIVERED);
+        assertThat(booking.getDeliveredAt()).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.DELIVERED);
+        verify(bookingValidationService).invalidateValidationCode(booking);
+        verify(bookingRepository).save(booking);
+    }
+
+    @Test
+    void confirmBookingDelivery_shouldThrow_whenTripIsNotCompleted() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L)
+                .trip(sampleTrip)
+                .sender(sender)
+                .status(TripBooking.BookingStatus.ACCEPTED)
+                .validationCode("123456")
+                .validationDeliveryStatus(TripBooking.ValidationDeliveryStatus.DELIVERED)
+                .validationCodeInvalidatedAt(null)
+                .build();
+        ConfirmBookingDeliveryRequest request = new ConfirmBookingDeliveryRequest();
+        request.setValidationCode("123456");
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> tripService.confirmBookingDelivery(10L, 1L, request, traveler))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("COMPLETED");
+
+        verify(bookingValidationService, never()).invalidateValidationCode(any());
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void confirmBookingDelivery_shouldThrow_whenValidationCodeDoesNotMatch() {
+        sampleTrip.setStatus(Trip.TripStatus.COMPLETED);
+        TripBooking booking = TripBooking.builder()
+                .id(1L)
+                .trip(sampleTrip)
+                .sender(sender)
+                .status(TripBooking.BookingStatus.ACCEPTED)
+                .validationCode("123456")
+                .validationDeliveryStatus(TripBooking.ValidationDeliveryStatus.DELIVERED)
+                .validationCodeInvalidatedAt(null)
+                .build();
+        ConfirmBookingDeliveryRequest request = new ConfirmBookingDeliveryRequest();
+        request.setValidationCode("654321");
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> tripService.confirmBookingDelivery(10L, 1L, request, traveler))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid validation code");
+
+        verify(bookingValidationService, never()).invalidateValidationCode(any());
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
     void removeBooking_shouldMarkRemovedInvalidateCodeAndSendEmail() {
         TripBooking booking = TripBooking.builder()
                 .id(1L).trip(sampleTrip).sender(sender)

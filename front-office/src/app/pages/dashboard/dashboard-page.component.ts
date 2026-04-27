@@ -80,6 +80,9 @@ export class DashboardPageComponent implements OnInit {
   isLoadingBookings = false;
   bookingActionError = '';
   isCancellingTrip = false;
+  isCompletingTrip = false;
+  deliveryCodeByBookingId: Record<number, string> = {};
+  validatingDeliveryBookingId: number | null = null;
 
   // ── Remove booking confirmation modal ─────────────────────────────────────
   isRemoveModalOpen = false;
@@ -234,6 +237,24 @@ export class DashboardPageComponent implements OnInit {
     this.selectedTripBookings = this.tripBookingsMap[tripId] ?? [];
   }
 
+  completeTrip(tripId: number): void {
+    this.isCompletingTrip = true;
+    this.bookingActionError = '';
+    this.tripService.completeTrip(tripId).subscribe({
+      next: (updatedTrip) => {
+        const tripIndex = this.myTrips.findIndex((trip) => trip.id === updatedTrip.id);
+        if (tripIndex >= 0) {
+          this.myTrips[tripIndex] = updatedTrip;
+        }
+        this.isCompletingTrip = false;
+      },
+      error: (err: { error?: { message?: string } }) => {
+        this.bookingActionError = err.error?.message || "Erreur lors du passage du trajet à l'état effectué.";
+        this.isCompletingTrip = false;
+      },
+    });
+  }
+
   acceptBooking(bookingId: number): void {
     if (!this.selectedTripId) return;
     this.bookingActionError = '';
@@ -292,6 +313,38 @@ export class DashboardPageComponent implements OnInit {
     this.pendingRemoveBookingId = null;
   }
 
+  confirmDelivery(booking: BookingResponse): void {
+    if (!this.selectedTripId || this.validatingDeliveryBookingId !== null) return;
+
+    const validationCode = (this.deliveryCodeByBookingId[booking.id] ?? '').trim();
+    if (!/^\d{6}$/.test(validationCode)) {
+      this.bookingActionError = 'Saisissez un code de validation à 6 chiffres.';
+      return;
+    }
+
+    this.validatingDeliveryBookingId = booking.id;
+    this.bookingActionError = '';
+    this.tripService.confirmBookingDelivery(this.selectedTripId, booking.id, { validationCode }).subscribe({
+      next: (updated) => {
+        const idx = this.selectedTripBookings.findIndex((x) => x.id === updated.id);
+        if (idx >= 0) {
+          this.selectedTripBookings[idx] = updated;
+          this.tripBookingsMap[this.selectedTripId!][idx] = updated;
+        }
+        const senderBookingIdx = this.myBookings.findIndex((x) => x.id === updated.id);
+        if (senderBookingIdx >= 0) {
+          this.myBookings[senderBookingIdx] = updated;
+        }
+        delete this.deliveryCodeByBookingId[booking.id];
+        this.validatingDeliveryBookingId = null;
+      },
+      error: (err: { error?: { message?: string } }) => {
+        this.bookingActionError = err.error?.message || 'Erreur lors de la validation de la remise.';
+        this.validatingDeliveryBookingId = null;
+      },
+    });
+  }
+
   cancelTrip(tripId: number): void {
     if (!confirm('Êtes-vous sûr de vouloir annuler ce trajet ? Tous les demandeurs seront notifiés.')) return;
     this.isCancellingTrip = true;
@@ -329,14 +382,32 @@ export class DashboardPageComponent implements OnInit {
   }
 
   statusLabel(status: string): string {
-    return ({ PENDING: 'En attente', ACCEPTED: 'Acceptée', REJECTED: 'Refusée', CANCELLED: 'Annulée', REMOVED: 'Retirée' } as Record<string, string>)[status] ?? status;
+    return ({ PENDING: 'En attente', ACCEPTED: 'Acceptée', REJECTED: 'Refusée', CANCELLED: 'Annulée', REMOVED: 'Retirée', DELIVERED: 'Remise confirmée' } as Record<string, string>)[status] ?? status;
   }
 
   statusClass(status: string): string {
-    return ({ PENDING: 'bg-yellow-100 text-yellow-800', ACCEPTED: 'bg-green-100 text-green-800', REJECTED: 'bg-red-100 text-red-800', CANCELLED: 'bg-gray-100 text-gray-500', REMOVED: 'bg-slate-100 text-slate-600' } as Record<string, string>)[status] ?? 'bg-gray-100 text-gray-800';
+    return ({ PENDING: 'bg-yellow-100 text-yellow-800', ACCEPTED: 'bg-green-100 text-green-800', REJECTED: 'bg-red-100 text-red-800', CANCELLED: 'bg-gray-100 text-gray-500', REMOVED: 'bg-slate-100 text-slate-600', DELIVERED: 'bg-secondary/10 text-secondary' } as Record<string, string>)[status] ?? 'bg-gray-100 text-gray-800';
   }
 
   validationChannelLabel(channel?: string): string {
     return channel === 'SMS' ? 'SMS' : 'e-mail';
+  }
+
+  tripStatusLabel(status: Trip['status']): string {
+    return ({ ACTIVE: 'Actif', COMPLETED: 'Effectué', CANCELLED: 'Annulé' } as Record<Trip['status'], string>)[status];
+  }
+
+  tripStatusClass(status: Trip['status']): string {
+    return ({ ACTIVE: 'bg-secondary/10 text-secondary', COMPLETED: 'bg-success/10 text-success', CANCELLED: 'bg-gray-100 text-gray-500' } as Record<Trip['status'], string>)[status];
+  }
+
+  selectedTrip(): Trip | undefined {
+    return this.myTrips.find((trip) => trip.id === this.selectedTripId);
+  }
+
+  canValidateDelivery(booking: BookingResponse): boolean {
+    return this.selectedTrip()?.status === 'COMPLETED'
+      && booking.status === 'ACCEPTED'
+      && booking.validationCodeActive;
   }
 }

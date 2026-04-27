@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Trip, CreateTripDto } from '../models/trip.model';
-import { CreateBookingRequest, BookingResponse } from '../models/booking.model';
+import { CreateBookingRequest, BookingResponse, ConfirmBookingDeliveryRequest } from '../models/booking.model';
 
 /**
  * Service responsible for trip search, creation, and booking operations.
@@ -25,6 +25,11 @@ export class TripService {
   /** Create a new trip proposal. */
   createTrip(data: CreateTripDto): Observable<Trip> {
     return this.http.post<Trip>(this.baseUrl, data);
+  }
+
+  /** Mark a trip as completed once it has been performed. */
+  completeTrip(tripId: number): Observable<Trip> {
+    return this.http.put<Trip>(`${this.baseUrl}/${tripId}/complete`, {});
   }
 
   /** Create a booking request for a specific trip. */
@@ -50,6 +55,15 @@ export class TripService {
   /** Accept a booking. */
   acceptBooking(tripId: number, bookingId: number): Observable<BookingResponse> {
     return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/accept`, {});
+  }
+
+  /** Confirm parcel handoff by validating the recipient code. */
+  confirmBookingDelivery(
+    tripId: number,
+    bookingId: number,
+    request: ConfirmBookingDeliveryRequest,
+  ): Observable<BookingResponse> {
+    return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/deliver`, request);
   }
 
   /** Reject a booking. */

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -90,9 +91,31 @@ public class TripServiceImpl implements TripService {
     }
 
     @Override
+    public TripResponse completeTrip(Long id, User requester) {
+        Trip trip = findTripOrThrow(id);
+        assertTripOwner(trip, requester);
+
+        if (trip.getStatus() == Trip.TripStatus.COMPLETED) {
+            return TripResponse.from(trip);
+        }
+        if (trip.getStatus() != Trip.TripStatus.ACTIVE) {
+            throw new IllegalStateException("Only ACTIVE trips can be marked as completed");
+        }
+        if (bookingRepository.existsByTripAndStatus(trip, TripBooking.BookingStatus.PENDING)) {
+            throw new IllegalStateException("All PENDING bookings must be processed before completing the trip");
+        }
+
+        trip.setStatus(Trip.TripStatus.COMPLETED);
+        return TripResponse.from(tripRepository.save(trip));
+    }
+
+    @Override
     public void deleteTrip(Long id, User requester) {
         Trip trip = findTripOrThrow(id);
         assertTripOwner(trip, requester);
+        if (trip.getStatus() != Trip.TripStatus.ACTIVE) {
+            throw new IllegalStateException("Only ACTIVE trips can be cancelled");
+        }
         trip.setStatus(Trip.TripStatus.CANCELLED);
         tripRepository.save(trip);
 
@@ -124,6 +147,10 @@ public class TripServiceImpl implements TripService {
     @Override
     public TripBookingResponse createBooking(Long tripId, CreateBookingRequest request, User sender) {
         Trip trip = findTripOrThrow(tripId);
+
+        if (trip.getStatus() != Trip.TripStatus.ACTIVE) {
+            throw new IllegalStateException("Only ACTIVE trips can receive bookings");
+        }
 
         if (trip.getTraveler().getId().equals(sender.getId())) {
             throw new IllegalArgumentException("You cannot create a booking request for your own trip");
@@ -178,6 +205,9 @@ public class TripServiceImpl implements TripService {
     public TripBookingResponse acceptBooking(Long tripId, Long bookingId, User requester) {
         TripBooking booking = findBookingOrThrow(tripId, bookingId);
         assertTripOwner(booking.getTrip(), requester);
+        if (booking.getTrip().getStatus() != Trip.TripStatus.ACTIVE) {
+            throw new IllegalStateException("Only bookings on ACTIVE trips can be accepted");
+        }
 
         if (booking.getStatus() == TripBooking.BookingStatus.ACCEPTED) {
             return TripBookingResponse.from(booking);
@@ -201,9 +231,42 @@ public class TripServiceImpl implements TripService {
     }
 
     @Override
+    public TripBookingResponse confirmBookingDelivery(Long tripId,
+                                                      Long bookingId,
+                                                      ConfirmBookingDeliveryRequest request,
+                                                      User requester) {
+        TripBooking booking = findBookingOrThrow(tripId, bookingId);
+        assertTripOwner(booking.getTrip(), requester);
+
+        if (booking.getStatus() == TripBooking.BookingStatus.DELIVERED) {
+            return TripBookingResponse.from(booking);
+        }
+        if (booking.getTrip().getStatus() != Trip.TripStatus.COMPLETED) {
+            throw new IllegalStateException("Trip must be COMPLETED before confirming parcel handoff");
+        }
+        if (booking.getStatus() != TripBooking.BookingStatus.ACCEPTED) {
+            throw new IllegalStateException("Only ACCEPTED bookings can be marked as delivered");
+        }
+        if (!booking.hasActiveValidationCode()) {
+            throw new IllegalStateException("No active validation code is available for this booking");
+        }
+        if (!booking.getValidationCode().equals(request.getValidationCode().trim())) {
+            throw new IllegalArgumentException("Invalid validation code");
+        }
+
+        booking.setStatus(TripBooking.BookingStatus.DELIVERED);
+        booking.setDeliveredAt(LocalDateTime.now());
+        bookingValidationService.invalidateValidationCode(booking);
+        return TripBookingResponse.from(bookingRepository.save(booking));
+    }
+
+    @Override
     public TripBookingResponse rejectBooking(Long tripId, Long bookingId, User requester) {
         TripBooking booking = findBookingOrThrow(tripId, bookingId);
         assertTripOwner(booking.getTrip(), requester);
+        if (booking.getTrip().getStatus() != Trip.TripStatus.ACTIVE) {
+            throw new IllegalStateException("Only bookings on ACTIVE trips can be rejected");
+        }
 
         if (booking.getStatus() == TripBooking.BookingStatus.REJECTED) {
             return TripBookingResponse.from(booking);
