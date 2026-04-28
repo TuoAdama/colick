@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { Router } from '@angular/router';
 import { RegisterPageComponent } from './register-page.component';
 import { AuthService } from '../../services/auth.service';
+import { GoogleIdentityService } from '../../services/google-identity.service';
 
 describe('RegisterPageComponent', () => {
   let fixture: ComponentFixture<RegisterPageComponent>;
@@ -12,6 +13,22 @@ describe('RegisterPageComponent', () => {
   let navigateSpy: jasmine.Spy;
   const authServiceMock = {
     register: jasmine.createSpy('register').and.returnValue(of({ id: 1 } as any)),
+    googleLogin: jasmine.createSpy('googleLogin').and.returnValue(of({
+      token: 'jwt-token',
+      type: 'Bearer',
+      user: {
+        id: 2,
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        email: 'ada@example.com',
+        role: 'USER',
+        identityDocument: 'ID-42',
+        hasPassword: false,
+      },
+    })),
+  };
+  const googleIdentityServiceMock = {
+    renderButton: jasmine.createSpy('renderButton').and.resolveTo(false),
   };
 
   beforeEach(async () => {
@@ -20,6 +37,7 @@ describe('RegisterPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: authServiceMock },
+        { provide: GoogleIdentityService, useValue: googleIdentityServiceMock },
       ],
     }).compileComponents();
 
@@ -46,4 +64,11 @@ describe('RegisterPageComponent', () => {
     tick(2500);
     expect(navigateSpy).toHaveBeenCalledWith(['/login']);
   }));
+
+  it('redirects to search after Google signup when profile is already complete', () => {
+    component.onGoogleCredential('google-id-token');
+
+    expect(authServiceMock.googleLogin).toHaveBeenCalledWith('google-id-token');
+    expect(navigateSpy).toHaveBeenCalledWith(['/search']);
+  });
 });

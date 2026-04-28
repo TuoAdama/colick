@@ -18,6 +18,7 @@ describe('DashboardPageComponent', () => {
     role: 'USER',
     phone: '+33 6 00 00 00 00',
     identityDocument: 'AA123456',
+    hasPassword: true,
   });
 
   const authServiceMock = {
@@ -73,5 +74,24 @@ describe('DashboardPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain("Vous n'avez aucun trajet proposé pour le moment.");
     expect(proposeLinks.every((link) => link.getAttribute('href') === '/propose')).toBeTrue();
     expect(proposeLinks.every((link) => link.className.includes('bg-secondary'))).toBeTrue();
+  });
+
+  it('shows identity reminder and hides password form for Google-only accounts', () => {
+    currentUser$.next({
+      id: 1,
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: 'ada@example.com',
+      role: 'USER',
+      identityDocument: '',
+      hasPassword: false,
+    });
+
+    fixture.detectChanges();
+
+    expect(component.needsIdentityDocument()).toBeTrue();
+    expect(component.hasLocalPassword()).toBeFalse();
+    expect(fixture.nativeElement.textContent).toContain('Ajoutez votre pièce d\'identité');
+    expect(fixture.nativeElement.textContent).toContain('Mot de passe oublie');
   });
 });

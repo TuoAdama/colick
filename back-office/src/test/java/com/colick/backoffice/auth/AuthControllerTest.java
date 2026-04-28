@@ -2,8 +2,10 @@ package com.colick.backoffice.auth;
 
 import com.colick.backoffice.auth.controller.AuthController;
 import com.colick.backoffice.auth.dto.ForgotPasswordRequest;
+import com.colick.backoffice.auth.dto.GoogleAuthConfigResponse;
 import com.colick.backoffice.auth.dto.LoginRequest;
 import com.colick.backoffice.auth.dto.ResetPasswordRequest;
+import com.colick.backoffice.auth.google.GoogleAuthenticationService;
 import com.colick.backoffice.auth.passwordreset.service.PasswordResetService;
 import com.colick.backoffice.auth.util.JwtUtil;
 import com.colick.backoffice.user.entity.User;
@@ -40,6 +42,9 @@ class AuthControllerTest {
 
     @Mock
     private PasswordResetService passwordResetService;
+
+    @Mock
+    private GoogleAuthenticationService googleAuthenticationService;
 
     @InjectMocks
     private AuthController authController;
@@ -79,6 +84,40 @@ class AuthControllerTest {
         when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
 
         assertThat(authController.login(request).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void login_shouldThrowAccessDenied_whenAccountUsesGoogleOnly() {
+        User user = User.builder()
+                .id(1L)
+                .email("john@example.com")
+                .password("hashed")
+                .enabled(true)
+                .localAuthEnabled(false)
+                .build();
+        LoginRequest request = new LoginRequest();
+        request.setEmail("john@example.com");
+        request.setPassword("password");
+
+        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> authController.login(request))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Google");
+    }
+
+    @Test
+    void getGoogleConfig_shouldReturnServiceConfiguration() {
+        GoogleAuthConfigResponse response = GoogleAuthConfigResponse.builder()
+                .enabled(true)
+                .clientId("google-client-id")
+                .build();
+        when(googleAuthenticationService.getConfiguration()).thenReturn(response);
+
+        var result = authController.getGoogleConfig();
+
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getBody()).isEqualTo(response);
     }
 
     @Test

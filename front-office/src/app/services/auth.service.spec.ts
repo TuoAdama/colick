@@ -70,6 +70,40 @@ describe('AuthService', () => {
     expect(service.getUser()?.photoUrl).toBe('/api/uploads/avatar.png');
   });
 
+  it('stores authenticated user after Google login', () => {
+    service.googleLogin('google-id-token').subscribe();
+
+    const req = httpMock.expectOne('/api/auth/google');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ idToken: 'google-id-token' });
+    req.flush({
+      token: 'jwt-token',
+      type: 'Bearer',
+      user: {
+        id: 1,
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        email: 'ada@example.com',
+        role: 'USER',
+        hasPassword: false,
+      },
+    });
+
+    expect(localStorage.getItem('colick_token')).toBe('jwt-token');
+    expect(service.getUser()?.email).toBe('ada@example.com');
+    expect(service.getUser()?.hasPassword).toBeFalse();
+  });
+
+  it('loads Google auth configuration', () => {
+    service.getGoogleAuthConfig().subscribe((config) => {
+      expect(config).toEqual({ enabled: true, clientId: 'google-client-id' });
+    });
+
+    const req = httpMock.expectOne('/api/auth/google/config');
+    expect(req.request.method).toBe('GET');
+    req.flush({ enabled: true, clientId: 'google-client-id' });
+  });
+
   it('normalizes relative profile photo URL after upload', () => {
     localStorage.setItem('colick_token', 'jwt-token');
     localStorage.setItem('colick_user', JSON.stringify({

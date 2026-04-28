@@ -19,6 +19,7 @@ public class UserResponse {
     private String identityDocument;
     private String photoUrl;
     private User.Role role;
+    private Boolean hasPassword;
 
     /**
      * Maps a {@link User} entity to a {@link UserResponse} DTO.
@@ -30,9 +31,17 @@ public class UserResponse {
                 .lastName(user.getLastName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
-                .identityDocument(user.getIdentityDocument())
+                .identityDocument(normalizeBlank(user.getIdentityDocument()))
                 .photoUrl(user.getPhotoUrl())
                 .role(user.getRole())
+                .hasPassword(!Boolean.FALSE.equals(user.getLocalAuthEnabled()))
                 .build();
+    }
+
+    private static String normalizeBlank(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value;
     }
 }

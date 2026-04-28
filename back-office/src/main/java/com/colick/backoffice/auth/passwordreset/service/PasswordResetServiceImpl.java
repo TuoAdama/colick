@@ -85,6 +85,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
         User user = token.getUser();
         user.setPassword(passwordEncoder.encode(newPassword));
+        user.setLocalAuthEnabled(true);
         userRepository.save(user);
 
         LocalDateTime now = LocalDateTime.now();

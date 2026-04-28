@@ -2,7 +2,9 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { AuthResponse, UserResponse } from '../../models/auth.model';
 import { AuthService } from '../../services/auth.service';
+import { GoogleAuthButtonComponent } from '../../components/google-auth-button/google-auth-button.component';
 
 /**
  * RegisterPageComponent - User registration page.
@@ -10,7 +12,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-register-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, GoogleAuthButtonComponent],
   templateUrl: './register-page.component.html',
 })
 export class RegisterPageComponent {
@@ -29,6 +31,7 @@ export class RegisterPageComponent {
   }, { validators: this.passwordMatchValidator });
 
   isLoading = false;
+  isGoogleLoading = false;
   errorMessage = '';
   successMessage = '';
 
@@ -58,5 +61,37 @@ export class RegisterPageComponent {
         this.errorMessage = err.error?.message || 'Erreur lors de la création du compte.';
       },
     });
+  }
+
+  onGoogleCredential(idToken: string): void {
+    if (this.isGoogleLoading) return;
+
+    this.isGoogleLoading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.authService.googleLogin(idToken).subscribe({
+      next: (response) => {
+        this.isGoogleLoading = false;
+        this.navigateAfterAuth(response);
+      },
+      error: (err: any) => {
+        this.isGoogleLoading = false;
+        this.errorMessage = err?.error?.message || 'Inscription Google impossible pour le moment.';
+      },
+    });
+  }
+
+  private navigateAfterAuth(response: AuthResponse): void {
+    if (this.requiresIdentityDocument(response.user)) {
+      this.router.navigate(['/dashboard'], { queryParams: { tab: 'profile', completeProfile: 'identity' } });
+      return;
+    }
+
+    this.router.navigate(['/search']);
+  }
+
+  private requiresIdentityDocument(user: UserResponse): boolean {
+    return !user.identityDocument?.trim();
   }
 }

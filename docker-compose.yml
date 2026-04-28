@@ -42,6 +42,7 @@ services:
       DB_PASSWORD: colick
       MAIL_HOST: mailhog
       MAIL_PORT: 1025
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     depends_on:
       - postgres
       - mailhog

@@ -118,6 +118,14 @@ export class DashboardPageComponent implements OnInit {
     });
   }
 
+  needsIdentityDocument(): boolean {
+    return !this.authService.getUser()?.identityDocument?.trim();
+  }
+
+  hasLocalPassword(): boolean {
+    return this.authService.getUser()?.hasPassword !== false;
+  }
+
   setTab(tab: Tab): void {
     this.activeTab = tab;
     if (tab === 'received' && this.myTrips.length === 0) this.loadMyTrips();

@@ -18,6 +18,15 @@ export interface AuthResponse {
   user: UserResponse;
 }
 
+export interface GoogleAuthRequest {
+  idToken: string;
+}
+
+export interface GoogleAuthConfig {
+  enabled: boolean;
+  clientId?: string;
+}
+
 export interface UserResponse {
   id: number;
   firstName: string;
@@ -27,6 +36,7 @@ export interface UserResponse {
   identityDocument?: string;
   photoUrl?: string;
   role: string;
+  hasPassword?: boolean;
 }
 
 /** Payload for updating basic profile info (no email/password via this request). */

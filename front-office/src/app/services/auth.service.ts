@@ -6,6 +6,8 @@ import {
   ChangeEmailRequest,
   ChangePasswordRequest,
   ForgotPasswordRequest,
+  GoogleAuthConfig,
+  GoogleAuthRequest,
   LoginRequest,
   RegisterRequest,
   ResetPasswordRequest,
@@ -24,12 +26,15 @@ export class AuthService {
   currentUser$ = this.currentUserSubject.asObservable();
 
   login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>('/api/auth/login', { email, password } as LoginRequest).pipe(
-      tap((res) => {
-        localStorage.setItem(this.TOKEN_KEY, res.token);
-        this.persistUser(res.user);
-      })
-    );
+    return this.authenticate('/api/auth/login', { email, password } as LoginRequest);
+  }
+
+  googleLogin(idToken: string): Observable<AuthResponse> {
+    return this.authenticate('/api/auth/google', { idToken } as GoogleAuthRequest);
+  }
+
+  getGoogleAuthConfig(): Observable<GoogleAuthConfig> {
+    return this.http.get<GoogleAuthConfig>('/api/auth/google/config');
   }
 
   register(data: RegisterRequest): Observable<UserResponse> {
@@ -45,6 +50,7 @@ export class AuthService {
   }
 
   logout(): void {
+    window.google?.accounts.id.disableAutoSelect();
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.currentUserSubject.next(null);
@@ -112,6 +118,15 @@ export class AuthService {
     } as ResetPasswordRequest);
   }
 
+  private authenticate(url: string, body: LoginRequest | GoogleAuthRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(url, body).pipe(
+      tap((res) => {
+        localStorage.setItem(this.TOKEN_KEY, res.token);
+        this.persistUser(res.user);
+      })
+    );
+  }
+
   private getStoredUser(): UserResponse | null {
     const raw = localStorage.getItem(this.USER_KEY);
     if (!raw) return null;
@@ -128,6 +143,7 @@ export class AuthService {
   private normalizeUser(user: UserResponse): UserResponse {
     return {
       ...user,
+      hasPassword: user.hasPassword !== false,
       photoUrl: this.normalizePhotoUrl(user.photoUrl),
     };
   }

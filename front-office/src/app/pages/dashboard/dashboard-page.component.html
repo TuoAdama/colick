@@ -51,6 +51,12 @@
             <section>
               <h2 class="text-base font-semibold text-text-primary mb-4 pb-2 border-b border-gray-100">Informations générales</h2>
 
+              @if (needsIdentityDocument()) {
+                <div class="mb-5 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-text-primary">
+                  Ajoutez votre pièce d'identité pour finaliser votre profil Colick et sécuriser vos futures réservations.
+                </div>
+              }
+
               <!-- Photo upload -->
               <div class="flex items-center gap-4 mb-5">
                 <label for="photo-upload" class="relative cursor-pointer group shrink-0" aria-label="Changer la photo de profil">
@@ -150,36 +156,43 @@
             <!-- ── Section 3: Changer le mot de passe ─────────────────────── -->
             <section>
               <h2 class="text-base font-semibold text-text-primary mb-4 pb-2 border-b border-gray-100">Changer le mot de passe</h2>
-              <form (ngSubmit)="savePassword()" [formGroup]="passwordForm" class="space-y-4">
-                @if (passwordSuccess) {
-                  <div class="bg-green-50 text-success text-sm px-4 py-3 rounded-lg" role="status">{{ passwordSuccess }}</div>
-                }
-                @if (passwordError) {
-                  <div class="bg-red-50 text-error text-sm px-4 py-3 rounded-lg" role="alert">{{ passwordError }}</div>
-                }
-                <div>
-                  <label for="oldPassword" class="block text-sm font-medium text-text-primary mb-1">Ancien mot de passe</label>
-                  <input id="oldPassword" formControlName="oldPassword" type="password" autocomplete="current-password"
-                    placeholder="••••••••"
-                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
+              @if (hasLocalPassword()) {
+                <form (ngSubmit)="savePassword()" [formGroup]="passwordForm" class="space-y-4">
+                  @if (passwordSuccess) {
+                    <div class="bg-green-50 text-success text-sm px-4 py-3 rounded-lg" role="status">{{ passwordSuccess }}</div>
+                  }
+                  @if (passwordError) {
+                    <div class="bg-red-50 text-error text-sm px-4 py-3 rounded-lg" role="alert">{{ passwordError }}</div>
+                  }
+                  <div>
+                    <label for="oldPassword" class="block text-sm font-medium text-text-primary mb-1">Ancien mot de passe</label>
+                    <input id="oldPassword" formControlName="oldPassword" type="password" autocomplete="current-password"
+                      placeholder="••••••••"
+                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label for="newPassword" class="block text-sm font-medium text-text-primary mb-1">Nouveau mot de passe <span class="text-text-muted font-normal">(8 caractères min.)</span></label>
+                    <input id="newPassword" formControlName="newPassword" type="password" autocomplete="new-password"
+                      placeholder="••••••••"
+                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label for="confirmPassword" class="block text-sm font-medium text-text-primary mb-1">Confirmer le nouveau mot de passe</label>
+                    <input id="confirmPassword" formControlName="confirmPassword" type="password" autocomplete="new-password"
+                      placeholder="••••••••"
+                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
+                  </div>
+                  <button type="submit" [disabled]="passwordForm.invalid || isSavingPassword"
+                    class="bg-primary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    {{ isSavingPassword ? 'Mise à jour…' : 'Mettre à jour le mot de passe' }}
+                  </button>
+                </form>
+              } @else {
+                <div class="rounded-xl border border-secondary/20 bg-secondary/10 px-4 py-3 text-sm text-text-primary">
+                  Votre compte utilise actuellement Google pour se connecter. Si vous souhaitez aussi definir un mot de passe local,
+                  utilisez le parcours <strong>Mot de passe oublie</strong> depuis l'ecran de connexion.
                 </div>
-                <div>
-                  <label for="newPassword" class="block text-sm font-medium text-text-primary mb-1">Nouveau mot de passe <span class="text-text-muted font-normal">(8 caractères min.)</span></label>
-                  <input id="newPassword" formControlName="newPassword" type="password" autocomplete="new-password"
-                    placeholder="••••••••"
-                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
-                </div>
-                <div>
-                  <label for="confirmPassword" class="block text-sm font-medium text-text-primary mb-1">Confirmer le nouveau mot de passe</label>
-                  <input id="confirmPassword" formControlName="confirmPassword" type="password" autocomplete="new-password"
-                    placeholder="••••••••"
-                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
-                </div>
-                <button type="submit" [disabled]="passwordForm.invalid || isSavingPassword"
-                  class="bg-primary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                  {{ isSavingPassword ? 'Mise à jour…' : 'Mettre à jour le mot de passe' }}
-                </button>
-              </form>
+              }
             </section>
 
           </div>
