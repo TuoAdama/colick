@@ -212,7 +212,18 @@
         <!-- ── Panel: Réservations reçues ──────────────────────────────────── -->
         @if (activeTab === 'received') {
           <div id="panel-received" role="tabpanel" aria-labelledby="tab-received">
-            <h2 class="text-lg font-semibold text-text-primary mb-4">Réservations reçues</h2>
+            <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 class="text-lg font-semibold text-text-primary">Réservations reçues</h2>
+              <a
+                routerLink="/propose"
+                class="inline-flex items-center justify-center gap-2 bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 shadow-lg shadow-secondary/30"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                Proposer un voyage
+              </a>
+            </div>
 
             @if (isLoadingTrips) {
               <!-- Loading spinner -->
@@ -221,7 +232,7 @@
               </div>
             } @else if (myTrips.length === 0) {
               <div class="text-center py-10 text-text-secondary text-sm">
-                Vous n'avez aucun trajet proposé pour le moment.
+                <p class="mb-6">Vous n'avez aucun trajet proposé pour le moment.</p>
               </div>
             } @else {
               <!-- Trip selection grid -->
