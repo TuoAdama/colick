@@ -117,7 +117,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
         return;
       }
 
-      const searchKey = `${from}::${to}`;
+      const searchKey = this.buildSearchKey(from, to);
       if (searchKey === this.lastAutoSearchKey) {
         return;
       }
@@ -136,8 +136,19 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.lastAutoSearchKey = `${this.departure.name}::${this.destination.name}`;
-    this.searchTripsByNames(this.departure.name, this.destination.name);
+    const from = this.departure.name;
+    const to = this.destination.name;
+
+    if (this.hasMatchingSearchParams(from, to)) {
+      this.lastAutoSearchKey = this.buildSearchKey(from, to);
+      this.searchTripsByNames(from, to);
+      return;
+    }
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { from, to },
+    });
   }
 
   private searchTripsByNames(departure: string, destination: string): void {
@@ -159,6 +170,16 @@ export class SearchPageComponent implements OnInit, OnDestroy {
           this.isLoading = false;
         },
       });
+  }
+
+  private hasMatchingSearchParams(departure: string, destination: string): boolean {
+    const currentParams = this.route.snapshot.queryParamMap;
+    return currentParams.get('from')?.trim() === departure
+      && currentParams.get('to')?.trim() === destination;
+  }
+
+  private buildSearchKey(departure: string, destination: string): string {
+    return `${departure}::${destination}`;
   }
 
   private createLocationFromQuery(name: string): Location {
