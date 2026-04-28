@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { BehaviorSubject, of } from 'rxjs';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { SearchPageComponent } from './search-page.component';
 import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
@@ -11,7 +11,13 @@ import { Trip } from '../../models/trip.model';
 describe('SearchPageComponent', () => {
   let fixture: ComponentFixture<SearchPageComponent>;
   let component: SearchPageComponent;
+  let router: Router;
+  let activatedRoute: ActivatedRoute;
   let queryParamMapSubject: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+  let routeMock: {
+    queryParamMap: Observable<ReturnType<typeof convertToParamMap>>;
+    snapshot: { queryParamMap: ReturnType<typeof convertToParamMap> };
+  };
 
   const tripServiceMock = {
     searchTrips: jasmine.createSpy('searchTrips').and.returnValue(of([])),
@@ -34,6 +40,10 @@ describe('SearchPageComponent', () => {
 
   beforeEach(async () => {
     queryParamMapSubject = new BehaviorSubject(convertToParamMap({}));
+    routeMock = {
+      queryParamMap: queryParamMapSubject.asObservable(),
+      snapshot: { queryParamMap: convertToParamMap({}) },
+    };
 
     await TestBed.configureTestingModule({
       imports: [SearchPageComponent],
@@ -41,7 +51,7 @@ describe('SearchPageComponent', () => {
         provideRouter([]),
         {
           provide: ActivatedRoute,
-          useValue: { queryParamMap: queryParamMapSubject.asObservable() },
+          useValue: routeMock,
         },
         { provide: TripService, useValue: tripServiceMock },
         { provide: AuthService, useValue: authServiceMock },
@@ -52,11 +62,20 @@ describe('SearchPageComponent', () => {
 
     fixture = TestBed.createComponent(SearchPageComponent);
     component = fixture.componentInstance;
+    router = TestBed.inject(Router);
+    activatedRoute = TestBed.inject(ActivatedRoute);
+    spyOn(router, 'navigate').and.resolveTo(true);
     tripServiceMock.searchTrips.calls.reset();
   });
 
+  function setQueryParams(params: Record<string, string>): void {
+    const paramMap = convertToParamMap(params);
+    routeMock.snapshot.queryParamMap = paramMap;
+    queryParamMapSubject.next(paramMap);
+  }
+
   it('reads from/to query params and auto-searches when both exist', () => {
-    queryParamMapSubject.next(convertToParamMap({ from: 'Paris', to: 'Abidjan' }));
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
     fixture.detectChanges();
 
     expect(component.departureQuery).toBe('Paris');
@@ -67,7 +86,7 @@ describe('SearchPageComponent', () => {
   });
 
   it('does not auto-search when query params are incomplete', () => {
-    queryParamMapSubject.next(convertToParamMap({ from: 'Paris' }));
+    setQueryParams({ from: 'Paris' });
     fixture.detectChanges();
 
     expect(component.departureQuery).toBe('Paris');
@@ -76,11 +95,39 @@ describe('SearchPageComponent', () => {
   });
 
   it('does not trigger duplicate auto-search for identical params', () => {
-    queryParamMapSubject.next(convertToParamMap({ from: 'Paris', to: 'Abidjan' }));
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
     fixture.detectChanges();
-    queryParamMapSubject.next(convertToParamMap({ from: 'Paris', to: 'Abidjan' }));
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
 
     expect(tripServiceMock.searchTrips).toHaveBeenCalledTimes(1);
+  });
+
+  it('updates query params instead of searching immediately when criteria change', () => {
+    component.departure = { id: 1, name: 'Paris', country: 'France', type: 'city' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", type: 'city' };
+
+    component.searchTrips();
+
+    expect(router.navigate).toHaveBeenCalledWith([], {
+      relativeTo: activatedRoute,
+      queryParams: { from: 'Paris', to: 'Abidjan' },
+    });
+    expect(tripServiceMock.searchTrips).not.toHaveBeenCalled();
+  });
+
+  it('retries the search immediately when the URL already matches the current criteria', () => {
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
+    fixture.detectChanges();
+    tripServiceMock.searchTrips.calls.reset();
+    (router.navigate as jasmine.Spy).calls.reset();
+
+    component.departure = { id: 1, name: 'Paris', country: 'France', type: 'city' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", type: 'city' };
+
+    component.searchTrips();
+
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(tripServiceMock.searchTrips).toHaveBeenCalledOnceWith('Paris', 'Abidjan');
   });
 
   it('returns true for own trip and false for other trip', () => {
