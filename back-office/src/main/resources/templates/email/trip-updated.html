@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trajet modifié - Colick</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:Poppins,Arial,sans-serif;color:#111827;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:24px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;">
+                <tr>
+                    <td style="background:#023047;padding:20px 24px;color:#ffffff;font-size:20px;font-weight:700;">
+                        Colick
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:28px 24px;">
+                        <p style="margin:0 0 12px 0;font-size:16px;">Bonjour <span th:text="${firstName}">Utilisateur</span>,</p>
+                        <p style="margin:0 0 20px 0;line-height:1.6;">
+                            Le trajet <strong th:text="${departureAddress}">Paris</strong> →
+                            <strong th:text="${destination}">Abidjan</strong> que vous avez réservé a été modifié par le voyageur.
+                        </p>
+                        <p style="margin:0 0 20px 0;line-height:1.6;background:#F9FAFB;border-left:4px solid #fb8500;padding:12px 16px;border-radius:10px;">
+                            Merci de vérifier les nouvelles informations dans votre espace Colick.
+                        </p>
+                        <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
+                        <p style="margin:0 0 12px 0;font-size:16px;">Hello <span th:text="${firstName}">User</span>,</p>
+                        <p style="margin:0 0 20px 0;line-height:1.6;">
+                            The trip <strong th:text="${departureAddress}">Paris</strong> →
+                            <strong th:text="${destination}">Abidjan</strong> you booked has been updated by the traveler.
+                        </p>
+                        <p style="margin:0;line-height:1.6;color:#6B7280;">
+                            Please review the updated details in your Colick account.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#F9FAFB;padding:16px 24px;font-size:12px;color:#6B7280;">
+                        Besoin d'aide / Need help? <span style="color:#219ebc;" th:text="${supportEmail}">support@colick.app</span>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

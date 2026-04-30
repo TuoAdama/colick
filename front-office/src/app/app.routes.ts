@@ -28,6 +28,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'propose/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/propose-trip/propose-trip-page.component').then(
+        (m) => m.ProposeTripPageComponent
+      ),
+  },
+  {
     path: 'propose',
     canActivate: [authGuard],
     loadComponent: () =>

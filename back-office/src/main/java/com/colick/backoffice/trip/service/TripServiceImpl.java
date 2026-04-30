@@ -2,6 +2,7 @@ package com.colick.backoffice.trip.service;
 
 import com.colick.backoffice.email.EmailService;
 import com.colick.backoffice.exception.TripBookingConflictException;
+import com.colick.backoffice.exception.TripUpdateNotAllowedException;
 import com.colick.backoffice.exception.ResourceNotFoundException;
 import com.colick.backoffice.exception.ValidationCodeDeliveryException;
 import com.colick.backoffice.location.entity.LocationType;
@@ -81,6 +82,9 @@ public class TripServiceImpl implements TripService {
     public TripResponse updateTrip(Long id, UpdateTripRequest request, User requester) {
         Trip trip = findTripOrThrow(id);
         assertTripOwner(trip, requester);
+        if (trip.getStatus() != Trip.TripStatus.ACTIVE) {
+            throw new TripUpdateNotAllowedException("Only ACTIVE trips can be updated");
+        }
 
         if (request.getDepartureAddress() != null) trip.setDepartureAddress(request.getDepartureAddress());
         if (request.getDestination() != null) trip.setDestination(request.getDestination());
@@ -90,7 +94,9 @@ public class TripServiceImpl implements TripService {
         if (request.getPricePerKilo() != null) trip.setPricePerKilo(request.getPricePerKilo());
         if (request.getInstantAcceptance() != null) trip.setInstantAcceptance(request.getInstantAcceptance());
 
-        return toTripResponse(tripRepository.save(trip));
+        Trip savedTrip = tripRepository.save(trip);
+        notifyAcceptedBookingSendersAboutTripUpdate(savedTrip);
+        return toTripResponse(savedTrip);
     }
 
     @Override
@@ -375,6 +381,16 @@ public class TripServiceImpl implements TripService {
             );
         }
         return bookingRepository.save(booking);
+    }
+
+    private void notifyAcceptedBookingSendersAboutTripUpdate(Trip trip) {
+        bookingRepository.findByTripAndStatus(trip, TripBooking.BookingStatus.ACCEPTED)
+                .forEach(booking -> emailService.sendTripUpdatedEmail(
+                        booking.getSender().getEmail(),
+                        booking.getSender().getFirstName(),
+                        trip.getDepartureAddress(),
+                        trip.getDestination()
+                ));
     }
 
     // ---- Trip search -------------------------------------------------------

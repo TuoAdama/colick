@@ -161,6 +161,23 @@ public class EmailService {
         );
     }
 
+    public void sendTripUpdatedEmail(String to,
+                                     String senderFirstName,
+                                     String departureAddress,
+                                     String destination) {
+        sendTemplateEmail(
+            to,
+            "Trajet modifié - Colick",
+            "email/trip-updated",
+            Map.of(
+                "firstName", senderFirstName,
+                "departureAddress", departureAddress,
+                "destination", destination,
+                "supportEmail", supportEmail
+            )
+        );
+    }
+
     public void sendBookingCancelledBySenderEmail(String to,
                                                   String travelerFirstName,
                                                   String senderFirstName,

@@ -3,6 +3,7 @@ package com.colick.backoffice.trip;
 import com.colick.backoffice.email.EmailService;
 import com.colick.backoffice.exception.ResourceNotFoundException;
 import com.colick.backoffice.exception.TripBookingConflictException;
+import com.colick.backoffice.exception.TripUpdateNotAllowedException;
 import com.colick.backoffice.exception.ValidationCodeDeliveryException;
 import com.colick.backoffice.location.entity.LocationType;
 import com.colick.backoffice.location.repository.LocationRepository;
@@ -147,6 +148,88 @@ class TripServiceImplTest {
         assertThatThrownBy(() -> tripService.getTripById(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("99");
+    }
+
+    @Test
+    void updateTrip_shouldUpdateActiveTripAndNotifyAcceptedBookingSenders() {
+        UpdateTripRequest request = new UpdateTripRequest();
+        request.setDepartureAddress("Lyon");
+        request.setDestination("Dakar");
+        request.setInstantAcceptance(true);
+
+        TripBooking acceptedBooking = TripBooking.builder()
+                .id(1L)
+                .trip(sampleTrip)
+                .sender(sender)
+                .status(TripBooking.BookingStatus.ACCEPTED)
+                .build();
+        TripBooking pendingBooking = TripBooking.builder()
+                .id(2L)
+                .trip(sampleTrip)
+                .sender(User.builder()
+                        .id(3L)
+                        .firstName("Claire")
+                        .email("claire@example.com")
+                        .role(User.Role.USER)
+                        .build())
+                .status(TripBooking.BookingStatus.PENDING)
+                .build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.save(any(Trip.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of(acceptedBooking));
+
+        TripResponse response = tripService.updateTrip(10L, request, traveler);
+
+        assertThat(response.getDepartureAddress()).isEqualTo("Lyon");
+        assertThat(response.getDestination()).isEqualTo("Dakar");
+        assertThat(response.isInstantAcceptance()).isTrue();
+        verify(bookingRepository).findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED);
+        verify(emailService).sendTripUpdatedEmail(
+                eq(sender.getEmail()),
+                eq(sender.getFirstName()),
+                eq("Lyon"),
+                eq("Dakar")
+        );
+        verify(emailService, never()).sendTripUpdatedEmail(
+                eq(pendingBooking.getSender().getEmail()),
+                anyString(),
+                anyString(),
+                anyString()
+        );
+    }
+
+    @Test
+    void updateTrip_shouldThrow_whenTripIsCompleted() {
+        sampleTrip.setStatus(Trip.TripStatus.COMPLETED);
+        UpdateTripRequest request = new UpdateTripRequest();
+        request.setDestination("Dakar");
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+
+        assertThatThrownBy(() -> tripService.updateTrip(10L, request, traveler))
+                .isInstanceOf(TripUpdateNotAllowedException.class)
+                .hasMessage("Only ACTIVE trips can be updated");
+
+        verify(tripRepository, never()).save(any());
+        verify(emailService, never()).sendTripUpdatedEmail(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void updateTrip_shouldThrow_whenTripIsCancelled() {
+        sampleTrip.setStatus(Trip.TripStatus.CANCELLED);
+        UpdateTripRequest request = new UpdateTripRequest();
+        request.setDestination("Dakar");
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+
+        assertThatThrownBy(() -> tripService.updateTrip(10L, request, traveler))
+                .isInstanceOf(TripUpdateNotAllowedException.class)
+                .hasMessage("Only ACTIVE trips can be updated");
+
+        verify(tripRepository, never()).save(any());
+        verify(emailService, never()).sendTripUpdatedEmail(anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
