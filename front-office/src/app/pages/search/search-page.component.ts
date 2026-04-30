@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AutocompleteComponent } from '../../shared/components/autocomplete/autocomplete.component';
 import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
+import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
 import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
@@ -20,7 +21,7 @@ import { UserResponse } from '../../models/auth.model';
 @Component({
   selector: 'app-search-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, AutocompleteComponent, BookingModalComponent],
+  imports: [CommonModule, RouterLink, AutocompleteComponent, BookingModalComponent, UserAvatarComponent],
   templateUrl: './search-page.component.html',
 })
 export class SearchPageComponent implements OnInit, OnDestroy {
@@ -288,5 +289,15 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   isOwnTrip(trip: Trip): boolean {
     const currentUser: UserResponse | null = this.authService.getUser();
     return !!currentUser && currentUser.id === trip.travelerId;
+  }
+
+  hasTravelerRating(trip: Trip): boolean {
+    return trip.travelerRatingAverage !== null
+      && trip.travelerRatingAverage !== undefined
+      && (trip.travelerRatingCount ?? 0) > 0;
+  }
+
+  formatTravelerRatingAverage(trip: Trip): string {
+    return (trip.travelerRatingAverage ?? 0).toFixed(1);
   }
 }

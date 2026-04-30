@@ -15,14 +15,15 @@ import {
   UpdateProfileRequest,
   UserResponse,
 } from '../models/auth.model';
+import { PhotoUrlService } from './photo-url.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly photoUrlService = inject(PhotoUrlService);
   private readonly TOKEN_KEY = 'colick_token';
   private readonly USER_KEY = 'colick_user';
-  private readonly API_PREFIX = '/api';
 
   private currentUserSubject = new BehaviorSubject<UserResponse | null>(this.getStoredUser());
   currentUser$ = this.currentUserSubject.asObservable();
@@ -148,27 +149,7 @@ export class AuthService {
     return {
       ...user,
       hasPassword: user.hasPassword !== false,
-      photoUrl: this.normalizePhotoUrl(user.photoUrl),
+      photoUrl: this.photoUrlService.normalizePhotoUrl(user.photoUrl),
     };
-  }
-
-  private normalizePhotoUrl(photoUrl?: string): string | undefined {
-    if (!photoUrl) return undefined;
-    if (
-      photoUrl.startsWith('http://')
-      || photoUrl.startsWith('https://')
-      || photoUrl.startsWith('data:')
-      || photoUrl.startsWith('blob:')
-      || photoUrl.startsWith(`${this.API_PREFIX}/`)
-    ) {
-      return photoUrl;
-    }
-    if (photoUrl.startsWith('/uploads/')) {
-      return `${this.API_PREFIX}${photoUrl}`;
-    }
-    if (photoUrl.startsWith('uploads/')) {
-      return `${this.API_PREFIX}/${photoUrl}`;
-    }
-    return photoUrl;
   }
 }

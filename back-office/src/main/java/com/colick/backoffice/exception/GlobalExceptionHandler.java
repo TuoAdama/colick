@@ -1,5 +1,6 @@
 package com.colick.backoffice.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,11 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
     }
 
-    @ExceptionHandler({UserAlreadyExistsException.class, TripBookingConflictException.class})
+    @ExceptionHandler({
+            UserAlreadyExistsException.class,
+            TripBookingConflictException.class,
+            ReviewSubmissionConflictException.class
+    })
     public ResponseEntity<ApiError> handleConflict(RuntimeException ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -50,6 +55,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity
+                .badRequest()
+                .body(new ApiError(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiError> handleConstraintViolation(ConstraintViolationException ex) {
         return ResponseEntity
                 .badRequest()
                 .body(new ApiError(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));

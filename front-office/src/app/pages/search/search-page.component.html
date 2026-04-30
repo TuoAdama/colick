@@ -308,35 +308,59 @@
             </div>
 
             <!-- BOTTOM SECTION — Footer with traveler info and CTA -->
-            <div class="px-5 sm:px-6 py-4 bg-bg-secondary/60 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <!-- Left side: traveler avatar, name and badges -->
-              <div class="flex items-center gap-3 flex-wrap">
-                <!-- Avatar circle with traveler initial -->
-                <div
-                  class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                  [attr.aria-label]="'Voyageur: ' + trip.travelerName"
-                >
-                  {{ trip.travelerName.charAt(0).toUpperCase() }}
-                </div>
-                <div class="flex flex-col">
-                  <span class="text-sm font-semibold text-text-primary">{{ trip.travelerName }}</span>
-                  <span class="text-xs text-text-muted">Voyageur</span>
+            <div class="px-5 sm:px-6 py-4 bg-bg-secondary/60 border-t border-primary/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <!-- Left side: traveler avatar, name and trust signals -->
+              <div class="flex flex-1 items-start gap-3 sm:gap-4 min-w-0">
+                <div class="shrink-0" [attr.aria-label]="'Voyageur: ' + trip.travelerName">
+                  <app-user-avatar
+                    [name]="trip.travelerName"
+                    [photoUrl]="trip.travelerPhotoUrl"
+                    sizeClasses="w-12 h-12"
+                    textClasses="text-sm"
+                  ></app-user-avatar>
                 </div>
 
-                <!-- Instant acceptance badge -->
-                @if (trip.instantAcceptance) {
-                  <span class="inline-flex items-center gap-1 bg-success/10 text-success text-xs font-semibold px-3 py-1 rounded-full">
-                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                      <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" />
-                    </svg>
-                    Acceptation instantanée
-                  </span>
-                }
+                <div class="min-w-0 space-y-2">
+                  <div class="min-w-0">
+                    <span class="block truncate text-sm font-semibold text-text-primary">{{ trip.travelerName }}</span>
+                    <span class="text-xs text-text-muted">Voyageur</span>
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-2">
+                    @if ((trip.travelerRatingCount ?? 0) > 0 && trip.travelerRatingAverage !== null && trip.travelerRatingAverage !== undefined) {
+                      <span class="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-white px-3 py-1.5 text-xs font-medium text-text-secondary">
+                        <svg class="w-3.5 h-3.5 text-accent" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                          <path d="M9.049.927c.3-.921 1.603-.921 1.902 0l1.286 3.954a1 1 0 00.95.69h4.158c.969 0 1.371 1.24.588 1.81l-3.364 2.445a1 1 0 00-.364 1.118l1.285 3.955c.3.92-.755 1.688-1.54 1.118l-3.364-2.445a1 1 0 00-1.176 0l-3.364 2.445c-.784.57-1.838-.197-1.539-1.118l1.285-3.955a1 1 0 00-.364-1.118L.98 7.38c-.783-.57-.38-1.81.588-1.81h4.159a1 1 0 00.95-.69L9.05.927z" />
+                        </svg>
+                        <span class="font-semibold text-text-primary">{{ trip.travelerRatingAverage | number: '1.1-1' }}/5</span>
+                        <span aria-hidden="true">•</span>
+                        <span>{{ trip.travelerRatingCount }} avis</span>
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-white px-3 py-1.5 text-xs font-medium text-text-secondary">
+                        <svg class="w-3.5 h-3.5 text-text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6M7 3h10a2 2 0 012 2v14l-4-2-4 2-4-2-4 2V5a2 2 0 012-2z" />
+                        </svg>
+                        Aucun avis pour le moment
+                      </span>
+                    }
+
+                    <!-- Instant acceptance badge -->
+                    @if (trip.instantAcceptance) {
+                      <span class="inline-flex items-center gap-1 bg-success/10 text-success text-xs font-semibold px-3 py-1.5 rounded-full">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                          <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" />
+                        </svg>
+                        Acceptation instantanée
+                      </span>
+                    }
+                  </div>
+                </div>
               </div>
 
               <!-- Right side: CTA buttons -->
               @if (!isOwnTrip(trip)) {
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2 sm:justify-end">
                   <button type="button" class="inline-flex items-center gap-1.5 bg-secondary text-white font-semibold px-4 py-2.5 rounded-full text-sm hover:bg-secondary/90 transition-colors whitespace-nowrap" (click)="contactTraveler(trip)"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>Contacter</button>
                   @if (hasActiveBookingForTrip(trip.id)) {
                     <span class="inline-flex items-center gap-1.5 bg-primary/10 text-primary font-semibold px-4 py-2.5 rounded-full text-sm whitespace-nowrap">

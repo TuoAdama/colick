@@ -12,6 +12,8 @@ import com.colick.backoffice.trip.entity.TripBooking;
 import com.colick.backoffice.trip.repository.TripBookingRepository;
 import com.colick.backoffice.trip.repository.TripRepository;
 import com.colick.backoffice.trip.service.BookingValidationService;
+import com.colick.backoffice.trip.service.TravelerRatingSummary;
+import com.colick.backoffice.trip.service.TravelerReviewService;
 import com.colick.backoffice.trip.service.TripServiceImpl;
 import com.colick.backoffice.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,11 +27,13 @@ import org.springframework.security.access.AccessDeniedException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -50,6 +54,9 @@ class TripServiceImplTest {
 
     @Mock
     private BookingValidationService bookingValidationService;
+
+    @Mock
+    private TravelerReviewService travelerReviewService;
 
     @InjectMocks
     private TripServiceImpl tripService;
@@ -91,6 +98,8 @@ class TripServiceImplTest {
 
         lenient().when(bookingValidationService.normalizeRecipientContact(anyString()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(travelerReviewService.getTravelerRatingSummaries(anyCollection()))
+                .thenReturn(Map.of());
     }
 
     @Test
@@ -630,6 +639,19 @@ class TripServiceImplTest {
         assertThat(sampleTrip.getStatus()).isEqualTo(Trip.TripStatus.COMPLETED);
         assertThat(response.getStatus()).isEqualTo(Trip.TripStatus.COMPLETED);
         verify(tripRepository).save(sampleTrip);
+        verify(travelerReviewService).createReviewInvitations(sampleTrip);
+    }
+
+    @Test
+    void completeTrip_shouldBeIdempotent_whenAlreadyCompleted() {
+        sampleTrip.setStatus(Trip.TripStatus.COMPLETED);
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+
+        TripResponse response = tripService.completeTrip(10L, traveler);
+
+        assertThat(response.getStatus()).isEqualTo(Trip.TripStatus.COMPLETED);
+        verify(tripRepository, never()).save(any());
+        verify(travelerReviewService, never()).createReviewInvitations(any());
     }
 
     @Test
@@ -939,5 +961,25 @@ class TripServiceImplTest {
         assertThat(results).hasSize(1);
         // Null weights are ignored, so availableWeight = maxWeight = 20
         assertThat(results.get(0).getAvailableWeight()).isEqualByComparingTo(BigDecimal.valueOf(20));
+    }
+
+    @Test
+    void searchTrips_shouldIncludeTravelerPhotoAndRatingAggregate() {
+        traveler.setPhotoUrl("/uploads/alice.jpg");
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(sampleTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+        when(travelerReviewService.getTravelerRatingSummaries(anyCollection()))
+                .thenReturn(Map.of(traveler.getId(), new TravelerRatingSummary(4.5, 2L)));
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getTravelerPhotoUrl()).isEqualTo("/uploads/alice.jpg");
+        assertThat(results.get(0).getTravelerRatingAverage()).isEqualTo(4.5);
+        assertThat(results.get(0).getTravelerRatingCount()).isEqualTo(2L);
     }
 }

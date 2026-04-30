@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notation du voyageur Colick</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:Poppins,Arial,sans-serif;color:#111827;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:24px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;">
+                <tr>
+                    <td style="background:#023047;padding:20px 24px;color:#ffffff;font-size:20px;font-weight:700;">
+                        Colick
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:28px 24px;">
+                        <p style="margin:0 0 12px 0;font-size:16px;">Bonjour <span th:text="${firstName}">Utilisateur</span>,</p>
+                        <p style="margin:0 0 20px 0;line-height:1.6;">
+                            Votre trajet avec <strong th:text="${travelerFirstName}">Voyageur</strong> entre
+                            <strong th:text="${departureAddress}">Paris</strong> et
+                            <strong th:text="${destination}">Abidjan</strong> est termine.
+                        </p>
+                        <p style="margin:0 0 24px 0;text-align:center;">
+                            <a th:href="${reviewUrl}" style="display:inline-block;background:#fb8500;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600;">
+                                Noter ce voyageur
+                            </a>
+                        </p>
+                        <p style="margin:0 0 10px 0;font-size:14px;color:#6B7280;line-height:1.6;">
+                            Laissez une note de 1 a 5 etoiles et un commentaire si vous le souhaitez.
+                        </p>
+                        <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
+                        <p style="margin:0 0 12px 0;font-size:16px;">Hello <span th:text="${firstName}">User</span>,</p>
+                        <p style="margin:0 0 20px 0;line-height:1.6;">
+                            Your trip with <strong th:text="${travelerFirstName}">Traveler</strong> from
+                            <strong th:text="${departureAddress}">Paris</strong> to
+                            <strong th:text="${destination}">Abidjan</strong> is complete.
+                        </p>
+                        <p style="margin:0;font-size:14px;color:#6B7280;line-height:1.6;">
+                            Leave a 1 to 5 star rating and an optional comment.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#F9FAFB;padding:16px 24px;font-size:12px;color:#6B7280;">
+                        Besoin d'aide / Need help? <span style="color:#219ebc;" th:text="${supportEmail}">support@colick.app</span>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

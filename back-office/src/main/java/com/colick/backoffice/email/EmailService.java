@@ -201,6 +201,27 @@ public class EmailService {
         );
     }
 
+    public void sendTravelerReviewInvitationEmail(String to,
+                                                  String senderFirstName,
+                                                  String travelerFirstName,
+                                                  String departureAddress,
+                                                  String destination,
+                                                  String reviewUrl) {
+        sendTemplateEmail(
+                to,
+                "Notez votre voyageur - Colick",
+                "email/traveler-review-invitation",
+                Map.of(
+                        "firstName", senderFirstName,
+                        "travelerFirstName", travelerFirstName,
+                        "departureAddress", departureAddress,
+                        "destination", destination,
+                        "reviewUrl", reviewUrl,
+                        "supportEmail", supportEmail
+                )
+        );
+    }
+
     private void sendTemplateEmail(String to, String subject, String templateName, Map<String, Object> variables) {
         Context context = new Context();
         variables.forEach(context::setVariable);

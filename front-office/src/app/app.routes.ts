@@ -21,6 +21,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'traveler-review',
+    loadComponent: () =>
+      import('./pages/review/review-page.component').then(
+        (m) => m.ReviewPageComponent
+      ),
+  },
+  {
     path: 'propose',
     canActivate: [authGuard],
     loadComponent: () =>

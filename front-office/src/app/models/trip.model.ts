@@ -18,6 +18,9 @@ export interface Trip {
   id: number;
   travelerId: number;
   travelerName: string;
+  travelerPhotoUrl?: string;
+  travelerRatingAverage?: number | null;
+  travelerRatingCount?: number;
   departureAddress: string;
   destination: string;
   departureTime: string;
