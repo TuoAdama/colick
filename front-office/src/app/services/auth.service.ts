@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
 import {
   AuthResponse,
@@ -18,6 +19,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
   private readonly TOKEN_KEY = 'colick_token';
   private readonly USER_KEY = 'colick_user';
   private readonly API_PREFIX = '/api';
@@ -54,6 +56,8 @@ export class AuthService {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.currentUserSubject.next(null);
+    // Redirect to login page after clearing the session
+    this.router.navigate(['/login']);
   }
 
   getUser(): UserResponse | null {

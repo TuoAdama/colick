@@ -1,0 +1,123 @@
+import { TestBed } from '@angular/core/testing';
+import {
+  HttpClient,
+  provideHttpClient,
+  withInterceptors,
+} from '@angular/common/http';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
+import { authInterceptor } from './auth.interceptor';
+import { AuthService } from '../services/auth.service';
+
+describe('authInterceptor', () => {
+  let http: HttpClient;
+  let httpMock: HttpTestingController;
+  let authServiceMock: jasmine.SpyObj<AuthService>;
+
+  beforeEach(() => {
+    authServiceMock = jasmine.createSpyObj<AuthService>('AuthService', [
+      'getToken',
+      'logout',
+    ]);
+    // Default: user is authenticated
+    authServiceMock.getToken.and.returnValue('jwt-token');
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([authInterceptor])),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: authServiceMock },
+      ],
+    });
+
+    http = TestBed.inject(HttpClient);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => httpMock.verify());
+
+  // ── Token attachment ────────────────────────────────────────────────────
+
+  it('attaches Authorization header when a token is present', () => {
+    http.get('/api/trips').subscribe();
+
+    const req = httpMock.expectOne('/api/trips');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer jwt-token');
+    req.flush([]);
+  });
+
+  it('does not attach Authorization header when no token is present', () => {
+    authServiceMock.getToken.and.returnValue(null);
+
+    http.get('/api/trips').subscribe();
+
+    const req = httpMock.expectOne('/api/trips');
+    expect(req.request.headers.has('Authorization')).toBeFalse();
+    req.flush([]);
+  });
+
+  // ── 401 handling on protected endpoints ────────────────────────────────
+
+  it('calls authService.logout() when a protected endpoint returns 401', () => {
+    http.get('/api/trips').subscribe({ error: () => {} });
+
+    const req = httpMock.expectOne('/api/trips');
+    req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    expect(authServiceMock.logout).toHaveBeenCalled();
+  });
+
+  it('propagates the 401 error after calling logout', (done) => {
+    http.get('/api/trips').subscribe({
+      error: (err) => {
+        expect(err.status).toBe(401);
+        done();
+      },
+    });
+
+    const req = httpMock.expectOne('/api/trips');
+    req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+  });
+
+  // ── 401 handling on auth endpoints (must NOT trigger logout) ───────────
+
+  it('does NOT call logout when /api/auth/ endpoint returns 401', () => {
+    http.post('/api/auth/login', {}).subscribe({ error: () => {} });
+
+    const req = httpMock.expectOne('/api/auth/login');
+    req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    expect(authServiceMock.logout).not.toHaveBeenCalled();
+  });
+
+  it('does NOT call logout when /api/auth/google returns 401', () => {
+    http.post('/api/auth/google', {}).subscribe({ error: () => {} });
+
+    const req = httpMock.expectOne('/api/auth/google');
+    req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    expect(authServiceMock.logout).not.toHaveBeenCalled();
+  });
+
+  // ── Non-401 errors must not trigger logout ──────────────────────────────
+
+  it('does NOT call logout for a 403 error on a protected endpoint', () => {
+    http.get('/api/trips').subscribe({ error: () => {} });
+
+    const req = httpMock.expectOne('/api/trips');
+    req.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
+
+    expect(authServiceMock.logout).not.toHaveBeenCalled();
+  });
+
+  it('does NOT call logout for a 500 error on a protected endpoint', () => {
+    http.get('/api/trips').subscribe({ error: () => {} });
+
+    const req = httpMock.expectOne('/api/trips');
+    req.flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
+
+    expect(authServiceMock.logout).not.toHaveBeenCalled();
+  });
+});
