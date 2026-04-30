@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link TripService}.
@@ -32,17 +33,20 @@ public class TripServiceImpl implements TripService {
     private final EmailService emailService;
     private final LocationRepository locationRepository;
     private final BookingValidationService bookingValidationService;
+    private final TravelerReviewService travelerReviewService;
 
     public TripServiceImpl(TripRepository tripRepository,
                            TripBookingRepository bookingRepository,
                            EmailService emailService,
                            LocationRepository locationRepository,
-                           BookingValidationService bookingValidationService) {
+                           BookingValidationService bookingValidationService,
+                           TravelerReviewService travelerReviewService) {
         this.tripRepository = tripRepository;
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
         this.locationRepository = locationRepository;
         this.bookingValidationService = bookingValidationService;
+        this.travelerReviewService = travelerReviewService;
     }
 
     @Override
@@ -57,21 +61,20 @@ public class TripServiceImpl implements TripService {
                 .pricePerKilo(request.getPricePerKilo())
                 .instantAcceptance(request.isInstantAcceptance())
                 .build();
-        return TripResponse.from(tripRepository.save(trip));
+        return toTripResponse(tripRepository.save(trip), null, Map.of());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<TripResponse> getAllTrips() {
-        return tripRepository.findByStatus(Trip.TripStatus.ACTIVE).stream()
-                .map(TripResponse::from)
-                .toList();
+        List<Trip> trips = tripRepository.findByStatus(Trip.TripStatus.ACTIVE);
+        return mapTrips(trips, false);
     }
 
     @Override
     @Transactional(readOnly = true)
     public TripResponse getTripById(Long id) {
-        return TripResponse.from(findTripOrThrow(id));
+        return toTripResponse(findTripOrThrow(id));
     }
 
     @Override
@@ -87,7 +90,7 @@ public class TripServiceImpl implements TripService {
         if (request.getPricePerKilo() != null) trip.setPricePerKilo(request.getPricePerKilo());
         if (request.getInstantAcceptance() != null) trip.setInstantAcceptance(request.getInstantAcceptance());
 
-        return TripResponse.from(tripRepository.save(trip));
+        return toTripResponse(tripRepository.save(trip));
     }
 
     @Override
@@ -96,7 +99,7 @@ public class TripServiceImpl implements TripService {
         assertTripOwner(trip, requester);
 
         if (trip.getStatus() == Trip.TripStatus.COMPLETED) {
-            return TripResponse.from(trip);
+            return toTripResponse(trip);
         }
         if (trip.getStatus() != Trip.TripStatus.ACTIVE) {
             throw new IllegalStateException("Only ACTIVE trips can be marked as completed");
@@ -106,7 +109,9 @@ public class TripServiceImpl implements TripService {
         }
 
         trip.setStatus(Trip.TripStatus.COMPLETED);
-        return TripResponse.from(tripRepository.save(trip));
+        Trip savedTrip = tripRepository.save(trip);
+        travelerReviewService.createReviewInvitations(savedTrip);
+        return toTripResponse(savedTrip);
     }
 
     @Override
@@ -382,11 +387,12 @@ public class TripServiceImpl implements TripService {
         Set<String> departureTerms = expandSearchTerm(departure);
         Set<String> destinationTerms = expandSearchTerm(destination);
 
-        return activeTrips.stream()
+        List<Trip> matchingTrips = activeTrips.stream()
                 .filter(t -> departureTerms == null || matchesAnyTerm(t.getDepartureAddress(), departureTerms))
                 .filter(t -> destinationTerms == null || matchesAnyTerm(t.getDestination(), destinationTerms))
-                .map(t -> TripResponse.from(t, computeAvailableWeight(t)))
                 .toList();
+
+        return mapTrips(matchingTrips, true);
     }
 
     /**
@@ -427,9 +433,7 @@ public class TripServiceImpl implements TripService {
     @Override
     @Transactional(readOnly = true)
     public List<TripResponse> getMyTrips(User user) {
-        return tripRepository.findByTraveler(user).stream()
-                .map(TripResponse::from)
-                .toList();
+        return mapTrips(tripRepository.findByTraveler(user), false);
     }
 
     @Override
@@ -452,5 +456,37 @@ public class TripServiceImpl implements TripService {
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return trip.getMaxWeight().subtract(totalBooked);
+    }
+
+    private List<TripResponse> mapTrips(List<Trip> trips, boolean includeAvailableWeight) {
+        Map<Long, TravelerRatingSummary> travelerRatingSummaries = travelerReviewService.getTravelerRatingSummaries(
+                trips.stream()
+                        .map(trip -> trip.getTraveler().getId())
+                        .collect(Collectors.toSet())
+        );
+
+        return trips.stream()
+                .map(trip -> toTripResponse(
+                        trip,
+                        includeAvailableWeight ? computeAvailableWeight(trip) : null,
+                        travelerRatingSummaries
+                ))
+                .toList();
+    }
+
+    private TripResponse toTripResponse(Trip trip) {
+        return toTripResponse(trip, null, travelerReviewService.getTravelerRatingSummaries(Set.of(trip.getTraveler().getId())));
+    }
+
+    private TripResponse toTripResponse(Trip trip,
+                                        BigDecimal availableWeight,
+                                        Map<Long, TravelerRatingSummary> travelerRatingSummaries) {
+        TravelerRatingSummary summary = travelerRatingSummaries.get(trip.getTraveler().getId());
+        return TripResponse.from(
+                trip,
+                availableWeight,
+                summary != null ? summary.averageRating() : null,
+                summary != null ? summary.reviewCount() : 0L
+        );
     }
 }

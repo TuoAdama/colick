@@ -66,6 +66,7 @@ describe('SearchPageComponent', () => {
     activatedRoute = TestBed.inject(ActivatedRoute);
     spyOn(router, 'navigate').and.resolveTo(true);
     tripServiceMock.searchTrips.calls.reset();
+    tripServiceMock.searchTrips.and.returnValue(of([]));
   });
 
   function setQueryParams(params: Record<string, string>): void {
@@ -181,5 +182,85 @@ describe('SearchPageComponent', () => {
     ];
 
     expect(component.hasActiveBookingForTrip(11)).toBeFalse();
+  });
+
+  it('returns true only when traveler rating data is complete', () => {
+    expect(component.hasTravelerRating({
+      travelerRatingAverage: 4.8,
+      travelerRatingCount: 12,
+    } as Trip)).toBeTrue();
+
+    expect(component.hasTravelerRating({
+      travelerRatingAverage: null,
+      travelerRatingCount: 12,
+    } as Trip)).toBeFalse();
+
+    expect(component.hasTravelerRating({
+      travelerRatingAverage: 4.8,
+      travelerRatingCount: 0,
+    } as Trip)).toBeFalse();
+  });
+
+  it('renders traveler photo and rating summary in the search results', () => {
+    tripServiceMock.searchTrips.and.returnValue(of([
+      {
+        id: 1,
+        travelerId: 14,
+        travelerName: 'Alice Martin',
+        travelerPhotoUrl: '/api/uploads/alice.png',
+        travelerRatingAverage: 4.8,
+        travelerRatingCount: 12,
+        departureAddress: 'Paris',
+        destination: 'Abidjan',
+        departureTime: '2025-03-02T08:00:00Z',
+        arrivalTime: '2025-03-02T16:00:00Z',
+        maxWeight: 20,
+        pricePerKilo: 15,
+        instantAcceptance: true,
+        status: 'ACTIVE',
+        availableWeight: 8,
+      },
+    ]));
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
+
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const image = host.querySelector('img[alt="Photo de profil de Alice Martin"]') as HTMLImageElement | null;
+
+    expect(image).not.toBeNull();
+    expect(image?.getAttribute('src')).toBe('/api/uploads/alice.png');
+    expect(host.textContent).toContain('4.8');
+    expect(host.textContent).toContain('12 avis');
+  });
+
+  it('renders traveler initials fallback when no photo is available', () => {
+    tripServiceMock.searchTrips.and.returnValue(of([
+      {
+        id: 1,
+        travelerId: 14,
+        travelerName: 'Alice Martin',
+        travelerPhotoUrl: undefined,
+        travelerRatingAverage: 4.8,
+        travelerRatingCount: 12,
+        departureAddress: 'Paris',
+        destination: 'Abidjan',
+        departureTime: '2025-03-02T08:00:00Z',
+        arrivalTime: '2025-03-02T16:00:00Z',
+        maxWeight: 20,
+        pricePerKilo: 15,
+        instantAcceptance: true,
+        status: 'ACTIVE',
+        availableWeight: 8,
+      },
+    ]));
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
+
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const fallback = host.querySelector('[data-testid="user-avatar-fallback"]');
+
+    expect(fallback?.textContent?.trim()).toBe('AM');
   });
 });

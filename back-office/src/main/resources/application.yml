@@ -72,6 +72,8 @@ upload:
 app:
   frontend:
     base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
+  review:
+    base-url: ${REVIEW_BASE_URL:${app.frontend.base-url}/traveler-review}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   mail:

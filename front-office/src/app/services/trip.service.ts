@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { Trip, CreateTripDto } from '../models/trip.model';
 import { CreateBookingRequest, BookingResponse, ConfirmBookingDeliveryRequest } from '../models/booking.model';
+import { PhotoUrlService } from './photo-url.service';
 
 /**
  * Service responsible for trip search, creation, and booking operations.
@@ -12,6 +13,7 @@ import { CreateBookingRequest, BookingResponse, ConfirmBookingDeliveryRequest } 
 })
 export class TripService {
   private readonly http = inject(HttpClient);
+  private readonly photoUrlService = inject(PhotoUrlService);
   private readonly baseUrl = '/api/trips';
 
   /** Search trips by departure and destination locations. */
@@ -19,17 +21,23 @@ export class TripService {
     const params = new HttpParams()
       .set('departure', departure)
       .set('destination', destination);
-    return this.http.get<Trip[]>(`${this.baseUrl}/search`, { params });
+    return this.http.get<Trip[]>(`${this.baseUrl}/search`, { params }).pipe(
+      map((trips) => trips.map((trip) => this.normalizeTrip(trip)))
+    );
   }
 
   /** Create a new trip proposal. */
   createTrip(data: CreateTripDto): Observable<Trip> {
-    return this.http.post<Trip>(this.baseUrl, data);
+    return this.http.post<Trip>(this.baseUrl, data).pipe(
+      map((trip) => this.normalizeTrip(trip))
+    );
   }
 
   /** Mark a trip as completed once it has been performed. */
   completeTrip(tripId: number): Observable<Trip> {
-    return this.http.put<Trip>(`${this.baseUrl}/${tripId}/complete`, {});
+    return this.http.put<Trip>(`${this.baseUrl}/${tripId}/complete`, {}).pipe(
+      map((trip) => this.normalizeTrip(trip))
+    );
   }
 
   /** Create a booking request for a specific trip. */
@@ -39,7 +47,9 @@ export class TripService {
 
   /** Get trips published by the current user. */
   getMyTrips(): Observable<Trip[]> {
-    return this.http.get<Trip[]>(`${this.baseUrl}/mine`);
+    return this.http.get<Trip[]>(`${this.baseUrl}/mine`).pipe(
+      map((trips) => trips.map((trip) => this.normalizeTrip(trip)))
+    );
   }
 
   /** Get booking requests sent by the current user. */
@@ -84,5 +94,13 @@ export class TripService {
   /** Cancel a booking (sender only). */
   cancelBooking(tripId: number, bookingId: number): Observable<BookingResponse> {
     return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/cancel`, {});
+  }
+
+  private normalizeTrip(trip: Trip): Trip {
+    return {
+      ...trip,
+      travelerPhotoUrl: this.photoUrlService.normalizePhotoUrl(trip.travelerPhotoUrl),
+      travelerRatingCount: trip.travelerRatingCount ?? 0,
+    };
   }
 }

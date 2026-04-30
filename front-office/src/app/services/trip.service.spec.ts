@@ -20,6 +20,36 @@ describe('TripService', () => {
     httpMock.verify();
   });
 
+  it('searches trips and normalizes traveler photo URLs', () => {
+    service.searchTrips('Paris', 'Abidjan').subscribe((trips) => {
+      expect(trips).toHaveSize(1);
+      expect(trips[0].travelerPhotoUrl).toBe('/api/uploads/traveler.png');
+      expect(trips[0].travelerRatingCount).toBe(12);
+    });
+
+    const req = httpMock.expectOne('/api/trips/search?departure=Paris&destination=Abidjan');
+    expect(req.request.method).toBe('GET');
+    req.flush([
+      {
+        id: 4,
+        travelerId: 2,
+        travelerName: 'Alice Martin',
+        travelerPhotoUrl: '/uploads/traveler.png',
+        travelerRatingAverage: 4.8,
+        travelerRatingCount: 12,
+        departureAddress: 'Paris',
+        destination: 'Abidjan',
+        departureTime: '2025-03-02T08:00:00Z',
+        arrivalTime: '2025-03-02T16:00:00Z',
+        maxWeight: 20,
+        pricePerKilo: 15,
+        instantAcceptance: true,
+        status: 'ACTIVE',
+        availableWeight: 6,
+      },
+    ]);
+  });
+
   it('calls complete trip endpoint', () => {
     service.completeTrip(12).subscribe();
 
