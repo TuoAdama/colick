@@ -19,7 +19,7 @@
         Recherche
       </a>
 
-      @if (authService.isLoggedIn()) {
+      @if (authService.currentUser$ | async) {
         <a
           [routerLink]="['/dashboard']"
           [queryParams]="{ tab: 'received' }"
@@ -175,7 +175,7 @@
           </a>
         </li>
 
-        @if (authService.isLoggedIn()) {
+        @if (authService.currentUser$ | async) {
           <li>
             <a
               [routerLink]="['/dashboard']"

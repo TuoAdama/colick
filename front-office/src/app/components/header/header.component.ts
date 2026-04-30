@@ -11,7 +11,7 @@ export class HeaderComponent implements OnInit {
   isProfileMenuOpen = false;
   private profilePhotoLoadFailed = false;
   private lastProfilePhotoUrl: string | null = null;
-  ngOnInit(): void { if (this.authService.isLoggedIn()) { this.messagingService.refreshUnreadCount(); } }
+  ngOnInit(): void { if (this.authService.getUser()) { this.messagingService.refreshUnreadCount(); } }
   toggleMobileMenu(): void {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
     if (this.isMobileMenuOpen) this.isProfileMenuOpen = false;

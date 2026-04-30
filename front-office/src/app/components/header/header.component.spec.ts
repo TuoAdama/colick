@@ -6,23 +6,30 @@ import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 import { HeaderComponent } from './header.component';
 
+/** Authenticated user fixture */
+const AUTHENTICATED_USER: UserResponse = {
+  id: 1,
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  email: 'ada@example.com',
+  role: 'USER',
+  photoUrl: '/api/uploads/avatar.png',
+};
+
 describe('HeaderComponent', () => {
   let fixture: ComponentFixture<HeaderComponent>;
   let component: HeaderComponent;
 
-  let loggedIn = false;
-  const currentUser$ = new BehaviorSubject<UserResponse>({
-    id: 1,
-    firstName: 'Ada',
-    lastName: 'Lovelace',
-    email: 'ada@example.com',
-    role: 'USER',
-    photoUrl: '/api/uploads/avatar.png',
-  });
+  // Drive auth state via currentUser$ so the template reacts reactively
+  const currentUser$ = new BehaviorSubject<UserResponse | null>(null);
 
   const authServiceMock = {
-    isLoggedIn: jasmine.createSpy('isLoggedIn').and.callFake(() => loggedIn),
-    logout: jasmine.createSpy('logout'),
+    /**
+     * isLoggedIn() is only used inside ngOnInit — keep it in sync with
+     * the BehaviorSubject so both code paths are consistent.
+     */
+    isLoggedIn: jasmine.createSpy('isLoggedIn').and.callFake(() => currentUser$.getValue() !== null),
+    logout: jasmine.createSpy('logout').and.callFake(() => currentUser$.next(null)),
     currentUser$,
     getUser: jasmine.createSpy('getUser').and.callFake(() => currentUser$.getValue()),
   };
@@ -34,6 +41,14 @@ describe('HeaderComponent', () => {
   };
 
   beforeEach(async () => {
+    // Reset spies and auth state before each test
+    authServiceMock.logout.calls.reset();
+    authServiceMock.isLoggedIn.calls.reset();
+    authServiceMock.getUser.calls.reset();
+    messagingServiceMock.refreshUnreadCount.calls.reset();
+    messagingServiceMock.resetUnreadCount.calls.reset();
+    currentUser$.next(null);
+
     await TestBed.configureTestingModule({
       imports: [HeaderComponent],
       providers: [
@@ -48,8 +63,7 @@ describe('HeaderComponent', () => {
   });
 
   it('shows guest actions when user is not authenticated', () => {
-    loggedIn = false;
-
+    // currentUser$ emits null — template must show guest UI
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent;
@@ -60,8 +74,7 @@ describe('HeaderComponent', () => {
   });
 
   it('shows authenticated actions when user is authenticated', () => {
-    loggedIn = true;
-
+    currentUser$.next(AUTHENTICATED_USER);
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent;
@@ -70,13 +83,23 @@ describe('HeaderComponent', () => {
     expect(messagingServiceMock.refreshUnreadCount).toHaveBeenCalled();
   });
 
-  it('shows profile photo in profile button when available', () => {
-    loggedIn = true;
-    currentUser$.next({
-      ...currentUser$.getValue(),
-      photoUrl: '/api/uploads/avatar.png',
-    });
+  it('reactively switches to guest view after logout', () => {
+    // Start authenticated
+    currentUser$.next(AUTHENTICATED_USER);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Mes réservations');
 
+    // Simulate logout by emitting null from currentUser$
+    currentUser$.next(null);
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Connexion');
+    expect(text).not.toContain('Mes réservations');
+  });
+
+  it('shows profile photo in profile button when available', () => {
+    currentUser$.next({ ...AUTHENTICATED_USER, photoUrl: '/api/uploads/avatar.png' });
     fixture.detectChanges();
 
     const profileImage = fixture.nativeElement.querySelector('button[aria-label="Menu profil"] img') as HTMLImageElement | null;
@@ -85,12 +108,7 @@ describe('HeaderComponent', () => {
   });
 
   it('falls back to initials when profile photo is missing', () => {
-    loggedIn = true;
-    currentUser$.next({
-      ...currentUser$.getValue(),
-      photoUrl: undefined,
-    });
-
+    currentUser$.next({ ...AUTHENTICATED_USER, photoUrl: undefined });
     fixture.detectChanges();
 
     const profileImage = fixture.nativeElement.querySelector('button[aria-label="Menu profil"] img') as HTMLImageElement | null;
@@ -100,12 +118,7 @@ describe('HeaderComponent', () => {
   });
 
   it('falls back to initials when profile image loading fails', () => {
-    loggedIn = true;
-    currentUser$.next({
-      ...currentUser$.getValue(),
-      photoUrl: '/api/uploads/broken-avatar.png',
-    });
-
+    currentUser$.next({ ...AUTHENTICATED_USER, photoUrl: '/api/uploads/broken-avatar.png' });
     fixture.detectChanges();
 
     const profileImage = fixture.nativeElement.querySelector('button[aria-label="Menu profil"] img') as HTMLImageElement;
@@ -118,8 +131,7 @@ describe('HeaderComponent', () => {
   });
 
   it('opens profile dropdown with expected links', () => {
-    loggedIn = true;
-
+    currentUser$.next(AUTHENTICATED_USER);
     fixture.detectChanges();
 
     const profileButton = fixture.nativeElement.querySelector('button[aria-label="Menu profil"]') as HTMLButtonElement;
@@ -134,9 +146,9 @@ describe('HeaderComponent', () => {
   });
 
   it('logs out and resets unread counter', () => {
-    loggedIn = true;
-
+    currentUser$.next(AUTHENTICATED_USER);
     fixture.detectChanges();
+
     const profileButton = fixture.nativeElement.querySelector('button[aria-label="Menu profil"]') as HTMLButtonElement;
     profileButton.click();
     fixture.detectChanges();

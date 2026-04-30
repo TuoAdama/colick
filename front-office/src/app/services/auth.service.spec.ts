@@ -4,18 +4,21 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
+import { provideRouter, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
+  let router: Router;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     });
     service = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);
+    router = TestBed.inject(Router);
   });
 
   afterEach(() => {
@@ -129,5 +132,46 @@ describe('AuthService', () => {
     });
 
     expect(service.getUser()?.photoUrl).toBe('/api/uploads/avatar.png');
+  });
+
+  describe('logout()', () => {
+    beforeEach(() => {
+      // Seed storage and user state before each logout test
+      localStorage.setItem('colick_token', 'jwt-token');
+      localStorage.setItem('colick_user', JSON.stringify({
+        id: 1, firstName: 'Ada', lastName: 'Lovelace',
+        email: 'ada@example.com', role: 'USER',
+      }));
+    });
+
+    it('removes token and user from localStorage', () => {
+      service.logout();
+
+      expect(localStorage.getItem('colick_token')).toBeNull();
+      expect(localStorage.getItem('colick_user')).toBeNull();
+    });
+
+    it('sets currentUser to null', () => {
+      let emittedUser: unknown = 'not-yet';
+      service.currentUser$.subscribe((u) => (emittedUser = u));
+
+      service.logout();
+
+      expect(emittedUser).toBeNull();
+    });
+
+    it('navigates to /login after clearing state', () => {
+      const navigateSpy = spyOn(router, 'navigate').and.returnValue(Promise.resolve(true));
+
+      service.logout();
+
+      expect(navigateSpy).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('isLoggedIn() returns false after logout', () => {
+      service.logout();
+
+      expect(service.isLoggedIn()).toBeFalse();
+    });
   });
 });
