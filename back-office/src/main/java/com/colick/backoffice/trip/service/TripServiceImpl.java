@@ -383,16 +383,23 @@ public class TripServiceImpl implements TripService {
     @Transactional(readOnly = true)
     public List<TripResponse> searchTrips(String departure, String destination) {
         List<Trip> activeTrips = tripRepository.findByStatus(Trip.TripStatus.ACTIVE);
+        LocalDateTime searchReferenceTime = LocalDateTime.now();
 
         Set<String> departureTerms = expandSearchTerm(departure);
         Set<String> destinationTerms = expandSearchTerm(destination);
 
         List<Trip> matchingTrips = activeTrips.stream()
+                .filter(trip -> departsAtOrAfter(trip, searchReferenceTime))
                 .filter(t -> departureTerms == null || matchesAnyTerm(t.getDepartureAddress(), departureTerms))
                 .filter(t -> destinationTerms == null || matchesAnyTerm(t.getDestination(), destinationTerms))
                 .toList();
 
         return mapTrips(matchingTrips, true);
+    }
+
+    private boolean departsAtOrAfter(Trip trip, LocalDateTime referenceTime) {
+        LocalDateTime departureTime = trip.getDepartureTime();
+        return departureTime != null && !departureTime.isBefore(referenceTime);
     }
 
     /**
