@@ -843,6 +843,64 @@ class TripServiceImplTest {
     }
 
     @Test
+    void searchTrips_shouldExcludeTripsWhoseDepartureTimeHasPassed() {
+        Trip expiredTrip = Trip.builder()
+                .id(11L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(LocalDateTime.now().minusHours(1))
+                .arrivalTime(LocalDateTime.now().plusHours(5))
+                .maxWeight(BigDecimal.valueOf(15))
+                .pricePerKilo(BigDecimal.valueOf(8))
+                .status(Trip.TripStatus.ACTIVE).build();
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(sampleTrip, expiredTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getId()).isEqualTo(sampleTrip.getId());
+    }
+
+    @Test
+    void searchTrips_shouldTakeTimeOfDayIntoAccountForSameDate() {
+        LocalDateTime now = LocalDateTime.now();
+
+        Trip sameDayExpiredTrip = Trip.builder()
+                .id(11L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(now.minusMinutes(10))
+                .arrivalTime(now.plusHours(5))
+                .maxWeight(BigDecimal.valueOf(15))
+                .pricePerKilo(BigDecimal.valueOf(8))
+                .status(Trip.TripStatus.ACTIVE).build();
+
+        Trip sameDayUpcomingTrip = Trip.builder()
+                .id(12L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(now.plusMinutes(10))
+                .arrivalTime(now.plusHours(6))
+                .maxWeight(BigDecimal.valueOf(18))
+                .pricePerKilo(BigDecimal.valueOf(9))
+                .status(Trip.TripStatus.ACTIVE).build();
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE))
+                .thenReturn(List.of(sameDayExpiredTrip, sameDayUpcomingTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(sameDayUpcomingTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getId()).isEqualTo(sameDayUpcomingTrip.getId());
+    }
+
+    @Test
     void searchTrips_shouldReturnMatchingTripsByDestination() {
         when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(sampleTrip));
         when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Abidjan"))
