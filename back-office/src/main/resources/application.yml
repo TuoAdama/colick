@@ -87,3 +87,5 @@ app:
     password-reset:
       base-url: ${PASSWORD_RESET_BASE_URL:http://localhost:4200/reset-password}
       expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:60}
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:}

@@ -2,7 +2,9 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { AuthResponse, UserResponse } from '../../models/auth.model';
 import { AuthService } from '../../services/auth.service';
+import { GoogleAuthButtonComponent } from '../../components/google-auth-button/google-auth-button.component';
 
 /**
  * LoginPageComponent - User authentication page with email/password form.
@@ -10,7 +12,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, GoogleAuthButtonComponent],
   templateUrl: './login-page.component.html',
 })
 export class LoginPageComponent {
@@ -24,6 +26,7 @@ export class LoginPageComponent {
   });
 
   isLoading = false;
+  isGoogleLoading = false;
   errorMessage = '';
 
   onSubmit(): void {
@@ -34,9 +37,9 @@ export class LoginPageComponent {
 
     const { email, password } = this.loginForm.value;
     this.authService.login(email!, password!).subscribe({
-      next: () => {
+      next: (response) => {
         this.isLoading = false;
-        this.router.navigate(['/search']);
+        this.navigateAfterAuth(response);
       },
       error: (err: any) => {
         this.isLoading = false;
@@ -44,5 +47,36 @@ export class LoginPageComponent {
         this.errorMessage = err?.error?.message || 'Email ou mot de passe incorrect.';
       },
     });
+  }
+
+  onGoogleCredential(idToken: string): void {
+    if (this.isGoogleLoading) return;
+
+    this.isGoogleLoading = true;
+    this.errorMessage = '';
+
+    this.authService.googleLogin(idToken).subscribe({
+      next: (response) => {
+        this.isGoogleLoading = false;
+        this.navigateAfterAuth(response);
+      },
+      error: (err: any) => {
+        this.isGoogleLoading = false;
+        this.errorMessage = err?.error?.message || 'Connexion Google impossible pour le moment.';
+      },
+    });
+  }
+
+  private navigateAfterAuth(response: AuthResponse): void {
+    if (this.requiresIdentityDocument(response.user)) {
+      this.router.navigate(['/dashboard'], { queryParams: { tab: 'profile', completeProfile: 'identity' } });
+      return;
+    }
+
+    this.router.navigate(['/search']);
+  }
+
+  private requiresIdentityDocument(user: UserResponse): boolean {
+    return !user.identityDocument?.trim();
   }
 }

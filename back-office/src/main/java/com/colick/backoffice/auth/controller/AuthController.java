@@ -3,8 +3,11 @@ package com.colick.backoffice.auth.controller;
 import com.colick.backoffice.auth.dto.AuthResponse;
 import com.colick.backoffice.auth.dto.ForgotPasswordRequest;
 import com.colick.backoffice.auth.dto.GenericMessageResponse;
+import com.colick.backoffice.auth.dto.GoogleAuthConfigResponse;
+import com.colick.backoffice.auth.dto.GoogleAuthRequest;
 import com.colick.backoffice.auth.dto.LoginRequest;
 import com.colick.backoffice.auth.dto.ResetPasswordRequest;
+import com.colick.backoffice.auth.google.GoogleAuthenticationService;
 import com.colick.backoffice.auth.passwordreset.service.PasswordResetService;
 import com.colick.backoffice.auth.util.JwtUtil;
 import com.colick.backoffice.exception.ResourceNotFoundException;
@@ -16,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,15 +36,18 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final PasswordResetService passwordResetService;
+    private final GoogleAuthenticationService googleAuthenticationService;
 
     public AuthController(UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
                           JwtUtil jwtUtil,
-                          PasswordResetService passwordResetService) {
+                          PasswordResetService passwordResetService,
+                          GoogleAuthenticationService googleAuthenticationService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.passwordResetService = passwordResetService;
+        this.googleAuthenticationService = googleAuthenticationService;
     }
 
     /** Authenticates a user and returns a JWT token. */
@@ -55,6 +62,10 @@ public class AuthController {
             );
         }
 
+        if (Boolean.FALSE.equals(user.getLocalAuthEnabled())) {
+            throw new AccessDeniedException("Ce compte utilise Google. Connectez-vous avec Google.");
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -65,6 +76,18 @@ public class AuthController {
                 .type("Bearer")
                 .user(UserResponse.from(user))
                 .build());
+    }
+
+    /** Returns the public Google auth configuration needed by the front-end. */
+    @GetMapping("/google/config")
+    public ResponseEntity<GoogleAuthConfigResponse> getGoogleConfig() {
+        return ResponseEntity.ok(googleAuthenticationService.getConfiguration());
+    }
+
+    /** Authenticates a user with a Google ID token and returns a Colick JWT. */
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> authenticateWithGoogle(@Valid @RequestBody GoogleAuthRequest request) {
+        return ResponseEntity.ok(googleAuthenticationService.authenticate(request.getIdToken()));
     }
 
     /**

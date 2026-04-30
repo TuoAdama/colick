@@ -98,7 +98,10 @@ public class UserServiceImpl implements UserService {
         }
         if (request.getPhone() != null) user.setPhone(request.getPhone());
         if (request.getIdentityDocument() != null) user.setIdentityDocument(request.getIdentityDocument());
-        if (request.getPassword() != null) user.setPassword(passwordEncoder.encode(request.getPassword()));
+        if (request.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setLocalAuthEnabled(true);
+        }
         return UserResponse.from(userRepository.save(user));
     }
 
@@ -195,10 +198,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse changePassword(Long id, String oldPassword, String newPassword) {
         User user = findOrThrow(id);
+        if (Boolean.FALSE.equals(user.getLocalAuthEnabled())) {
+            throw new AccessDeniedException(
+                    "Ce compte n'a pas encore de mot de passe local. Utilisez Google ou le parcours mot de passe oublie."
+            );
+        }
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new AccessDeniedException("Old password is incorrect");
         }
         user.setPassword(passwordEncoder.encode(newPassword));
+        user.setLocalAuthEnabled(true);
         return UserResponse.from(userRepository.save(user));
     }
 

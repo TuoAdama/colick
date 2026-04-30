@@ -39,6 +39,21 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    /** Whether password-based sign-in is enabled for this account. */
+    @Column
+    @Builder.Default
+    private Boolean localAuthEnabled = true;
+
+    /** Primary account creation source. */
+    @Enumerated(EnumType.STRING)
+    @Column
+    @Builder.Default
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
+    /** Google account subject linked to this user, if any. */
+    @Column(unique = true)
+    private String googleSubject;
+
     /** Whether this account is activated and allowed to log in. */
     @Column
     @Builder.Default
@@ -75,5 +90,9 @@ public class User {
 
     public enum Role {
         USER, ADMIN
+    }
+
+    public enum AuthProvider {
+        LOCAL, GOOGLE
     }
 }

@@ -164,6 +164,7 @@ class PasswordResetServiceImplTest {
         passwordResetService.resetPassword("valid-token", "StrongPass1");
 
         assertThat(user.getPassword()).isEqualTo("new-hash");
+        assertThat(user.getLocalAuthEnabled()).isTrue();
         verify(userRepository).save(user);
         assertThat(token.getUsedAt()).isNotNull();
         assertThat(secondActiveToken.getUsedAt()).isNotNull();

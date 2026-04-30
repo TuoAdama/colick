@@ -67,6 +67,15 @@
         </button>
       </form>
 
+      <app-google-auth-button
+        buttonText="signup_with"
+        (credentialReceived)="onGoogleCredential($event)"
+      />
+
+      @if (isGoogleLoading) {
+        <p class="mt-4 text-center text-sm text-text-secondary">Inscription Google en cours...</p>
+      }
+
       <p class="text-center text-sm text-text-secondary mt-6">
         Déjà un compte ? <a routerLink="/login" class="text-secondary font-medium hover:underline">Se connecter</a>
       </p>
