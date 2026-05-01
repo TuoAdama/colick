@@ -38,7 +38,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             UserAlreadyExistsException.class,
             TripBookingConflictException.class,
-            ReviewSubmissionConflictException.class
+            ReviewSubmissionConflictException.class,
+            TripUpdateNotAllowedException.class
     })
     public ResponseEntity<ApiError> handleConflict(RuntimeException ex) {
         return ResponseEntity

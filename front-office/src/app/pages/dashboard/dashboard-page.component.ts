@@ -245,6 +245,10 @@ export class DashboardPageComponent implements OnInit {
     this.selectedTripBookings = this.tripBookingsMap[tripId] ?? [];
   }
 
+  editTrip(tripId: number): void {
+    void this.router.navigate(['/propose', tripId]);
+  }
+
   completeTrip(tripId: number): void {
     this.isCompletingTrip = true;
     this.bookingActionError = '';

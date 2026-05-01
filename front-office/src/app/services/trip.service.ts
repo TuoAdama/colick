@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { Trip, CreateTripDto } from '../models/trip.model';
+import { Trip, CreateTripDto, UpdateTripDto } from '../models/trip.model';
 import { CreateBookingRequest, BookingResponse, ConfirmBookingDeliveryRequest } from '../models/booking.model';
 import { PhotoUrlService } from './photo-url.service';
 
@@ -29,6 +29,20 @@ export class TripService {
   /** Create a new trip proposal. */
   createTrip(data: CreateTripDto): Observable<Trip> {
     return this.http.post<Trip>(this.baseUrl, data).pipe(
+      map((trip) => this.normalizeTrip(trip))
+    );
+  }
+
+  /** Get a trip published by its identifier. */
+  getTripById(tripId: number): Observable<Trip> {
+    return this.http.get<Trip>(`${this.baseUrl}/${tripId}`).pipe(
+      map((trip) => this.normalizeTrip(trip))
+    );
+  }
+
+  /** Update an existing trip proposal. */
+  updateTrip(tripId: number, data: UpdateTripDto): Observable<Trip> {
+    return this.http.put<Trip>(`${this.baseUrl}/${tripId}`, data).pipe(
       map((trip) => this.normalizeTrip(trip))
     );
   }

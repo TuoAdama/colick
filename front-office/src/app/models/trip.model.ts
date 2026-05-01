@@ -12,6 +12,12 @@ export interface CreateTripDto {
 }
 
 /**
+ * DTO used when updating an existing trip via PUT /api/trips/:id.
+ * The edit form reuses the exact same payload as creation.
+ */
+export type UpdateTripDto = CreateTripDto;
+
+/**
  * Trip model representing a trip returned by the search API.
  */
 export interface Trip {

@@ -1,8 +1,8 @@
-<!-- Propose Trip Page -->
-<div class="min-h-screen bg-bg-primary" aria-labelledby="propose-title">
+<!-- Propose / Edit Trip Page -->
+<div class="min-h-screen bg-bg-primary font-['Poppins']" aria-labelledby="propose-title">
 
   <!-- ============================================================
-       PAGE HEADER — gradient banner with title and back link
+       PAGE HEADER — gradient banner with dynamic title and back link
        ============================================================ -->
   <section class="hero-gradient pt-24 pb-32 md:pb-40 relative overflow-hidden">
     <!-- Decorative background blurs -->
@@ -16,11 +16,12 @@
     ></div>
 
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      <!-- Back to home link -->
+      <!-- Back link — adapts to create vs edit context -->
       <a
-        routerLink="/"
+        [routerLink]="isEditMode ? '/dashboard' : '/'"
+        [queryParams]="isEditMode ? { tab: 'received' } : {}"
         class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-medium mb-6 group"
-        aria-label="Retour à l'accueil"
+        [attr.aria-label]="isEditMode ? 'Retour au tableau de bord' : 'Retour à l\'accueil'"
       >
         <svg
           class="w-4 h-4 transition-transform group-hover:-translate-x-1"
@@ -32,18 +33,18 @@
         >
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
-        Retour à l'accueil
+        {{ isEditMode ? 'Retour au tableau de bord' : 'Retour à l\'accueil' }}
       </a>
 
-      <!-- Page title -->
+      <!-- Dynamic page title -->
       <h1
         id="propose-title"
         class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-3"
       >
-        Proposer un voyage
+        {{ pageTitle }}
       </h1>
       <p class="text-white/80 text-base sm:text-lg max-w-xl">
-        Partagez votre itinéraire et transportez des colis contre rémunération.
+        {{ pageDescription }}
       </p>
     </div>
   </section>
@@ -55,217 +56,248 @@
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
 
-        <!-- Error message -->
-        @if (errorMessage) {
+        <!-- ── Page loading skeleton (edit mode: fetching trip details) ── -->
+        @if (isPageLoading) {
           <div
-            class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm"
-            role="alert"
-            aria-live="assertive"
+            class="flex flex-col items-center justify-center py-14 gap-4"
+            role="status"
+            aria-label="Chargement du voyage en cours"
           >
-            <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-            </svg>
-            <span>{{ errorMessage }}</span>
+            <div class="w-9 h-9 border-[3px] border-secondary border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-text-secondary text-sm">Chargement du voyage…</p>
           </div>
-        }
+        } @else {
 
-        <form (ngSubmit)="submit()" novalidate>
-
-          <!-- ── Section: Itinéraire ── -->
-          <fieldset class="mb-6">
-            <legend class="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
-              <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
-              Itinéraire
-            </legend>
-
-            <div class="space-y-4">
-              <!-- Departure autocomplete -->
-              <app-autocomplete
-                label="Ville de départ *"
-                placeholder="Ex: Paris, France"
-                (selected)="onDepartureSelected($event)"
-                (cleared)="onDepartureCleared()"
-              />
-
-              <!-- Destination autocomplete -->
-              <app-autocomplete
-                label="Destination *"
-                placeholder="Ex: Abidjan, Côte d'Ivoire"
-                (selected)="onDestinationSelected($event)"
-                (cleared)="onDestinationCleared()"
-              />
+          <!-- ── Error / warning message ── -->
+          @if (errorMessage) {
+            <div
+              class="flex items-start gap-3 rounded-xl px-4 py-3 mb-6 text-sm border"
+              [class]="canEditTrip
+                ? 'bg-red-50 border-red-200 text-red-700'
+                : 'bg-warning/10 border-warning/30 text-text-primary'"
+              role="alert"
+              aria-live="assertive"
+            >
+              <!-- Icon: triangle warning for non-editable, circle error otherwise -->
+              @if (!canEditTrip) {
+                <svg class="w-5 h-5 shrink-0 mt-0.5 text-warning" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+              } @else {
+                <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+              }
+              <span>{{ errorMessage }}</span>
             </div>
-          </fieldset>
+          }
 
-          <hr class="border-gray-100 mb-6" aria-hidden="true" />
-
-          <!-- ── Section: Dates ── -->
-          <fieldset class="mb-6">
-            <legend class="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
-              <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              Dates
-            </legend>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <!-- Departure date -->
-              <div>
-                <label for="departure-time" class="block text-sm font-medium text-text-primary mb-1.5">
-                  Date de départ *
-                </label>
-                <input
-                  id="departure-time"
-                  type="datetime-local"
-                  [(ngModel)]="departureTime"
-                  name="departureTime"
-                  required
-                  [min]="minDateTime"
-                  class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
-                  aria-required="true"
-                />
-              </div>
-
-              <!-- Arrival date -->
-              <div>
-                <label for="arrival-time" class="block text-sm font-medium text-text-primary mb-1.5">
-                  Date d'arrivée estimée *
-                </label>
-                <input
-                  id="arrival-time"
-                  type="datetime-local"
-                  [(ngModel)]="arrivalTime"
-                  name="arrivalTime"
-                  required
-                  [min]="departureTime || minDateTime"
-                  class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
-                  aria-required="true"
-                />
-              </div>
-            </div>
-          </fieldset>
-
-          <hr class="border-gray-100 mb-6" aria-hidden="true" />
-
-          <!-- ── Section: Conditions de transport ── -->
-          <fieldset class="mb-8">
-            <legend class="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
-              <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
-              </svg>
-              Conditions de transport
-            </legend>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-              <!-- Max weight -->
-              <div>
-                <label for="max-weight" class="block text-sm font-medium text-text-primary mb-1.5">
-                  Poids max accepté (kg) *
-                </label>
-                <div class="relative">
-                  <input
-                    id="max-weight"
-                    type="number"
-                    [(ngModel)]="maxWeight"
-                    name="maxWeight"
-                    min="1"
-                    step="1"
-                    placeholder="Ex: 10"
-                    required
-                    class="w-full border border-gray-200 rounded-xl px-4 py-3 pr-12 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
-                    aria-required="true"
-                  />
-                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium pointer-events-none">
-                    kg
-                  </span>
-                </div>
-              </div>
-
-              <!-- Price per kilo -->
-              <div>
-                <label for="price-per-kilo" class="block text-sm font-medium text-text-primary mb-1.5">
-                  Prix par kilo (€) *
-                </label>
-                <div class="relative">
-                  <input
-                    id="price-per-kilo"
-                    type="number"
-                    [(ngModel)]="pricePerKilo"
-                    name="pricePerKilo"
-                    min="0"
-                    step="0.5"
-                    placeholder="Ex: 5.00"
-                    required
-                    class="w-full border border-gray-200 rounded-xl px-4 py-3 pr-10 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
-                    aria-required="true"
-                  />
-                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium pointer-events-none">
-                    €
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Instant acceptance toggle -->
-            <div class="flex items-center justify-between bg-bg-secondary rounded-xl px-4 py-4">
-              <div>
-                <p class="text-sm font-medium text-text-primary">Acceptation instantanée</p>
-                <p class="text-xs text-text-muted mt-0.5">
-                  Les réservations sont confirmées automatiquement sans votre validation manuelle.
-                </p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                [attr.aria-checked]="instantAcceptance"
-                (click)="instantAcceptance = !instantAcceptance"
-                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:ring-offset-2"
-                [class.bg-secondary]="instantAcceptance"
-                [class.bg-gray-200]="!instantAcceptance"
-                aria-label="Activer l'acceptation instantanée"
-              >
-                <span
-                  class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                  [class.translate-x-5]="instantAcceptance"
-                  [class.translate-x-0]="!instantAcceptance"
-                ></span>
-              </button>
-            </div>
-          </fieldset>
-
-          <!-- ── Submit button ── -->
-          <button
-            type="submit"
-            [disabled]="isLoading || !isFormValid"
-            class="w-full flex items-center justify-center gap-2 bg-accent text-white font-bold py-4 rounded-xl hover:bg-opacity-90 transition shadow-lg shadow-accent/30 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Publier le voyage"
+          <!-- ── Form — visually dimmed when the trip cannot be edited ── -->
+          <div
+            [class.opacity-60]="!canEditTrip"
+            [class.pointer-events-none]="!canEditTrip"
           >
-            @if (isLoading) {
-              <!-- Loading spinner -->
-              <svg
-                class="animate-spin w-5 h-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-              </svg>
-              <span>Publication en cours…</span>
-            } @else {
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-              </svg>
-              <span>Publier le voyage</span>
-            }
-          </button>
+            <form (ngSubmit)="submit()" novalidate>
 
-        </form>
+              <!-- ── Section: Itinéraire ── -->
+              <fieldset class="mb-6">
+                <legend class="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
+                  <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  Itinéraire
+                </legend>
+
+                <div class="space-y-4">
+                  <!-- Departure autocomplete — pre-filled in edit mode -->
+                  <app-autocomplete
+                    label="Ville de départ *"
+                    placeholder="Ex: Paris, France"
+                    [initialQuery]="departureQuery"
+                    (selected)="onDepartureSelected($event)"
+                    (cleared)="onDepartureCleared()"
+                  />
+
+                  <!-- Destination autocomplete — pre-filled in edit mode -->
+                  <app-autocomplete
+                    label="Destination *"
+                    placeholder="Ex: Abidjan, Côte d'Ivoire"
+                    [initialQuery]="destinationQuery"
+                    (selected)="onDestinationSelected($event)"
+                    (cleared)="onDestinationCleared()"
+                  />
+                </div>
+              </fieldset>
+
+              <hr class="border-gray-100 mb-6" aria-hidden="true" />
+
+              <!-- ── Section: Dates ── -->
+              <fieldset class="mb-6">
+                <legend class="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
+                  <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  Dates
+                </legend>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <!-- Departure date -->
+                  <div>
+                    <label for="departure-time" class="block text-sm font-medium text-text-primary mb-1.5">
+                      Date de départ *
+                    </label>
+                    <input
+                      id="departure-time"
+                      type="datetime-local"
+                      [(ngModel)]="departureTime"
+                      name="departureTime"
+                      required
+                      [min]="minDateTime"
+                      class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
+                      aria-required="true"
+                    />
+                  </div>
+
+                  <!-- Arrival date -->
+                  <div>
+                    <label for="arrival-time" class="block text-sm font-medium text-text-primary mb-1.5">
+                      Date d'arrivée estimée *
+                    </label>
+                    <input
+                      id="arrival-time"
+                      type="datetime-local"
+                      [(ngModel)]="arrivalTime"
+                      name="arrivalTime"
+                      required
+                      [min]="departureTime || minDateTime"
+                      class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
+                      aria-required="true"
+                    />
+                  </div>
+                </div>
+              </fieldset>
+
+              <hr class="border-gray-100 mb-6" aria-hidden="true" />
+
+              <!-- ── Section: Conditions de transport ── -->
+              <fieldset class="mb-8">
+                <legend class="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
+                  <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+                  </svg>
+                  Conditions de transport
+                </legend>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                  <!-- Max weight -->
+                  <div>
+                    <label for="max-weight" class="block text-sm font-medium text-text-primary mb-1.5">
+                      Poids max accepté (kg) *
+                    </label>
+                    <div class="relative">
+                      <input
+                        id="max-weight"
+                        type="number"
+                        [(ngModel)]="maxWeight"
+                        name="maxWeight"
+                        min="1"
+                        step="1"
+                        placeholder="Ex: 10"
+                        required
+                        class="w-full border border-gray-200 rounded-xl px-4 py-3 pr-12 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
+                        aria-required="true"
+                      />
+                      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium pointer-events-none">
+                        kg
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Price per kilo -->
+                  <div>
+                    <label for="price-per-kilo" class="block text-sm font-medium text-text-primary mb-1.5">
+                      Prix par kilo (€) *
+                    </label>
+                    <div class="relative">
+                      <input
+                        id="price-per-kilo"
+                        type="number"
+                        [(ngModel)]="pricePerKilo"
+                        name="pricePerKilo"
+                        min="0"
+                        step="0.5"
+                        placeholder="Ex: 5.00"
+                        required
+                        class="w-full border border-gray-200 rounded-xl px-4 py-3 pr-10 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
+                        aria-required="true"
+                      />
+                      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium pointer-events-none">
+                        €
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Instant acceptance toggle -->
+                <div class="flex items-center justify-between bg-bg-secondary rounded-xl px-4 py-4">
+                  <div>
+                    <p class="text-sm font-medium text-text-primary">Acceptation instantanée</p>
+                    <p class="text-xs text-text-muted mt-0.5">
+                      Les réservations sont confirmées automatiquement sans votre validation manuelle.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    [attr.aria-checked]="instantAcceptance"
+                    (click)="instantAcceptance = !instantAcceptance"
+                    class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:ring-offset-2"
+                    [class.bg-secondary]="instantAcceptance"
+                    [class.bg-gray-200]="!instantAcceptance"
+                    aria-label="Activer l'acceptation instantanée"
+                  >
+                    <span
+                      class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                      [class.translate-x-5]="instantAcceptance"
+                      [class.translate-x-0]="!instantAcceptance"
+                    ></span>
+                  </button>
+                </div>
+              </fieldset>
+
+              <!-- ── Submit button — dynamic label & disabled state ── -->
+              <button
+                type="submit"
+                [disabled]="isSubmitDisabled"
+                class="w-full flex items-center justify-center gap-2 bg-accent text-white font-bold py-4 rounded-xl hover:bg-opacity-90 transition shadow-lg shadow-accent/30 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                [attr.aria-label]="submitButtonLabel"
+              >
+                @if (isLoading) {
+                  <svg
+                    class="animate-spin w-5 h-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                  </svg>
+                  <span>{{ submitLoadingLabel }}</span>
+                } @else {
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                  </svg>
+                  <span>{{ submitButtonLabel }}</span>
+                }
+              </button>
+
+            </form>
+          </div><!-- /form wrapper -->
+
+        }<!-- /isPageLoading @else -->
       </div>
     </div>
   </section>
