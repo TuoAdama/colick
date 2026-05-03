@@ -52,6 +52,7 @@ export class DashboardPageComponent implements OnInit {
   selectedPhotoFile: File | null = null;
   isUploadingPhoto = false;
   photoError = '';
+  selectedIdentityProofFile: File | null = null;
 
   // ── Section 2: Changer l'e-mail ───────────────────────────────────────────
   emailForm = this.fb.group({
@@ -109,6 +110,9 @@ export class DashboardPageComponent implements OnInit {
         phone: user.phone ?? '',
         identityDocument: user.identityDocument ?? '',
       });
+      this.emailForm.patchValue({
+        newEmail: user.email,
+      });
       this.photoPreview = user.photoUrl ?? null;
     }
 
@@ -159,6 +163,11 @@ export class DashboardPageComponent implements OnInit {
     });
   }
 
+  onIdentityProofSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.selectedIdentityProofFile = input.files?.length ? input.files[0] : null;
+  }
+
   // ── Infos générales ──────────────────────────────────────────────────────
   saveInfo(): void {
     if (this.infoForm.invalid || this.isSavingInfo) return;
@@ -192,7 +201,6 @@ export class DashboardPageComponent implements OnInit {
     this.authService.requestEmailChange(user.id, newEmail).subscribe({
       next: () => {
         this.emailSuccess = `Un lien de confirmation a été envoyé à ${newEmail}. Vérifiez votre boîte mail.`;
-        this.emailForm.reset();
         this.isSendingEmail = false;
       },
       error: () => { this.emailError = "Erreur lors de l'envoi. L'adresse est peut-être déjà utilisée."; this.isSendingEmail = false; },
@@ -220,6 +228,49 @@ export class DashboardPageComponent implements OnInit {
       },
       error: () => { this.passwordError = 'Ancien mot de passe incorrect ou erreur serveur.'; this.isSavingPassword = false; },
     });
+  }
+
+  saveProfileChanges(): void {
+    const user = this.authService.getUser();
+    if (!user) return;
+
+    this.saveInfo();
+
+    const nextEmail = this.emailForm.value.newEmail?.trim();
+    if (nextEmail && nextEmail !== user.email) {
+      this.sendEmailChange();
+    }
+
+    if (this.hasLocalPassword()) {
+      const val = this.passwordForm.value;
+      const hasPasswordInput = !!(val.oldPassword || val.newPassword || val.confirmPassword);
+      if (hasPasswordInput) {
+        this.savePassword();
+      }
+    }
+  }
+
+  resetProfileForms(): void {
+    const user = this.authService.getUser();
+    if (!user) return;
+
+    this.infoForm.reset({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone ?? '',
+      identityDocument: user.identityDocument ?? '',
+    });
+    this.emailForm.reset({
+      newEmail: user.email,
+    });
+    this.passwordForm.reset();
+    this.selectedIdentityProofFile = null;
+    this.infoSuccess = '';
+    this.infoError = '';
+    this.emailSuccess = '';
+    this.emailError = '';
+    this.passwordSuccess = '';
+    this.passwordError = '';
   }
 
   // ── Received reservations ────────────────────────────────────────────────
