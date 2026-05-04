@@ -45,156 +45,190 @@
 
         <!-- ── Panel: Mon profil ────────────────────────────────────────────── -->
         @if (activeTab === 'profile') {
-          <div class="max-w-lg space-y-8" id="panel-profile" role="tabpanel" aria-labelledby="tab-profile">
-
-            <!-- ── Section 1: Photo + Infos générales ─────────────────────── -->
-            <section>
-              <h2 class="text-base font-semibold text-text-primary mb-4 pb-2 border-b border-gray-100">Informations générales</h2>
-
-              @if (needsIdentityDocument()) {
-                <div class="mb-5 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-text-primary">
-                  Ajoutez votre pièce d'identité pour finaliser votre profil Colick et sécuriser vos futures réservations.
-                </div>
-              }
-
-              <!-- Photo upload -->
-              <div class="flex items-center gap-4 mb-5">
-                <label for="photo-upload" class="relative cursor-pointer group shrink-0" aria-label="Changer la photo de profil">
-                  <div class="w-16 h-16 rounded-full overflow-hidden bg-secondary flex items-center justify-center">
-                    @if (photoPreview) {
-                      <img [src]="photoPreview" alt="Photo de profil" class="w-full h-full object-cover" />
-                    } @else {
-                      <span class="text-white text-xl font-bold uppercase">
-                        {{ (currentUser$ | async)?.firstName?.charAt(0) }}{{ (currentUser$ | async)?.lastName?.charAt(0) }}
-                      </span>
-                    }
-                  </div>
-                  <div class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" aria-hidden="true">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                  </div>
+          <div class="space-y-6" id="panel-profile" role="tabpanel" aria-labelledby="tab-profile">
+            <div class="grid gap-6 lg:grid-cols-[18rem_1fr]">
+              <aside class="rounded-2xl border border-gray-200 bg-background-secondary p-6">
+                <div class="flex flex-col items-center text-center">
+                  <label for="photo-upload" class="relative mb-6 cursor-pointer" aria-label="Changer la photo de profil">
+                    <div class="h-32 w-32 overflow-hidden rounded-full border-4 border-gray-200 bg-secondary">
+                      @if (photoPreview) {
+                        <img [src]="photoPreview" alt="Photo de profil" class="h-full w-full object-cover" />
+                      } @else {
+                        <div class="flex h-full w-full items-center justify-center text-3xl font-bold uppercase text-white">
+                          {{ (currentUser$ | async)?.firstName?.charAt(0) }}{{ (currentUser$ | async)?.lastName?.charAt(0) }}
+                        </div>
+                      }
+                    </div>
+                    <span class="absolute bottom-0 right-0 inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent text-white shadow-lg">
+                      <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      </svg>
+                    </span>
+                  </label>
                   <input id="photo-upload" type="file" accept="image/*" class="sr-only" (change)="onPhotoSelected($event)" />
-                </label>
-                <div>
-                  <p class="text-sm font-medium text-text-primary">Photo de profil</p>
-                  <p class="text-xs text-text-secondary mt-0.5">JPG, PNG — cliquez sur la photo pour modifier</p>
+
+                  <h2 class="text-2xl font-bold text-primary">Photo de profil</h2>
+                  <p class="mt-2 text-sm text-text-secondary">JPG, GIF ou PNG. Taille max 800 Ko</p>
+
+                  <label
+                    for="photo-upload"
+                    class="mt-6 inline-flex w-full cursor-pointer items-center justify-center rounded-xl border border-secondary px-4 py-2.5 text-sm font-medium text-secondary hover:bg-secondary/5"
+                  >
+                    Changer la photo
+                  </label>
+
                   @if (isUploadingPhoto) {
-                    <p class="text-xs text-secondary mt-1">Upload en cours…</p>
+                    <p class="mt-3 text-xs text-secondary">Upload en cours…</p>
                   }
                   @if (photoError) {
-                    <p class="text-xs text-error mt-1">{{ photoError }}</p>
+                    <p class="mt-2 text-xs text-error">{{ photoError }}</p>
                   }
                 </div>
+              </aside>
+
+              <div class="space-y-6">
+                <section class="rounded-2xl border border-gray-200 bg-background-secondary p-5">
+                  <div class="flex items-center gap-2 text-primary">
+                    <svg class="h-5 w-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <h2 class="text-2xl font-bold">Informations personnelles</h2>
+                  </div>
+                  <div class="mt-4 border-t border-gray-200 pt-4 space-y-4">
+                    @if (infoSuccess) {
+                      <div class="rounded-lg bg-success/10 px-4 py-3 text-sm text-success" role="status">{{ infoSuccess }}</div>
+                    }
+                    @if (infoError) {
+                      <div class="rounded-lg bg-error/10 px-4 py-3 text-sm text-error" role="alert">{{ infoError }}</div>
+                    }
+                    @if (emailSuccess) {
+                      <div class="rounded-lg bg-success/10 px-4 py-3 text-sm text-success" role="status">{{ emailSuccess }}</div>
+                    }
+                    @if (emailError) {
+                      <div class="rounded-lg bg-error/10 px-4 py-3 text-sm text-error" role="alert">{{ emailError }}</div>
+                    }
+
+                    <div [formGroup]="infoForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <label for="firstName" class="mb-1 block text-sm font-medium text-text-secondary">Prénom</label>
+                        <input id="firstName" formControlName="firstName" type="text" autocomplete="given-name"
+                          class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
+                      </div>
+                      <div>
+                        <label for="lastName" class="mb-1 block text-sm font-medium text-text-secondary">Nom</label>
+                        <input id="lastName" formControlName="lastName" type="text" autocomplete="family-name"
+                          class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
+                      </div>
+                      <div class="sm:col-span-2">
+                        <label for="newEmail" class="mb-1 block text-sm font-medium text-text-secondary">Adresse e-mail</label>
+                        <div [formGroup]="emailForm">
+                          <input id="newEmail" formControlName="newEmail" type="email" autocomplete="email"
+                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="rounded-2xl border border-gray-200 bg-background-secondary p-5">
+                  <div class="flex items-center gap-2 text-primary">
+                    <svg class="h-5 w-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-4M10 6V5a2 2 0 114 0v1M10 6a2 2 0 104 0"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6"/>
+                    </svg>
+                    <h2 class="text-2xl font-bold">Vérification d'identité</h2>
+                  </div>
+                  <div class="mt-4 border-t border-gray-200 pt-4 space-y-3">
+                    @if (needsIdentityDocument()) {
+                      <div class="rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-text-primary">
+                        Ajoutez votre pièce d'identité pour finaliser votre profil Colick et sécuriser vos futures réservations.
+                      </div>
+                    }
+                    <div [formGroup]="infoForm">
+                      <label for="identityDocument" class="mb-1 block text-sm font-medium text-text-secondary">Numéro de pièce d'identité</label>
+                      <input id="identityDocument" formControlName="identityDocument" type="text"
+                        placeholder="Passeport, carte d'identité…"
+                        class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
+                    </div>
+                    <div>
+                      <label for="identityProofFile" class="mb-1 block text-sm font-medium text-text-secondary">Justificatif (fichier)</label>
+                      <input
+                        id="identityProofFile"
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg"
+                        (change)="onIdentityProofSelected($event)"
+                        class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-text-primary file:mr-3 file:rounded-lg file:border-0 file:bg-secondary/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-secondary hover:file:bg-secondary/20"
+                      />
+                      <p class="mt-1 text-xs text-text-muted">Formats acceptés : PDF, PNG, JPG, JPEG</p>
+                      @if (selectedIdentityProofFile) {
+                        <p class="mt-1 text-xs text-secondary">Fichier sélectionné : {{ selectedIdentityProofFile.name }}</p>
+                      }
+                    </div>
+                  </div>
+                </section>
+
+                <section class="rounded-2xl border border-gray-200 bg-background-secondary p-5">
+                  <div class="flex items-center gap-2 text-primary">
+                    <svg class="h-5 w-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 4v5c0 5-3.4 8.7-7 10-3.6-1.3-7-5-7-10V7l7-4z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4"/>
+                    </svg>
+                    <h2 class="text-2xl font-bold">Sécurité</h2>
+                  </div>
+                  <div class="mt-4 border-t border-gray-200 pt-4">
+                    @if (hasLocalPassword()) {
+                      <div [formGroup]="passwordForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        @if (passwordSuccess) {
+                          <div class="sm:col-span-2 rounded-lg bg-success/10 px-4 py-3 text-sm text-success" role="status">{{ passwordSuccess }}</div>
+                        }
+                        @if (passwordError) {
+                          <div class="sm:col-span-2 rounded-lg bg-error/10 px-4 py-3 text-sm text-error" role="alert">{{ passwordError }}</div>
+                        }
+                        <div class="sm:col-span-2">
+                          <label for="oldPassword" class="mb-1 block text-sm font-medium text-text-secondary">Ancien mot de passe</label>
+                          <input id="oldPassword" formControlName="oldPassword" type="password" autocomplete="current-password" placeholder="••••••••"
+                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
+                        </div>
+                        <div>
+                          <label for="newPassword" class="mb-1 block text-sm font-medium leading-5 text-text-secondary sm:min-h-10">Nouveau mot de passe</label>
+                          <input id="newPassword" formControlName="newPassword" type="password" autocomplete="new-password" placeholder="••••••••"
+                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
+                        </div>
+                        <div>
+                          <label for="confirmPassword" class="mb-1 block text-sm font-medium leading-5 text-text-secondary sm:min-h-10">Confirmer le nouveau mot de passe</label>
+                          <input id="confirmPassword" formControlName="confirmPassword" type="password" autocomplete="new-password" placeholder="••••••••"
+                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
+                        </div>
+                      </div>
+                    } @else {
+                      <div class="rounded-xl border border-secondary/20 bg-secondary/10 px-4 py-3 text-sm text-text-primary">
+                        Votre compte utilise actuellement Google pour se connecter. Si vous souhaitez aussi definir un mot de passe local,
+                        utilisez le parcours <strong>Mot de passe oublie</strong> depuis l'ecran de connexion.
+                      </div>
+                    }
+                  </div>
+                </section>
               </div>
+            </div>
 
-              <!-- Info form -->
-              <form (ngSubmit)="saveInfo()" [formGroup]="infoForm" class="space-y-4">
-                @if (infoSuccess) {
-                  <div class="bg-green-50 text-success text-sm px-4 py-3 rounded-lg" role="status">{{ infoSuccess }}</div>
-                }
-                @if (infoError) {
-                  <div class="bg-red-50 text-error text-sm px-4 py-3 rounded-lg" role="alert">{{ infoError }}</div>
-                }
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label for="firstName" class="block text-sm font-medium text-text-primary mb-1">Prénom</label>
-                    <input id="firstName" formControlName="firstName" type="text" autocomplete="given-name"
-                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
-                  </div>
-                  <div>
-                    <label for="lastName" class="block text-sm font-medium text-text-primary mb-1">Nom</label>
-                    <input id="lastName" formControlName="lastName" type="text" autocomplete="family-name"
-                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
-                  </div>
-                </div>
-                <div>
-                  <label for="phone" class="block text-sm font-medium text-text-primary mb-1">Téléphone</label>
-                  <input id="phone" formControlName="phone" type="tel" autocomplete="tel" placeholder="+33 6 00 00 00 00"
-                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
-                </div>
-                <div>
-                  <label for="identityDocument" class="block text-sm font-medium text-text-primary mb-1">Numéro de document d'identité</label>
-                  <input id="identityDocument" formControlName="identityDocument" type="text"
-                    placeholder="Passeport, carte d'identité…"
-                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
-                </div>
-                <button type="submit" [disabled]="infoForm.invalid || isSavingInfo"
-                  class="bg-primary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                  {{ isSavingInfo ? 'Enregistrement…' : 'Enregistrer les informations' }}
-                </button>
-              </form>
-            </section>
-
-            <!-- ── Section 2: Changer l'adresse e-mail ────────────────────── -->
-            <section>
-              <h2 class="text-base font-semibold text-text-primary mb-1 pb-2 border-b border-gray-100">Changer l'adresse e-mail</h2>
-              <p class="text-xs text-text-secondary mb-4">
-                Adresse actuelle : <strong class="text-text-primary">{{ (currentUser$ | async)?.email }}</strong>
-              </p>
-              <form (ngSubmit)="sendEmailChange()" [formGroup]="emailForm" class="space-y-4">
-                @if (emailSuccess) {
-                  <div class="bg-green-50 text-success text-sm px-4 py-3 rounded-lg" role="status">{{ emailSuccess }}</div>
-                }
-                @if (emailError) {
-                  <div class="bg-red-50 text-error text-sm px-4 py-3 rounded-lg" role="alert">{{ emailError }}</div>
-                }
-                <div>
-                  <label for="newEmail" class="block text-sm font-medium text-text-primary mb-1">Nouvelle adresse e-mail</label>
-                  <input id="newEmail" formControlName="newEmail" type="email" autocomplete="email"
-                    placeholder="nouvelle@adresse.com"
-                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
-                </div>
-                <button type="submit" [disabled]="emailForm.invalid || isSendingEmail"
-                  class="bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                  {{ isSendingEmail ? 'Envoi…' : 'Envoyer le lien de confirmation' }}
-                </button>
-              </form>
-            </section>
-
-            <!-- ── Section 3: Changer le mot de passe ─────────────────────── -->
-            <section>
-              <h2 class="text-base font-semibold text-text-primary mb-4 pb-2 border-b border-gray-100">Changer le mot de passe</h2>
-              @if (hasLocalPassword()) {
-                <form (ngSubmit)="savePassword()" [formGroup]="passwordForm" class="space-y-4">
-                  @if (passwordSuccess) {
-                    <div class="bg-green-50 text-success text-sm px-4 py-3 rounded-lg" role="status">{{ passwordSuccess }}</div>
-                  }
-                  @if (passwordError) {
-                    <div class="bg-red-50 text-error text-sm px-4 py-3 rounded-lg" role="alert">{{ passwordError }}</div>
-                  }
-                  <div>
-                    <label for="oldPassword" class="block text-sm font-medium text-text-primary mb-1">Ancien mot de passe</label>
-                    <input id="oldPassword" formControlName="oldPassword" type="password" autocomplete="current-password"
-                      placeholder="••••••••"
-                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
-                  </div>
-                  <div>
-                    <label for="newPassword" class="block text-sm font-medium text-text-primary mb-1">Nouveau mot de passe <span class="text-text-muted font-normal">(8 caractères min.)</span></label>
-                    <input id="newPassword" formControlName="newPassword" type="password" autocomplete="new-password"
-                      placeholder="••••••••"
-                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
-                  </div>
-                  <div>
-                    <label for="confirmPassword" class="block text-sm font-medium text-text-primary mb-1">Confirmer le nouveau mot de passe</label>
-                    <input id="confirmPassword" formControlName="confirmPassword" type="password" autocomplete="new-password"
-                      placeholder="••••••••"
-                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" />
-                  </div>
-                  <button type="submit" [disabled]="passwordForm.invalid || isSavingPassword"
-                    class="bg-primary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                    {{ isSavingPassword ? 'Mise à jour…' : 'Mettre à jour le mot de passe' }}
-                  </button>
-                </form>
-              } @else {
-                <div class="rounded-xl border border-secondary/20 bg-secondary/10 px-4 py-3 text-sm text-text-primary">
-                  Votre compte utilise actuellement Google pour se connecter. Si vous souhaitez aussi definir un mot de passe local,
-                  utilisez le parcours <strong>Mot de passe oublie</strong> depuis l'ecran de connexion.
-                </div>
-              }
-            </section>
-
+            <div class="flex justify-end gap-3">
+              <button
+                type="button"
+                (click)="resetProfileForms()"
+                class="inline-flex items-center justify-center rounded-xl border border-gray-300 px-6 py-2.5 text-sm font-semibold text-text-secondary transition hover:bg-white"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                (click)="saveProfileChanges()"
+                [disabled]="infoForm.invalid || isSavingInfo || isSendingEmail || isSavingPassword || isUploadingPhoto"
+                class="inline-flex items-center justify-center rounded-xl bg-accent px-6 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {{ isSavingInfo || isSendingEmail || isSavingPassword ? 'Enregistrement…' : 'Enregistrer les modifications' }}
+              </button>
+            </div>
           </div>
         }
 

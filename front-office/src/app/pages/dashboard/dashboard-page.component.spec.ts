@@ -144,4 +144,15 @@ describe('DashboardPageComponent', () => {
 
     expect(router.navigate).toHaveBeenCalledWith(['/propose', 12]);
   });
+
+  it('shows an identity proof file field in the profile tab', () => {
+    component.activeTab = 'profile';
+    fixture.detectChanges();
+
+    const fileInput = fixture.nativeElement.querySelector('#identityProofFile') as HTMLInputElement | null;
+
+    expect(fileInput).not.toBeNull();
+    expect(fileInput?.type).toBe('file');
+    expect(fixture.nativeElement.textContent).toContain('Justificatif (fichier)');
+  });
 });
