@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { guestGuard } from './guards/guest.guard';
 
 /**
  * Application route definitions.
@@ -45,6 +46,7 @@ export const routes: Routes = [
   },
   {
     path: 'login',
+    canActivate: [guestGuard],
     loadComponent: () =>
       import('./pages/login/login-page.component').then(
         (m) => m.LoginPageComponent
@@ -52,6 +54,7 @@ export const routes: Routes = [
   },
   {
     path: 'register',
+    canActivate: [guestGuard],
     loadComponent: () =>
       import('./pages/register/register-page.component').then(
         (m) => m.RegisterPageComponent
@@ -73,6 +76,7 @@ export const routes: Routes = [
   },
   {
     path: 'forgot-password',
+    canActivate: [guestGuard],
     loadComponent: () =>
       import('./pages/forgot-password/forgot-password-page.component').then(
         (m) => m.ForgotPasswordPageComponent
