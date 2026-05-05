@@ -1,0 +1,74 @@
+<article
+  class="font-sans w-full max-w-[22rem] mx-auto aspect-[9/16] rounded-[2rem] overflow-hidden bg-primary border border-secondary/40 shadow-2xl shadow-primary/30 flex flex-col"
+  aria-label="Carte de partage Colick au format story">
+  <header class="p-5 sm:p-6 border-b border-secondary/30 bg-primary">
+    <p class="text-bg-secondary text-xs sm:text-sm tracking-[0.2em] uppercase">Colick</p>
+    <h1 class="text-bg-secondary text-2xl sm:text-3xl font-bold leading-tight mt-2">Partage de voyage</h1>
+    <p class="text-secondary text-sm sm:text-base mt-1">Voyagez léger, entraidez plus.</p>
+  </header>
+
+  <section class="flex-1 p-5 sm:p-6 bg-bg-secondary">
+    <div class="h-full rounded-3xl bg-bg-primary border border-secondary/20 p-4 sm:p-5 flex flex-col gap-3">
+      @if (data?.city || data?.country) {
+        <div class="rounded-2xl bg-bg-secondary border border-secondary/25 px-4 py-3">
+          <p class="text-text-muted text-xs uppercase tracking-wide">Destination</p>
+          <p class="text-primary text-base sm:text-lg font-semibold">
+            @if (data?.city) {
+              <span>{{ data?.city }}</span>
+            }
+            @if (data?.city && data?.country) {
+              <span>, </span>
+            }
+            @if (data?.country) {
+              <span>{{ data?.country }}</span>
+            }
+          </p>
+        </div>
+      }
+
+      @if (data?.formattedDate) {
+        <div class="rounded-2xl bg-bg-secondary border border-secondary/25 px-4 py-3">
+          <p class="text-text-muted text-xs uppercase tracking-wide">Date</p>
+          <p class="text-primary text-base sm:text-lg font-semibold">{{ data?.formattedDate }}</p>
+        </div>
+      }
+
+      @if (data?.phone) {
+        <div class="rounded-2xl bg-bg-secondary border border-secondary/25 px-4 py-3">
+          <p class="text-text-muted text-xs uppercase tracking-wide">Téléphone</p>
+          <p class="text-text-primary text-sm sm:text-base font-medium break-all">{{ data?.phone }}</p>
+        </div>
+      }
+
+      @if (data?.email) {
+        <div class="rounded-2xl bg-bg-secondary border border-secondary/25 px-4 py-3">
+          <p class="text-text-muted text-xs uppercase tracking-wide">Email</p>
+          <p class="text-text-primary text-sm sm:text-base font-medium break-all">{{ data?.email }}</p>
+        </div>
+      }
+
+      @if (data?.availableWeightLabel || data?.pricePerKiloLabel) {
+        <div class="mt-auto rounded-2xl bg-primary px-4 py-3 flex flex-col gap-2">
+          @if (data?.availableWeightLabel) {
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-secondary text-xs uppercase tracking-wide">Kg disponibles</span>
+              <span class="text-bg-secondary text-base font-semibold">{{ data?.availableWeightLabel }}</span>
+            </div>
+          }
+          @if (data?.pricePerKiloLabel) {
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-secondary text-xs uppercase tracking-wide">Prix / kg</span>
+              <span class="text-accent text-base font-bold">{{ data?.pricePerKiloLabel }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <footer class="px-5 sm:px-6 py-4 bg-primary border-t border-secondary/30">
+    <div class="w-full rounded-full bg-accent text-primary text-center font-semibold text-sm py-2">
+      colick.app
+    </div>
+  </footer>
+</article>
