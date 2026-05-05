@@ -8,6 +8,5 @@ export interface Location {
   name: string;
   country: string;
   isoCode: string;
-  continent: string;
   type: LocationType;
 }

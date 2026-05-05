@@ -36,11 +36,6 @@ public class Location {
     @Column(nullable = false, length = 2)
     private String isoCode;
 
-    /** Continent of the location/country. */
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Continent continent;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LocationType type;

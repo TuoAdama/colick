@@ -1,7 +1,6 @@
 package com.colick.backoffice.location;
 
 import com.colick.backoffice.location.dto.LocationResponse;
-import com.colick.backoffice.location.entity.Continent;
 import com.colick.backoffice.location.entity.Location;
 import com.colick.backoffice.location.entity.LocationType;
 import com.colick.backoffice.location.repository.LocationRepository;
@@ -29,9 +28,9 @@ class LocationServiceImplTest {
     @Test
     void search_shouldReturnMatchingLocations() {
         Location paris = Location.builder()
-                .id(1L).name("Paris").country("France").isoCode("FR").continent(Continent.EUROPE).type(LocationType.CITY).build();
+                .id(1L).name("Paris").country("France").isoCode("FR").type(LocationType.CITY).build();
         Location pays = Location.builder()
-                .id(2L).name("Pays-Bas").country("Pays-Bas").isoCode("NL").continent(Continent.EUROPE).type(LocationType.COUNTRY).build();
+                .id(2L).name("Pays-Bas").country("Pays-Bas").isoCode("NL").type(LocationType.COUNTRY).build();
 
         when(locationRepository.findTop10ByNameStartingWithIgnoreCaseOrderByNameAsc("Pa"))
                 .thenReturn(List.of(paris, pays));
@@ -42,7 +41,6 @@ class LocationServiceImplTest {
         assertThat(results.get(0).getName()).isEqualTo("Paris");
         assertThat(results.get(0).getCountry()).isEqualTo("France");
         assertThat(results.get(0).getIsoCode()).isEqualTo("FR");
-        assertThat(results.get(0).getContinent()).isEqualTo(Continent.EUROPE);
         assertThat(results.get(0).getType()).isEqualTo(LocationType.CITY);
         assertThat(results.get(1).getName()).isEqualTo("Pays-Bas");
         verify(locationRepository).findTop10ByNameStartingWithIgnoreCaseOrderByNameAsc("Pa");
@@ -80,9 +78,9 @@ class LocationServiceImplTest {
         // so verify the service delegates correctly.
         when(locationRepository.findTop10ByNameStartingWithIgnoreCaseOrderByNameAsc("A"))
                 .thenReturn(List.of(
-                        Location.builder().id(1L).name("Abidjan").country("Côte d'Ivoire").isoCode("CI").continent(Continent.AFRICA).type(LocationType.CITY).build(),
-                        Location.builder().id(2L).name("Alger").country("Algérie").isoCode("DZ").continent(Continent.AFRICA).type(LocationType.CITY).build(),
-                        Location.builder().id(3L).name("Allemagne").country("Allemagne").isoCode("DE").continent(Continent.EUROPE).type(LocationType.COUNTRY).build()
+                        Location.builder().id(1L).name("Abidjan").country("Côte d'Ivoire").isoCode("CI").type(LocationType.CITY).build(),
+                        Location.builder().id(2L).name("Alger").country("Algérie").isoCode("DZ").type(LocationType.CITY).build(),
+                        Location.builder().id(3L).name("Allemagne").country("Allemagne").isoCode("DE").type(LocationType.COUNTRY).build()
                 ));
 
         List<LocationResponse> results = locationService.search("A");
@@ -94,7 +92,7 @@ class LocationServiceImplTest {
     @Test
     void search_shouldMapAllFieldsCorrectly() {
         Location abidjan = Location.builder()
-                .id(5L).name("Abidjan").country("Côte d'Ivoire").isoCode("CI").continent(Continent.AFRICA).type(LocationType.CITY).build();
+                .id(5L).name("Abidjan").country("Côte d'Ivoire").isoCode("CI").type(LocationType.CITY).build();
 
         when(locationRepository.findTop10ByNameStartingWithIgnoreCaseOrderByNameAsc("Ab"))
                 .thenReturn(List.of(abidjan));
@@ -107,7 +105,6 @@ class LocationServiceImplTest {
         assertThat(dto.getName()).isEqualTo("Abidjan");
         assertThat(dto.getCountry()).isEqualTo("Côte d'Ivoire");
         assertThat(dto.getIsoCode()).isEqualTo("CI");
-        assertThat(dto.getContinent()).isEqualTo(Continent.AFRICA);
         assertThat(dto.getType()).isEqualTo(LocationType.CITY);
     }
 }

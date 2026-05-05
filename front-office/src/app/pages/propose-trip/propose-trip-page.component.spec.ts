@@ -94,8 +94,8 @@ describe('ProposeTripPageComponent', () => {
     setRouteId();
     fixture.detectChanges();
 
-    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', continent: 'Europe', type: 'CITY' };
-    component.destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', continent: 'Africa', type: 'CITY' };
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', type: 'CITY' };
     component.departureTime = '2025-05-10T08:00';
     component.arrivalTime = '2025-05-10T16:00';
     component.maxWeight = 20;
