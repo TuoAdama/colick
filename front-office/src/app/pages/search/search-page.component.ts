@@ -188,7 +188,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       id: 0,
       name,
       country: '',
-      type: 'city',
+      isoCode: '',
+      continent: '',
+      type: 'CITY',
     };
   }
 

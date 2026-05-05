@@ -1,6 +1,7 @@
 package com.colick.backoffice.location.dto;
 
 import com.colick.backoffice.location.entity.Location;
+import com.colick.backoffice.location.entity.Continent;
 import com.colick.backoffice.location.entity.LocationType;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,8 @@ public class LocationResponse {
     private Long id;
     private String name;
     private String country;
+    private String isoCode;
+    private Continent continent;
     private LocationType type;
 
     /**
@@ -25,6 +28,8 @@ public class LocationResponse {
                 .id(location.getId())
                 .name(location.getName())
                 .country(location.getCountry())
+                .isoCode(location.getIsoCode())
+                .continent(location.getContinent())
                 .type(location.getType())
                 .build();
     }

@@ -104,8 +104,8 @@ describe('SearchPageComponent', () => {
   });
 
   it('updates query params instead of searching immediately when criteria change', () => {
-    component.departure = { id: 1, name: 'Paris', country: 'France', type: 'city' };
-    component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", type: 'city' };
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', continent: 'Europe', type: 'CITY' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", isoCode: 'CI', continent: 'Africa', type: 'CITY' };
 
     component.searchTrips();
 
@@ -122,8 +122,8 @@ describe('SearchPageComponent', () => {
     tripServiceMock.searchTrips.calls.reset();
     (router.navigate as jasmine.Spy).calls.reset();
 
-    component.departure = { id: 1, name: 'Paris', country: 'France', type: 'city' };
-    component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", type: 'city' };
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', continent: 'Europe', type: 'CITY' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", isoCode: 'CI', continent: 'Africa', type: 'CITY' };
 
     component.searchTrips();
 
