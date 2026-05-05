@@ -15,6 +15,7 @@ public class LocationResponse {
     private Long id;
     private String name;
     private String country;
+    private String isoCode;
     private LocationType type;
 
     /**
@@ -25,6 +26,7 @@ public class LocationResponse {
                 .id(location.getId())
                 .name(location.getName())
                 .country(location.getCountry())
+                .isoCode(location.getIsoCode())
                 .type(location.getType())
                 .build();
     }

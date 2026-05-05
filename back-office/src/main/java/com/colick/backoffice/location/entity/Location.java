@@ -32,6 +32,10 @@ public class Location {
     @Column(nullable = false)
     private String country;
 
+    /** ISO 3166-1 alpha-2 country code. */
+    @Column(nullable = false, length = 2)
+    private String isoCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LocationType type;

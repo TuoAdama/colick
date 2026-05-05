@@ -251,7 +251,8 @@ export class ProposeTripPageComponent implements OnInit {
       id: 0,
       name: parts[0] ?? address,
       country: parts.slice(1).join(', '),
-      type: 'city',
+      isoCode: '',
+      type: 'CITY',
     };
   }
 
