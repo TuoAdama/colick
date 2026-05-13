@@ -16,31 +16,40 @@ describe('ShareCardStoryComponent', () => {
 
   it('renders provided fields', () => {
     component.data = {
-      city: 'Abidjan',
-      country: "Côte d'Ivoire",
-      formattedDate: '14 juillet 2025',
+      departureCity: 'Paris',
+      destinationCity: 'Abidjan',
+      routeLabel: 'Paris → Abidjan',
+      formattedDateTime: '14 mars 2024 • 10:30',
+      formattedDate: '14 Mars 2024',
+      formattedTime: '10:30',
+      travelerName: 'Jean Dupont',
       phone: '+33 6 00 00 00 00',
       email: 'ada@example.com',
-      availableWeightLabel: '8 kg',
+      availableWeightLabel: '12 kg',
       pricePerKiloLabel: '10,00 € / kg',
     };
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Abidjan');
-    expect(text).toContain("Côte d'Ivoire");
-    expect(text).toContain('14 juillet 2025');
-    expect(text).toContain('+33 6 00 00 00 00');
-    expect(text).toContain('ada@example.com');
-    expect(text).toContain('8 kg');
+    expect(text).toContain('Paris → Abidjan');
+    expect(text).toContain('14 Mars 2024');
+    expect(text).toContain('• 10:30');
+    expect(text).toContain('Jean Dupont');
+    expect(text).toContain('12 kg');
     expect(text).toContain('10,00 € / kg');
+    expect(text).toContain('Abidjan');
+    expect(text).toContain('Colick');
   });
 
-  it('hides optional fields when missing', () => {
+  it('shows safe fallback values when optional fields are missing', () => {
     component.data = {
-      city: null,
-      country: null,
+      departureCity: null,
+      destinationCity: null,
+      routeLabel: null,
+      formattedDateTime: null,
       formattedDate: null,
+      formattedTime: null,
+      travelerName: null,
       phone: null,
       email: null,
       availableWeightLabel: null,
@@ -49,11 +58,13 @@ describe('ShareCardStoryComponent', () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent as string;
-    expect(text).not.toContain('Destination');
-    expect(text).not.toContain('Date');
-    expect(text).not.toContain('Téléphone');
-    expect(text).not.toContain('Email');
-    expect(text).not.toContain('Kg disponibles');
-    expect(text).not.toContain('Prix / kg');
+    expect(text).toContain('Voyage Colick');
+    expect(text).toContain('Date à confirmer');
+    expect(text).toContain('• --:--');
+    expect(text).toContain('N/A kg');
+    expect(text).toContain('N/A€ / kg');
+    expect(text).toContain('Profil vérifié Colick');
+    expect(text).not.toContain('ada@example.com');
+    expect(text).not.toContain('+33 6 00 00 00 00');
   });
 });

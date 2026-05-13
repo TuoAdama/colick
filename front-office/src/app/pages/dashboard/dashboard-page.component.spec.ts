@@ -49,9 +49,13 @@ describe('DashboardPageComponent', () => {
 
   const shareCardMapperServiceMock = {
     mapActiveTripToShareCard: jasmine.createSpy('mapActiveTripToShareCard').and.returnValue({
-      city: 'Abidjan',
-      country: "Côte d'Ivoire",
-      formattedDate: '14 juillet 2025',
+      departureCity: 'Paris',
+      destinationCity: 'Abidjan',
+      routeLabel: 'Paris → Abidjan',
+      formattedDateTime: '14 mars 2024 • 10:30',
+      formattedDate: '14 Mars 2024',
+      formattedTime: '10:30',
+      travelerName: 'Ada Lovelace',
       phone: '+33 6 00 00 00 00',
       email: 'ada@example.com',
       availableWeightLabel: '8 kg',
