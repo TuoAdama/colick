@@ -1,14 +1,18 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import * as htmlToImage from 'html-to-image';
 import { AuthService } from '../../services/auth.service';
+import { ShareCardData } from '../../models/share-card.model';
 import { TripService } from '../../services/trip.service';
 import { Trip } from '../../models/trip.model';
 import { BookingResponse } from '../../models/booking.model';
 import { UpdateProfileRequest } from '../../models/auth.model';
+import { ShareCardMapperService } from '../../services/share-card-mapper.service';
+import { ShareCardStoryComponent } from '../../components/share-card-story/share-card-story.component';
 import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
 
 type Tab = 'profile' | 'chats' | 'received' | 'sent';
@@ -16,15 +20,18 @@ type Tab = 'profile' | 'chats' | 'received' | 'sent';
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink, ConfirmModalComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink, ConfirmModalComponent, ShareCardStoryComponent],
   templateUrl: './dashboard-page.component.html',
 })
 export class DashboardPageComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly shareCardMapperService = inject(ShareCardMapperService);
   private readonly tripService = inject(TripService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
+  @ViewChild('shareCardCapture') private shareCardCapture?: ElementRef<HTMLElement>;
 
   activeTab: Tab = 'profile';
 
@@ -82,6 +89,9 @@ export class DashboardPageComponent implements OnInit {
   bookingActionError = '';
   isCancellingTrip = false;
   isCompletingTrip = false;
+  isGeneratingShareCard = false;
+  shareCardError = '';
+  shareCardData: ShareCardData | null = null;
   deliveryCodeByBookingId: Record<number, string> = {};
   validatingDeliveryBookingId: number | null = null;
 
@@ -293,7 +303,45 @@ export class DashboardPageComponent implements OnInit {
   selectTrip(tripId: number): void {
     this.selectedTripId = tripId;
     this.bookingActionError = '';
+    this.shareCardError = '';
     this.selectedTripBookings = this.tripBookingsMap[tripId] ?? [];
+  }
+
+  async downloadShareCardPng(): Promise<void> {
+    const trip = this.selectedTrip();
+    const user = this.authService.getUser();
+
+    if (!trip || trip.status !== 'ACTIVE' || !user) {
+      this.shareCardError = 'Sélectionnez un voyage actif pour générer la carte.';
+      return;
+    }
+
+    this.shareCardError = '';
+    this.shareCardData = this.shareCardMapperService.mapActiveTripToShareCard(trip, user);
+    this.cdr.detectChanges();
+    this.isGeneratingShareCard = true;
+
+    try {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve());
+      });
+
+      const captureElement = this.shareCardCapture?.nativeElement;
+      if (!captureElement) {
+        throw new Error('Share card capture element missing');
+      }
+
+      const pngDataUrl = await this.generatePngFromElement(captureElement);
+
+      const downloadLink = document.createElement('a');
+      downloadLink.href = pngDataUrl;
+      downloadLink.download = `colick-carte-partage-${this.shareCardMapperService.buildFileDate(trip.departureTime)}.png`;
+      downloadLink.click();
+    } catch {
+      this.shareCardError = 'Impossible de générer la carte PNG pour le moment.';
+    } finally {
+      this.isGeneratingShareCard = false;
+    }
   }
 
   editTrip(tripId: number): void {
@@ -472,5 +520,16 @@ export class DashboardPageComponent implements OnInit {
     return this.selectedTrip()?.status === 'COMPLETED'
       && booking.status === 'ACCEPTED'
       && booking.validationCodeActive;
+  }
+
+  canGenerateShareCard(): boolean {
+    return this.selectedTrip()?.status === 'ACTIVE' && !this.isGeneratingShareCard;
+  }
+
+  private generatePngFromElement(element: HTMLElement): Promise<string> {
+    return htmlToImage.toPng(element, {
+      cacheBust: true,
+      pixelRatio: 2,
+    });
   }
 }

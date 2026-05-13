@@ -2,7 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of } from 'rxjs';
 import { UserResponse } from '../../models/auth.model';
+import { Trip } from '../../models/trip.model';
 import { AuthService } from '../../services/auth.service';
+import { ShareCardMapperService } from '../../services/share-card-mapper.service';
 import { TripService } from '../../services/trip.service';
 import { DashboardPageComponent } from './dashboard-page.component';
 
@@ -45,12 +47,30 @@ describe('DashboardPageComponent', () => {
     confirmBookingDelivery: jasmine.createSpy('confirmBookingDelivery').and.returnValue(of()),
   };
 
+  const shareCardMapperServiceMock = {
+    mapActiveTripToShareCard: jasmine.createSpy('mapActiveTripToShareCard').and.returnValue({
+      departureCity: 'Paris',
+      destinationCity: 'Abidjan',
+      routeLabel: 'Paris → Abidjan',
+      formattedDateTime: '14 mars 2024 • 10:30',
+      formattedDate: '14 Mars 2024',
+      formattedTime: '10:30',
+      travelerName: 'Ada Lovelace',
+      phone: '+33 6 00 00 00 00',
+      email: 'ada@example.com',
+      availableWeightLabel: '8 kg',
+      pricePerKiloLabel: '10,00 € / kg',
+    }),
+    buildFileDate: jasmine.createSpy('buildFileDate').and.returnValue('2025-07-14'),
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DashboardPageComponent],
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: authServiceMock },
+        { provide: ShareCardMapperService, useValue: shareCardMapperServiceMock },
         { provide: TripService, useValue: tripServiceMock },
       ],
     }).compileComponents();
@@ -155,4 +175,52 @@ describe('DashboardPageComponent', () => {
     expect(fileInput?.type).toBe('file');
     expect(fixture.nativeElement.textContent).toContain('Justificatif (fichier)');
   });
+
+  it('downloads a PNG share card from the selected active trip', async () => {
+    const selectedTrip = buildTrip();
+    component.activeTab = 'received';
+    component.myTrips = [selectedTrip];
+    component.tripBookingsMap = { [selectedTrip.id]: [] };
+    component.selectedTripId = selectedTrip.id;
+    fixture.detectChanges();
+
+    const requestAnimationFrameSpy = spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => {
+      cb(0);
+      return 0;
+    });
+    const generatePngSpy = spyOn<any>(component, 'generatePngFromElement').and.resolveTo('data:image/png;base64,test');
+
+    const anchor = document.createElement('a');
+    const anchorClickSpy = spyOn(anchor, 'click');
+    const originalCreateElement = document.createElement.bind(document);
+    spyOn(document, 'createElement').and.callFake((tagName: string) => (
+      tagName.toLowerCase() === 'a' ? anchor : originalCreateElement(tagName)
+    ));
+
+    await component.downloadShareCardPng();
+
+    expect(requestAnimationFrameSpy).toHaveBeenCalled();
+    expect(shareCardMapperServiceMock.mapActiveTripToShareCard).toHaveBeenCalledWith(selectedTrip, currentUser$.getValue());
+    expect(generatePngSpy).toHaveBeenCalled();
+    expect(anchor.download).toBe('colick-carte-partage-2025-07-14.png');
+    expect(anchorClickSpy).toHaveBeenCalled();
+    expect(component.shareCardError).toBe('');
+  });
 });
+
+function buildTrip(): Trip {
+  return {
+    id: 12,
+    travelerId: 1,
+    travelerName: 'Ada',
+    departureAddress: 'Paris, France',
+    destination: "Abidjan, Côte d'Ivoire",
+    departureTime: '2025-07-14T08:00:00',
+    arrivalTime: '2025-07-14T16:00:00',
+    maxWeight: 20,
+    pricePerKilo: 15,
+    instantAcceptance: true,
+    status: 'ACTIVE',
+    availableWeight: 8,
+  };
+}

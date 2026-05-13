@@ -22,6 +22,8 @@ COPY . .
 EXPOSE 4200
 
 # Start Angular development server with hot reload
+# Reinstall dependencies at container startup to keep the named node_modules volume
+# aligned with the lockfile copied in the image.
 # --host 0.0.0.0 allows connections from outside the container
 # --poll enables file watching in Docker environments
-CMD ["ng", "serve", "--host", "0.0.0.0", "--poll=2000"]
+CMD ["sh", "-c", "npm ci && ng serve --host 0.0.0.0 --poll=2000"]
