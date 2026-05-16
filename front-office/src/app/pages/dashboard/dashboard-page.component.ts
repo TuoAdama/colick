@@ -13,6 +13,7 @@ import { BookingResponse } from '../../models/booking.model';
 import { UpdateProfileRequest } from '../../models/auth.model';
 import { ShareCardMapperService } from '../../services/share-card-mapper.service';
 import { ShareCardStoryComponent } from '../../components/share-card-story/share-card-story.component';
+import { TravelerTripsDesktopListComponent } from '../../components/dashboard/traveler-trips-desktop-list/traveler-trips-desktop-list.component';
 import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
 
 type Tab = 'profile' | 'chats' | 'received' | 'sent';
@@ -20,7 +21,15 @@ type Tab = 'profile' | 'chats' | 'received' | 'sent';
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink, ConfirmModalComponent, ShareCardStoryComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterLink,
+    ConfirmModalComponent,
+    ShareCardStoryComponent,
+    TravelerTripsDesktopListComponent,
+  ],
   templateUrl: './dashboard-page.component.html',
 })
 export class DashboardPageComponent implements OnInit {
@@ -89,7 +98,9 @@ export class DashboardPageComponent implements OnInit {
   bookingActionError = '';
   isCancellingTrip = false;
   isCompletingTrip = false;
+  completingTripId: number | null = null;
   isGeneratingShareCard = false;
+  generatingShareCardTripId: number | null = null;
   shareCardError = '';
   shareCardData: ShareCardData | null = null;
   deliveryCodeByBookingId: Record<number, string> = {};
@@ -307,8 +318,10 @@ export class DashboardPageComponent implements OnInit {
     this.selectedTripBookings = this.tripBookingsMap[tripId] ?? [];
   }
 
-  async downloadShareCardPng(): Promise<void> {
-    const trip = this.selectedTrip();
+  async downloadShareCardPng(tripId?: number): Promise<void> {
+    const trip = typeof tripId === 'number'
+      ? this.myTrips.find((currentTrip) => currentTrip.id === tripId)
+      : this.selectedTrip();
     const user = this.authService.getUser();
 
     if (!trip || trip.status !== 'ACTIVE' || !user) {
@@ -320,6 +333,7 @@ export class DashboardPageComponent implements OnInit {
     this.shareCardData = this.shareCardMapperService.mapActiveTripToShareCard(trip, user);
     this.cdr.detectChanges();
     this.isGeneratingShareCard = true;
+    this.generatingShareCardTripId = trip.id;
 
     try {
       await new Promise<void>((resolve) => {
@@ -341,6 +355,7 @@ export class DashboardPageComponent implements OnInit {
       this.shareCardError = 'Impossible de générer la carte PNG pour le moment.';
     } finally {
       this.isGeneratingShareCard = false;
+      this.generatingShareCardTripId = null;
     }
   }
 
@@ -349,7 +364,12 @@ export class DashboardPageComponent implements OnInit {
   }
 
   completeTrip(tripId: number): void {
+    if (this.isCompletingTrip) {
+      return;
+    }
+
     this.isCompletingTrip = true;
+    this.completingTripId = tripId;
     this.bookingActionError = '';
     this.tripService.completeTrip(tripId).subscribe({
       next: (updatedTrip) => {
@@ -358,12 +378,24 @@ export class DashboardPageComponent implements OnInit {
           this.myTrips[tripIndex] = updatedTrip;
         }
         this.isCompletingTrip = false;
+        this.completingTripId = null;
       },
       error: (err: { error?: { message?: string } }) => {
         this.bookingActionError = err.error?.message || "Erreur lors du passage du trajet à l'état effectué.";
         this.isCompletingTrip = false;
+        this.completingTripId = null;
       },
     });
+  }
+
+  handleDesktopTripShareCardDownload(tripId: number): void {
+    this.selectTrip(tripId);
+    void this.downloadShareCardPng(tripId);
+  }
+
+  handleDesktopTripCompletion(tripId: number): void {
+    this.selectTrip(tripId);
+    this.completeTrip(tripId);
   }
 
   acceptBooking(bookingId: number): void {
