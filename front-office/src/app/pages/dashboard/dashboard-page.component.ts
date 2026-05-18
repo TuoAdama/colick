@@ -110,6 +110,7 @@ export class DashboardPageComponent implements OnInit {
   isRemoveModalOpen = false;
   pendingRemoveBookingId: number | null = null;
   isRemoving = false;
+  pendingSelectTripId: number | null = null;
 
   // ── Sent requests ─────────────────────────────────────────────────────────
   myBookings: BookingResponse[] = [];
@@ -140,6 +141,8 @@ export class DashboardPageComponent implements OnInit {
     this.route.queryParamMap.subscribe((params) => {
       const tab = params.get('tab');
       if (this.isTab(tab)) this.setTab(tab);
+      const tripId = params.get('tripId');
+      if (tripId) this.pendingSelectTripId = Number(tripId);
     });
   }
 
@@ -305,6 +308,10 @@ export class DashboardPageComponent implements OnInit {
         forkJoin(requests).subscribe((results) => {
           trips.forEach((t, i) => { this.tripBookingsMap[t.id] = results[i] as BookingResponse[]; });
           this.isLoadingTrips = false;
+          if (this.pendingSelectTripId) {
+            this.selectTrip(this.pendingSelectTripId);
+            this.pendingSelectTripId = null;
+          }
         });
       },
       error: () => { this.isLoadingTrips = false; },
