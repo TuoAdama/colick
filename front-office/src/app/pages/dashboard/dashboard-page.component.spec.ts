@@ -173,6 +173,24 @@ describe('DashboardPageComponent', () => {
     ]);
   });
 
+  it('uses the wider dashboard container and keeps the received desktop list rendered', () => {
+    const selectedTrip = buildTrip();
+
+    component.activeTab = 'received';
+    component.myTrips = [selectedTrip];
+    component.tripBookingsMap = { [selectedTrip.id]: [] };
+    component.selectedTripId = selectedTrip.id;
+
+    fixture.detectChanges();
+
+    const dashboardContainer = fixture.nativeElement.querySelector('.max-w-6xl') as HTMLElement | null;
+    const desktopList = fixture.nativeElement.querySelector('app-traveler-trips-desktop-list');
+
+    expect(dashboardContainer).not.toBeNull();
+    expect(dashboardContainer?.className).not.toContain('max-w-4xl');
+    expect(desktopList).not.toBeNull();
+  });
+
   it('shows an identity proof file field in the profile tab', () => {
     component.activeTab = 'profile';
     fixture.detectChanges();
