@@ -119,6 +119,54 @@ describe('TripService', () => {
     });
   });
 
+  it('falls back to maxWeight when availableWeight is missing from the API response', () => {
+    service.getMyTrips().subscribe((trips) => {
+      expect(trips).toHaveSize(1);
+      expect(trips[0].availableWeight).toBe(20);
+    });
+
+    const req = httpMock.expectOne('/api/trips/mine');
+    expect(req.request.method).toBe('GET');
+    req.flush([
+      {
+        id: 12,
+        travelerId: 2,
+        travelerName: 'Alice Martin',
+        departureAddress: 'Paris, France',
+        destination: "Abidjan, Côte d'Ivoire",
+        departureTime: '2025-03-02T08:00:00Z',
+        arrivalTime: '2025-03-02T16:00:00Z',
+        maxWeight: 20,
+        pricePerKilo: 17,
+        instantAcceptance: false,
+        status: 'ACTIVE',
+      },
+    ]);
+  });
+
+  it('uses remainingWeight when the API provides it instead of availableWeight', () => {
+    service.getTripById(12).subscribe((trip) => {
+      expect(trip.availableWeight).toBe(9);
+    });
+
+    const req = httpMock.expectOne('/api/trips/12');
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      id: 12,
+      travelerId: 2,
+      travelerName: 'Alice Martin',
+      departureAddress: 'Paris, France',
+      destination: "Abidjan, Côte d'Ivoire",
+      departureTime: '2025-03-02T08:00:00Z',
+      arrivalTime: '2025-03-02T16:00:00Z',
+      maxWeight: 20,
+      pricePerKilo: 15,
+      instantAcceptance: true,
+      status: 'ACTIVE',
+      remainingWeight: 9,
+    });
+  });
+
   it('calls complete trip endpoint', () => {
     service.completeTrip(12).subscribe();
 

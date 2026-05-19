@@ -14,6 +14,7 @@ import { UpdateProfileRequest } from '../../models/auth.model';
 import { ShareCardMapperService } from '../../services/share-card-mapper.service';
 import { ShareCardStoryComponent } from '../../components/share-card-story/share-card-story.component';
 import { TravelerTripsDesktopListComponent } from '../../components/dashboard/traveler-trips-desktop-list/traveler-trips-desktop-list.component';
+import { DashboardReceivedMobileCardComponent } from '../../components/dashboard/dashboard-received-mobile-card/dashboard-received-mobile-card.component';
 import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
 
 type Tab = 'profile' | 'chats' | 'received' | 'sent';
@@ -29,6 +30,7 @@ type Tab = 'profile' | 'chats' | 'received' | 'sent';
     ConfirmModalComponent,
     ShareCardStoryComponent,
     TravelerTripsDesktopListComponent,
+    DashboardReceivedMobileCardComponent,
   ],
   templateUrl: './dashboard-page.component.html',
 })
@@ -544,7 +546,7 @@ export class DashboardPageComponent implements OnInit {
   }
 
   tripStatusLabel(status: Trip['status']): string {
-    return ({ ACTIVE: 'Actif', COMPLETED: 'Effectué', CANCELLED: 'Annulé' } as Record<Trip['status'], string>)[status];
+    return ({ ACTIVE: 'Actif', COMPLETED: 'Terminé', CANCELLED: 'Annulé' } as Record<Trip['status'], string>)[status];
   }
 
   tripStatusClass(status: Trip['status']): string {

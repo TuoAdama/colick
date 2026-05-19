@@ -14,11 +14,14 @@ export class TripOptionsMenuComponent {
   @Input({ required: true }) tripLabel!: string;
   @Input() canDownload = false;
   @Input() canComplete = false;
+  @Input() canCancel = false;
   @Input() isDownloading = false;
   @Input() isCompleting = false;
+  @Input() appearance: 'default' | 'minimal' = 'default';
 
   @Output() downloadPng = new EventEmitter<number>();
   @Output() completeTrip = new EventEmitter<number>();
+  @Output() cancelTrip = new EventEmitter<number>();
 
   isOpen = false;
 
@@ -50,6 +53,17 @@ export class TripOptionsMenuComponent {
     }
 
     this.completeTrip.emit(this.tripId);
+    this.closeMenu();
+  }
+
+  onCancel(event: Event): void {
+    event.stopPropagation();
+
+    if (!this.canCancel) {
+      return;
+    }
+
+    this.cancelTrip.emit(this.tripId);
     this.closeMenu();
   }
 

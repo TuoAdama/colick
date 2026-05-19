@@ -16,6 +16,10 @@ export class TripService {
   private readonly photoUrlService = inject(PhotoUrlService);
   private readonly baseUrl = '/api/trips';
 
+  private isValidNumber(value?: number | null): value is number {
+    return value !== null && value !== undefined && !Number.isNaN(value);
+  }
+
   /** Search trips by departure and destination locations. */
   searchTrips(departure: string, destination: string): Observable<Trip[]> {
     const params = new HttpParams()
@@ -110,9 +114,23 @@ export class TripService {
     return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/cancel`, {});
   }
 
-  private normalizeTrip(trip: Trip): Trip {
+  private normalizeTrip(
+    trip: Trip & {
+      availableWeight?: number | null;
+      remainingWeight?: number | null;
+    }
+  ): Trip {
+    const normalizedAvailableWeight = this.isValidNumber(trip.availableWeight)
+      ? trip.availableWeight
+      : this.isValidNumber(trip.remainingWeight)
+        ? trip.remainingWeight
+        : this.isValidNumber(trip.maxWeight)
+          ? trip.maxWeight
+          : 0;
+
     return {
       ...trip,
+      availableWeight: normalizedAvailableWeight,
       travelerPhotoUrl: this.photoUrlService.normalizePhotoUrl(trip.travelerPhotoUrl),
       travelerRatingCount: trip.travelerRatingCount ?? 0,
     };

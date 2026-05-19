@@ -57,4 +57,18 @@ describe('TripOptionsMenuComponent', () => {
 
     expect(component.completeTrip.emit).not.toHaveBeenCalled();
   });
+
+  it('shows and emits the optional cancel action when enabled', () => {
+    spyOn(component.cancelTrip, 'emit');
+    component.canCancel = true;
+    component.isOpen = true;
+    fixture.detectChanges();
+
+    const menuItems = fixture.nativeElement.querySelectorAll('button[role="menuitem"]') as NodeListOf<HTMLButtonElement>;
+    menuItems[2].click();
+
+    expect(menuItems.length).toBe(3);
+    expect(menuItems[2].textContent).toContain('Annuler le trajet');
+    expect(component.cancelTrip.emit).toHaveBeenCalledWith(12);
+  });
 });

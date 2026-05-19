@@ -154,8 +154,9 @@ describe('DashboardPageComponent', () => {
 
     fixture.detectChanges();
 
+    const desktopList = fixture.nativeElement.querySelector('app-traveler-trips-desktop-list') as HTMLElement;
     const menuButtons = Array.from(
-      fixture.nativeElement.querySelectorAll('button[aria-haspopup="menu"]')
+      desktopList.querySelectorAll('button[aria-haspopup="menu"]')
     ) as HTMLButtonElement[];
 
     expect(menuButtons.length).toBe(2);
@@ -164,7 +165,7 @@ describe('DashboardPageComponent', () => {
     fixture.detectChanges();
 
     const menuItems = Array.from(
-      fixture.nativeElement.querySelectorAll('button[role="menuitem"]')
+      desktopList.querySelectorAll('button[role="menuitem"]')
     ) as HTMLButtonElement[];
 
     expect(menuItems.map((item) => item.textContent?.trim())).toEqual([
@@ -189,6 +190,42 @@ describe('DashboardPageComponent', () => {
     expect(dashboardContainer).not.toBeNull();
     expect(dashboardContainer?.className).not.toContain('max-w-4xl');
     expect(desktopList).not.toBeNull();
+  });
+
+  it('renders the redesigned mobile received cards with the truthful price-per-kilo label', () => {
+    const selectedTrip = buildTrip();
+
+    component.activeTab = 'received';
+    component.myTrips = [selectedTrip];
+    component.tripBookingsMap = { [selectedTrip.id]: [] };
+
+    fixture.detectChanges();
+
+    const mobileCard = fixture.nativeElement.querySelector('app-dashboard-received-mobile-card');
+
+    expect(mobileCard).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Prix / kg');
+    expect(fixture.nativeElement.textContent).toContain('15 €');
+  });
+
+  it('renders the effective mobile received card without exposing undefined capacity text', () => {
+    const selectedTrip = {
+      ...buildTrip(),
+      availableWeight: undefined as unknown as number,
+      maxWeight: 20,
+    };
+
+    component.activeTab = 'received';
+    component.myTrips = [selectedTrip];
+    component.tripBookingsMap = { [selectedTrip.id]: [] };
+
+    fixture.detectChanges();
+
+    const mobileCard = fixture.nativeElement.querySelector('app-dashboard-received-mobile-card');
+
+    expect(mobileCard).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('20 kg disponibles');
+    expect(fixture.nativeElement.textContent).not.toContain('undefined kg disponibles');
   });
 
   it('shows an identity proof file field in the profile tab', () => {
@@ -259,6 +296,12 @@ describe('DashboardPageComponent', () => {
 
     expect(component.selectTrip).toHaveBeenCalledWith(selectedTrip.id);
     expect(component.completeTrip).toHaveBeenCalledWith(selectedTrip.id);
+  });
+
+  it('uses the expected received-trip status mapping', () => {
+    expect(component.tripStatusLabel('ACTIVE')).toBe('Actif');
+    expect(component.tripStatusLabel('COMPLETED')).toBe('Terminé');
+    expect(component.tripStatusLabel('CANCELLED')).toBe('Annulé');
   });
 });
 

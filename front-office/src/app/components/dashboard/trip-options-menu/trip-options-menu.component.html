@@ -1,7 +1,9 @@
 <div class="relative flex justify-end">
   <button
     type="button"
-    class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-background-primary bg-white text-text-secondary transition hover:border-secondary hover:text-secondary focus:outline-none focus:ring-2 focus:ring-secondary"
+    [class]="appearance === 'minimal'
+      ? 'inline-flex h-10 w-10 items-center justify-center rounded-full text-text-secondary transition hover:bg-bg-secondary hover:text-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20'
+      : 'inline-flex h-10 w-10 items-center justify-center rounded-full border border-bg-primary bg-white text-text-secondary transition hover:border-secondary hover:text-secondary focus:outline-none focus:ring-2 focus:ring-secondary'"
     [attr.aria-expanded]="isOpen"
     aria-haspopup="menu"
     aria-label="Plus d'options"
@@ -14,13 +16,13 @@
 
   @if (isOpen) {
     <div
-      class="absolute right-0 top-full z-20 mt-2 w-56 rounded-2xl border border-background-primary bg-white p-2 shadow-xl"
+      class="absolute right-0 top-full z-20 mt-2 w-56 rounded-2xl border border-bg-primary bg-white p-2 shadow-xl"
       role="menu"
       aria-label="Options du trajet"
     >
       <button
         type="button"
-        class="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-text-primary transition hover:bg-background-secondary disabled:cursor-not-allowed disabled:text-text-muted"
+        class="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-text-primary transition hover:bg-bg-secondary disabled:cursor-not-allowed disabled:text-text-muted"
         role="menuitem"
         [disabled]="!canDownload || isDownloading"
         (click)="onDownload($event)"
@@ -33,7 +35,7 @@
 
       <button
         type="button"
-        class="mt-1 flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-text-primary transition hover:bg-background-secondary disabled:cursor-not-allowed disabled:text-text-muted"
+        class="mt-1 flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-text-primary transition hover:bg-bg-secondary disabled:cursor-not-allowed disabled:text-text-muted"
         role="menuitem"
         [disabled]="!canComplete || isCompleting"
         (click)="onComplete($event)"
@@ -43,6 +45,17 @@
           <span class="text-xs text-text-muted">En cours…</span>
         }
       </button>
+
+      @if (canCancel) {
+        <button
+          type="button"
+          class="mt-1 flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-error transition hover:bg-error/10"
+          role="menuitem"
+          (click)="onCancel($event)"
+        >
+          <span>Annuler le trajet</span>
+        </button>
+      }
     </div>
   }
 </div>
