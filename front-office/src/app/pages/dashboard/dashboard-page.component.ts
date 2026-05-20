@@ -550,7 +550,7 @@ export class DashboardPageComponent implements OnInit {
   }
 
   tripStatusClass(status: Trip['status']): string {
-    return ({ ACTIVE: 'bg-secondary/10 text-secondary', COMPLETED: 'bg-success/10 text-success', CANCELLED: 'bg-gray-100 text-gray-500' } as Record<Trip['status'], string>)[status];
+    return ({ ACTIVE: 'bg-accent/10 text-accent', COMPLETED: 'bg-success/10 text-success', CANCELLED: 'bg-background-primary text-text-muted' } as Record<Trip['status'], string>)[status];
   }
 
   selectedTrip(): Trip | undefined {

@@ -32,8 +32,8 @@ export class DashboardReceivedMobileCardComponent {
 
   statusClass(status: Trip['status']): string {
     return ({
-      ACTIVE: 'border-success/25 bg-success/10 text-success',
-      COMPLETED: 'border-secondary/20 bg-secondary/10 text-secondary',
+      ACTIVE: 'border-accent/25 bg-accent/10 text-accent',
+      COMPLETED: 'border-success/25 bg-success/10 text-success',
       CANCELLED: 'border-bg-primary bg-bg-primary text-text-muted',
     } as Record<Trip['status'], string>)[status];
   }

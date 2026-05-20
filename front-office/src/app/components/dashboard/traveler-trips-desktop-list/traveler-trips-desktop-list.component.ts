@@ -48,7 +48,7 @@ export class TravelerTripsDesktopListComponent {
 
   tripStatusClass(status: Trip['status']): string {
     return ({
-      ACTIVE: 'bg-secondary/10 text-secondary',
+      ACTIVE: 'bg-accent/10 text-accent',
       COMPLETED: 'bg-success/10 text-success',
       CANCELLED: 'bg-background-primary text-text-muted',
     } as Record<Trip['status'], string>)[status];

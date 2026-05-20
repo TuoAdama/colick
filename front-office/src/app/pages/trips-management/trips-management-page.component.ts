@@ -227,17 +227,17 @@ export class TripsManagementPageComponent implements OnInit {
 
   tripStatusDotClass(status: Trip['status']): string {
     return ({
-      ACTIVE: 'bg-success',
-      COMPLETED: 'bg-text-muted',
-      CANCELLED: 'bg-error',
+      ACTIVE: 'bg-accent',
+      COMPLETED: 'bg-success',
+      CANCELLED: 'bg-text-muted',
     } as Record<Trip['status'], string>)[status];
   }
 
   tripStatusTextClass(status: Trip['status']): string {
     return ({
-      ACTIVE: 'text-success',
-      COMPLETED: 'text-text-muted',
-      CANCELLED: 'text-error',
+      ACTIVE: 'text-accent',
+      COMPLETED: 'text-success',
+      CANCELLED: 'text-text-muted',
     } as Record<Trip['status'], string>)[status];
   }
 
