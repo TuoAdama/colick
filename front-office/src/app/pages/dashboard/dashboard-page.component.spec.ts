@@ -118,7 +118,7 @@ describe('DashboardPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Mot de passe oublie');
   });
 
-  it('shows an edit action for active trips and opens the edit route', () => {
+  it('shows a desktop options menu with the two confirmed actions', () => {
     component.activeTab = 'received';
     component.myTrips = [
       {
@@ -154,15 +154,78 @@ describe('DashboardPageComponent', () => {
 
     fixture.detectChanges();
 
-    const editButtons = Array.from(
-      fixture.nativeElement.querySelectorAll('button[aria-label="Modifier ce trajet"]')
+    const desktopList = fixture.nativeElement.querySelector('app-traveler-trips-desktop-list') as HTMLElement;
+    const menuButtons = Array.from(
+      desktopList.querySelectorAll('button[aria-haspopup="menu"]')
     ) as HTMLButtonElement[];
 
-    expect(editButtons.length).toBe(1);
+    expect(menuButtons.length).toBe(2);
 
-    editButtons[0].click();
+    menuButtons[0].click();
+    fixture.detectChanges();
 
-    expect(router.navigate).toHaveBeenCalledWith(['/propose', 12]);
+    const menuItems = Array.from(
+      desktopList.querySelectorAll('button[role="menuitem"]')
+    ) as HTMLButtonElement[];
+
+    expect(menuItems.map((item) => item.textContent?.trim())).toEqual([
+      'Télécharger la carte PNG',
+      'Marqué effectué',
+    ]);
+  });
+
+  it('uses the wider dashboard container and keeps the received desktop list rendered', () => {
+    const selectedTrip = buildTrip();
+
+    component.activeTab = 'received';
+    component.myTrips = [selectedTrip];
+    component.tripBookingsMap = { [selectedTrip.id]: [] };
+    component.selectedTripId = selectedTrip.id;
+
+    fixture.detectChanges();
+
+    const dashboardContainer = fixture.nativeElement.querySelector('.max-w-6xl') as HTMLElement | null;
+    const desktopList = fixture.nativeElement.querySelector('app-traveler-trips-desktop-list');
+
+    expect(dashboardContainer).not.toBeNull();
+    expect(dashboardContainer?.className).not.toContain('max-w-4xl');
+    expect(desktopList).not.toBeNull();
+  });
+
+  it('renders the redesigned mobile received cards with the truthful price-per-kilo label', () => {
+    const selectedTrip = buildTrip();
+
+    component.activeTab = 'received';
+    component.myTrips = [selectedTrip];
+    component.tripBookingsMap = { [selectedTrip.id]: [] };
+
+    fixture.detectChanges();
+
+    const mobileCard = fixture.nativeElement.querySelector('app-dashboard-received-mobile-card');
+
+    expect(mobileCard).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Prix / kg');
+    expect(fixture.nativeElement.textContent).toContain('15 €');
+  });
+
+  it('renders the effective mobile received card without exposing undefined capacity text', () => {
+    const selectedTrip = {
+      ...buildTrip(),
+      availableWeight: undefined as unknown as number,
+      maxWeight: 20,
+    };
+
+    component.activeTab = 'received';
+    component.myTrips = [selectedTrip];
+    component.tripBookingsMap = { [selectedTrip.id]: [] };
+
+    fixture.detectChanges();
+
+    const mobileCard = fixture.nativeElement.querySelector('app-dashboard-received-mobile-card');
+
+    expect(mobileCard).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('20 kg disponibles');
+    expect(fixture.nativeElement.textContent).not.toContain('undefined kg disponibles');
   });
 
   it('shows an identity proof file field in the profile tab', () => {
@@ -197,7 +260,7 @@ describe('DashboardPageComponent', () => {
       tagName.toLowerCase() === 'a' ? anchor : originalCreateElement(tagName)
     ));
 
-    await component.downloadShareCardPng();
+    await component.downloadShareCardPng(selectedTrip.id);
 
     expect(requestAnimationFrameSpy).toHaveBeenCalled();
     expect(shareCardMapperServiceMock.mapActiveTripToShareCard).toHaveBeenCalledWith(selectedTrip, currentUser$.getValue());
@@ -205,6 +268,40 @@ describe('DashboardPageComponent', () => {
     expect(anchor.download).toBe('colick-carte-partage-2025-07-14.png');
     expect(anchorClickSpy).toHaveBeenCalled();
     expect(component.shareCardError).toBe('');
+  });
+
+  it('selects the trip before downloading it from the desktop options menu', async () => {
+    const selectedTrip = buildTrip();
+    component.activeTab = 'received';
+    component.myTrips = [selectedTrip];
+    component.tripBookingsMap = { [selectedTrip.id]: [] };
+    spyOn(component, 'selectTrip').and.callThrough();
+    spyOn(component, 'downloadShareCardPng').and.resolveTo();
+
+    component.handleDesktopTripShareCardDownload(selectedTrip.id);
+
+    expect(component.selectTrip).toHaveBeenCalledWith(selectedTrip.id);
+    expect(component.downloadShareCardPng).toHaveBeenCalledWith(selectedTrip.id);
+  });
+
+  it('selects the trip before marking it as completed from the desktop options menu', () => {
+    const selectedTrip = buildTrip();
+    component.activeTab = 'received';
+    component.myTrips = [selectedTrip];
+    component.tripBookingsMap = { [selectedTrip.id]: [] };
+    spyOn(component, 'selectTrip').and.callThrough();
+    spyOn(component, 'completeTrip');
+
+    component.handleDesktopTripCompletion(selectedTrip.id);
+
+    expect(component.selectTrip).toHaveBeenCalledWith(selectedTrip.id);
+    expect(component.completeTrip).toHaveBeenCalledWith(selectedTrip.id);
+  });
+
+  it('uses the expected received-trip status mapping', () => {
+    expect(component.tripStatusLabel('ACTIVE')).toBe('Actif');
+    expect(component.tripStatusLabel('COMPLETED')).toBe('Terminé');
+    expect(component.tripStatusLabel('CANCELLED')).toBe('Annulé');
   });
 });
 

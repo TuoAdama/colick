@@ -97,4 +97,12 @@ export const routes: Routes = [
         (m) => m.DashboardPageComponent
       ),
   },
+  {
+    path: 'trips',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/trips-management/trips-management-page.component').then(
+        (m) => m.TripsManagementPageComponent
+      ),
+  },
 ];

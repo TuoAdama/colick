@@ -13,6 +13,8 @@ import { BookingResponse } from '../../models/booking.model';
 import { UpdateProfileRequest } from '../../models/auth.model';
 import { ShareCardMapperService } from '../../services/share-card-mapper.service';
 import { ShareCardStoryComponent } from '../../components/share-card-story/share-card-story.component';
+import { TravelerTripsDesktopListComponent } from '../../components/dashboard/traveler-trips-desktop-list/traveler-trips-desktop-list.component';
+import { DashboardReceivedMobileCardComponent } from '../../components/dashboard/dashboard-received-mobile-card/dashboard-received-mobile-card.component';
 import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
 
 type Tab = 'profile' | 'chats' | 'received' | 'sent';
@@ -20,7 +22,16 @@ type Tab = 'profile' | 'chats' | 'received' | 'sent';
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink, ConfirmModalComponent, ShareCardStoryComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterLink,
+    ConfirmModalComponent,
+    ShareCardStoryComponent,
+    TravelerTripsDesktopListComponent,
+    DashboardReceivedMobileCardComponent,
+  ],
   templateUrl: './dashboard-page.component.html',
 })
 export class DashboardPageComponent implements OnInit {
@@ -89,7 +100,9 @@ export class DashboardPageComponent implements OnInit {
   bookingActionError = '';
   isCancellingTrip = false;
   isCompletingTrip = false;
+  completingTripId: number | null = null;
   isGeneratingShareCard = false;
+  generatingShareCardTripId: number | null = null;
   shareCardError = '';
   shareCardData: ShareCardData | null = null;
   deliveryCodeByBookingId: Record<number, string> = {};
@@ -99,6 +112,7 @@ export class DashboardPageComponent implements OnInit {
   isRemoveModalOpen = false;
   pendingRemoveBookingId: number | null = null;
   isRemoving = false;
+  pendingSelectTripId: number | null = null;
 
   // ── Sent requests ─────────────────────────────────────────────────────────
   myBookings: BookingResponse[] = [];
@@ -129,6 +143,8 @@ export class DashboardPageComponent implements OnInit {
     this.route.queryParamMap.subscribe((params) => {
       const tab = params.get('tab');
       if (this.isTab(tab)) this.setTab(tab);
+      const tripId = params.get('tripId');
+      if (tripId) this.pendingSelectTripId = Number(tripId);
     });
   }
 
@@ -294,6 +310,10 @@ export class DashboardPageComponent implements OnInit {
         forkJoin(requests).subscribe((results) => {
           trips.forEach((t, i) => { this.tripBookingsMap[t.id] = results[i] as BookingResponse[]; });
           this.isLoadingTrips = false;
+          if (this.pendingSelectTripId) {
+            this.selectTrip(this.pendingSelectTripId);
+            this.pendingSelectTripId = null;
+          }
         });
       },
       error: () => { this.isLoadingTrips = false; },
@@ -307,8 +327,10 @@ export class DashboardPageComponent implements OnInit {
     this.selectedTripBookings = this.tripBookingsMap[tripId] ?? [];
   }
 
-  async downloadShareCardPng(): Promise<void> {
-    const trip = this.selectedTrip();
+  async downloadShareCardPng(tripId?: number): Promise<void> {
+    const trip = typeof tripId === 'number'
+      ? this.myTrips.find((currentTrip) => currentTrip.id === tripId)
+      : this.selectedTrip();
     const user = this.authService.getUser();
 
     if (!trip || trip.status !== 'ACTIVE' || !user) {
@@ -320,6 +342,7 @@ export class DashboardPageComponent implements OnInit {
     this.shareCardData = this.shareCardMapperService.mapActiveTripToShareCard(trip, user);
     this.cdr.detectChanges();
     this.isGeneratingShareCard = true;
+    this.generatingShareCardTripId = trip.id;
 
     try {
       await new Promise<void>((resolve) => {
@@ -341,6 +364,7 @@ export class DashboardPageComponent implements OnInit {
       this.shareCardError = 'Impossible de générer la carte PNG pour le moment.';
     } finally {
       this.isGeneratingShareCard = false;
+      this.generatingShareCardTripId = null;
     }
   }
 
@@ -349,7 +373,12 @@ export class DashboardPageComponent implements OnInit {
   }
 
   completeTrip(tripId: number): void {
+    if (this.isCompletingTrip) {
+      return;
+    }
+
     this.isCompletingTrip = true;
+    this.completingTripId = tripId;
     this.bookingActionError = '';
     this.tripService.completeTrip(tripId).subscribe({
       next: (updatedTrip) => {
@@ -358,12 +387,24 @@ export class DashboardPageComponent implements OnInit {
           this.myTrips[tripIndex] = updatedTrip;
         }
         this.isCompletingTrip = false;
+        this.completingTripId = null;
       },
       error: (err: { error?: { message?: string } }) => {
         this.bookingActionError = err.error?.message || "Erreur lors du passage du trajet à l'état effectué.";
         this.isCompletingTrip = false;
+        this.completingTripId = null;
       },
     });
+  }
+
+  handleDesktopTripShareCardDownload(tripId: number): void {
+    this.selectTrip(tripId);
+    void this.downloadShareCardPng(tripId);
+  }
+
+  handleDesktopTripCompletion(tripId: number): void {
+    this.selectTrip(tripId);
+    this.completeTrip(tripId);
   }
 
   acceptBooking(bookingId: number): void {
@@ -505,11 +546,11 @@ export class DashboardPageComponent implements OnInit {
   }
 
   tripStatusLabel(status: Trip['status']): string {
-    return ({ ACTIVE: 'Actif', COMPLETED: 'Effectué', CANCELLED: 'Annulé' } as Record<Trip['status'], string>)[status];
+    return ({ ACTIVE: 'Actif', COMPLETED: 'Terminé', CANCELLED: 'Annulé' } as Record<Trip['status'], string>)[status];
   }
 
   tripStatusClass(status: Trip['status']): string {
-    return ({ ACTIVE: 'bg-secondary/10 text-secondary', COMPLETED: 'bg-success/10 text-success', CANCELLED: 'bg-gray-100 text-gray-500' } as Record<Trip['status'], string>)[status];
+    return ({ ACTIVE: 'bg-accent/10 text-accent', COMPLETED: 'bg-success/10 text-success', CANCELLED: 'bg-background-primary text-text-muted' } as Record<Trip['status'], string>)[status];
   }
 
   selectedTrip(): Trip | undefined {

@@ -1,0 +1,75 @@
+<div class="hidden lg:block">
+  <div class="overflow-hidden rounded-[1.5rem] border border-background-primary bg-white shadow-sm">
+    <div class="grid grid-cols-[minmax(0,2.2fr)_1.2fr_0.8fr_0.8fr_0.7fr_0.9fr_auto] gap-4 border-b border-background-primary bg-background-secondary px-6 py-4 text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary">
+      <span>Voyage</span>
+      <span>Départ</span>
+      <span>Poids max</span>
+      <span>Prix/kg</span>
+      <span>Demandes</span>
+      <span>Statut</span>
+      <span class="text-right">Plus d'options</span>
+    </div>
+
+    <div class="divide-y divide-background-primary">
+      @for (trip of trips; track trip.id) {
+        <div
+          role="button"
+          tabindex="0"
+          class="grid grid-cols-[minmax(0,2.2fr)_1.2fr_0.8fr_0.8fr_0.7fr_0.9fr_auto] items-center gap-4 px-6 py-4 transition hover:bg-background-secondary"
+          [class.bg-background-secondary]="selectedTripId === trip.id"
+          [class.ring-1]="selectedTripId === trip.id"
+          [class.ring-secondary]="selectedTripId === trip.id"
+          [attr.aria-pressed]="selectedTripId === trip.id"
+          (click)="onSelect(trip.id)"
+          (keydown)="onRowKeydown($event, trip.id)"
+        >
+          <div class="min-w-0">
+            <p class="truncate text-sm font-semibold text-text-primary">
+              {{ trip.departureAddress }} → {{ trip.destination }}
+            </p>
+            <p class="mt-1 truncate text-xs text-text-secondary">
+              Voyageur · {{ trip.travelerName }}
+            </p>
+          </div>
+
+          <div class="text-sm text-text-primary">
+            {{ trip.departureTime | date:'dd/MM/yyyy HH:mm' }}
+          </div>
+
+          <div class="text-sm text-text-primary">
+            {{ trip.maxWeight }} kg
+          </div>
+
+          <div class="text-sm text-text-primary">
+            {{ trip.pricePerKilo | number:'1.0-2' }} €/kg
+          </div>
+
+          <div>
+            <span class="inline-flex min-w-10 items-center justify-center rounded-full bg-accent px-3 py-1 text-xs font-semibold text-white">
+              {{ bookingCount(trip.id) }}
+            </span>
+          </div>
+
+          <div>
+            <span [class]="tripStatusClass(trip.status) + ' inline-flex rounded-full px-3 py-1 text-xs font-semibold'">
+              {{ tripStatusLabel(trip.status) }}
+            </span>
+          </div>
+
+          <div class="flex justify-end" (click)="$event.stopPropagation()">
+            <app-trip-options-menu
+              [tripId]="trip.id"
+              [tripLabel]="trip.departureAddress + ' vers ' + trip.destination"
+              [canDownload]="trip.status === 'ACTIVE'"
+              [canComplete]="trip.status === 'ACTIVE'"
+              [isDownloading]="generatingShareCardTripId === trip.id"
+              [isCompleting]="completingTripId === trip.id"
+              (downloadPng)="downloadTripShareCard.emit($event)"
+              (completeTrip)="markTripCompleted.emit($event)"
+            />
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
