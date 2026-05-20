@@ -41,7 +41,7 @@ export class TravelerTripsDesktopListComponent {
   tripStatusLabel(status: Trip['status']): string {
     return ({
       ACTIVE: 'Actif',
-      COMPLETED: 'Effectué',
+      COMPLETED: 'Terminé',
       CANCELLED: 'Annulé',
     } as Record<Trip['status'], string>)[status];
   }
