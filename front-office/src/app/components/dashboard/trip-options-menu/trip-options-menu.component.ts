@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { AfterViewChecked, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-trip-options-menu',
@@ -7,11 +7,14 @@ import { ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, I
   imports: [CommonModule],
   templateUrl: './trip-options-menu.component.html',
 })
-export class TripOptionsMenuComponent {
+export class TripOptionsMenuComponent implements AfterViewChecked {
   constructor(
     private readonly elementRef: ElementRef<HTMLElement>,
     private readonly cdr: ChangeDetectorRef,
   ) {}
+
+  @ViewChild('triggerButton') private triggerButton?: ElementRef<HTMLElement>;
+  @ViewChild('menuPanel') private menuPanel?: ElementRef<HTMLElement>;
 
   @Input({ required: true }) tripId!: number;
   @Input({ required: true }) tripLabel!: string;
@@ -28,7 +31,17 @@ export class TripOptionsMenuComponent {
   @Output() cancelTrip = new EventEmitter<number>();
 
   isOpen = false;
-  menuStyles: Record<string, string> = { visibility: 'hidden' };
+  menuStyles: Record<string, string> = { top: '-9999px', left: '-9999px' };
+
+  private pendingPositionUpdate = false;
+
+  ngAfterViewChecked(): void {
+    if (this.pendingPositionUpdate && this.menuPanel && this.triggerButton) {
+      this.pendingPositionUpdate = false;
+      this.updateMenuPosition();
+      this.cdr.detectChanges();
+    }
+  }
 
   toggleMenu(event: Event): void {
     event.stopPropagation();
@@ -38,18 +51,14 @@ export class TripOptionsMenuComponent {
       return;
     }
 
-    // Render the panel (hidden) so its dimensions can be measured.
-    this.menuStyles = { visibility: 'hidden' };
+    this.menuStyles = { top: '-9999px', left: '-9999px' };
     this.isOpen = true;
-    this.cdr.detectChanges();
-
-    // Compute and apply the position now that the panel is in the DOM.
-    this.updateMenuPosition();
-    this.cdr.detectChanges();
+    this.pendingPositionUpdate = true;
   }
 
   closeMenu(): void {
     this.isOpen = false;
+    this.pendingPositionUpdate = false;
   }
 
   onDownload(event: Event): void {
@@ -112,7 +121,6 @@ export class TripOptionsMenuComponent {
     }
 
     this.updateMenuPosition();
-    this.cdr.detectChanges();
   }
 
   @HostListener('window:scroll', ['$event'])
@@ -121,14 +129,12 @@ export class TripOptionsMenuComponent {
       return;
     }
 
-    // Ignore scroll events that originate from inside the menu panel itself.
-    const menuPanel = this.elementRef.nativeElement.querySelector('[role="menu"]');
-    if (menuPanel instanceof HTMLElement && menuPanel.contains(event.target as Node)) {
+    const menuPanel = this.menuPanel?.nativeElement;
+    if (menuPanel?.contains(event.target as Node)) {
       return;
     }
 
     this.updateMenuPosition();
-    this.cdr.detectChanges();
   }
 
   private updateMenuPosition(): void {
@@ -136,21 +142,22 @@ export class TripOptionsMenuComponent {
       return;
     }
 
-    const triggerButton = this.elementRef.nativeElement.querySelector('button[aria-haspopup="menu"]');
-    const menuPanel = this.elementRef.nativeElement.querySelector('[role="menu"]');
+    const triggerEl = this.triggerButton?.nativeElement;
+    const panelEl = this.menuPanel?.nativeElement;
 
-    if (!(triggerButton instanceof HTMLElement) || !(menuPanel instanceof HTMLElement)) {
+    if (!triggerEl || !panelEl) {
       return;
     }
 
-    const triggerRect = triggerButton.getBoundingClientRect();
-    const menuWidth = menuPanel.offsetWidth || 224;
-    const menuHeight = menuPanel.offsetHeight || 0;
+    const triggerRect = triggerEl.getBoundingClientRect();
+    const menuWidth = panelEl.offsetWidth || 224;
+    const menuHeight = panelEl.offsetHeight || 0;
     const viewportPadding = 12;
     const panelOffset = 8;
-    const preferredTop = this.verticalPosition === 'top';
+
     const spaceAbove = triggerRect.top - viewportPadding;
     const spaceBelow = window.innerHeight - triggerRect.bottom - viewportPadding;
+    const preferredTop = this.verticalPosition === 'top';
     const shouldOpenAbove = preferredTop
       ? spaceAbove >= menuHeight || spaceAbove > spaceBelow
       : spaceBelow < menuHeight && spaceAbove > spaceBelow;
