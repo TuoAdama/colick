@@ -19,25 +19,30 @@ describe('TravelerTripsDesktopListComponent', () => {
     fixture.detectChanges();
   });
 
-  it('renders the desktop columns and booking count', () => {
+  it('renders the requested desktop columns and booking count', () => {
     const textContent = fixture.nativeElement.textContent;
 
-    expect(textContent).toContain('Voyage');
-    expect(textContent).toContain('Départ');
+    expect(textContent).toContain('Trajet');
+    expect(textContent).toContain('Date');
     expect(textContent).toContain('Poids max');
     expect(textContent).toContain('Prix/kg');
-    expect(textContent).toContain('Demandes');
-    expect(textContent).toContain("Plus d'options");
+    expect(textContent).toContain('Status');
+    expect(textContent).toContain('Actions');
     expect(textContent).toContain('2');
   });
 
-  it('emits the selected trip id when a row is clicked', () => {
+  it('emits the selected trip id from the view action and the trip id from the edit action', () => {
     spyOn(component.selectTrip, 'emit');
+    spyOn(component.editTrip, 'emit');
 
-    const row = fixture.nativeElement.querySelector('[role="button"][tabindex="0"]') as HTMLDivElement;
-    row.click();
+    const viewButton = fixture.nativeElement.querySelector('button[aria-label="Voir les demandes pour ce trajet"]') as HTMLButtonElement;
+    const editButton = fixture.nativeElement.querySelector('button[aria-label="Modifier ce trajet"]') as HTMLButtonElement;
+
+    viewButton.click();
+    editButton.click();
 
     expect(component.selectTrip.emit).toHaveBeenCalledWith(12);
+    expect(component.editTrip.emit).toHaveBeenCalledWith(12);
   });
 
   it('passes the exact actions to the options menu', () => {
@@ -52,7 +57,9 @@ describe('TravelerTripsDesktopListComponent', () => {
 
     expect(menuItems.map((item) => item.textContent?.trim())).toEqual([
       'Télécharger la carte PNG',
-      'Marqué effectué',
+      'Supprimer le trajet',
+      'Annuler',
+      'Marquer comme terminé',
     ]);
   });
 });

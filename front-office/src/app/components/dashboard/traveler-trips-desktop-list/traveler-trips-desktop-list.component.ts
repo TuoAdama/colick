@@ -15,9 +15,14 @@ export class TravelerTripsDesktopListComponent {
   @Input({ required: true }) tripBookingsMap: Record<number, BookingResponse[]> = {};
   @Input() selectedTripId: number | null = null;
   @Input() generatingShareCardTripId: number | null = null;
+  @Input() isCancellingTrip = false;
+  @Input() isDeletingTrip = false;
   @Input() completingTripId: number | null = null;
 
   @Output() selectTrip = new EventEmitter<number>();
+  @Output() editTrip = new EventEmitter<number>();
+  @Output() deleteTrip = new EventEmitter<number>();
+  @Output() cancelTrip = new EventEmitter<number>();
   @Output() downloadTripShareCard = new EventEmitter<number>();
   @Output() markTripCompleted = new EventEmitter<number>();
 
@@ -29,13 +34,16 @@ export class TravelerTripsDesktopListComponent {
     this.selectTrip.emit(tripId);
   }
 
-  onRowKeydown(event: KeyboardEvent, tripId: number): void {
-    if (event.key !== 'Enter' && event.key !== ' ') {
-      return;
-    }
+  onEditTrip(tripId: number): void {
+    this.editTrip.emit(tripId);
+  }
 
-    event.preventDefault();
-    this.onSelect(tripId);
+  onDeleteTrip(tripId: number): void {
+    this.deleteTrip.emit(tripId);
+  }
+
+  onCancelTrip(tripId: number): void {
+    this.cancelTrip.emit(tripId);
   }
 
   tripStatusLabel(status: Trip['status']): string {
@@ -52,5 +60,9 @@ export class TravelerTripsDesktopListComponent {
       COMPLETED: 'bg-success/10 text-success',
       CANCELLED: 'bg-background-primary text-text-muted',
     } as Record<Trip['status'], string>)[status];
+  }
+
+  canDeleteTrip(trip: Trip): boolean {
+    return trip.status === 'ACTIVE' && this.bookingCount(trip.id) === 0;
   }
 }

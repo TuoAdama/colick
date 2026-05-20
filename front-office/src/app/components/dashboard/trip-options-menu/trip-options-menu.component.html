@@ -1,5 +1,6 @@
 <div class="relative flex justify-end">
   <button
+    #triggerButton
     type="button"
     [class]="appearance === 'minimal'
       ? 'inline-flex h-10 w-10 items-center justify-center rounded-full text-text-secondary transition hover:bg-bg-secondary hover:text-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20'
@@ -16,7 +17,9 @@
 
   @if (isOpen) {
     <div
-      class="absolute right-0 top-full z-20 mt-2 w-56 rounded-2xl border border-bg-primary bg-white p-2 shadow-xl"
+      #menuPanel
+      class="fixed z-[9999] w-56 rounded-2xl border border-bg-primary bg-white p-2 shadow-xl"
+      [ngStyle]="menuStyles"
       role="menu"
       aria-label="Options du trajet"
     >
@@ -33,18 +36,20 @@
         }
       </button>
 
-      <button
-        type="button"
-        class="mt-1 flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-text-primary transition hover:bg-bg-secondary disabled:cursor-not-allowed disabled:text-text-muted"
-        role="menuitem"
-        [disabled]="!canComplete || isCompleting"
-        (click)="onComplete($event)"
-      >
-        <span>Marqué effectué</span>
-        @if (isCompleting) {
-          <span class="text-xs text-text-muted">En cours…</span>
-        }
-      </button>
+      @if (showDeleteOption) {
+        <button
+          type="button"
+          class="mt-1 flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-error transition hover:bg-error/10 disabled:cursor-not-allowed disabled:text-text-muted"
+          role="menuitem"
+          [disabled]="!canDelete || isDeleting"
+          (click)="onDelete($event)"
+        >
+          <span>Supprimer le trajet</span>
+          @if (isDeleting) {
+            <span class="text-xs text-text-muted">Suppression…</span>
+          }
+        </button>
+      }
 
       @if (canCancel) {
         <button
@@ -53,9 +58,22 @@
           role="menuitem"
           (click)="onCancel($event)"
         >
-          <span>Annuler le trajet</span>
+          <span>Annuler</span>
         </button>
       }
+
+      <button
+        type="button"
+        class="mt-1 flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-text-primary transition hover:bg-bg-secondary disabled:cursor-not-allowed disabled:text-text-muted"
+        role="menuitem"
+        [disabled]="!canComplete || isCompleting"
+        (click)="onComplete($event)"
+      >
+        <span>Marquer comme terminé</span>
+        @if (isCompleting) {
+          <span class="text-xs text-text-muted">En cours…</span>
+        }
+      </button>
     </div>
   }
 </div>

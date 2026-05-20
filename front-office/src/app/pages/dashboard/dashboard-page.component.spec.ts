@@ -118,7 +118,7 @@ describe('DashboardPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Mot de passe oublie');
   });
 
-  it('shows a desktop options menu with the two confirmed actions', () => {
+  it('shows the desktop actions menu with the requested actions', () => {
     component.activeTab = 'received';
     component.myTrips = [
       {
@@ -170,7 +170,9 @@ describe('DashboardPageComponent', () => {
 
     expect(menuItems.map((item) => item.textContent?.trim())).toEqual([
       'Télécharger la carte PNG',
-      'Marqué effectué',
+      'Supprimer le trajet',
+      'Annuler',
+      'Marquer comme terminé',
     ]);
   });
 
@@ -296,6 +298,35 @@ describe('DashboardPageComponent', () => {
 
     expect(component.selectTrip).toHaveBeenCalledWith(selectedTrip.id);
     expect(component.completeTrip).toHaveBeenCalledWith(selectedTrip.id);
+  });
+
+  it('deletes a trip when deletion is possible', () => {
+    const selectedTrip = buildTrip();
+    component.activeTab = 'received';
+    component.myTrips = [selectedTrip];
+    component.tripBookingsMap = { [selectedTrip.id]: [] };
+    tripServiceMock.cancelTrip.calls.reset();
+    spyOn(window, 'confirm').and.returnValue(true);
+
+    component.deleteTrip(selectedTrip.id);
+
+    expect(tripServiceMock.cancelTrip).toHaveBeenCalledWith(selectedTrip.id);
+    expect(component.myTrips).toEqual([]);
+  });
+
+  it('blocks trip deletion when requests already exist', () => {
+    const selectedTrip = buildTrip();
+    component.activeTab = 'received';
+    component.myTrips = [selectedTrip];
+    component.tripBookingsMap = { [selectedTrip.id]: [{ id: 1 } as never] };
+    tripServiceMock.cancelTrip.calls.reset();
+    spyOn(window, 'confirm');
+
+    component.deleteTrip(selectedTrip.id);
+
+    expect(window.confirm).not.toHaveBeenCalled();
+    expect(tripServiceMock.cancelTrip).not.toHaveBeenCalled();
+    expect(component.bookingActionError).toContain('ne peut pas être supprimé');
   });
 
   it('uses the expected received-trip status mapping', () => {

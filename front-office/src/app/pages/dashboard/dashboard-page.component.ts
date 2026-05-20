@@ -99,6 +99,7 @@ export class DashboardPageComponent implements OnInit {
   isLoadingBookings = false;
   bookingActionError = '';
   isCancellingTrip = false;
+  isDeletingTrip = false;
   isCompletingTrip = false;
   completingTripId: number | null = null;
   isGeneratingShareCard = false;
@@ -407,6 +408,18 @@ export class DashboardPageComponent implements OnInit {
     this.completeTrip(tripId);
   }
 
+  handleDesktopTripEdit(tripId: number): void {
+    this.editTrip(tripId);
+  }
+
+  handleDesktopTripDelete(tripId: number): void {
+    this.deleteTrip(tripId);
+  }
+
+  handleDesktopTripCancel(tripId: number): void {
+    this.cancelTrip(tripId);
+  }
+
   acceptBooking(bookingId: number): void {
     if (!this.selectedTripId) return;
     this.bookingActionError = '';
@@ -497,17 +510,34 @@ export class DashboardPageComponent implements OnInit {
     });
   }
 
+  deleteTrip(tripId: number): void {
+    if ((this.tripBookingsMap[tripId] ?? []).length > 0) {
+      this.bookingActionError = 'Ce trajet ne peut pas être supprimé car il a déjà reçu des demandes.';
+      return;
+    }
+
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce trajet ?')) return;
+    this.isDeletingTrip = true;
+    this.bookingActionError = '';
+    this.tripService.cancelTrip(tripId).subscribe({
+      next: () => {
+        this.removeTripFromState(tripId);
+        this.isDeletingTrip = false;
+      },
+      error: () => {
+        this.bookingActionError = 'Erreur lors de la suppression du trajet.';
+        this.isDeletingTrip = false;
+      },
+    });
+  }
+
   cancelTrip(tripId: number): void {
     if (!confirm('Êtes-vous sûr de vouloir annuler ce trajet ? Tous les demandeurs seront notifiés.')) return;
     this.isCancellingTrip = true;
     this.bookingActionError = '';
     this.tripService.cancelTrip(tripId).subscribe({
       next: () => {
-        this.myTrips = this.myTrips.filter((t) => t.id !== tripId);
-        if (this.selectedTripId === tripId) {
-          this.selectedTripId = null;
-          this.selectedTripBookings = [];
-        }
+        this.removeTripFromState(tripId);
         this.isCancellingTrip = false;
       },
       error: () => { this.bookingActionError = "Erreur lors de l'annulation du trajet."; this.isCancellingTrip = false; },
@@ -572,5 +602,15 @@ export class DashboardPageComponent implements OnInit {
       cacheBust: true,
       pixelRatio: 2,
     });
+  }
+
+  private removeTripFromState(tripId: number): void {
+    this.myTrips = this.myTrips.filter((trip) => trip.id !== tripId);
+    delete this.tripBookingsMap[tripId];
+
+    if (this.selectedTripId === tripId) {
+      this.selectedTripId = null;
+      this.selectedTripBookings = [];
+    }
   }
 }
