@@ -71,4 +71,14 @@ describe('TripOptionsMenuComponent', () => {
     expect(menuItems[2].textContent).toContain('Annuler le trajet');
     expect(component.cancelTrip.emit).toHaveBeenCalledWith(12);
   });
+
+  it('renders the panel above the trigger when the top position is requested', () => {
+    component.verticalPosition = 'top';
+    component.isOpen = true;
+    fixture.detectChanges();
+
+    const menu = fixture.nativeElement.querySelector('[role="menu"]') as HTMLDivElement;
+
+    expect(menu.className).toContain('fixed');
+  });
 });

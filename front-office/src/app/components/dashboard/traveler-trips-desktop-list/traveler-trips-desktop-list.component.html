@@ -62,6 +62,7 @@
               [tripLabel]="trip.departureAddress + ' vers ' + trip.destination"
               [canDownload]="trip.status === 'ACTIVE'"
               [canComplete]="trip.status === 'ACTIVE'"
+              verticalPosition="top"
               [isDownloading]="generatingShareCardTripId === trip.id"
               [isCompleting]="completingTripId === trip.id"
               (downloadPng)="downloadTripShareCard.emit($event)"
