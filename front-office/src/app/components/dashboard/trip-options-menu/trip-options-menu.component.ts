@@ -13,13 +13,17 @@ export class TripOptionsMenuComponent {
   @Input({ required: true }) tripId!: number;
   @Input({ required: true }) tripLabel!: string;
   @Input() canDownload = false;
+  @Input() canDelete = false;
   @Input() canComplete = false;
   @Input() canCancel = false;
   @Input() isDownloading = false;
+  @Input() isDeleting = false;
   @Input() isCompleting = false;
   @Input() appearance: 'default' | 'minimal' = 'default';
+  @Input() showDeleteOption = false;
 
   @Output() downloadPng = new EventEmitter<number>();
+  @Output() deleteTrip = new EventEmitter<number>();
   @Output() completeTrip = new EventEmitter<number>();
   @Output() cancelTrip = new EventEmitter<number>();
 
@@ -53,6 +57,17 @@ export class TripOptionsMenuComponent {
     }
 
     this.completeTrip.emit(this.tripId);
+    this.closeMenu();
+  }
+
+  onDelete(event: Event): void {
+    event.stopPropagation();
+
+    if (!this.canDelete || this.isDeleting) {
+      return;
+    }
+
+    this.deleteTrip.emit(this.tripId);
     this.closeMenu();
   }
 

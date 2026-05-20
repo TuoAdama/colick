@@ -301,8 +301,13 @@
                 [tripBookingsMap]="tripBookingsMap"
                 [selectedTripId]="selectedTripId"
                 [generatingShareCardTripId]="generatingShareCardTripId"
+                [isCancellingTrip]="isCancellingTrip"
+                [isDeletingTrip]="isDeletingTrip"
                 [completingTripId]="completingTripId"
                 (selectTrip)="selectTrip($event)"
+                (editTrip)="handleDesktopTripEdit($event)"
+                (deleteTrip)="handleDesktopTripDelete($event)"
+                (cancelTrip)="handleDesktopTripCancel($event)"
                 (downloadTripShareCard)="handleDesktopTripShareCardDownload($event)"
                 (markTripCompleted)="handleDesktopTripCompletion($event)"
               />
