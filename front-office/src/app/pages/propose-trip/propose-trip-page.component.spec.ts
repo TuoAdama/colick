@@ -190,4 +190,82 @@ describe('ProposeTripPageComponent', () => {
     expect(component.errorMessage).toContain('Une erreur est survenue lors du chargement du voyage.');
     expect(component.isPageLoading).toBeFalse();
   });
+
+  // --- Backend error message surfacing (issue #74) ---
+
+  it('shows the backend message when createTrip fails with a structured error', () => {
+    setRouteId();
+    fixture.detectChanges();
+
+    tripServiceMock.createTrip.and.returnValue(
+      throwError(() => ({ error: { message: 'departureTime: Departure time must be in the future' } }))
+    );
+
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', type: 'CITY' };
+    component.departureTime = '2025-05-10T08:00';
+    component.arrivalTime = '2025-05-10T16:00';
+    component.maxWeight = 20;
+    component.pricePerKilo = 15;
+
+    component.submit();
+
+    // Field prefix stripped; human-readable message shown instead of generic fallback
+    expect(component.errorMessage).toBe('Departure time must be in the future');
+  });
+
+  it('falls back to the generic publish error when createTrip fails without a backend message', () => {
+    setRouteId();
+    fixture.detectChanges();
+
+    tripServiceMock.createTrip.and.returnValue(throwError(() => new Error('network error')));
+
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', type: 'CITY' };
+    component.departureTime = '2025-05-10T08:00';
+    component.arrivalTime = '2025-05-10T16:00';
+    component.maxWeight = 20;
+    component.pricePerKilo = 15;
+
+    component.submit();
+
+    expect(component.errorMessage).toContain('Une erreur est survenue lors de la publication du voyage.');
+  });
+
+  it('shows the backend message when updateTrip fails with a structured error', () => {
+    setRouteId('12');
+    fixture.detectChanges();
+
+    tripServiceMock.updateTrip.and.returnValue(
+      throwError(() => ({ error: { message: 'maxWeight: Max weight must be at least 1 kg' } }))
+    );
+
+    component.submit();
+
+    // Field prefix stripped
+    expect(component.errorMessage).toBe('Max weight must be at least 1 kg');
+  });
+
+  it('falls back to the generic update error when updateTrip fails without a backend message', () => {
+    setRouteId('12');
+    fixture.detectChanges();
+
+    tripServiceMock.updateTrip.and.returnValue(throwError(() => ({ error: {} })));
+
+    component.submit();
+
+    expect(component.errorMessage).toContain('Une erreur est survenue lors de la mise à jour du voyage.');
+  });
+
+  it('shows the backend message when getTripById fails with a structured error', () => {
+    tripServiceMock.getTripById.and.returnValue(
+      throwError(() => ({ error: { message: 'Trip not found' } }))
+    );
+
+    setRouteId('99');
+    fixture.detectChanges();
+
+    expect(component.errorMessage).toBe('Trip not found');
+    expect(component.isPageLoading).toBeFalse();
+  });
 });
