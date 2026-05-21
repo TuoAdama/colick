@@ -12,14 +12,14 @@ import lombok.Data;
 public class StartConversationRequest {
 
     /** ID of the trip this conversation is about. */
-    @NotNull(message = "Trip ID is required")
+    @NotNull
     private Long tripId;
 
     /** ID of the other participant (recipient). */
-    @NotNull(message = "Recipient ID is required")
+    @NotNull
     private Long recipientId;
 
     /** Content of the first message. */
-    @NotBlank(message = "Message content is required")
+    @NotBlank
     private String content;
 }

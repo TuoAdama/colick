@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AutocompleteComponent } from '../../shared/components/autocomplete/autocomplete.component';
@@ -7,6 +7,10 @@ import { TripService } from '../../services/trip.service';
 import { Location } from '../../models/location.model';
 import { CreateTripDto, Trip } from '../../models/trip.model';
 import { extractApiErrorMessage } from '../../shared/utils/api-error.utils';
+import {
+  getProposeTripApiErrorMessage,
+  validateProposeTripTimes,
+} from './propose-trip-error-message.utils';
 
 /**
  * ProposeTripPageComponent - Shared form used to create or edit a trip.
@@ -20,6 +24,7 @@ import { extractApiErrorMessage } from '../../shared/utils/api-error.utils';
   templateUrl: './propose-trip-page.component.html',
 })
 export class ProposeTripPageComponent implements OnInit {
+  private readonly document = inject(DOCUMENT);
   private readonly tripService = inject(TripService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -144,6 +149,11 @@ export class ProposeTripPageComponent implements OnInit {
     return this.isEditMode ? 'Mise à jour en cours…' : 'Publication en cours…';
   }
 
+  /** Current document language used to keep frontend validation aligned with existing translations. */
+  get currentLanguage(): string {
+    return this.document.documentElement.lang || 'fr';
+  }
+
   onDepartureSelected(location: Location): void {
     this.departure = location;
   }
@@ -172,6 +182,17 @@ export class ProposeTripPageComponent implements OnInit {
 
     if (!this.isFormValid) {
       this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
+      return;
+    }
+
+    const dateValidationMessage = validateProposeTripTimes({
+      departureTime: this.departureTime,
+      arrivalTime: this.arrivalTime,
+      language: this.currentLanguage,
+    });
+
+    if (dateValidationMessage) {
+      this.errorMessage = dateValidationMessage;
       return;
     }
 
@@ -206,7 +227,8 @@ export class ProposeTripPageComponent implements OnInit {
         const fallback = this.isEditMode
           ? 'Une erreur est survenue lors de la mise à jour du voyage. Veuillez réessayer.'
           : 'Une erreur est survenue lors de la publication du voyage. Veuillez réessayer.';
-        this.errorMessage = extractApiErrorMessage(err, fallback);
+        const apiErrorMessage = extractApiErrorMessage(err, fallback);
+        this.errorMessage = getProposeTripApiErrorMessage(err, apiErrorMessage, this.currentLanguage);
       },
     });
   }

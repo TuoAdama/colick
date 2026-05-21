@@ -1,7 +1,9 @@
 package com.colick.backoffice.trip.service;
 
 import com.colick.backoffice.email.EmailService;
+import com.colick.backoffice.exception.BadRequestException;
 import com.colick.backoffice.exception.ReviewSubmissionConflictException;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.trip.dto.SubmitTravelerReviewRequest;
 import com.colick.backoffice.trip.dto.TravelerReviewResponse;
 import com.colick.backoffice.trip.entity.TravelerReview;
@@ -28,21 +30,22 @@ import java.util.stream.Collectors;
 @Transactional
 public class TravelerReviewServiceImpl implements TravelerReviewService {
 
-    private static final String INVALID_TOKEN_MESSAGE = "Invalid traveler review token";
-
     private final TripBookingRepository tripBookingRepository;
     private final TravelerReviewRepository travelerReviewRepository;
     private final EmailService emailService;
     private final String reviewBaseUrl;
+    private final LocalizedMessages localizedMessages;
 
     public TravelerReviewServiceImpl(TripBookingRepository tripBookingRepository,
                                      TravelerReviewRepository travelerReviewRepository,
                                      EmailService emailService,
-                                     @Value("${app.review.base-url}") String reviewBaseUrl) {
+                                     @Value("${app.review.base-url}") String reviewBaseUrl,
+                                     LocalizedMessages localizedMessages) {
         this.tripBookingRepository = tripBookingRepository;
         this.travelerReviewRepository = travelerReviewRepository;
         this.emailService = emailService;
         this.reviewBaseUrl = reviewBaseUrl;
+        this.localizedMessages = localizedMessages;
     }
 
     @Override
@@ -93,7 +96,7 @@ public class TravelerReviewServiceImpl implements TravelerReviewService {
         TravelerReview review = findReviewByRawToken(rawToken);
 
         if (review.isSubmitted()) {
-            throw new ReviewSubmissionConflictException("A final review has already been submitted for this booking");
+            throw new ReviewSubmissionConflictException(localizedMessages.get("error.review.alreadySubmitted"));
         }
 
         review.submit(request.getRating(), request.getComment(), LocalDateTime.now());
@@ -120,10 +123,10 @@ public class TravelerReviewServiceImpl implements TravelerReviewService {
 
     private TravelerReview findReviewByRawToken(String rawToken) {
         if (rawToken == null || rawToken.isBlank()) {
-            throw new IllegalArgumentException(INVALID_TOKEN_MESSAGE);
+            throw new BadRequestException(localizedMessages.get("error.review.invalidToken"));
         }
         return travelerReviewRepository.findByTokenHashWithAssociations(hashToken(rawToken))
-                .orElseThrow(() -> new IllegalArgumentException(INVALID_TOKEN_MESSAGE));
+                .orElseThrow(() -> new BadRequestException(localizedMessages.get("error.review.invalidToken")));
     }
 
     private String buildReviewUrl(String rawToken) {
@@ -150,7 +153,7 @@ public class TravelerReviewServiceImpl implements TravelerReviewService {
             }
             return hex.toString();
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 algorithm is not available", e);
+            throw new IllegalStateException(localizedMessages.get("error.system.sha256Unavailable"), e);
         }
     }
 }

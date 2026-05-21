@@ -13,17 +13,17 @@ import java.math.BigDecimal;
 @Data
 public class CreateBookingRequest {
 
-    @NotBlank(message = "Package title is required")
+    @NotBlank
     private String title;
 
-    @NotNull(message = "Package weight is required")
-    @DecimalMin(value = "0.1", message = "Weight must be greater than 0")
+    @NotNull
+    @DecimalMin("0.1")
     private BigDecimal weight;
 
     private String description;
 
     private String packagePhotoUrl;
 
-    @NotBlank(message = "Recipient contact is required")
+    @NotBlank
     private String recipientContact;
 }

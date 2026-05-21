@@ -1,6 +1,8 @@
 package com.colick.backoffice.messaging.service;
 
+import com.colick.backoffice.exception.BadRequestException;
 import com.colick.backoffice.exception.ResourceNotFoundException;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.messaging.dto.*;
 import com.colick.backoffice.messaging.entity.Conversation;
 import com.colick.backoffice.messaging.entity.Message;
@@ -28,29 +30,32 @@ public class MessagingServiceImpl implements MessagingService {
     private final MessageRepository messageRepository;
     private final TripRepository tripRepository;
     private final UserRepository userRepository;
+    private final LocalizedMessages localizedMessages;
 
     public MessagingServiceImpl(ConversationRepository conversationRepository,
                                 MessageRepository messageRepository,
                                 TripRepository tripRepository,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                LocalizedMessages localizedMessages) {
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
         this.tripRepository = tripRepository;
         this.userRepository = userRepository;
+        this.localizedMessages = localizedMessages;
     }
 
     @Override
     public ConversationResponse startConversation(StartConversationRequest request, User currentUser) {
         Trip trip = tripRepository.findById(request.getTripId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Trip not found with id: " + request.getTripId()));
+                        localizedMessages.get("error.trip.notFound", request.getTripId())));
 
         User recipient = userRepository.findById(request.getRecipientId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found with id: " + request.getRecipientId()));
+                        localizedMessages.get("error.user.notFound", request.getRecipientId())));
 
         if (currentUser.getId().equals(recipient.getId())) {
-            throw new IllegalArgumentException("Cannot start a conversation with yourself");
+            throw new BadRequestException(localizedMessages.get("error.messaging.selfConversation"));
         }
 
         // Look for an existing conversation in both directions
@@ -130,7 +135,7 @@ public class MessagingServiceImpl implements MessagingService {
     private Conversation findConversationOrThrow(Long id) {
         return conversationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Conversation not found with id: " + id));
+                        localizedMessages.get("error.conversation.notFound", id)));
     }
 
     /**
@@ -142,7 +147,7 @@ public class MessagingServiceImpl implements MessagingService {
         boolean isParticipant = conversation.getParticipant1().getId().equals(user.getId())
                 || conversation.getParticipant2().getId().equals(user.getId());
         if (!isParticipant) {
-            throw new AccessDeniedException("You are not a participant in this conversation");
+            throw new AccessDeniedException(localizedMessages.get("error.messaging.notParticipant"));
         }
     }
 

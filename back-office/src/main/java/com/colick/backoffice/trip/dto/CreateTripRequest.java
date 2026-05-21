@@ -15,25 +15,25 @@ import java.time.LocalDateTime;
 @Data
 public class CreateTripRequest {
 
-    @NotBlank(message = "Departure address is required")
+    @NotBlank
     private String departureAddress;
 
-    @NotBlank(message = "Destination is required")
+    @NotBlank
     private String destination;
 
-    @NotNull(message = "Departure time is required")
-    @Future(message = "Departure time must be in the future")
+    @NotNull
+    @Future
     private LocalDateTime departureTime;
 
-    @NotNull(message = "Arrival time is required")
+    @NotNull
     private LocalDateTime arrivalTime;
 
-    @NotNull(message = "Max weight is required")
-    @DecimalMin(value = "0.1", message = "Max weight must be greater than 0")
+    @NotNull
+    @DecimalMin("0.1")
     private BigDecimal maxWeight;
 
-    @NotNull(message = "Price per kilo is required")
-    @DecimalMin(value = "0.01", message = "Price per kilo must be greater than 0")
+    @NotNull
+    @DecimalMin("0.01")
     private BigDecimal pricePerKilo;
 
     private boolean instantAcceptance;

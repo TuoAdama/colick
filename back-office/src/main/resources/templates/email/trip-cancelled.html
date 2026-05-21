@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Trajet annulé - Colick</title>
+    <title th:text="#{email.subject.tripCancelled}">Trip cancelled - Colick</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f5f5f5;font-family:Poppins,Arial,sans-serif;color:#111827;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:24px 0;">
@@ -11,34 +11,19 @@
         <td align="center">
             <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;">
                 <tr>
-                    <td style="background:#023047;padding:20px 24px;color:#ffffff;font-size:20px;font-weight:700;">
-                        Colick
-                    </td>
+                    <td style="background:#023047;padding:20px 24px;color:#ffffff;font-size:20px;font-weight:700;" th:text="#{email.common.brand}">Colick</td>
                 </tr>
                 <tr>
                     <td style="padding:28px 24px;">
-                        <p style="margin:0 0 12px 0;font-size:16px;">Bonjour <span th:text="${firstName}">Utilisateur</span>,</p>
-                        <p style="margin:0 0 20px 0;line-height:1.6;">
-                            Nous vous informons que le trajet <strong th:text="${departureAddress}">Paris</strong> →
-                            <strong th:text="${destination}">Abidjan</strong> a été <strong>annulé</strong> par le voyageur.
-                        </p>
-                        <p style="margin:0 0 20px 0;line-height:1.6;background:#F9FAFB;border-left:4px solid #fb8500;padding:12px 16px;border-radius:10px;">
-                            Votre réservation est automatiquement annulée. Vous pouvez relancer votre recherche directement depuis Colick.
-                        </p>
-                        <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
-                        <p style="margin:0 0 12px 0;font-size:16px;">Hello <span th:text="${firstName}">User</span>,</p>
-                        <p style="margin:0 0 20px 0;line-height:1.6;">
-                            We inform you that the trip <strong th:text="${departureAddress}">Paris</strong> →
-                            <strong th:text="${destination}">Abidjan</strong> has been <strong>cancelled</strong> by the traveler.
-                        </p>
-                        <p style="margin:0;line-height:1.6;color:#6B7280;">
-                            Your booking has been automatically cancelled. You can launch a new search directly from Colick.
-                        </p>
+                        <p style="margin:0 0 12px 0;font-size:16px;" th:text="#{email.common.greeting(${firstName})}">Hello User,</p>
+                        <p style="margin:0 0 20px 0;line-height:1.6;" th:text="#{email.tripCancelled.intro(${departureAddress}, ${destination})}">The trip has been cancelled.</p>
+                        <p style="margin:0;line-height:1.6;color:#6B7280;" th:text="#{email.tripCancelled.note}">Your booking has been automatically cancelled.</p>
                     </td>
                 </tr>
                 <tr>
                     <td style="background:#F9FAFB;padding:16px 24px;font-size:12px;color:#6B7280;">
-                        Besoin d'aide / Need help? <span style="color:#219ebc;" th:text="${supportEmail}">support@colick.app</span>
+                        <span th:text="#{email.common.help}">Need help?</span>
+                        <span style="color:#219ebc;" th:text="${supportEmail}">support@colick.app</span>
                     </td>
                 </tr>
             </table>

@@ -11,18 +11,49 @@
  *  3. Falls back to the provided `fallback` string when no usable message is found
  *     (network failures, unexpected payload shapes, etc.).
  */
-export function extractApiErrorMessage(err: unknown, fallback: string): string {
+export interface ApiErrorMessageDetails {
+  rawMessage: string | null;
+  fieldName: string | null;
+  cleanedMessage: string | null;
+}
+
+/**
+ * Parses a backend error payload and exposes both the raw message and the optional field prefix.
+ */
+export function parseApiErrorMessage(err: unknown): ApiErrorMessageDetails {
   const raw: unknown = (err as Record<string, unknown> | null)?.['error'];
   const message = (raw as Record<string, unknown> | null)?.['message'];
 
-  if (typeof message !== 'string' || !message.trim()) {
-    return fallback;
+  if (typeof message !== 'string') {
+    return {
+      rawMessage: null,
+      fieldName: null,
+      cleanedMessage: null,
+    };
   }
 
-  // Strip a leading "camelCaseField: " prefix produced by backend bean-validation.
-  // Regex matches an identifier (letters/digits, starting with a letter) followed
-  // by a colon and optional whitespace, only at the very start of the string.
-  const cleaned = message.replace(/^[a-zA-Z][a-zA-Z0-9]*:\s*/, '').trim();
+  const rawMessage = message.trim();
 
-  return cleaned || fallback;
+  if (!rawMessage) {
+    return {
+      rawMessage: null,
+      fieldName: null,
+      cleanedMessage: null,
+    };
+  }
+
+  const prefixMatch = message.match(/^([a-zA-Z][a-zA-Z0-9]*)\s*:\s*(.*)$/);
+  const fieldName = prefixMatch?.[1] ?? null;
+  const cleanedMessage = prefixMatch ? prefixMatch[2].trim() : rawMessage;
+
+  return {
+    rawMessage,
+    fieldName,
+    cleanedMessage: cleanedMessage || null,
+  };
+}
+
+export function extractApiErrorMessage(err: unknown, fallback: string): string {
+  const { cleanedMessage } = parseApiErrorMessage(err);
+  return cleanedMessage || fallback;
 }

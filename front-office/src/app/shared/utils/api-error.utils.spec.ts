@@ -1,4 +1,4 @@
-import { extractApiErrorMessage } from './api-error.utils';
+import { extractApiErrorMessage, parseApiErrorMessage } from './api-error.utils';
 
 describe('extractApiErrorMessage', () => {
   const FALLBACK = 'Une erreur inattendue est survenue.';
@@ -82,5 +82,37 @@ describe('extractApiErrorMessage', () => {
     // Edge case: "field: " with nothing after — cleaned becomes ''
     const err = { error: { message: 'field:' } };
     expect(extractApiErrorMessage(err, FALLBACK)).toBe(FALLBACK);
+  });
+});
+
+describe('parseApiErrorMessage', () => {
+  it('returns the backend field name when the message starts with a validation prefix', () => {
+    const err = { error: { message: 'departureTime: doit être une date dans le futur' } };
+
+    expect(parseApiErrorMessage(err)).toEqual({
+      rawMessage: 'departureTime: doit être une date dans le futur',
+      fieldName: 'departureTime',
+      cleanedMessage: 'doit être une date dans le futur',
+    });
+  });
+
+  it('keeps the full message when no field prefix is present', () => {
+    const err = { error: { message: 'Trip not found.' } };
+
+    expect(parseApiErrorMessage(err)).toEqual({
+      rawMessage: 'Trip not found.',
+      fieldName: null,
+      cleanedMessage: 'Trip not found.',
+    });
+  });
+
+  it('does not treat a message with a leading space as a field-prefixed validation error', () => {
+    const err = { error: { message: ' https://example.com is invalid' } };
+
+    expect(parseApiErrorMessage(err)).toEqual({
+      rawMessage: 'https://example.com is invalid',
+      fieldName: null,
+      cleanedMessage: 'https://example.com is invalid',
+    });
   });
 });

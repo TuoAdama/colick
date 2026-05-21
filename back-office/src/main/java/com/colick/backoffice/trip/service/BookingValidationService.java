@@ -1,7 +1,9 @@
 package com.colick.backoffice.trip.service;
 
 import com.colick.backoffice.email.EmailService;
+import com.colick.backoffice.exception.BadRequestException;
 import com.colick.backoffice.exception.ValidationCodeDeliveryException;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.notification.qrcode.QrCodeService;
 import com.colick.backoffice.notification.sms.SmsService;
 import com.colick.backoffice.trip.entity.TripBooking;
@@ -23,24 +25,27 @@ public class BookingValidationService {
     private final EmailService emailService;
     private final SmsService smsService;
     private final QrCodeService qrCodeService;
+    private final LocalizedMessages localizedMessages;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public BookingValidationService(EmailService emailService,
                                     SmsService smsService,
-                                    QrCodeService qrCodeService) {
+                                    QrCodeService qrCodeService,
+                                    LocalizedMessages localizedMessages) {
         this.emailService = emailService;
         this.smsService = smsService;
         this.qrCodeService = qrCodeService;
+        this.localizedMessages = localizedMessages;
     }
 
     public String normalizeRecipientContact(String rawContact) {
         if (rawContact == null) {
-            throw new IllegalArgumentException("Recipient contact must be a valid email address or phone number");
+            throw new BadRequestException(localizedMessages.get("error.booking.recipientContactInvalid"));
         }
 
         String contact = rawContact.trim();
         if (contact.isEmpty()) {
-            throw new IllegalArgumentException("Recipient contact must be a valid email address or phone number");
+            throw new BadRequestException(localizedMessages.get("error.booking.recipientContactInvalid"));
         }
 
         if (isEmail(contact)) {
@@ -48,12 +53,12 @@ public class BookingValidationService {
         }
 
         if (!PHONE_ALLOWED_PATTERN.matcher(contact).matches()) {
-            throw new IllegalArgumentException("Recipient contact must be a valid email address or phone number");
+            throw new BadRequestException(localizedMessages.get("error.booking.recipientContactInvalid"));
         }
 
         String normalizedPhone = contact.replaceAll("[\\s().-]", "");
         if (!normalizedPhone.matches("^\\+?[0-9]{6,15}$")) {
-            throw new IllegalArgumentException("Recipient contact must be a valid email address or phone number");
+            throw new BadRequestException(localizedMessages.get("error.booking.recipientContactInvalid"));
         }
         return normalizedPhone;
     }
@@ -87,7 +92,7 @@ public class BookingValidationService {
             }
         } catch (RuntimeException ex) {
             throw new ValidationCodeDeliveryException(
-                    "Unable to deliver validation code",
+                    localizedMessages.get("error.validationCode.deliveryFailed"),
                     normalizedContact,
                     channel,
                     ex

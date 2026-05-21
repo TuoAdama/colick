@@ -1,7 +1,9 @@
 package com.colick.backoffice.trip;
 
 import com.colick.backoffice.email.EmailService;
+import com.colick.backoffice.exception.BadRequestException;
 import com.colick.backoffice.exception.ReviewSubmissionConflictException;
+import com.colick.backoffice.support.TestLocalizedMessages;
 import com.colick.backoffice.trip.dto.SubmitTravelerReviewRequest;
 import com.colick.backoffice.trip.dto.TravelerReviewResponse;
 import com.colick.backoffice.trip.entity.TravelerReview;
@@ -18,10 +20,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -53,11 +57,13 @@ class TravelerReviewServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
         travelerReviewService = new TravelerReviewServiceImpl(
                 tripBookingRepository,
                 travelerReviewRepository,
                 emailService,
-                "http://localhost:4200/traveler-review"
+                "http://localhost:4200/traveler-review",
+                TestLocalizedMessages.create()
         );
 
         traveler = User.builder()
@@ -238,7 +244,7 @@ class TravelerReviewServiceImplTest {
     @Test
     void getReviewByToken_shouldThrow_whenTokenIsBlank() {
         assertThatThrownBy(() -> travelerReviewService.getReviewByToken(" "))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessage("Invalid traveler review token");
     }
 
