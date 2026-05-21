@@ -25,8 +25,8 @@ describe('ProposeTripPageComponent', () => {
       travelerName: 'Ada',
       departureAddress: 'Paris, France',
       destination: "Abidjan, Côte d'Ivoire",
-      departureTime: '2025-05-10T08:00:00',
-      arrivalTime: '2025-05-10T16:00:00',
+      departureTime: '2099-05-10T08:00:00',
+      arrivalTime: '2099-05-10T16:00:00',
       maxWeight: 20,
       pricePerKilo: 15,
       instantAcceptance: true,
@@ -70,8 +70,8 @@ describe('ProposeTripPageComponent', () => {
       travelerName: 'Ada',
       departureAddress: 'Paris, France',
       destination: "Abidjan, Côte d'Ivoire",
-      departureTime: '2025-05-10T08:00:00',
-      arrivalTime: '2025-05-10T16:00:00',
+      departureTime: '2099-05-10T08:00:00',
+      arrivalTime: '2099-05-10T16:00:00',
       maxWeight: 20,
       pricePerKilo: 15,
       instantAcceptance: true,
@@ -79,6 +79,7 @@ describe('ProposeTripPageComponent', () => {
       availableWeight: 8,
     }));
     tripServiceMock.updateTrip.and.returnValue(of({}));
+    document.documentElement.lang = 'fr';
 
     fixture = TestBed.createComponent(ProposeTripPageComponent);
     component = fixture.componentInstance;
@@ -96,8 +97,8 @@ describe('ProposeTripPageComponent', () => {
 
     component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
     component.destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', type: 'CITY' };
-    component.departureTime = '2025-05-10T08:00';
-    component.arrivalTime = '2025-05-10T16:00';
+    component.departureTime = '2099-05-10T08:00';
+    component.arrivalTime = '2099-05-10T16:00';
     component.maxWeight = 20;
     component.pricePerKilo = 15;
     component.instantAcceptance = true;
@@ -107,8 +108,8 @@ describe('ProposeTripPageComponent', () => {
     expect(tripServiceMock.createTrip).toHaveBeenCalledWith({
       departureAddress: 'Paris, France',
       destination: "Abidjan, Côte d'Ivoire",
-      departureTime: '2025-05-10T08:00',
-      arrivalTime: '2025-05-10T16:00',
+      departureTime: '2099-05-10T08:00',
+      arrivalTime: '2099-05-10T16:00',
       maxWeight: 20,
       pricePerKilo: 15,
       instantAcceptance: true,
@@ -161,8 +162,8 @@ describe('ProposeTripPageComponent', () => {
       travelerName: 'Ada',
       departureAddress: 'Paris, France',
       destination: "Abidjan, Côte d'Ivoire",
-      departureTime: '2025-05-10T08:00:00',
-      arrivalTime: '2025-05-10T16:00:00',
+      departureTime: '2099-05-10T08:00:00',
+      arrivalTime: '2099-05-10T16:00:00',
       maxWeight: 20,
       pricePerKilo: 15,
       instantAcceptance: true,
@@ -198,20 +199,19 @@ describe('ProposeTripPageComponent', () => {
     fixture.detectChanges();
 
     tripServiceMock.createTrip.and.returnValue(
-      throwError(() => ({ error: { message: 'departureTime: Departure time must be in the future' } }))
+      throwError(() => ({ error: { message: 'departureTime: doit être une date dans le futur' } }))
     );
 
     component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
     component.destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', type: 'CITY' };
-    component.departureTime = '2025-05-10T08:00';
-    component.arrivalTime = '2025-05-10T16:00';
+    component.departureTime = '2099-05-10T08:00';
+    component.arrivalTime = '2099-05-10T16:00';
     component.maxWeight = 20;
     component.pricePerKilo = 15;
 
     component.submit();
 
-    // Field prefix stripped; human-readable message shown instead of generic fallback
-    expect(component.errorMessage).toBe('Departure time must be in the future');
+    expect(component.errorMessage).toBe('Veuillez choisir une date et une heure de départ dans le futur.');
   });
 
   it('falls back to the generic publish error when createTrip fails without a backend message', () => {
@@ -222,8 +222,8 @@ describe('ProposeTripPageComponent', () => {
 
     component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
     component.destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', type: 'CITY' };
-    component.departureTime = '2025-05-10T08:00';
-    component.arrivalTime = '2025-05-10T16:00';
+    component.departureTime = '2099-05-10T08:00';
+    component.arrivalTime = '2099-05-10T16:00';
     component.maxWeight = 20;
     component.pricePerKilo = 15;
 
@@ -242,7 +242,6 @@ describe('ProposeTripPageComponent', () => {
 
     component.submit();
 
-    // Field prefix stripped
     expect(component.errorMessage).toBe('Max weight must be at least 1 kg');
   });
 
@@ -267,5 +266,43 @@ describe('ProposeTripPageComponent', () => {
 
     expect(component.errorMessage).toBe('Trip not found');
     expect(component.isPageLoading).toBeFalse();
+  });
+
+  it('blocks submission on the client when the departure date is in the past', () => {
+    setRouteId();
+    fixture.detectChanges();
+
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', type: 'CITY' };
+    component.departureTime = '2000-05-10T08:00';
+    component.arrivalTime = '2099-05-10T16:00';
+    component.maxWeight = 20;
+    component.pricePerKilo = 15;
+
+    component.submit();
+
+    expect(component.errorMessage).toBe('Veuillez choisir une date et une heure de départ dans le futur.');
+    expect(tripServiceMock.createTrip).not.toHaveBeenCalled();
+  });
+
+  it('shows an English contextual message when the page language is English', () => {
+    document.documentElement.lang = 'en';
+    setRouteId();
+    fixture.detectChanges();
+
+    tripServiceMock.createTrip.and.returnValue(
+      throwError(() => ({ error: { message: 'arrivalTime: must be a date in the future' } }))
+    );
+
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', type: 'CITY' };
+    component.departureTime = '2099-05-10T08:00';
+    component.arrivalTime = '2099-05-10T16:00';
+    component.maxWeight = 20;
+    component.pricePerKilo = 15;
+
+    component.submit();
+
+    expect(component.errorMessage).toBe('Please choose an estimated arrival date and time in the future.');
   });
 });
