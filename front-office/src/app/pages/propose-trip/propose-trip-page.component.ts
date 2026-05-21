@@ -6,6 +6,7 @@ import { AutocompleteComponent } from '../../shared/components/autocomplete/auto
 import { TripService } from '../../services/trip.service';
 import { Location } from '../../models/location.model';
 import { CreateTripDto, Trip } from '../../models/trip.model';
+import { extractApiErrorMessage } from '../../shared/utils/api-error.utils';
 
 /**
  * ProposeTripPageComponent - Shared form used to create or edit a trip.
@@ -200,11 +201,12 @@ export class ProposeTripPageComponent implements OnInit {
         }
         this.router.navigate(['/search']);
       },
-      error: () => {
+      error: (err: unknown) => {
         this.isLoading = false;
-        this.errorMessage = this.isEditMode
+        const fallback = this.isEditMode
           ? 'Une erreur est survenue lors de la mise à jour du voyage. Veuillez réessayer.'
           : 'Une erreur est survenue lors de la publication du voyage. Veuillez réessayer.';
+        this.errorMessage = extractApiErrorMessage(err, fallback);
       },
     });
   }
@@ -222,8 +224,11 @@ export class ProposeTripPageComponent implements OnInit {
         }
         this.isPageLoading = false;
       },
-      error: () => {
-        this.errorMessage = 'Une erreur est survenue lors du chargement du voyage. Veuillez réessayer.';
+      error: (err: unknown) => {
+        this.errorMessage = extractApiErrorMessage(
+          err,
+          'Une erreur est survenue lors du chargement du voyage. Veuillez réessayer.',
+        );
         this.isPageLoading = false;
       },
     });
