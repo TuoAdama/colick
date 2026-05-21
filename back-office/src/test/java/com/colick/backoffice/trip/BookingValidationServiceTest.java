@@ -1,9 +1,12 @@
 package com.colick.backoffice.trip;
 
 import com.colick.backoffice.email.EmailService;
+import com.colick.backoffice.exception.BadRequestException;
 import com.colick.backoffice.exception.ValidationCodeDeliveryException;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.notification.qrcode.QrCodeService;
 import com.colick.backoffice.notification.sms.SmsService;
+import com.colick.backoffice.support.TestLocalizedMessages;
 import com.colick.backoffice.trip.entity.Trip;
 import com.colick.backoffice.trip.entity.TripBooking;
 import com.colick.backoffice.trip.service.BookingValidationService;
@@ -14,9 +17,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -35,6 +41,9 @@ class BookingValidationServiceTest {
     @Mock
     private QrCodeService qrCodeService;
 
+    @Spy
+    private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
+
     @InjectMocks
     private BookingValidationService bookingValidationService;
 
@@ -42,6 +51,7 @@ class BookingValidationServiceTest {
 
     @BeforeEach
     void setUp() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
         User traveler = User.builder()
                 .id(1L)
                 .firstName("Alice")
@@ -77,7 +87,7 @@ class BookingValidationServiceTest {
     @Test
     void normalizeRecipientContact_shouldThrow_whenInvalid() {
         assertThatThrownBy(() -> bookingValidationService.normalizeRecipientContact("John Doe"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessage("Recipient contact must be a valid email address or phone number");
     }
 

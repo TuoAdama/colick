@@ -1,5 +1,7 @@
 package com.colick.backoffice.auth.google;
 
+import com.colick.backoffice.exception.BadRequestException;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -19,18 +21,21 @@ import java.util.List;
 public class GoogleTokenVerifierService implements GoogleTokenVerifier {
 
     private final String clientId;
+    private final LocalizedMessages localizedMessages;
 
-    public GoogleTokenVerifierService(@Value("${app.auth.google.client-id:}") String clientId) {
+    public GoogleTokenVerifierService(@Value("${app.auth.google.client-id:}") String clientId,
+                                      LocalizedMessages localizedMessages) {
         this.clientId = clientId == null ? "" : clientId.trim();
+        this.localizedMessages = localizedMessages;
     }
 
     @Override
     public GoogleTokenPayload verify(String idToken) {
         if (!isConfigured()) {
-            throw new IllegalStateException("Google authentication is not configured.");
+            throw new BadRequestException(localizedMessages.get("error.google.notConfigured"));
         }
         if (idToken == null || idToken.isBlank()) {
-            throw new IllegalArgumentException("Google ID token is required");
+            throw new BadRequestException(localizedMessages.get("error.google.tokenRequired"));
         }
 
         GoogleIdToken googleIdToken;
@@ -40,18 +45,18 @@ public class GoogleTokenVerifierService implements GoogleTokenVerifier {
                     .build()
                     .verify(idToken);
         } catch (GeneralSecurityException | IOException ex) {
-            throw new IllegalArgumentException("Impossible de verifier le jeton Google.", ex);
+            throw new BadRequestException(localizedMessages.get("error.google.verificationFailed"));
         }
 
         if (googleIdToken == null) {
-            throw new AccessDeniedException("Jeton Google invalide.");
+            throw new AccessDeniedException(localizedMessages.get("error.google.invalidToken"));
         }
 
         GoogleIdToken.Payload payload = googleIdToken.getPayload();
         if (!Boolean.TRUE.equals(payload.getEmailVerified())
                 || payload.getEmail() == null || payload.getEmail().isBlank()
                 || payload.getSubject() == null || payload.getSubject().isBlank()) {
-            throw new AccessDeniedException("Le compte Google doit fournir une adresse e-mail verifiee.");
+            throw new AccessDeniedException(localizedMessages.get("error.google.emailNotVerified"));
         }
 
         return new GoogleTokenPayload(

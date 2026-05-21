@@ -14,13 +14,13 @@ public class UpdateUserRequest {
 
     private String lastName;
 
-    @Email(message = "Email must be valid")
+    @Email
     private String email;
 
     private String phone;
 
     private String identityDocument;
 
-    @Size(min = 8, message = "Password must be at least 8 characters")
+    @Size(min = 8)
     private String password;
 }

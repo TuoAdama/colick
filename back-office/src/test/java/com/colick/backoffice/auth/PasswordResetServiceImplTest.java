@@ -4,6 +4,9 @@ import com.colick.backoffice.auth.passwordreset.entity.PasswordResetToken;
 import com.colick.backoffice.auth.passwordreset.repository.PasswordResetTokenRepository;
 import com.colick.backoffice.auth.passwordreset.service.PasswordResetServiceImpl;
 import com.colick.backoffice.email.EmailService;
+import com.colick.backoffice.exception.BadRequestException;
+import com.colick.backoffice.i18n.LocalizedMessages;
+import com.colick.backoffice.support.TestLocalizedMessages;
 import com.colick.backoffice.user.entity.User;
 import com.colick.backoffice.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,12 +15,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +51,9 @@ class PasswordResetServiceImplTest {
     @Mock
     private EmailService emailService;
 
+    @Spy
+    private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
+
     @InjectMocks
     private PasswordResetServiceImpl passwordResetService;
 
@@ -52,6 +61,7 @@ class PasswordResetServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
         ReflectionTestUtils.setField(passwordResetService, "resetBaseUrl", "https://app.colick.com/reset-password");
         ReflectionTestUtils.setField(passwordResetService, "expirationMinutes", 45L);
 
@@ -106,7 +116,7 @@ class PasswordResetServiceImplTest {
         when(passwordResetTokenRepository.findByTokenHash(anyString())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> passwordResetService.resetPassword("invalid-token", "NewPassword1"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Invalid password reset token");
     }
 
@@ -121,7 +131,7 @@ class PasswordResetServiceImplTest {
         when(passwordResetTokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(token));
 
         assertThatThrownBy(() -> passwordResetService.resetPassword("expired-token", "NewPassword1"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("expired");
     }
 
@@ -137,7 +147,7 @@ class PasswordResetServiceImplTest {
         when(passwordResetTokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(token));
 
         assertThatThrownBy(() -> passwordResetService.resetPassword("used-token", "NewPassword1"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("already been used");
     }
 

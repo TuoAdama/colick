@@ -2,18 +2,24 @@ package com.colick.backoffice.auth.google;
 
 import com.colick.backoffice.auth.dto.AuthResponse;
 import com.colick.backoffice.auth.util.JwtUtil;
+import com.colick.backoffice.i18n.LocalizedMessages;
+import com.colick.backoffice.support.TestLocalizedMessages;
 import com.colick.backoffice.user.entity.User;
 import com.colick.backoffice.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,8 +44,16 @@ class GoogleAuthenticationServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Spy
+    private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
+
     @InjectMocks
     private GoogleAuthenticationServiceImpl googleAuthenticationService;
+
+    @BeforeEach
+    void setUp() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
+    }
 
     @Test
     void authenticate_shouldCreateGoogleUser_whenEmailIsUnknown() {
@@ -143,7 +157,7 @@ class GoogleAuthenticationServiceImplTest {
 
         assertThatThrownBy(() -> googleAuthenticationService.authenticate("google-id-token"))
                 .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("deja lie");
+                .hasMessageContaining("already linked");
     }
 
     @Test

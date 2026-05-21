@@ -3,6 +3,8 @@ package com.colick.backoffice.user;
 import com.colick.backoffice.email.EmailService;
 import com.colick.backoffice.exception.ResourceNotFoundException;
 import com.colick.backoffice.exception.UserAlreadyExistsException;
+import com.colick.backoffice.i18n.LocalizedMessages;
+import com.colick.backoffice.support.TestLocalizedMessages;
 import com.colick.backoffice.file.FileStorageService;
 import com.colick.backoffice.user.dto.CreateUserRequest;
 import com.colick.backoffice.user.dto.UpdateUserRequest;
@@ -19,9 +21,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.mockito.Spy;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,6 +51,9 @@ class UserServiceImplTest {
     @Mock
     private EmailService emailService;
 
+    @Spy
+    private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
+
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -53,6 +61,7 @@ class UserServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
         sampleUser = User.builder()
                 .id(1L)
                 .firstName("John")

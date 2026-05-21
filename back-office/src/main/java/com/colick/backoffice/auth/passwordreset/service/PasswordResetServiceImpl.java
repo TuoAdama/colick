@@ -3,6 +3,8 @@ package com.colick.backoffice.auth.passwordreset.service;
 import com.colick.backoffice.auth.passwordreset.entity.PasswordResetToken;
 import com.colick.backoffice.auth.passwordreset.repository.PasswordResetTokenRepository;
 import com.colick.backoffice.email.EmailService;
+import com.colick.backoffice.exception.BadRequestException;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.user.entity.User;
 import com.colick.backoffice.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,12 +26,11 @@ import java.util.Base64;
 @Transactional
 public class PasswordResetServiceImpl implements PasswordResetService {
 
-    private static final String INVALID_TOKEN_MESSAGE = "Invalid password reset token";
-
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final LocalizedMessages localizedMessages;
 
     @Value("${app.auth.password-reset.base-url}")
     private String resetBaseUrl;
@@ -40,11 +41,13 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     public PasswordResetServiceImpl(UserRepository userRepository,
                                     PasswordResetTokenRepository passwordResetTokenRepository,
                                     PasswordEncoder passwordEncoder,
-                                    EmailService emailService) {
+                                    EmailService emailService,
+                                    LocalizedMessages localizedMessages) {
         this.userRepository = userRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.localizedMessages = localizedMessages;
     }
 
     @Override
@@ -73,14 +76,14 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     public void resetPassword(String rawToken, String newPassword) {
         String hashedToken = hashToken(rawToken);
         PasswordResetToken token = passwordResetTokenRepository.findByTokenHash(hashedToken)
-                .orElseThrow(() -> new IllegalArgumentException(INVALID_TOKEN_MESSAGE));
+                .orElseThrow(() -> new BadRequestException(localizedMessages.get("error.passwordReset.invalidToken")));
 
         if (token.isUsed()) {
-            throw new IllegalArgumentException("Password reset token has already been used");
+            throw new BadRequestException(localizedMessages.get("error.passwordReset.tokenUsed"));
         }
 
         if (token.isExpired()) {
-            throw new IllegalArgumentException("Password reset token has expired");
+            throw new BadRequestException(localizedMessages.get("error.passwordReset.tokenExpired"));
         }
 
         User user = token.getUser();
@@ -109,7 +112,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
             }
             return hex.toString();
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 algorithm is not available", e);
+            throw new IllegalStateException(localizedMessages.get("error.system.sha256Unavailable"), e);
         }
     }
 

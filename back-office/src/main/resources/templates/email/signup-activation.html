@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Confirmation de compte Colick</title>
+    <title th:text="#{email.subject.signupActivation}">Confirm your Colick account</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f5f5f5;font-family:Poppins,Arial,sans-serif;color:#111827;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:24px 0;">
@@ -11,37 +11,22 @@
         <td align="center">
             <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;">
                 <tr>
-                    <td style="background:#023047;padding:20px 24px;color:#ffffff;font-size:20px;font-weight:700;">
-                        Colick
-                    </td>
+                    <td style="background:#023047;padding:20px 24px;color:#ffffff;font-size:20px;font-weight:700;" th:text="#{email.common.brand}">Colick</td>
                 </tr>
                 <tr>
                     <td style="padding:28px 24px;">
-                        <p style="margin:0 0 12px 0;font-size:16px;">Bonjour <span th:text="${firstName}">Utilisateur</span>,</p>
-                        <p style="margin:0 0 20px 0;line-height:1.6;">
-                            Merci pour votre inscription sur Colick. Pour activer votre compte, veuillez confirmer votre adresse e-mail.
-                        </p>
+                        <p style="margin:0 0 12px 0;font-size:16px;" th:text="#{email.common.greeting(${firstName})}">Hello User,</p>
+                        <p style="margin:0 0 20px 0;line-height:1.6;" th:text="#{email.signupActivation.intro}">Thanks for signing up to Colick.</p>
                         <p style="margin:0 0 24px 0;text-align:center;">
-                            <a th:href="${confirmUrl}" style="display:inline-block;background:#fb8500;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600;">
-                                Activer mon compte
-                            </a>
+                            <a th:href="${confirmUrl}" style="display:inline-block;background:#fb8500;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600;" th:text="#{email.signupActivation.cta}">Activate my account</a>
                         </p>
-                        <p style="margin:0 0 10px 0;font-size:14px;color:#6B7280;line-height:1.6;">
-                            Ce lien expire dans 24 heures. Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail.
-                        </p>
-                        <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
-                        <p style="margin:0 0 12px 0;font-size:16px;">Hello <span th:text="${firstName}">User</span>,</p>
-                        <p style="margin:0 0 20px 0;line-height:1.6;">
-                            Thanks for signing up to Colick. Please confirm your email address to activate your account.
-                        </p>
-                        <p style="margin:0 0 10px 0;font-size:14px;color:#6B7280;line-height:1.6;">
-                            This link expires in 24 hours. If you did not create this account, you can ignore this email.
-                        </p>
+                        <p style="margin:0;line-height:1.6;color:#6B7280;" th:text="#{email.signupActivation.note}">This link expires in 24 hours.</p>
                     </td>
                 </tr>
                 <tr>
                     <td style="background:#F9FAFB;padding:16px 24px;font-size:12px;color:#6B7280;">
-                        Besoin d'aide / Need help? <span style="color:#219ebc;" th:text="${supportEmail}">support@colick.app</span>
+                        <span th:text="#{email.common.help}">Need help?</span>
+                        <span style="color:#219ebc;" th:text="${supportEmail}">support@colick.app</span>
                     </td>
                 </tr>
             </table>

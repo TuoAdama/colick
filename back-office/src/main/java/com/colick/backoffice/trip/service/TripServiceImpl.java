@@ -1,10 +1,13 @@
 package com.colick.backoffice.trip.service;
 
 import com.colick.backoffice.email.EmailService;
+import com.colick.backoffice.exception.BadRequestException;
+import com.colick.backoffice.exception.ConflictException;
+import com.colick.backoffice.exception.ResourceNotFoundException;
 import com.colick.backoffice.exception.TripBookingConflictException;
 import com.colick.backoffice.exception.TripUpdateNotAllowedException;
-import com.colick.backoffice.exception.ResourceNotFoundException;
 import com.colick.backoffice.exception.ValidationCodeDeliveryException;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.location.entity.LocationType;
 import com.colick.backoffice.location.repository.LocationRepository;
 import com.colick.backoffice.trip.dto.*;
@@ -35,19 +38,22 @@ public class TripServiceImpl implements TripService {
     private final LocationRepository locationRepository;
     private final BookingValidationService bookingValidationService;
     private final TravelerReviewService travelerReviewService;
+    private final LocalizedMessages localizedMessages;
 
     public TripServiceImpl(TripRepository tripRepository,
                            TripBookingRepository bookingRepository,
                            EmailService emailService,
                            LocationRepository locationRepository,
                            BookingValidationService bookingValidationService,
-                           TravelerReviewService travelerReviewService) {
+                           TravelerReviewService travelerReviewService,
+                           LocalizedMessages localizedMessages) {
         this.tripRepository = tripRepository;
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
         this.locationRepository = locationRepository;
         this.bookingValidationService = bookingValidationService;
         this.travelerReviewService = travelerReviewService;
+        this.localizedMessages = localizedMessages;
     }
 
     @Override
@@ -83,7 +89,7 @@ public class TripServiceImpl implements TripService {
         Trip trip = findTripOrThrow(id);
         assertTripOwner(trip, requester);
         if (trip.getStatus() != Trip.TripStatus.ACTIVE) {
-            throw new TripUpdateNotAllowedException("Only ACTIVE trips can be updated");
+            throw new TripUpdateNotAllowedException(localizedMessages.get("error.trip.onlyActiveUpdatable"));
         }
 
         if (request.getDepartureAddress() != null) trip.setDepartureAddress(request.getDepartureAddress());
@@ -108,10 +114,10 @@ public class TripServiceImpl implements TripService {
             return toTripResponse(trip);
         }
         if (trip.getStatus() != Trip.TripStatus.ACTIVE) {
-            throw new IllegalStateException("Only ACTIVE trips can be marked as completed");
+            throw new ConflictException(localizedMessages.get("error.trip.onlyActiveCompletable"));
         }
         if (bookingRepository.existsByTripAndStatus(trip, TripBooking.BookingStatus.PENDING)) {
-            throw new IllegalStateException("All PENDING bookings must be processed before completing the trip");
+            throw new ConflictException(localizedMessages.get("error.trip.pendingBookingsMustBeProcessed"));
         }
 
         trip.setStatus(Trip.TripStatus.COMPLETED);
@@ -125,7 +131,7 @@ public class TripServiceImpl implements TripService {
         Trip trip = findTripOrThrow(id);
         assertTripOwner(trip, requester);
         if (trip.getStatus() != Trip.TripStatus.ACTIVE) {
-            throw new IllegalStateException("Only ACTIVE trips can be cancelled");
+            throw new ConflictException(localizedMessages.get("error.trip.onlyActiveCancelable"));
         }
         trip.setStatus(Trip.TripStatus.CANCELLED);
         tripRepository.save(trip);
@@ -160,24 +166,24 @@ public class TripServiceImpl implements TripService {
         Trip trip = findTripOrThrow(tripId);
 
         if (trip.getStatus() != Trip.TripStatus.ACTIVE) {
-            throw new IllegalStateException("Only ACTIVE trips can receive bookings");
+            throw new ConflictException(localizedMessages.get("error.trip.onlyActiveBookingsCreatable"));
         }
 
         if (trip.getTraveler().getId().equals(sender.getId())) {
-            throw new IllegalArgumentException("You cannot create a booking request for your own trip");
+            throw new BadRequestException(localizedMessages.get("error.trip.selfBooking"));
         }
 
         List<TripBooking.BookingStatus> activeStatuses = List.of(
                 TripBooking.BookingStatus.PENDING,
                 TripBooking.BookingStatus.ACCEPTED);
         if (bookingRepository.existsByTripAndSenderAndStatusIn(trip, sender, activeStatuses)) {
-            throw new TripBookingConflictException("Vous avez deja une demande en cours pour ce trajet");
+            throw new TripBookingConflictException(localizedMessages.get("error.trip.bookingAlreadyExists"));
         }
 
         // Validate that the requested weight does not exceed the available weight
         BigDecimal availableWeight = computeAvailableWeight(trip);
         if (request.getWeight() != null && request.getWeight().compareTo(availableWeight) > 0) {
-            throw new IllegalArgumentException("Requested weight exceeds available weight");
+            throw new BadRequestException(localizedMessages.get("error.trip.requestedWeightExceedsAvailable"));
         }
 
         TripBooking.BookingStatus initialStatus = trip.isInstantAcceptance()
@@ -217,14 +223,14 @@ public class TripServiceImpl implements TripService {
         TripBooking booking = findBookingOrThrow(tripId, bookingId);
         assertTripOwner(booking.getTrip(), requester);
         if (booking.getTrip().getStatus() != Trip.TripStatus.ACTIVE) {
-            throw new IllegalStateException("Only bookings on ACTIVE trips can be accepted");
+            throw new ConflictException(localizedMessages.get("error.trip.onlyActiveBookingsAcceptable"));
         }
 
         if (booking.getStatus() == TripBooking.BookingStatus.ACCEPTED) {
             return TripBookingResponse.from(booking);
         }
         if (booking.getStatus() != TripBooking.BookingStatus.PENDING) {
-            throw new IllegalStateException("Only PENDING bookings can be accepted");
+            throw new ConflictException(localizedMessages.get("error.trip.onlyPendingBookingsAcceptable"));
         }
 
         booking.setStatus(TripBooking.BookingStatus.ACCEPTED);
@@ -253,16 +259,16 @@ public class TripServiceImpl implements TripService {
             return TripBookingResponse.from(booking);
         }
         if (booking.getTrip().getStatus() != Trip.TripStatus.COMPLETED) {
-            throw new IllegalStateException("Trip must be COMPLETED before confirming parcel handoff");
+            throw new ConflictException(localizedMessages.get("error.trip.completedRequiredForDelivery"));
         }
         if (booking.getStatus() != TripBooking.BookingStatus.ACCEPTED) {
-            throw new IllegalStateException("Only ACCEPTED bookings can be marked as delivered");
+            throw new ConflictException(localizedMessages.get("error.trip.onlyAcceptedBookingsDeliverable"));
         }
         if (!booking.hasActiveValidationCode()) {
-            throw new IllegalStateException("No active validation code is available for this booking");
+            throw new ConflictException(localizedMessages.get("error.trip.noActiveValidationCode"));
         }
         if (!booking.getValidationCode().equals(request.getValidationCode().trim())) {
-            throw new IllegalArgumentException("Invalid validation code");
+            throw new BadRequestException(localizedMessages.get("error.trip.invalidValidationCode"));
         }
 
         booking.setStatus(TripBooking.BookingStatus.DELIVERED);
@@ -276,14 +282,14 @@ public class TripServiceImpl implements TripService {
         TripBooking booking = findBookingOrThrow(tripId, bookingId);
         assertTripOwner(booking.getTrip(), requester);
         if (booking.getTrip().getStatus() != Trip.TripStatus.ACTIVE) {
-            throw new IllegalStateException("Only bookings on ACTIVE trips can be rejected");
+            throw new ConflictException(localizedMessages.get("error.trip.onlyActiveBookingsRejectable"));
         }
 
         if (booking.getStatus() == TripBooking.BookingStatus.REJECTED) {
             return TripBookingResponse.from(booking);
         }
         if (booking.getStatus() != TripBooking.BookingStatus.PENDING) {
-            throw new IllegalStateException("Only PENDING bookings can be rejected");
+            throw new ConflictException(localizedMessages.get("error.trip.onlyPendingBookingsRejectable"));
         }
 
         booking.setStatus(TripBooking.BookingStatus.REJECTED);
@@ -309,7 +315,7 @@ public class TripServiceImpl implements TripService {
             return;
         }
         if (booking.getStatus() != TripBooking.BookingStatus.ACCEPTED) {
-            throw new IllegalStateException("Only ACCEPTED bookings can be removed");
+            throw new ConflictException(localizedMessages.get("error.trip.onlyAcceptedBookingsRemovable"));
         }
 
         booking.setStatus(TripBooking.BookingStatus.REMOVED);
@@ -329,12 +335,12 @@ public class TripServiceImpl implements TripService {
         TripBooking booking = findBookingOrThrow(tripId, bookingId);
 
         if (!booking.getSender().getId().equals(requester.getId())) {
-            throw new AccessDeniedException("You are not the sender of this booking");
+            throw new AccessDeniedException(localizedMessages.get("error.trip.notBookingSender"));
         }
 
         if (booking.getStatus() != TripBooking.BookingStatus.PENDING
                 && booking.getStatus() != TripBooking.BookingStatus.ACCEPTED) {
-            throw new IllegalStateException("Only PENDING or ACCEPTED bookings can be cancelled");
+            throw new ConflictException(localizedMessages.get("error.trip.onlyPendingOrAcceptedBookingsCancelable"));
         }
 
         booking.setStatus(TripBooking.BookingStatus.CANCELLED);
@@ -353,20 +359,20 @@ public class TripServiceImpl implements TripService {
 
     private Trip findTripOrThrow(Long id) {
         return tripRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Trip not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(localizedMessages.get("error.trip.notFound", id)));
     }
 
     private TripBooking findBookingOrThrow(Long tripId, Long bookingId) {
         findTripOrThrow(tripId); // ensure trip exists
         return bookingRepository.findById(bookingId)
                 .filter(b -> b.getTrip().getId().equals(tripId))
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+                .orElseThrow(() -> new ResourceNotFoundException(localizedMessages.get("error.booking.notFound", bookingId)));
     }
 
     private void assertTripOwner(Trip trip, User requester) {
         if (!trip.getTraveler().getId().equals(requester.getId())
                 && requester.getRole() != User.Role.ADMIN) {
-            throw new AccessDeniedException("You are not the owner of this trip");
+            throw new AccessDeniedException(localizedMessages.get("error.trip.notOwner"));
         }
     }
 

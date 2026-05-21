@@ -13,6 +13,6 @@ public class ChangeEmailRequest {
 
     /** The new e-mail address to associate with the account after confirmation. */
     @NotBlank
-    @Email(message = "Email must be valid")
+    @Email
     private String newEmail;
 }

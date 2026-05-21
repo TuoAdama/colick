@@ -1,5 +1,7 @@
 package com.colick.backoffice.email;
 
+import com.colick.backoffice.i18n.LocalizedMessages;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -10,6 +12,7 @@ import jakarta.mail.internet.MimeMessage;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -20,15 +23,18 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
+    private final LocalizedMessages localizedMessages;
     private final String fromAddress;
     private final String supportEmail;
 
     public EmailService(JavaMailSender mailSender,
                         SpringTemplateEngine templateEngine,
+                        LocalizedMessages localizedMessages,
                         @Value("${app.mail.from-address:noreply@colick.app}") String fromAddress,
                         @Value("${app.mail.support-email:support@colick.app}") String supportEmail) {
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
+        this.localizedMessages = localizedMessages;
         this.fromAddress = fromAddress;
         this.supportEmail = supportEmail;
     }
@@ -45,7 +51,7 @@ public class EmailService {
     public void sendSignupActivationEmail(String to, String firstName, String confirmUrl) {
         sendTemplateEmail(
                 to,
-                "Confirmez votre compte Colick / Confirm your Colick account",
+                "email.subject.signupActivation",
                 "email/signup-activation",
                 Map.of("firstName", firstName, "confirmUrl", confirmUrl, "supportEmail", supportEmail)
         );
@@ -54,7 +60,7 @@ public class EmailService {
     public void sendEmailChangeConfirmationEmail(String to, String firstName, String confirmUrl) {
         sendTemplateEmail(
                 to,
-                "Confirmez votre nouvelle adresse e-mail / Confirm your new email address",
+                "email.subject.changeEmailConfirmation",
                 "email/change-email-confirmation",
                 Map.of("firstName", firstName, "confirmUrl", confirmUrl, "supportEmail", supportEmail)
         );
@@ -63,7 +69,7 @@ public class EmailService {
     public void sendPasswordResetEmail(String to, String firstName, String resetUrl, long expirationMinutes) {
         sendTemplateEmail(
                 to,
-                "Réinitialisez votre mot de passe Colick / Reset your Colick password",
+                "email.subject.passwordReset",
                 "email/password-reset",
                 Map.of(
                         "firstName", firstName,
@@ -74,75 +80,75 @@ public class EmailService {
         );
     }
 
-            public void sendTripBookingCreatedEmail(String to,
-                                String travelerFirstName,
-                                String senderFirstName,
-                                String departureAddress,
-                                String destination) {
-            sendTemplateEmail(
+    public void sendTripBookingCreatedEmail(String to,
+                                            String travelerFirstName,
+                                            String senderFirstName,
+                                            String departureAddress,
+                                            String destination) {
+        sendTemplateEmail(
                 to,
-                "Nouvelle demande de transport - Colick",
+                "email.subject.tripBookingCreated",
                 "email/trip-booking-created",
                 Map.of(
-                    "firstName", travelerFirstName,
-                    "senderFirstName", senderFirstName,
-                    "departureAddress", departureAddress,
-                    "destination", destination,
-                    "supportEmail", supportEmail
+                        "firstName", travelerFirstName,
+                        "senderFirstName", senderFirstName,
+                        "departureAddress", departureAddress,
+                        "destination", destination,
+                        "supportEmail", supportEmail
                 )
-            );
-            }
+        );
+    }
 
-            public void sendTripBookingAcceptedEmail(String to,
-                                 String senderFirstName,
-                                 String departureAddress,
-                                 String destination) {
-            sendTemplateEmail(
+    public void sendTripBookingAcceptedEmail(String to,
+                                             String senderFirstName,
+                                             String departureAddress,
+                                             String destination) {
+        sendTemplateEmail(
                 to,
-                "Votre demande a ete acceptee - Colick",
+                "email.subject.tripBookingAccepted",
                 "email/trip-booking-accepted",
                 Map.of(
-                    "firstName", senderFirstName,
-                    "departureAddress", departureAddress,
-                    "destination", destination,
-                    "supportEmail", supportEmail
+                        "firstName", senderFirstName,
+                        "departureAddress", departureAddress,
+                        "destination", destination,
+                        "supportEmail", supportEmail
                 )
-            );
-            }
+        );
+    }
 
-            public void sendTripBookingRejectedEmail(String to,
-                                 String senderFirstName,
-                                 String departureAddress,
-                                 String destination) {
-            sendTemplateEmail(
+    public void sendTripBookingRejectedEmail(String to,
+                                             String senderFirstName,
+                                             String departureAddress,
+                                             String destination) {
+        sendTemplateEmail(
                 to,
-                "Votre demande a ete refusee - Colick",
+                "email.subject.tripBookingRejected",
                 "email/trip-booking-rejected",
                 Map.of(
-                    "firstName", senderFirstName,
-                    "departureAddress", departureAddress,
-                    "destination", destination,
-                    "supportEmail", supportEmail
+                        "firstName", senderFirstName,
+                        "departureAddress", departureAddress,
+                        "destination", destination,
+                        "supportEmail", supportEmail
                 )
-            );
-            }
+        );
+    }
 
-            public void sendTripBookingRemovedEmail(String to,
-                                String senderFirstName,
-                                String departureAddress,
-                                String destination) {
-            sendTemplateEmail(
+    public void sendTripBookingRemovedEmail(String to,
+                                            String senderFirstName,
+                                            String departureAddress,
+                                            String destination) {
+        sendTemplateEmail(
                 to,
-                "Vous avez ete retire d'un trajet - Colick",
+                "email.subject.tripBookingRemoved",
                 "email/trip-booking-removed",
                 Map.of(
-                    "firstName", senderFirstName,
-                    "departureAddress", departureAddress,
-                    "destination", destination,
-                    "supportEmail", supportEmail
+                        "firstName", senderFirstName,
+                        "departureAddress", departureAddress,
+                        "destination", destination,
+                        "supportEmail", supportEmail
                 )
-            );
-            }
+        );
+    }
 
     public void sendTripCancelledEmail(String to,
                                        String senderFirstName,
@@ -150,7 +156,7 @@ public class EmailService {
                                        String destination) {
         sendTemplateEmail(
             to,
-            "Trajet annulé - Colick",
+            "email.subject.tripCancelled",
             "email/trip-cancelled",
             Map.of(
                 "firstName", senderFirstName,
@@ -167,7 +173,7 @@ public class EmailService {
                                      String destination) {
         sendTemplateEmail(
             to,
-            "Trajet modifié - Colick",
+            "email.subject.tripUpdated",
             "email/trip-updated",
             Map.of(
                 "firstName", senderFirstName,
@@ -185,7 +191,7 @@ public class EmailService {
                                                   String destination) {
         sendTemplateEmail(
             to,
-            "Réservation annulée - Colick",
+            "email.subject.bookingCancelledBySender",
             "email/booking-cancelled-by-sender",
             Map.of(
                 "firstName", travelerFirstName,
@@ -205,7 +211,7 @@ public class EmailService {
                                                String destination) {
         sendTemplateEmail(
             to,
-            "Code de validation destinataire - Colick",
+            "email.subject.bookingValidationCode",
             "email/booking-validation-code",
             Map.of(
                 "packageTitle", packageTitle,
@@ -226,7 +232,7 @@ public class EmailService {
                                                   String reviewUrl) {
         sendTemplateEmail(
                 to,
-                "Notez votre voyageur - Colick",
+                "email.subject.travelerReviewInvitation",
                 "email/traveler-review-invitation",
                 Map.of(
                         "firstName", senderFirstName,
@@ -239,8 +245,9 @@ public class EmailService {
         );
     }
 
-    private void sendTemplateEmail(String to, String subject, String templateName, Map<String, Object> variables) {
-        Context context = new Context();
+    private void sendTemplateEmail(String to, String subjectCode, String templateName, Map<String, Object> variables) {
+        Locale locale = LocaleContextHolder.getLocale();
+        Context context = new Context(locale);
         variables.forEach(context::setVariable);
         String htmlBody = templateEngine.process(templateName, context);
 
@@ -248,12 +255,12 @@ public class EmailService {
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
             helper.setTo(to);
-            helper.setSubject(subject);
+            helper.setSubject(localizedMessages.getForLocale(locale, subjectCode));
             helper.setText(htmlBody, true);
             helper.setFrom(fromAddress);
             mailSender.send(message);
         } catch (MessagingException ex) {
-            throw new IllegalStateException("Unable to send HTML email", ex);
+            throw new IllegalStateException(localizedMessages.get("error.email.sendFailed"), ex);
         }
     }
 }

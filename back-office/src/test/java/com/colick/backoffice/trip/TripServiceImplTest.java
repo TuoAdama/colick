@@ -1,12 +1,16 @@
 package com.colick.backoffice.trip;
 
 import com.colick.backoffice.email.EmailService;
+import com.colick.backoffice.exception.BadRequestException;
+import com.colick.backoffice.exception.ConflictException;
 import com.colick.backoffice.exception.ResourceNotFoundException;
 import com.colick.backoffice.exception.TripBookingConflictException;
 import com.colick.backoffice.exception.TripUpdateNotAllowedException;
 import com.colick.backoffice.exception.ValidationCodeDeliveryException;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.location.entity.LocationType;
 import com.colick.backoffice.location.repository.LocationRepository;
+import com.colick.backoffice.support.TestLocalizedMessages;
 import com.colick.backoffice.trip.dto.*;
 import com.colick.backoffice.trip.entity.Trip;
 import com.colick.backoffice.trip.entity.TripBooking;
@@ -22,12 +26,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -59,6 +66,9 @@ class TripServiceImplTest {
     @Mock
     private TravelerReviewService travelerReviewService;
 
+    @Spy
+    private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
+
     @InjectMocks
     private TripServiceImpl tripService;
 
@@ -68,6 +78,7 @@ class TripServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
         traveler = User.builder()
                 .id(1L)
                 .firstName("Alice")
@@ -365,7 +376,7 @@ class TripServiceImplTest {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.cancelBooking(10L, 1L, sender))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("PENDING or ACCEPTED");
         verify(bookingRepository, never()).save(any());
     }
@@ -380,7 +391,7 @@ class TripServiceImplTest {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.cancelBooking(10L, 1L, sender))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("PENDING or ACCEPTED");
     }
 
@@ -520,7 +531,7 @@ class TripServiceImplTest {
 
         assertThatThrownBy(() -> tripService.createBooking(10L, request, sender))
                 .isInstanceOf(TripBookingConflictException.class)
-                .hasMessage("Vous avez deja une demande en cours pour ce trajet");
+                .hasMessage("You already have an active booking request for this trip");
 
         verify(bookingRepository, never()).save(any(TripBooking.class));
         verify(emailService, never()).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
@@ -570,7 +581,7 @@ class TripServiceImplTest {
                 when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
 
                 assertThatThrownBy(() -> tripService.createBooking(10L, request, traveler))
-                                .isInstanceOf(IllegalArgumentException.class)
+                                .isInstanceOf(BadRequestException.class)
                                 .hasMessage("You cannot create a booking request for your own trip");
 
                 verify(bookingRepository, never()).save(any(TripBooking.class));
@@ -654,7 +665,7 @@ class TripServiceImplTest {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.acceptBooking(10L, 1L, traveler))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessage("Only PENDING bookings can be accepted");
     }
 
@@ -707,7 +718,7 @@ class TripServiceImplTest {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.rejectBooking(10L, 1L, traveler))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessage("Only PENDING bookings can be rejected");
     }
 
@@ -743,7 +754,7 @@ class TripServiceImplTest {
         when(bookingRepository.existsByTripAndStatus(sampleTrip, TripBooking.BookingStatus.PENDING)).thenReturn(true);
 
         assertThatThrownBy(() -> tripService.completeTrip(10L, traveler))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("PENDING bookings");
 
         verify(tripRepository, never()).save(any());
@@ -761,7 +772,7 @@ class TripServiceImplTest {
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
 
         assertThatThrownBy(() -> tripService.createBooking(10L, request, sender))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("ACTIVE trips");
 
         verify(bookingRepository, never()).save(any());
@@ -813,7 +824,7 @@ class TripServiceImplTest {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.confirmBookingDelivery(10L, 1L, request, traveler))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("COMPLETED");
 
         verify(bookingValidationService, never()).invalidateValidationCode(any());
@@ -839,7 +850,7 @@ class TripServiceImplTest {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.confirmBookingDelivery(10L, 1L, request, traveler))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Invalid validation code");
 
         verify(bookingValidationService, never()).invalidateValidationCode(any());
@@ -880,7 +891,7 @@ class TripServiceImplTest {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.removeBooking(10L, 1L, traveler))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessage("Only ACCEPTED bookings can be removed");
         verify(bookingRepository, never()).save(any());
     }
@@ -905,7 +916,7 @@ class TripServiceImplTest {
                 .thenReturn(List.of(existingAccepted));
 
         assertThatThrownBy(() -> tripService.createBooking(10L, request, sender))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessage("Requested weight exceeds available weight");
     }
 

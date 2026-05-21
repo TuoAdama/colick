@@ -4,6 +4,7 @@ import com.colick.backoffice.email.EmailService;
 import com.colick.backoffice.exception.ResourceNotFoundException;
 import com.colick.backoffice.exception.UserAlreadyExistsException;
 import com.colick.backoffice.file.FileStorageService;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.user.dto.CreateUserRequest;
 import com.colick.backoffice.user.dto.UpdateUserRequest;
 import com.colick.backoffice.user.dto.UserResponse;
@@ -31,23 +32,26 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
     private final EmailService emailService;
+    private final LocalizedMessages localizedMessages;
     @Value("${app.frontend.base-url:http://localhost:4200}")
     private String frontendBaseUrl;
 
     public UserServiceImpl(UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
                            FileStorageService fileStorageService,
-                           EmailService emailService) {
+                           EmailService emailService,
+                           LocalizedMessages localizedMessages) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.fileStorageService = fileStorageService;
         this.emailService = emailService;
+        this.localizedMessages = localizedMessages;
     }
 
     @Override
     public UserResponse createUser(CreateUserRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException("A user with email " + request.getEmail() + " already exists");
+            throw new UserAlreadyExistsException(localizedMessages.get("error.user.exists", request.getEmail()));
         }
         String signupToken = UUID.randomUUID().toString();
         User user = User.builder()
@@ -92,7 +96,7 @@ public class UserServiceImpl implements UserService {
         if (request.getLastName() != null) user.setLastName(request.getLastName());
         if (request.getEmail() != null) {
             if (!request.getEmail().equals(user.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
-                throw new UserAlreadyExistsException("A user with email " + request.getEmail() + " already exists");
+                throw new UserAlreadyExistsException(localizedMessages.get("error.user.exists", request.getEmail()));
             }
             user.setEmail(request.getEmail());
         }
@@ -134,7 +138,7 @@ public class UserServiceImpl implements UserService {
     public void requestEmailChange(Long id, String newEmail) {
         User user = findOrThrow(id);
         if (!newEmail.equals(user.getEmail()) && userRepository.existsByEmail(newEmail)) {
-            throw new UserAlreadyExistsException("A user with email " + newEmail + " already exists");
+            throw new UserAlreadyExistsException(localizedMessages.get("error.user.exists", newEmail));
         }
         String token = UUID.randomUUID().toString();
         user.setPendingEmail(newEmail);
@@ -169,7 +173,7 @@ public class UserServiceImpl implements UserService {
         User signupUser = userRepository.findBySignupConfirmToken(token).orElse(null);
         if (signupUser != null) {
             if (isExpired(signupUser.getSignupConfirmTokenExpiresAt())) {
-                throw new ResourceNotFoundException("Token has expired");
+                throw new ResourceNotFoundException(localizedMessages.get("error.user.tokenExpired"));
             }
             signupUser.setEnabled(true);
             signupUser.setSignupConfirmToken(null);
@@ -178,12 +182,12 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = userRepository.findByEmailConfirmToken(token)
-                .orElseThrow(() -> new ResourceNotFoundException("Invalid or expired token"));
+                .orElseThrow(() -> new ResourceNotFoundException(localizedMessages.get("error.user.invalidOrExpiredToken")));
         if (isExpired(user.getEmailConfirmTokenExpiresAt())) {
-            throw new ResourceNotFoundException("Token has expired");
+            throw new ResourceNotFoundException(localizedMessages.get("error.user.tokenExpired"));
         }
         if (user.getPendingEmail() == null || user.getPendingEmail().isBlank()) {
-            throw new ResourceNotFoundException("Invalid or expired token");
+            throw new ResourceNotFoundException(localizedMessages.get("error.user.invalidOrExpiredToken"));
         }
         user.setEmail(user.getPendingEmail());
         user.setPendingEmail(null);
@@ -199,12 +203,10 @@ public class UserServiceImpl implements UserService {
     public UserResponse changePassword(Long id, String oldPassword, String newPassword) {
         User user = findOrThrow(id);
         if (Boolean.FALSE.equals(user.getLocalAuthEnabled())) {
-            throw new AccessDeniedException(
-                    "Ce compte n'a pas encore de mot de passe local. Utilisez Google ou le parcours mot de passe oublie."
-            );
+            throw new AccessDeniedException(localizedMessages.get("error.auth.googleNoLocalPassword"));
         }
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new AccessDeniedException("Old password is incorrect");
+            throw new AccessDeniedException(localizedMessages.get("error.auth.oldPasswordIncorrect"));
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setLocalAuthEnabled(true);
@@ -217,7 +219,7 @@ public class UserServiceImpl implements UserService {
 
     private User findOrThrow(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(localizedMessages.get("error.user.notFound", id)));
     }
 
     private boolean isExpired(LocalDateTime expiresAt) {

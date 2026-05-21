@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class ConfirmBookingDeliveryRequest {
 
-    @NotBlank(message = "Validation code is required")
-    @Pattern(regexp = "^\\d{6}$", message = "Validation code must contain exactly 6 digits")
+    @NotBlank
+    @Pattern(regexp = "^\\d{6}$", message = "{validation.validationCode.pattern}")
     private String validationCode;
 }

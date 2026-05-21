@@ -1,5 +1,7 @@
 package com.colick.backoffice.trip.controller;
 
+import com.colick.backoffice.exception.BadRequestException;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.trip.dto.*;
 import com.colick.backoffice.trip.service.TripService;
 import com.colick.backoffice.user.entity.User;
@@ -9,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -21,9 +22,11 @@ import java.util.List;
 public class TripController {
 
     private final TripService tripService;
+    private final LocalizedMessages localizedMessages;
 
-    public TripController(TripService tripService) {
+    public TripController(TripService tripService, LocalizedMessages localizedMessages) {
         this.tripService = tripService;
+        this.localizedMessages = localizedMessages;
     }
 
     /** Publish a new trip. Requires authentication. */
@@ -47,8 +50,7 @@ public class TripController {
 
         if ((departure == null || departure.isBlank())
                 && (destination == null || destination.isBlank())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "At least one of 'departure' or 'destination' is required");
+            throw new BadRequestException(localizedMessages.get("error.trip.searchCriteriaRequired"));
         }
         return ResponseEntity.ok(tripService.searchTrips(departure, destination));
     }

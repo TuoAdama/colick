@@ -3,6 +3,7 @@ package com.colick.backoffice.auth.google;
 import com.colick.backoffice.auth.dto.AuthResponse;
 import com.colick.backoffice.auth.dto.GoogleAuthConfigResponse;
 import com.colick.backoffice.auth.util.JwtUtil;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.user.dto.UserResponse;
 import com.colick.backoffice.user.entity.User;
 import com.colick.backoffice.user.repository.UserRepository;
@@ -25,15 +26,18 @@ public class GoogleAuthenticationServiceImpl implements GoogleAuthenticationServ
     private final JwtUtil jwtUtil;
     private final GoogleTokenVerifier googleTokenVerifier;
     private final PasswordEncoder passwordEncoder;
+    private final LocalizedMessages localizedMessages;
 
     public GoogleAuthenticationServiceImpl(UserRepository userRepository,
                                            JwtUtil jwtUtil,
                                            GoogleTokenVerifier googleTokenVerifier,
-                                           PasswordEncoder passwordEncoder) {
+                                           PasswordEncoder passwordEncoder,
+                                           LocalizedMessages localizedMessages) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.googleTokenVerifier = googleTokenVerifier;
         this.passwordEncoder = passwordEncoder;
+        this.localizedMessages = localizedMessages;
     }
 
     @Override
@@ -77,7 +81,7 @@ public class GoogleAuthenticationServiceImpl implements GoogleAuthenticationServ
 
     private User linkExistingUser(User user, GoogleTokenPayload payload) {
         if (user.getGoogleSubject() != null && !user.getGoogleSubject().equals(payload.subject())) {
-            throw new AccessDeniedException("Ce compte Colick est deja lie a un autre compte Google.");
+            throw new AccessDeniedException(localizedMessages.get("error.google.accountAlreadyLinked"));
         }
 
         user.setGoogleSubject(payload.subject());

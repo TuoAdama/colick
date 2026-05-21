@@ -25,6 +25,11 @@ spring:
   jackson:
     default-property-inclusion: non_null
 
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
   servlet:
     multipart:
       enabled: true

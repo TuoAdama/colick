@@ -1,12 +1,15 @@
 package com.colick.backoffice.messaging;
 
+import com.colick.backoffice.exception.BadRequestException;
 import com.colick.backoffice.exception.ResourceNotFoundException;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.messaging.dto.*;
 import com.colick.backoffice.messaging.entity.Conversation;
 import com.colick.backoffice.messaging.entity.Message;
 import com.colick.backoffice.messaging.repository.ConversationRepository;
 import com.colick.backoffice.messaging.repository.MessageRepository;
 import com.colick.backoffice.messaging.service.MessagingServiceImpl;
+import com.colick.backoffice.support.TestLocalizedMessages;
 import com.colick.backoffice.trip.entity.Trip;
 import com.colick.backoffice.trip.repository.TripRepository;
 import com.colick.backoffice.user.entity.User;
@@ -16,12 +19,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,6 +50,9 @@ class MessagingServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Spy
+    private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
+
     @InjectMocks
     private MessagingServiceImpl messagingService;
 
@@ -54,6 +63,7 @@ class MessagingServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
         alice = User.builder()
                 .id(1L)
                 .firstName("Alice")
@@ -298,7 +308,7 @@ class MessagingServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(alice));
 
         assertThatThrownBy(() -> messagingService.startConversation(request, alice))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("yourself");
     }
 

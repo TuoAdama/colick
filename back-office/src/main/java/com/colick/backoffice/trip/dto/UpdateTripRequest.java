@@ -21,10 +21,10 @@ public class UpdateTripRequest {
 
     private LocalDateTime arrivalTime;
 
-    @DecimalMin(value = "0.1", message = "Max weight must be greater than 0")
+    @DecimalMin("0.1")
     private BigDecimal maxWeight;
 
-    @DecimalMin(value = "0.01", message = "Price per kilo must be greater than 0")
+    @DecimalMin("0.01")
     private BigDecimal pricePerKilo;
 
     private Boolean instantAcceptance;

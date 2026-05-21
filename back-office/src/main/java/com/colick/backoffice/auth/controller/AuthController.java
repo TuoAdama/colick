@@ -10,7 +10,8 @@ import com.colick.backoffice.auth.dto.ResetPasswordRequest;
 import com.colick.backoffice.auth.google.GoogleAuthenticationService;
 import com.colick.backoffice.auth.passwordreset.service.PasswordResetService;
 import com.colick.backoffice.auth.util.JwtUtil;
-import com.colick.backoffice.exception.ResourceNotFoundException;
+import com.colick.backoffice.exception.UnauthorizedException;
+import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.user.dto.UserResponse;
 import com.colick.backoffice.user.entity.User;
 import com.colick.backoffice.user.repository.UserRepository;
@@ -37,37 +38,38 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final PasswordResetService passwordResetService;
     private final GoogleAuthenticationService googleAuthenticationService;
+    private final LocalizedMessages localizedMessages;
 
     public AuthController(UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
                           JwtUtil jwtUtil,
                           PasswordResetService passwordResetService,
-                          GoogleAuthenticationService googleAuthenticationService) {
+                          GoogleAuthenticationService googleAuthenticationService,
+                          LocalizedMessages localizedMessages) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.passwordResetService = passwordResetService;
         this.googleAuthenticationService = googleAuthenticationService;
+        this.localizedMessages = localizedMessages;
     }
 
     /** Authenticates a user and returns a JWT token. */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("Invalid email or password"));
+                .orElseThrow(() -> new UnauthorizedException(localizedMessages.get("error.auth.invalidCredentials")));
 
         if (Boolean.FALSE.equals(user.getEnabled())) {
-            throw new AccessDeniedException(
-                    "Votre compte n'est pas encore activé. Vérifiez votre email. / Your account is not activated yet. Please check your email."
-            );
+            throw new AccessDeniedException(localizedMessages.get("error.auth.accountNotActivated"));
         }
 
         if (Boolean.FALSE.equals(user.getLocalAuthEnabled())) {
-            throw new AccessDeniedException("Ce compte utilise Google. Connectez-vous avec Google.");
+            throw new AccessDeniedException(localizedMessages.get("error.auth.googleLoginRequired"));
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException(localizedMessages.get("error.auth.invalidCredentials"));
         }
 
         String token = jwtUtil.generateToken(user);
@@ -98,7 +100,7 @@ public class AuthController {
         passwordResetService.requestPasswordReset(request.getEmail());
         return ResponseEntity.accepted().body(
                 new GenericMessageResponse(
-                        "If an account exists for this email, a password reset link has been sent"
+                        localizedMessages.get("api.auth.forgotPassword.accepted")
                 )
         );
     }
@@ -109,6 +111,6 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<GenericMessageResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
-        return ResponseEntity.ok(new GenericMessageResponse("Password reset successful"));
+        return ResponseEntity.ok(new GenericMessageResponse(localizedMessages.get("api.auth.resetPassword.success")));
     }
 }

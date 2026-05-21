@@ -11,22 +11,22 @@ import lombok.Data;
 @Data
 public class CreateUserRequest {
 
-    @NotBlank(message = "First name is required")
+    @NotBlank
     private String firstName;
 
-    @NotBlank(message = "Last name is required")
+    @NotBlank
     private String lastName;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
+    @NotBlank
+    @Email
     private String email;
 
     private String phone;
 
-    @NotBlank(message = "Identity document is required")
+    @NotBlank
     private String identityDocument;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters")
+    @NotBlank
+    @Size(min = 8)
     private String password;
 }

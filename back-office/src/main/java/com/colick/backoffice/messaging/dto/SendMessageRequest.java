@@ -10,6 +10,6 @@ import lombok.Data;
 public class SendMessageRequest {
 
     /** Content of the message. */
-    @NotBlank(message = "Message content is required")
+    @NotBlank
     private String content;
 }

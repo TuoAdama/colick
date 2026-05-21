@@ -1,6 +1,9 @@
 package com.colick.backoffice.config;
 
 import com.colick.backoffice.auth.filter.JwtAuthFilter;
+import com.colick.backoffice.exception.ApiError;
+import com.colick.backoffice.i18n.LocalizedMessages;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +21,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -27,11 +32,17 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final LocalizedMessages localizedMessages;
+    private final ObjectMapper objectMapper;
     @Value("${app.cors.allowed-origins:http://localhost:4200}")
     private String corsAllowedOrigins;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
+                          LocalizedMessages localizedMessages,
+                          ObjectMapper objectMapper) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.localizedMessages = localizedMessages;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
@@ -41,8 +52,16 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((req, res, e) ->
-                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")))
+                .authenticationEntryPoint((req, res, e) -> writeError(
+                        res,
+                        HttpServletResponse.SC_UNAUTHORIZED,
+                        localizedMessages.get("error.auth.unauthorized")
+                ))
+                .accessDeniedHandler((req, res, e) -> writeError(
+                        res,
+                        HttpServletResponse.SC_FORBIDDEN,
+                        localizedMessages.get("error.auth.forbidden")
+                )))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
@@ -87,5 +106,12 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    private void writeError(HttpServletResponse response, int status, String message) throws IOException {
+        response.setStatus(status);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setContentType("application/json");
+        objectMapper.writeValue(response.getWriter(), new ApiError(status, message));
     }
 }
