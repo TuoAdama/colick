@@ -15,7 +15,6 @@ import { ShareCardMapperService } from '../../services/share-card-mapper.service
 import { ShareCardStoryComponent } from '../../components/share-card-story/share-card-story.component';
 import { TravelerTripsDesktopListComponent } from '../../components/dashboard/traveler-trips-desktop-list/traveler-trips-desktop-list.component';
 import { DashboardReceivedMobileCardComponent } from '../../components/dashboard/dashboard-received-mobile-card/dashboard-received-mobile-card.component';
-import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
 
 type Tab = 'profile' | 'chats' | 'received' | 'sent';
 
@@ -27,7 +26,6 @@ type Tab = 'profile' | 'chats' | 'received' | 'sent';
     FormsModule,
     ReactiveFormsModule,
     RouterLink,
-    ConfirmModalComponent,
     ShareCardStoryComponent,
     TravelerTripsDesktopListComponent,
     DashboardReceivedMobileCardComponent,
@@ -93,11 +91,8 @@ export class DashboardPageComponent implements OnInit {
   // ── Received reservations ─────────────────────────────────────────────────
   myTrips: Trip[] = [];
   tripBookingsMap: Record<number, BookingResponse[]> = {};
-  selectedTripBookings: BookingResponse[] = [];
-  selectedTripId: number | null = null;
   isLoadingTrips = false;
-  isLoadingBookings = false;
-  bookingActionError = '';
+  receivedTripsActionError = '';
   isCancellingTrip = false;
   isDeletingTrip = false;
   isCompletingTrip = false;
@@ -106,14 +101,6 @@ export class DashboardPageComponent implements OnInit {
   generatingShareCardTripId: number | null = null;
   shareCardError = '';
   shareCardData: ShareCardData | null = null;
-  deliveryCodeByBookingId: Record<number, string> = {};
-  validatingDeliveryBookingId: number | null = null;
-
-  // ── Remove booking confirmation modal ─────────────────────────────────────
-  isRemoveModalOpen = false;
-  pendingRemoveBookingId: number | null = null;
-  isRemoving = false;
-  pendingSelectTripId: number | null = null;
 
   // ── Sent requests ─────────────────────────────────────────────────────────
   myBookings: BookingResponse[] = [];
@@ -144,8 +131,6 @@ export class DashboardPageComponent implements OnInit {
     this.route.queryParamMap.subscribe((params) => {
       const tab = params.get('tab');
       if (this.isTab(tab)) this.setTab(tab);
-      const tripId = params.get('tripId');
-      if (tripId) this.pendingSelectTripId = Number(tripId);
     });
   }
 
@@ -303,6 +288,7 @@ export class DashboardPageComponent implements OnInit {
   // ── Received reservations ────────────────────────────────────────────────
   loadMyTrips(): void {
     this.isLoadingTrips = true;
+    this.receivedTripsActionError = '';
     this.tripService.getMyTrips().subscribe({
       next: (trips) => {
         this.myTrips = trips;
@@ -311,10 +297,6 @@ export class DashboardPageComponent implements OnInit {
         forkJoin(requests).subscribe((results) => {
           trips.forEach((t, i) => { this.tripBookingsMap[t.id] = results[i] as BookingResponse[]; });
           this.isLoadingTrips = false;
-          if (this.pendingSelectTripId) {
-            this.selectTrip(this.pendingSelectTripId);
-            this.pendingSelectTripId = null;
-          }
         });
       },
       error: () => { this.isLoadingTrips = false; },
@@ -322,16 +304,13 @@ export class DashboardPageComponent implements OnInit {
   }
 
   selectTrip(tripId: number): void {
-    this.selectedTripId = tripId;
-    this.bookingActionError = '';
-    this.shareCardError = '';
-    this.selectedTripBookings = this.tripBookingsMap[tripId] ?? [];
+    void this.router.navigate(['/trips', tripId, 'reservations']);
   }
 
   async downloadShareCardPng(tripId?: number): Promise<void> {
     const trip = typeof tripId === 'number'
       ? this.myTrips.find((currentTrip) => currentTrip.id === tripId)
-      : this.selectedTrip();
+      : undefined;
     const user = this.authService.getUser();
 
     if (!trip || trip.status !== 'ACTIVE' || !user) {
@@ -380,7 +359,7 @@ export class DashboardPageComponent implements OnInit {
 
     this.isCompletingTrip = true;
     this.completingTripId = tripId;
-    this.bookingActionError = '';
+    this.receivedTripsActionError = '';
     this.tripService.completeTrip(tripId).subscribe({
       next: (updatedTrip) => {
         const tripIndex = this.myTrips.findIndex((trip) => trip.id === updatedTrip.id);
@@ -391,7 +370,7 @@ export class DashboardPageComponent implements OnInit {
         this.completingTripId = null;
       },
       error: (err: { error?: { message?: string } }) => {
-        this.bookingActionError = err.error?.message || "Erreur lors du passage du trajet à l'état effectué.";
+        this.receivedTripsActionError = err.error?.message || "Erreur lors du passage du trajet à l'état effectué.";
         this.isCompletingTrip = false;
         this.completingTripId = null;
       },
@@ -399,12 +378,10 @@ export class DashboardPageComponent implements OnInit {
   }
 
   handleDesktopTripShareCardDownload(tripId: number): void {
-    this.selectTrip(tripId);
     void this.downloadShareCardPng(tripId);
   }
 
   handleDesktopTripCompletion(tripId: number): void {
-    this.selectTrip(tripId);
     this.completeTrip(tripId);
   }
 
@@ -420,112 +397,22 @@ export class DashboardPageComponent implements OnInit {
     this.cancelTrip(tripId);
   }
 
-  acceptBooking(bookingId: number): void {
-    if (!this.selectedTripId) return;
-    this.bookingActionError = '';
-    this.tripService.acceptBooking(this.selectedTripId, bookingId).subscribe({
-      next: (updated) => {
-        const idx = this.selectedTripBookings.findIndex((x) => x.id === updated.id);
-        if (idx >= 0) { this.selectedTripBookings[idx] = updated; this.tripBookingsMap[this.selectedTripId!][idx] = updated; }
-      },
-      error: () => { this.bookingActionError = "Erreur lors de l'acceptation."; },
-    });
-  }
-
-  rejectBooking(bookingId: number): void {
-    if (!this.selectedTripId) return;
-    this.bookingActionError = '';
-    this.tripService.rejectBooking(this.selectedTripId, bookingId).subscribe({
-      next: (updated) => {
-        const idx = this.selectedTripBookings.findIndex((x) => x.id === updated.id);
-        if (idx >= 0) { this.selectedTripBookings[idx] = updated; this.tripBookingsMap[this.selectedTripId!][idx] = updated; }
-      },
-      error: () => { this.bookingActionError = 'Erreur lors du refus.'; },
-    });
-  }
-
-  removeBooking(bookingId: number): void {
-    if (!this.selectedTripId) return;
-    this.pendingRemoveBookingId = bookingId;
-    this.isRemoveModalOpen = true;
-  }
-
-  confirmRemoveBooking(): void {
-    if (!this.selectedTripId || this.pendingRemoveBookingId === null) return;
-    this.isRemoving = true;
-    this.bookingActionError = '';
-    this.tripService.removeBooking(this.selectedTripId, this.pendingRemoveBookingId).subscribe({
-      next: () => {
-        this.selectedTripBookings = this.selectedTripBookings.filter(
-          (b) => b.id !== this.pendingRemoveBookingId
-        );
-        this.tripBookingsMap[this.selectedTripId!] = this.selectedTripBookings;
-        this.isRemoveModalOpen = false;
-        this.pendingRemoveBookingId = null;
-        this.isRemoving = false;
-      },
-      error: () => {
-        this.bookingActionError = 'Erreur lors du retrait du demandeur.';
-        this.isRemoveModalOpen = false;
-        this.pendingRemoveBookingId = null;
-        this.isRemoving = false;
-      },
-    });
-  }
-
-  cancelRemoveBooking(): void {
-    this.isRemoveModalOpen = false;
-    this.pendingRemoveBookingId = null;
-  }
-
-  confirmDelivery(booking: BookingResponse): void {
-    if (!this.selectedTripId || this.validatingDeliveryBookingId !== null) return;
-
-    const validationCode = (this.deliveryCodeByBookingId[booking.id] ?? '').trim();
-    if (!/^\d{6}$/.test(validationCode)) {
-      this.bookingActionError = 'Saisissez un code de validation à 6 chiffres.';
-      return;
-    }
-
-    this.validatingDeliveryBookingId = booking.id;
-    this.bookingActionError = '';
-    this.tripService.confirmBookingDelivery(this.selectedTripId, booking.id, { validationCode }).subscribe({
-      next: (updated) => {
-        const idx = this.selectedTripBookings.findIndex((x) => x.id === updated.id);
-        if (idx >= 0) {
-          this.selectedTripBookings[idx] = updated;
-          this.tripBookingsMap[this.selectedTripId!][idx] = updated;
-        }
-        const senderBookingIdx = this.myBookings.findIndex((x) => x.id === updated.id);
-        if (senderBookingIdx >= 0) {
-          this.myBookings[senderBookingIdx] = updated;
-        }
-        delete this.deliveryCodeByBookingId[booking.id];
-        this.validatingDeliveryBookingId = null;
-      },
-      error: (err: { error?: { message?: string } }) => {
-        this.bookingActionError = err.error?.message || 'Erreur lors de la validation de la remise.';
-        this.validatingDeliveryBookingId = null;
-      },
-    });
-  }
-
   deleteTrip(tripId: number): void {
     if ((this.tripBookingsMap[tripId] ?? []).length > 0) {
-      this.bookingActionError = 'Ce trajet ne peut pas être supprimé car il a déjà reçu des demandes.';
+      this.receivedTripsActionError = 'Ce trajet ne peut pas être supprimé car il a déjà reçu des demandes.';
       return;
     }
 
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce trajet ?')) return;
     this.isDeletingTrip = true;
-    this.bookingActionError = '';
+    this.receivedTripsActionError = '';
     this.tripService.cancelTrip(tripId).subscribe({
       next: () => {
         this.removeTripFromState(tripId);
         this.isDeletingTrip = false;
       },
       error: () => {
-        this.bookingActionError = 'Erreur lors de la suppression du trajet.';
+        this.receivedTripsActionError = 'Erreur lors de la suppression du trajet.';
         this.isDeletingTrip = false;
       },
     });
@@ -534,13 +421,13 @@ export class DashboardPageComponent implements OnInit {
   cancelTrip(tripId: number): void {
     if (!confirm('Êtes-vous sûr de vouloir annuler ce trajet ? Tous les demandeurs seront notifiés.')) return;
     this.isCancellingTrip = true;
-    this.bookingActionError = '';
+    this.receivedTripsActionError = '';
     this.tripService.cancelTrip(tripId).subscribe({
       next: () => {
         this.removeTripFromState(tripId);
         this.isCancellingTrip = false;
       },
-      error: () => { this.bookingActionError = "Erreur lors de l'annulation du trajet."; this.isCancellingTrip = false; },
+      error: () => { this.receivedTripsActionError = "Erreur lors de l'annulation du trajet."; this.isCancellingTrip = false; },
     });
   }
 
@@ -583,20 +470,6 @@ export class DashboardPageComponent implements OnInit {
     return ({ ACTIVE: 'bg-accent/10 text-accent', COMPLETED: 'bg-success/10 text-success', CANCELLED: 'bg-background-primary text-text-muted' } as Record<Trip['status'], string>)[status];
   }
 
-  selectedTrip(): Trip | undefined {
-    return this.myTrips.find((trip) => trip.id === this.selectedTripId);
-  }
-
-  canValidateDelivery(booking: BookingResponse): boolean {
-    return this.selectedTrip()?.status === 'COMPLETED'
-      && booking.status === 'ACCEPTED'
-      && booking.validationCodeActive;
-  }
-
-  canGenerateShareCard(): boolean {
-    return this.selectedTrip()?.status === 'ACTIVE' && !this.isGeneratingShareCard;
-  }
-
   private generatePngFromElement(element: HTMLElement): Promise<string> {
     return htmlToImage.toPng(element, {
       cacheBust: true,
@@ -607,10 +480,5 @@ export class DashboardPageComponent implements OnInit {
   private removeTripFromState(tripId: number): void {
     this.myTrips = this.myTrips.filter((trip) => trip.id !== tripId);
     delete this.tripBookingsMap[tripId];
-
-    if (this.selectedTripId === tripId) {
-      this.selectedTripId = null;
-      this.selectedTripBookings = [];
-    }
   }
 }
