@@ -84,6 +84,19 @@ describe('BookingRequestCardComponent', () => {
 
     expect(component.confirmDelivery.emit).not.toHaveBeenCalled();
   });
+
+  it('does not render an invalidated-code information block', () => {
+    component.booking = {
+      ...buildBooking(),
+      status: 'ACCEPTED',
+      validationCodeInvalidatedAt: '2026-05-22T15:08:00',
+    };
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Code invalidé');
+    expect(fixture.nativeElement.textContent).not.toContain('Invalidé le');
+  });
 });
 
 function buildBooking(): BookingResponse {

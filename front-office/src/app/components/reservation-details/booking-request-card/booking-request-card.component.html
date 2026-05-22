@@ -84,14 +84,6 @@
         </div>
       }
 
-      @if (booking.validationCodeInvalidatedAt) {
-        <div class="rounded-2xl border border-warning/20 bg-warning/10 p-4">
-          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-warning">Code invalidé</p>
-          <p class="mt-2 text-sm text-text-primary">Le précédent code n'est plus utilisable. Un nouveau code peut être nécessaire avant la remise.</p>
-          <p class="mt-1 text-sm text-text-secondary">Invalidé le {{ booking.validationCodeInvalidatedAt | date:'dd/MM/yyyy • HH:mm' }}</p>
-        </div>
-      }
-
       @if (booking.deliveredAt) {
         <div class="rounded-2xl border border-success/20 bg-success/10 p-4">
           <p class="text-xs font-semibold uppercase tracking-[0.16em] text-success">Colis remis</p>

@@ -391,11 +391,7 @@
                         <p class="text-success text-xs mt-1">
                           Colis remis le {{ booking.deliveredAt | date:'dd/MM/yyyy HH:mm' }}
                         </p>
-                      } @else if (booking.validationCodeInvalidatedAt) {
-                        <p class="text-warning text-xs mt-1">
-                          Code invalidé le {{ booking.validationCodeInvalidatedAt | date:'dd/MM/yyyy HH:mm' }}
-                        </p>
-                      } @else if (booking.status === 'ACCEPTED') {
+                      } @else if (booking.status === 'ACCEPTED' && !booking.validationCodeInvalidatedAt) {
                         <p class="text-text-muted text-xs mt-1">
                           Le code de validation est en cours d’envoi au destinataire.
                         </p>
