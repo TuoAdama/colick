@@ -169,6 +169,7 @@
                 [tripStatus]="trip.status"
                 [isProcessing]="isBookingProcessing(booking.id)"
                 [tripId]="trip.id"
+                [pricePerKilo]="trip.pricePerKilo"
                 (accept)="acceptBooking($event)"
                 (reject)="rejectBooking($event)"
                 (remove)="openRemoveBookingModal($event)"

@@ -15,6 +15,7 @@ describe('BookingRequestCardComponent', () => {
     component = fixture.componentInstance;
     component.tripId = 12;
     component.tripStatus = 'ACTIVE';
+    component.pricePerKilo = 15;
     component.booking = buildBooking();
     fixture.detectChanges();
   });
@@ -96,6 +97,19 @@ describe('BookingRequestCardComponent', () => {
 
     expect(fixture.nativeElement.textContent).not.toContain('Code invalidé');
     expect(fixture.nativeElement.textContent).not.toContain('Invalidé le');
+  });
+
+  it('renders the reservation amount when the trip price per kilo is available', () => {
+    component.booking = {
+      ...buildBooking(),
+      weight: 4,
+    };
+    component.pricePerKilo = 15;
+
+    fixture.detectChanges();
+
+    expect(component.reservationAmount()).toBe(60);
+    expect(fixture.nativeElement.textContent).toContain('60 €');
   });
 });
 

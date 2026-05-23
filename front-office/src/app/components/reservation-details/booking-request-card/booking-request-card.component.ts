@@ -14,6 +14,7 @@ export class BookingRequestCardComponent {
   @Input({ required: true }) tripStatus!: Trip['status'];
   @Input() isProcessing = false;
   @Input({ required: true }) tripId!: number;
+  @Input() pricePerKilo: number | null = null;
 
   @Output() accept = new EventEmitter<number>();
   @Output() reject = new EventEmitter<number>();
@@ -45,6 +46,19 @@ export class BookingRequestCardComponent {
 
   validationChannelLabel(channel?: BookingResponse['validationDeliveryChannel']): string {
     return channel === 'SMS' ? 'SMS' : 'e-mail';
+  }
+
+  reservationAmount(): number | null {
+    if (
+      this.pricePerKilo === null
+      || this.pricePerKilo === undefined
+      || Number.isNaN(this.pricePerKilo)
+      || Number.isNaN(this.booking.weight)
+    ) {
+      return null;
+    }
+
+    return this.booking.weight * this.pricePerKilo;
   }
 
   canShowConfirmDelivery(): boolean {

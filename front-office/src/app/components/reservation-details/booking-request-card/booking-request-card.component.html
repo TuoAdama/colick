@@ -33,7 +33,7 @@
         <!-- Booking title -->
         <p class="mt-0.5 text-sm font-medium text-primary">{{ booking.title }}</p>
 
-        <!-- Inline meta: weight · recipient contact -->
+        <!-- Inline meta: weight · amount · recipient contact -->
         <dl class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
           <div class="flex items-center gap-1">
             <!-- Package / weight icon -->
@@ -43,6 +43,17 @@
             <dt class="sr-only">Poids</dt>
             <dd class="text-xs text-text-secondary">{{ booking.weight | number:'1.0-2' }} kg</dd>
           </div>
+          @if (reservationAmount() !== null) {
+            <span class="text-text-muted" aria-hidden="true">·</span>
+            <div class="flex items-center gap-1">
+              <!-- Reservation amount icon -->
+              <svg class="h-3.5 w-3.5 shrink-0 text-text-muted" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m3.5-9.5H10.75a2.25 2.25 0 1 0 0 4.5h2.5a2.25 2.25 0 1 1 0 4.5H8" />
+              </svg>
+              <dt class="sr-only">Montant de la réservation</dt>
+              <dd class="text-xs text-text-secondary">{{ reservationAmount()! | number:'1.0-2' }} €</dd>
+            </div>
+          }
           <span class="text-text-muted" aria-hidden="true">·</span>
           <div class="flex items-center gap-1 min-w-0">
             <!-- Contact / phone icon -->
