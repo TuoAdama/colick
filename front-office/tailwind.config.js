@@ -20,24 +20,51 @@ module.exports = {
         'slide-up': 'slideUp 300ms ease-out',
       },
       colors: {
-        // Brand colors
+        // Colick design system tokens
         primary: '#023047',
+        'primary-hover': '#4F46E5',
         secondary: '#219ebc',
-        accent: '#fb8500',
+        neutral: '#9C9C9C',
+        border: '#E8E8EC',
+        surface: '#FFFFFF',
         error: '#EF4444',
-        success: '#22C55E',
-        warning: '#F97316',
-        // Background colors
-        'bg-primary': '#f5f5f5',
-        'bg-secondary': '#F9FAFB',
+        success: '#10B981',
+        warning: '#F59E0B',
+        background: {
+          primary: '#FAFAFA',
+          secondary: '#FFFFFF',
+          dark: '#111827',
+        },
+        text: {
+          primary: '#0A0A0A',
+          secondary: '#6B6B6B',
+          muted: '#9C9C9C',
+        },
+        // Legacy background aliases kept for existing bg-bg-* utilities.
+        'bg-primary': '#FAFAFA',
+        'bg-secondary': '#FFFFFF',
         'bg-dark': '#111827',
-        // Text colors
-        'text-primary': '#111827',
-        'text-secondary': '#6B7280',
-        'text-muted': '#9CA3AF',
       },
       fontFamily: {
-        sans: ['Poppins', 'sans-serif'],
+        display: ['General Sans', 'sans-serif'],
+        sans: ['DM Sans', 'sans-serif'],
+        body: ['DM Sans', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
+      borderRadius: {
+        sm: '4px',
+        DEFAULT: '6px',
+        md: '8px',
+        lg: '12px',
+      },
+      boxShadow: {
+        // Hover elevation for cards
+        card: '0 8px 30px rgba(0,0,0,0.08)',
+        // Tinted hover glow for primary actions
+        'primary-glow': '0 4px 12px rgba(99,102,241,0.35)',
+      },
+      ringColor: {
+        primary: 'rgba(99,102,241,0.12)',
       },
     },
   },
