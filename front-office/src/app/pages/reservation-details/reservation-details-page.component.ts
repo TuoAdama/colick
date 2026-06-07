@@ -5,9 +5,12 @@ import { forkJoin } from 'rxjs';
 import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
 import { BookingRequestCardComponent } from '../../components/reservation-details/booking-request-card/booking-request-card.component';
+import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
 import { MessagingService } from '../../services/messaging.service';
 import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
+
+type ReservationStatusTab = 'ALL' | BookingResponse['status'];
 
 @Component({
   selector: 'app-reservation-details-page',
@@ -23,6 +26,7 @@ import { ConfirmModalComponent } from '../../shared/components/confirm-modal/con
 export class ReservationDetailsPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
   private readonly tripService = inject(TripService);
   private readonly messagingService = inject(MessagingService);
 
@@ -37,6 +41,25 @@ export class ReservationDetailsPageComponent implements OnInit {
   isCancelTripModalOpen = false;
   isRemoveBookingModalOpen = false;
   pendingRemoveBookingId: number | null = null;
+  selectedTab: ReservationStatusTab = 'ALL';
+  currentPage = 1;
+  tripSummaryExpanded = false;
+  showExtendedFilters = false;
+
+  private profilePhotoLoadFailed = false;
+  private lastProfilePhotoUrl: string | null = null;
+
+  readonly pageSize = 4;
+  readonly primaryStatusTabs: ReadonlyArray<{ value: ReservationStatusTab; label: string }> = [
+    { value: 'PENDING', label: 'En attentes' },
+    { value: 'ACCEPTED', label: 'Acceptées' },
+  ];
+  readonly extendedStatusTabs: ReadonlyArray<{ value: ReservationStatusTab; label: string }> = [
+    { value: 'REJECTED', label: 'Refusées' },
+    { value: 'CANCELLED', label: 'Annulées' },
+    { value: 'REMOVED', label: 'Retirées' },
+    { value: 'ALL', label: 'Toutes' },
+  ];
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -54,6 +77,73 @@ export class ReservationDetailsPageComponent implements OnInit {
     });
   }
 
+  currentUserName(): string {
+    const user = this.authService.getUser();
+    const name = [user?.firstName?.trim(), user?.lastName?.trim()]
+      .filter((value): value is string => !!value)
+      .join(' ')
+      .trim();
+
+    return name || 'Mon espace';
+  }
+
+  currentUserEmail(): string {
+    return this.authService.getUser()?.email ?? '';
+  }
+
+  hasUserPhoto(): boolean {
+    return !!this.userPhotoUrl();
+  }
+
+  userPhotoUrl(): string | null {
+    const photoUrl = this.authService.getUser()?.photoUrl?.trim() ?? null;
+    if (!photoUrl) {
+      this.profilePhotoLoadFailed = false;
+      this.lastProfilePhotoUrl = null;
+      return null;
+    }
+
+    if (photoUrl !== this.lastProfilePhotoUrl) {
+      this.profilePhotoLoadFailed = false;
+      this.lastProfilePhotoUrl = photoUrl;
+    }
+
+    return this.profilePhotoLoadFailed ? null : photoUrl;
+  }
+
+  userInitials(): string {
+    const user = this.authService.getUser();
+    const firstInitial = user?.firstName?.trim().charAt(0) ?? '';
+    const lastInitial = user?.lastName?.trim().charAt(0) ?? '';
+    const initials = `${firstInitial}${lastInitial}`.toUpperCase();
+
+    if (initials) {
+      return initials;
+    }
+
+    return user?.email?.trim().charAt(0).toUpperCase() ?? 'U';
+  }
+
+  onUserPhotoError(): void {
+    this.profilePhotoLoadFailed = true;
+  }
+
+  logout(): void {
+    this.authService.logout();
+  }
+
+  toggleTripSummary(): void {
+    this.tripSummaryExpanded = !this.tripSummaryExpanded;
+  }
+
+  toggleExtendedFilters(): void {
+    this.showExtendedFilters = !this.showExtendedFilters;
+  }
+
+  hasExtendedStatuses(): boolean {
+    return this.extendedStatusTabs.some((tab) => this.bookingCountForStatus(tab.value) > 0);
+  }
+
   tripStatusLabel(status: Trip['status']): string {
     return ({
       ACTIVE: 'Actif',
@@ -64,10 +154,78 @@ export class ReservationDetailsPageComponent implements OnInit {
 
   tripStatusClass(status: Trip['status']): string {
     return ({
-      ACTIVE: 'border-accent/20 bg-accent/10 text-accent',
-      COMPLETED: 'border-success/20 bg-success/10 text-success',
+      ACTIVE: 'border-[#c1c6d5] bg-[#e0e2eb] text-[#414753]',
+      COMPLETED: 'border-[#b6d0ff] bg-[#b6d0ff]/30 text-[#3f5881]',
       CANCELLED: 'border-error/20 bg-error/10 text-error',
     } as Record<Trip['status'], string>)[status];
+  }
+
+  selectTab(tab: ReservationStatusTab): void {
+    this.selectedTab = tab;
+    this.currentPage = 1;
+  }
+
+  filteredBookings(): BookingResponse[] {
+    if (this.selectedTab === 'ALL') {
+      return this.bookings;
+    }
+
+    return this.bookings.filter((booking) => booking.status === this.selectedTab);
+  }
+
+  paginatedBookings(): BookingResponse[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredBookings().slice(start, start + this.pageSize);
+  }
+
+  totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredBookings().length / this.pageSize));
+  }
+
+  pageNumbers(): number[] {
+    return Array.from({ length: this.totalPages() }, (_, index) => index + 1);
+  }
+
+  goToPage(page: number): void {
+    this.currentPage = Math.min(Math.max(page, 1), this.totalPages());
+  }
+
+  currentRangeEnd(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filteredBookings().length);
+  }
+
+  bookingCountForStatus(status: ReservationStatusTab): number {
+    if (status === 'ALL') {
+      return this.bookings.length;
+    }
+
+    return this.bookings.filter((booking) => booking.status === status).length;
+  }
+
+  demandedWeight(): number {
+    return this.bookings
+      .filter((booking) => booking.status === 'PENDING' || booking.status === 'ACCEPTED')
+      .reduce((total, booking) => total + (Number.isFinite(booking.weight) ? booking.weight : 0), 0);
+  }
+
+  remainingWeight(): number {
+    if (!this.trip) {
+      return 0;
+    }
+
+    return Math.max(this.trip.maxWeight - this.demandedWeight(), 0);
+  }
+
+  usedWeight(): number {
+    return this.demandedWeight();
+  }
+
+  usedWeightPercentage(): number {
+    if (!this.trip || this.trip.maxWeight <= 0) {
+      return 0;
+    }
+
+    return Math.min((this.usedWeight() / this.trip.maxWeight) * 100, 100);
   }
 
   editTrip(): void {
@@ -123,7 +281,7 @@ export class ReservationDetailsPageComponent implements OnInit {
         this.navigateBackToDashboard();
       },
       error: (error: { error?: { message?: string } }) => {
-        this.actionError = error.error?.message || 'Impossible d’annuler ce trajet pour le moment.';
+        this.actionError = error.error?.message || "Impossible d'annuler ce trajet pour le moment.";
         this.isCancellingTrip = false;
         this.isCancelTripModalOpen = false;
       },
@@ -143,7 +301,7 @@ export class ReservationDetailsPageComponent implements OnInit {
         this.processingBookingId = null;
       },
       error: (error: { error?: { message?: string } }) => {
-        this.actionError = error.error?.message || 'Impossible d’accepter cette réservation.';
+        this.actionError = error.error?.message || "Impossible d'accepter cette réservation.";
         this.processingBookingId = null;
       },
     });
@@ -193,6 +351,7 @@ export class ReservationDetailsPageComponent implements OnInit {
     this.tripService.removeBooking(this.trip.id, bookingId).subscribe({
       next: () => {
         this.bookings = this.bookings.filter((booking) => booking.id !== bookingId);
+        this.clampCurrentPage();
         this.processingBookingId = null;
         this.closeRemoveBookingModal();
       },
@@ -272,6 +431,8 @@ export class ReservationDetailsPageComponent implements OnInit {
     this.loadError = '';
     this.actionError = '';
     this.processingBookingId = null;
+    this.tripSummaryExpanded = false;
+    this.showExtendedFilters = false;
     this.closeRemoveBookingModal();
     this.closeCancelTripModal();
 
@@ -282,6 +443,8 @@ export class ReservationDetailsPageComponent implements OnInit {
       next: ({ trip, bookings }) => {
         this.trip = trip;
         this.bookings = bookings;
+        this.selectedTab = this.getDefaultStatusTab(bookings);
+        this.currentPage = 1;
         this.isLoading = false;
       },
       error: () => {
@@ -297,11 +460,29 @@ export class ReservationDetailsPageComponent implements OnInit {
     this.bookings = this.bookings.map((booking) =>
       booking.id === updatedBooking.id ? updatedBooking : booking
     );
+    this.clampCurrentPage();
   }
 
   private navigateBackToDashboard(): void {
     void this.router.navigate(['/dashboard'], {
       queryParams: { tab: 'received' },
     });
+  }
+
+  private clampCurrentPage(): void {
+    this.currentPage = Math.min(this.currentPage, this.totalPages());
+    this.currentPage = Math.max(this.currentPage, 1);
+  }
+
+  private getDefaultStatusTab(bookings: BookingResponse[]): ReservationStatusTab {
+    if (bookings.some((booking) => booking.status === 'PENDING')) {
+      return 'PENDING';
+    }
+
+    if (bookings.some((booking) => booking.status === 'ACCEPTED')) {
+      return 'ACCEPTED';
+    }
+
+    return 'ALL';
   }
 }

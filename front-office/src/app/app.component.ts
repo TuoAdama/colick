@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
+import { filter } from 'rxjs';
 
 /**
  * AppComponent - Root component for the Colick front-office application.
@@ -15,8 +16,23 @@ import { FooterComponent } from './components/footer/footer.component';
   styleUrl: './app.component.css',
 })
 export class AppComponent {
+  private readonly router = inject(Router);
   /**
    * Application title
    */
   title = 'Colick - Envoyez vos colis avec des voyageurs de confiance';
+  showSharedChrome = true;
+
+  constructor() {
+    this.updateSharedChrome(this.router.url);
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe((event) => {
+        this.updateSharedChrome(event.urlAfterRedirects);
+      });
+  }
+
+  private updateSharedChrome(url: string): void {
+    this.showSharedChrome = !/^\/trips\/\d+\/reservations(?:[/?#]|$)/.test(url);
+  }
 }

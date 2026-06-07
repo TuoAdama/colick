@@ -24,6 +24,7 @@ module.exports = {
         primary: '#023047',
         'primary-hover': '#4F46E5',
         secondary: '#219ebc',
+        accent: '#FB8500',
         neutral: '#9C9C9C',
         border: '#E8E8EC',
         surface: '#FFFFFF',

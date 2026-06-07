@@ -184,4 +184,30 @@ describe('TripService', () => {
     expect(req.request.body).toEqual({ validationCode: '123456' });
     req.flush({});
   });
+
+  it('normalizes sender and package photo URLs in trip bookings', () => {
+    service.getTripBookings(12).subscribe((bookings) => {
+      expect(bookings).toHaveSize(1);
+      expect(bookings[0].senderPhotoUrl).toBe('/api/uploads/sender.png');
+      expect(bookings[0].packagePhotoUrl).toBe('/api/uploads/package.png');
+    });
+
+    const req = httpMock.expectOne('/api/trips/12/bookings');
+    expect(req.request.method).toBe('GET');
+    req.flush([
+      {
+        id: 4,
+        tripId: 12,
+        senderId: 2,
+        senderName: 'Alice Martin',
+        senderPhotoUrl: 'uploads/sender.png',
+        title: 'Valise',
+        weight: 2,
+        packagePhotoUrl: '/uploads/package.png',
+        recipientContact: '+22501020304',
+        status: 'PENDING',
+        validationCodeActive: false,
+      },
+    ]);
+  });
 });

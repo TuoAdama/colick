@@ -1,267 +1,243 @@
+<!-- ============================================================
+     Booking Request Card — matches mockup (code.html) layout
+     Collapsed: header / divider / 2-col body / footer
+     Expanded details panel (toggled by "Détails" button)
+     ============================================================ -->
 <article
-  class="mb-3 overflow-hidden rounded-xl border border-background-primary bg-background-secondary shadow-sm transition-shadow hover:shadow"
+  class="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-background-secondary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card"
   [attr.data-trip-id]="tripId"
   [attr.aria-busy]="isProcessing"
 >
-  <div class="flex flex-col gap-3.5 p-4 sm:p-5">
 
-    <!-- ── Header: avatar · identity · meta · thumbnail ── -->
-    <div class="flex items-start gap-3">
-
-      <!-- Sender avatar -->
-      <div
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-sm font-bold text-secondary"
-        aria-hidden="true"
-      >
-        {{ booking.senderName.charAt(0) || '?' }}
-      </div>
-
-      <!-- Identity + meta -->
-      <div class="min-w-0 flex-1">
-        <!-- Name + status badge -->
-        <div class="flex flex-wrap items-center gap-2">
-          <h3 class="text-sm font-semibold text-text-primary">{{ booking.senderName }}</h3>
-          <span
-            class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-widest"
-            [class]="statusClass(booking.status)"
-          >
-            <span class="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true"></span>
-            {{ statusLabel(booking.status) }}
-          </span>
+  <!-- ── Card Header: avatar · name · status ── -->
+  <div class="flex items-start justify-between p-5 pb-4">
+    <div class="flex items-center gap-3">
+      @if (senderPhotoUrl(); as photoUrl) {
+        <img
+          [src]="photoUrl"
+          [alt]="'Photo de profil de ' + booking.senderName"
+          class="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
+          loading="lazy"
+          decoding="async"
+          (error)="onSenderPhotoError()"
+        />
+      } @else {
+        <div
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-sm font-bold text-primary"
+          aria-hidden="true"
+        >
+          {{ senderInitial() }}
         </div>
+      }
 
-        <!-- Booking title -->
-        <p class="mt-0.5 text-sm font-medium text-primary">{{ booking.title }}</p>
+      <div class="min-w-0">
+        <h3 class="font-bold text-text-primary">{{ booking.senderName }}</h3>
+        <!-- Fallback subtitle: package title acts as sender context -->
+        <p class="truncate text-sm text-text-secondary">{{ booking.title }}</p>
+      </div>
+    </div>
 
-        <!-- Inline meta: weight · amount · recipient contact -->
-        <dl class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-          <div class="flex items-center gap-1">
-            <!-- Package / weight icon -->
-            <svg class="h-3.5 w-3.5 shrink-0 text-text-muted" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
-            </svg>
-            <dt class="sr-only">Poids</dt>
-            <dd class="text-xs text-text-secondary">{{ booking.weight | number:'1.0-2' }} kg</dd>
-          </div>
-          @if (reservationAmount() !== null) {
-            <span class="text-text-muted" aria-hidden="true">·</span>
-            <div class="flex items-center gap-1">
-              <!-- Reservation amount icon -->
-              <svg class="h-3.5 w-3.5 shrink-0 text-text-muted" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m3.5-9.5H10.75a2.25 2.25 0 1 0 0 4.5h2.5a2.25 2.25 0 1 1 0 4.5H8" />
-              </svg>
-              <dt class="sr-only">Montant de la réservation</dt>
-              <dd class="text-xs text-text-secondary">{{ reservationAmount()! | number:'1.0-2' }} €</dd>
-            </div>
-          }
-          <span class="text-text-muted" aria-hidden="true">·</span>
-          <div class="flex items-center gap-1 min-w-0">
-            <!-- Contact / phone icon -->
-            <svg class="h-3.5 w-3.5 shrink-0 text-text-muted" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-            </svg>
-            <dt class="sr-only">Contact destinataire</dt>
-            <dd class="truncate text-xs text-text-secondary">{{ booking.recipientContact }}</dd>
-          </div>
-        </dl>
+    <!-- Status badge -->
+    <span
+      class="shrink-0 rounded px-2 py-1 text-[11px] font-bold uppercase tracking-wide"
+      [class]="statusBadgeClass(booking.status)"
+    >
+      {{ statusLabel(booking.status) }}
+    </span>
+  </div>
+
+  <!-- ── Divider ── -->
+  <hr class="mx-5 border-border" />
+
+  <!-- ── Card Body: 2-column grid ── -->
+  <div class="grid min-h-[8.5rem] flex-1 grid-cols-2 gap-6 px-5 py-4">
+    <div>
+      <p class="mb-1 text-[11px] font-bold uppercase tracking-wide text-text-muted">Objet &amp; Type</p>
+      <p class="font-bold text-text-primary">{{ booking.title }}</p>
+      @if (booking.description) {
+        <p class="text-sm italic text-text-secondary">{{ booking.description }}</p>
+      } @else {
+        <p class="text-sm italic text-text-muted">—</p>
+      }
+    </div>
+
+    <div class="text-right">
+      <p class="mb-1 text-[11px] font-bold uppercase tracking-wide text-text-muted">Volume estimé</p>
+      <p class="font-bold text-text-primary">{{ booking.weight | number:'1.0-2' }} kg</p>
+    </div>
+  </div>
+
+  <!-- ── Card Footer: gain + action buttons ── -->
+  <div
+    class="mt-auto flex items-end justify-between border-t border-border/50 px-5 py-3"
+  >
+    <!-- Gain proposé -->
+    <div>
+      <p class="mb-1 text-[11px] font-bold uppercase tracking-wide text-text-muted">Gain Proposé</p>
+      @if (reservationAmount() !== null) {
+        <p class="text-xl font-bold text-primary">{{ reservationAmount()! | number:'1.0-2' }} €</p>
+      } @else {
+        <p class="text-xl font-bold text-text-muted">—</p>
+      }
+    </div>
+
+    <!-- Action buttons -->
+    <div class="flex flex-wrap justify-end gap-2">
+      <!-- Details toggle -->
+      <button
+        type="button"
+        class="rounded-xl border px-4 py-2 text-sm transition focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+        [class]="isDetailsOpen
+          ? 'border-primary bg-background-primary text-primary'
+          : 'border-border bg-background-secondary text-text-primary hover:bg-background-primary'"
+        [attr.aria-expanded]="isDetailsOpen"
+        [disabled]="isProcessing"
+        (click)="toggleDetails()"
+      >
+        Détails
+      </button>
+
+      <!-- PENDING → Accept -->
+      @if (booking.status === 'PENDING') {
+        <button
+          type="button"
+          class="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-background-secondary transition hover:opacity-90 hover:shadow-primary-glow focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="isProcessing"
+          (click)="onAccept()"
+        >
+          {{ isProcessing ? '...' : 'Accepter' }}
+        </button>
+      }
+
+      <!-- ACCEPTED → Remove (styled as cancel) -->
+      @if (booking.status === 'ACCEPTED') {
+        <button
+          type="button"
+          class="rounded-xl border border-error/30 bg-background-secondary px-4 py-2 text-sm font-bold text-error transition hover:bg-error/5 focus:outline-none focus:ring-2 focus:ring-error/20 disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="isProcessing"
+          (click)="onRemove()"
+        >
+          Annuler
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Collapsible Details Panel ── -->
+  @if (isDetailsOpen) {
+    <div class="space-y-4 border-t border-border bg-background-primary px-5 py-4 animate-fade-in">
+
+      <!-- Secondary action row -->
+      <div class="flex flex-wrap gap-2">
+        <!-- Message sender -->
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-md border border-border bg-background-secondary px-3 py-2 text-sm font-medium text-text-primary transition hover:-translate-y-px hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+          [disabled]="isProcessing"
+          (click)="onMessage()"
+        >
+          <!-- chat bubble icon -->
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z" />
+          </svg>
+          Envoyer un message
+        </button>
+
+        <!-- PENDING: Reject -->
+        @if (booking.status === 'PENDING') {
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-md border border-error/20 bg-background-secondary px-3 py-2 text-sm font-medium text-error transition hover:-translate-y-px hover:bg-error/10 focus:outline-none focus:ring-2 focus:ring-error/20 disabled:opacity-50"
+            [disabled]="isProcessing"
+            (click)="onReject()"
+          >
+            Refuser
+          </button>
+        }
       </div>
 
-      <!-- Package photo — thumbnail (desktop: inline; mobile: hidden here, shown below) -->
+      <!-- Recipient contact -->
+      <div class="rounded-md border border-border bg-background-secondary px-3 py-2.5">
+        <p class="text-[11px] font-bold uppercase tracking-wide text-text-muted">Contact destinataire</p>
+        <p class="mt-1 text-sm font-medium text-text-primary">{{ booking.recipientContact }}</p>
+      </div>
+
+      <!-- Package photo -->
       @if (booking.packagePhotoUrl) {
-        <div class="hidden shrink-0 sm:block" aria-hidden="true">
+        <div>
+          <p class="mb-2 text-[11px] font-bold uppercase tracking-wide text-text-muted">Photo du colis</p>
           <img
             [src]="booking.packagePhotoUrl"
             [alt]="'Photo du colis ' + booking.title"
-            class="h-14 w-14 rounded-lg object-cover ring-1 ring-background-primary"
+            class="h-44 w-full rounded-md border border-border object-cover"
             loading="lazy"
           />
         </div>
       }
-    </div>
 
-    <!-- ── Description (optional) ── -->
-    @if (booking.description) {
-      <p class="border-l-2 border-background-primary pl-3 text-xs leading-5 text-text-secondary">
-        {{ booking.description }}
-      </p>
-    }
-
-    <!-- ── Package photo — mobile fallback ── -->
-    @if (booking.packagePhotoUrl) {
-      <div class="sm:hidden">
-        <img
-          [src]="booking.packagePhotoUrl"
-          [alt]="'Photo du colis ' + booking.title"
-          class="h-36 w-full rounded-lg object-cover"
-          loading="lazy"
-        />
-      </div>
-    }
-
-    <!-- ── Status banners ── -->
-    @if (booking.validationCodeActive && booking.validationDeliveryChannel && booking.validationCodeSentAt) {
-      <div
-        role="status"
-        aria-live="polite"
-        [class]="tripStatus === 'COMPLETED'
-          ? 'flex items-start gap-2 rounded-lg border border-secondary/20 bg-secondary/10 px-3 py-2.5'
-          : 'flex items-start gap-2 rounded-lg border border-secondary/10 bg-background-primary px-3 py-2'"
-      >
-        <svg
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-          [class]="tripStatus === 'COMPLETED'
-            ? 'mt-0.5 h-4 w-4 shrink-0 text-secondary'
-            : 'mt-0.5 h-4 w-4 shrink-0 text-secondary/70'"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-        </svg>
-        <div class="min-w-0">
-          <p
-            [class]="tripStatus === 'COMPLETED'
-              ? 'text-xs font-semibold leading-4 text-secondary'
-              : 'text-xs font-medium leading-4 text-secondary'"
-          >
-            Code de validation actif
-          </p>
-          <p
-            [class]="tripStatus === 'COMPLETED'
-              ? 'mt-0.5 text-xs leading-4 text-text-primary'
-              : 'mt-0.5 text-xs leading-4 text-text-muted'"
-          >
-            Code envoyé par <span class="font-medium">{{ validationChannelLabel(booking.validationDeliveryChannel) }}</span>
+      <!-- Validation code info -->
+      @if (booking.validationCodeActive && booking.validationDeliveryChannel && booking.validationCodeSentAt) {
+        <div class="rounded-md border border-warning/20 bg-warning/10 px-4 py-3">
+          <p class="text-sm font-medium text-text-primary">Code de validation actif</p>
+          <p class="mt-1 text-xs text-text-secondary">
+            Envoyé par {{ validationChannelLabel(booking.validationDeliveryChannel) }}
             le {{ booking.validationCodeSentAt | date:'dd/MM/yyyy à HH:mm' }}.
           </p>
-          @if (tripStatus === 'COMPLETED') {
-            <p class="mt-0.5 text-xs text-text-secondary">Saisissez le code ci-dessous pour confirmer la remise.</p>
-          }
         </div>
-      </div>
-    }
-
-    @if (booking.validationDeliveryStatus === 'FAILED' && booking.validationCodeDeliveryFailedAt) {
-      <div class="flex items-start gap-2.5 rounded-lg border border-error/20 bg-error/10 px-3 py-2.5" role="alert">
-        <svg class="mt-px h-4 w-4 shrink-0 text-error" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-        </svg>
-        <div class="min-w-0">
-          <p class="text-xs font-semibold text-error">Envoi du code échoué</p>
-          <p class="mt-0.5 text-xs text-text-primary">Le code n'a pas pu être transmis au destinataire.</p>
-          <p class="mt-0.5 text-xs text-text-muted">Échec le {{ booking.validationCodeDeliveryFailedAt | date:'dd/MM/yyyy à HH:mm' }}</p>
-        </div>
-      </div>
-    }
-
-    @if (booking.deliveredAt) {
-      <div class="flex items-start gap-2.5 rounded-lg border border-success/20 bg-success/10 px-3 py-2.5" role="status">
-        <svg class="mt-px h-4 w-4 shrink-0 text-success" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-        <div class="min-w-0">
-          <p class="text-xs font-semibold text-success">Colis remis</p>
-          <p class="mt-0.5 text-xs text-text-primary">Remise confirmée le {{ booking.deliveredAt | date:'dd/MM/yyyy à HH:mm' }}.</p>
-        </div>
-      </div>
-    }
-
-    <!-- ── Confirm-delivery inline form ── -->
-    @if (canShowConfirmDelivery()) {
-      <div class="flex flex-col gap-2 rounded-lg bg-background-primary px-3 py-2.5 sm:flex-row sm:items-end sm:gap-3">
-        <div class="flex-1">
-          <label [for]="'delivery-code-' + booking.id" class="mb-1 block text-xs font-medium text-text-secondary">
-            Code de remise destinataire
-          </label>
-          <input
-            [id]="'delivery-code-' + booking.id"
-            type="text"
-            inputmode="numeric"
-            maxlength="6"
-            [value]="deliveryCode"
-            (input)="deliveryCode = $any($event.target).value"
-            placeholder="000000"
-            class="w-full rounded-lg border border-background-primary bg-background-secondary px-3 py-2 text-sm tracking-[0.2em] text-text-primary placeholder:text-text-muted focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20"
-          />
-        </div>
-        <button
-          type="button"
-          class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
-          [disabled]="deliveryCode.trim().length !== 6 || isProcessing"
-          (click)="onConfirmDelivery()"
-        >
-          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7" />
-          </svg>
-          {{ isProcessing ? 'Traitement…' : 'Confirmer' }}
-        </button>
-      </div>
-    }
-
-    <!-- ── Action bar ── -->
-    <div class="flex flex-col gap-2 border-t border-background-primary pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-
-      <!-- Message — always visible -->
-      <button
-        type="button"
-        class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-secondary/30 px-2.5 py-1.5 text-xs font-medium text-secondary transition hover:border-secondary hover:bg-secondary/10 focus:outline-none focus:ring-2 focus:ring-secondary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:justify-start"
-        [disabled]="isProcessing"
-        (click)="onMessage()"
-        aria-label="Envoyer un message à l'expéditeur"
-      >
-        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.42-4.03 8-9 8-1.43 0-2.79-.27-4.02-.76L3 20l1.28-3.41A7.65 7.65 0 0 1 3 12c0-4.42 4.03-8 9-8s9 3.58 9 8Z" />
-        </svg>
-        Message
-      </button>
-
-      <!-- Remove — ACCEPTED only -->
-      @if (booking.status === 'ACCEPTED') {
-        <button
-          type="button"
-          class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-warning/30 px-2.5 py-1.5 text-xs font-medium text-warning transition hover:border-warning hover:bg-warning/10 focus:outline-none focus:ring-2 focus:ring-warning/20 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:justify-start"
-          [disabled]="isProcessing"
-          (click)="onRemove()"
-          aria-label="Retirer la réservation acceptée"
-        >
-          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-          </svg>
-          Retirer
-        </button>
       }
 
-      <!-- Reject + Accept — PENDING only -->
-      @if (booking.status === 'PENDING') {
-        <button
-          type="button"
-          class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-error/30 px-2.5 py-1.5 text-xs font-medium text-error transition hover:border-error hover:bg-error/10 focus:outline-none focus:ring-2 focus:ring-error/20 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:justify-start"
-          [disabled]="isProcessing"
-          (click)="onReject()"
-          aria-label="Refuser la demande de réservation"
-        >
-          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m6 6 12 12M18 6 6 18" />
-          </svg>
-          Refuser
-        </button>
-
-        <button
-          type="button"
-          class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-success px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-success/90 focus:outline-none focus:ring-2 focus:ring-success/20 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:justify-start"
-          [disabled]="isProcessing"
-          (click)="onAccept()"
-          aria-label="Accepter la demande de réservation"
-        >
-          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7" />
-          </svg>
-          {{ isProcessing ? 'Traitement…' : 'Accepter' }}
-        </button>
+      @if (booking.validationDeliveryStatus === 'FAILED' && booking.validationCodeDeliveryFailedAt) {
+        <div class="rounded-md border border-error/20 bg-error/10 px-4 py-3">
+          <p class="text-sm font-medium text-error">Envoi du code échoué</p>
+          <p class="mt-1 text-xs text-text-secondary">
+            Échec le {{ booking.validationCodeDeliveryFailedAt | date:'dd/MM/yyyy à HH:mm' }}
+          </p>
+        </div>
       }
 
+      @if (booking.deliveredAt) {
+        <div class="rounded-md border border-success/20 bg-success/10 px-4 py-3">
+          <p class="text-sm font-medium text-success">Colis remis</p>
+          <p class="mt-1 text-xs text-text-secondary">
+            Confirmé le {{ booking.deliveredAt | date:'dd/MM/yyyy à HH:mm' }}
+          </p>
+        </div>
+      }
+
+      <!-- Delivery confirmation form -->
+      @if (canShowConfirmDelivery()) {
+        <div class="rounded-md border border-border bg-background-secondary p-4">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div class="flex-1">
+              <label
+                [for]="'delivery-code-' + booking.id"
+                class="mb-2 block text-xs font-medium text-text-secondary"
+              >
+                Code de remise
+              </label>
+              <input
+                [id]="'delivery-code-' + booking.id"
+                type="text"
+                inputmode="numeric"
+                maxlength="6"
+                [value]="deliveryCode"
+                (input)="deliveryCode = $any($event.target).value"
+                placeholder="000000"
+                class="w-full rounded-md border border-border bg-background-secondary px-4 py-3 text-sm tracking-[0.25em] text-text-primary placeholder:text-text-secondary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <button
+              type="button"
+              class="rounded-md bg-primary px-4 py-3 text-sm font-semibold text-background-secondary transition hover:-translate-y-px hover:shadow-primary-glow focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+              [disabled]="deliveryCode.trim().length !== 6 || isProcessing"
+              (click)="onConfirmDelivery()"
+            >
+              {{ isProcessing ? 'Traitement...' : 'Confirmer la remise' }}
+            </button>
+          </div>
+        </div>
+      }
     </div>
-
-  </div>
+  }
 </article>

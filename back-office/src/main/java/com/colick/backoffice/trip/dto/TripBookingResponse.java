@@ -18,6 +18,7 @@ public class TripBookingResponse {
     private Long tripId;
     private Long senderId;
     private String senderName;
+    private String senderPhotoUrl;
     private String title;
     private BigDecimal weight;
     private String description;
@@ -41,6 +42,7 @@ public class TripBookingResponse {
                 .tripId(booking.getTrip().getId())
                 .senderId(booking.getSender().getId())
                 .senderName(booking.getSender().getFirstName() + " " + booking.getSender().getLastName())
+                .senderPhotoUrl(booking.getSender().getPhotoUrl())
                 .title(booking.getTitle())
                 .weight(booking.getWeight())
                 .description(booking.getDescription())

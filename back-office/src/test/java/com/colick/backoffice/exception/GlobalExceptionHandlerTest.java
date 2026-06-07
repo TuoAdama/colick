@@ -4,8 +4,10 @@ import com.colick.backoffice.support.TestLocalizedMessages;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.Locale;
 
@@ -55,5 +57,17 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertEquals(400, response.getBody().getStatus());
         assertEquals("Requested weight exceeds available weight", response.getBody().getMessage());
+    }
+
+    @Test
+    void handleNoResourceFound_shouldReturn404InsteadOf500() {
+        NoResourceFoundException ex = new NoResourceFoundException(HttpMethod.GET, "/uploads/missing.png");
+
+        ResponseEntity<ApiError> response = handler.handleNoResourceFound(ex);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(404, response.getBody().getStatus());
+        assertTrue(response.getBody().getMessage().contains("/uploads/missing.png"));
     }
 }

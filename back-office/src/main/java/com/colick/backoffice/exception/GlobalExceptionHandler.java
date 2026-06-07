@@ -10,6 +10,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -98,9 +99,16 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(HttpStatus.BAD_REQUEST.value(), message));
     }
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiError> handleNoResourceFound(NoResourceFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ApiError(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
+    }
+
     /**
-     * Handles Spring MVC exceptions (NoResourceFoundException, MethodNotAllowedException, etc.)
-     * and returns the correct HTTP status code instead of masking them as 500.
+     * Handles Spring MVC exceptions that already carry an HTTP status and
+     * returns that status instead of masking them as 500.
      */
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ApiError> handleResponseStatus(ResponseStatusException ex) {

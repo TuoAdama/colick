@@ -4,6 +4,7 @@ import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
 import { MessagingService } from '../../services/messaging.service';
+import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
 import { ReservationDetailsPageComponent } from './reservation-details-page.component';
 
@@ -29,6 +30,18 @@ describe('ReservationDetailsPageComponent', () => {
     startConversation: jasmine.createSpy('startConversation'),
   };
 
+  const authServiceMock = {
+    getUser: jasmine.createSpy('getUser').and.returnValue({
+      id: 1,
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: 'ada@example.com',
+      hasPassword: true,
+      photoUrl: null,
+    }),
+    logout: jasmine.createSpy('logout'),
+  };
+
   beforeEach(async () => {
     tripParamMap$.next(convertToParamMap({ tripId: '12' }));
     tripServiceMock.getTripById.calls.reset();
@@ -40,6 +53,8 @@ describe('ReservationDetailsPageComponent', () => {
     tripServiceMock.cancelTrip.calls.reset();
     tripServiceMock.confirmBookingDelivery.calls.reset();
     messagingServiceMock.startConversation.calls.reset();
+    authServiceMock.getUser.calls.reset();
+    authServiceMock.logout.calls.reset();
 
     tripServiceMock.getTripById.and.returnValue(of(buildTrip()));
     tripServiceMock.getTripBookings.and.returnValue(of([buildBooking()]));
@@ -77,6 +92,7 @@ describe('ReservationDetailsPageComponent', () => {
         },
         { provide: TripService, useValue: tripServiceMock },
         { provide: MessagingService, useValue: messagingServiceMock },
+        { provide: AuthService, useValue: authServiceMock },
       ],
     }).compileComponents();
 
@@ -108,6 +124,52 @@ describe('ReservationDetailsPageComponent', () => {
     createComponent();
 
     expect(fixture.nativeElement.textContent).toContain('Impossible de charger les détails de cette réservation.');
+  });
+
+  it('defaults to the pending tab when pending bookings are available', () => {
+    createComponent();
+
+    expect(component.selectedTab).toBe('PENDING');
+    expect(component.filteredBookings().length).toBe(1);
+  });
+
+  it('filters bookings by status and paginates the current tab', () => {
+    tripServiceMock.getTripBookings.and.returnValue(of([
+      buildBooking({ id: 1, status: 'PENDING', title: 'A' }),
+      buildBooking({ id: 2, status: 'PENDING', title: 'B' }),
+      buildBooking({ id: 3, status: 'PENDING', title: 'C' }),
+      buildBooking({ id: 4, status: 'PENDING', title: 'D' }),
+      buildBooking({ id: 5, status: 'PENDING', title: 'E' }),
+      buildBooking({ id: 6, status: 'ACCEPTED', title: 'F' }),
+    ]));
+
+    createComponent();
+
+    expect(component.filteredBookings().length).toBe(5);
+    expect(component.paginatedBookings().map((booking) => booking.id)).toEqual([1, 2, 3, 4]);
+
+    component.goToPage(2);
+
+    expect(component.paginatedBookings().map((booking) => booking.id)).toEqual([5]);
+
+    component.selectTab('ACCEPTED');
+
+    expect(component.currentPage).toBe(1);
+    expect(component.paginatedBookings().map((booking) => booking.id)).toEqual([6]);
+  });
+
+  it('computes the demanded and remaining weight from active bookings', () => {
+    tripServiceMock.getTripBookings.and.returnValue(of([
+      buildBooking({ id: 1, status: 'PENDING', weight: 3 }),
+      buildBooking({ id: 2, status: 'ACCEPTED', weight: 4 }),
+      buildBooking({ id: 3, status: 'REJECTED', weight: 6 }),
+    ]));
+
+    createComponent();
+
+    expect(component.demandedWeight()).toBe(7);
+    expect(component.remainingWeight()).toBe(13);
+    expect(component.usedWeightPercentage()).toBe(35);
   });
 
   it('accepts a booking and updates it in the page state', () => {
@@ -202,7 +264,7 @@ function buildTrip(): Trip {
   };
 }
 
-function buildBooking(): BookingResponse {
+function buildBooking(overrides: Partial<BookingResponse> = {}): BookingResponse {
   return {
     id: 7,
     tripId: 12,
@@ -214,5 +276,6 @@ function buildBooking(): BookingResponse {
     recipientContact: '+22501020304',
     status: 'PENDING',
     validationCodeActive: false,
+    ...overrides,
   };
 }

@@ -7,6 +7,9 @@ import { Trip } from '../../../models/trip.model';
   selector: 'app-booking-request-card',
   standalone: true,
   imports: [CommonModule],
+  host: {
+    class: 'block h-full',
+  },
   templateUrl: './booking-request-card.component.html',
 })
 export class BookingRequestCardComponent {
@@ -23,6 +26,9 @@ export class BookingRequestCardComponent {
   @Output() confirmDelivery = new EventEmitter<{ bookingId: number; code: string }>();
 
   deliveryCode = '';
+  isDetailsOpen = false;
+  private senderPhotoLoadFailed = false;
+  private lastSenderPhotoUrl: string | null = null;
 
   statusLabel(status: BookingResponse['status']): string {
     return ({
@@ -34,14 +40,42 @@ export class BookingRequestCardComponent {
     } as Record<BookingResponse['status'], string>)[status];
   }
 
-  statusClass(status: BookingResponse['status']): string {
+  /**
+   * Returns Tailwind classes for the compact status badge in the card header.
+   * Maps each status to a pill-shaped badge matching the mockup palette.
+   */
+  statusBadgeClass(status: BookingResponse['status']): string {
     return ({
-      PENDING: 'border-warning/20 bg-warning/10 text-warning',
-      ACCEPTED: 'border-success/20 bg-success/10 text-success',
-      REJECTED: 'border-error/20 bg-error/10 text-error',
-      CANCELLED: 'border-error/20 bg-error/10 text-error',
-      REMOVED: 'border-text-muted/20 bg-background-primary text-text-muted',
+      PENDING: 'bg-border text-text-secondary',
+      ACCEPTED: 'bg-secondary/10 text-secondary',
+      REJECTED: 'bg-error/10 text-error',
+      CANCELLED: 'bg-error/10 text-error',
+      REMOVED: 'bg-background-primary text-text-muted',
     } as Record<BookingResponse['status'], string>)[status];
+  }
+
+  senderInitial(): string {
+    return this.booking.senderName?.trim().charAt(0).toUpperCase() || '?';
+  }
+
+  senderPhotoUrl(): string | null {
+    const photoUrl = this.booking.senderPhotoUrl?.trim() ?? null;
+    if (!photoUrl) {
+      this.senderPhotoLoadFailed = false;
+      this.lastSenderPhotoUrl = null;
+      return null;
+    }
+
+    if (photoUrl !== this.lastSenderPhotoUrl) {
+      this.senderPhotoLoadFailed = false;
+      this.lastSenderPhotoUrl = photoUrl;
+    }
+
+    return this.senderPhotoLoadFailed ? null : photoUrl;
+  }
+
+  onSenderPhotoError(): void {
+    this.senderPhotoLoadFailed = true;
   }
 
   validationChannelLabel(channel?: BookingResponse['validationDeliveryChannel']): string {
@@ -66,6 +100,10 @@ export class BookingRequestCardComponent {
       && this.booking.status === 'ACCEPTED'
       && this.booking.validationCodeActive
       && !this.booking.deliveredAt;
+  }
+
+  toggleDetails(): void {
+    this.isDetailsOpen = !this.isDetailsOpen;
   }
 
   onAccept(): void {
