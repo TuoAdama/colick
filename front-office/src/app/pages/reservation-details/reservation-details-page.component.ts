@@ -44,7 +44,7 @@ export class ReservationDetailsPageComponent implements OnInit {
   selectedTab: ReservationStatusTab = 'ALL';
   currentPage = 1;
   tripSummaryExpanded = false;
-  showExtendedFilters = false;
+  isMobileMenuOpen = false;
 
   private profilePhotoLoadFailed = false;
   private lastProfilePhotoUrl: string | null = null;
@@ -53,12 +53,6 @@ export class ReservationDetailsPageComponent implements OnInit {
   readonly primaryStatusTabs: ReadonlyArray<{ value: ReservationStatusTab; label: string }> = [
     { value: 'PENDING', label: 'En attentes' },
     { value: 'ACCEPTED', label: 'Acceptées' },
-  ];
-  readonly extendedStatusTabs: ReadonlyArray<{ value: ReservationStatusTab; label: string }> = [
-    { value: 'REJECTED', label: 'Refusées' },
-    { value: 'CANCELLED', label: 'Annulées' },
-    { value: 'REMOVED', label: 'Retirées' },
-    { value: 'ALL', label: 'Toutes' },
   ];
 
   ngOnInit(): void {
@@ -136,12 +130,12 @@ export class ReservationDetailsPageComponent implements OnInit {
     this.tripSummaryExpanded = !this.tripSummaryExpanded;
   }
 
-  toggleExtendedFilters(): void {
-    this.showExtendedFilters = !this.showExtendedFilters;
+  openMobileMenu(): void {
+    this.isMobileMenuOpen = true;
   }
 
-  hasExtendedStatuses(): boolean {
-    return this.extendedStatusTabs.some((tab) => this.bookingCountForStatus(tab.value) > 0);
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen = false;
   }
 
   tripStatusLabel(status: Trip['status']): string {
@@ -166,11 +160,7 @@ export class ReservationDetailsPageComponent implements OnInit {
   }
 
   filteredBookings(): BookingResponse[] {
-    if (this.selectedTab === 'ALL') {
-      return this.bookings;
-    }
-
-    return this.bookings.filter((booking) => booking.status === this.selectedTab);
+    return this.bookings.filter((booking) => this.matchesStatusFilter(booking));
   }
 
   paginatedBookings(): BookingResponse[] {
@@ -432,7 +422,6 @@ export class ReservationDetailsPageComponent implements OnInit {
     this.actionError = '';
     this.processingBookingId = null;
     this.tripSummaryExpanded = false;
-    this.showExtendedFilters = false;
     this.closeRemoveBookingModal();
     this.closeCancelTripModal();
 
@@ -484,5 +473,9 @@ export class ReservationDetailsPageComponent implements OnInit {
     }
 
     return 'ALL';
+  }
+
+  private matchesStatusFilter(booking: BookingResponse): boolean {
+    return this.selectedTab === 'ALL' || booking.status === this.selectedTab;
   }
 }

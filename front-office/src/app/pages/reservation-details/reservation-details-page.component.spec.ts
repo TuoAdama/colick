@@ -172,6 +172,16 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.usedWeightPercentage()).toBe(35);
   });
 
+  it('opens and closes the mobile menu', () => {
+    createComponent();
+
+    component.openMobileMenu();
+    expect(component.isMobileMenuOpen).toBeTrue();
+
+    component.closeMobileMenu();
+    expect(component.isMobileMenuOpen).toBeFalse();
+  });
+
   it('accepts a booking and updates it in the page state', () => {
     createComponent();
 
