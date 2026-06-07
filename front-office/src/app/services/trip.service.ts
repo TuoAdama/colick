@@ -60,7 +60,9 @@ export class TripService {
 
   /** Create a booking request for a specific trip. */
   createBooking(tripId: number, request: CreateBookingRequest): Observable<BookingResponse> {
-    return this.http.post<BookingResponse>(`${this.baseUrl}/${tripId}/bookings`, request);
+    return this.http.post<BookingResponse>(`${this.baseUrl}/${tripId}/bookings`, request).pipe(
+      map((booking) => this.normalizeBooking(booking))
+    );
   }
 
   /** Get trips published by the current user. */
@@ -72,17 +74,23 @@ export class TripService {
 
   /** Get booking requests sent by the current user. */
   getMyBookings(): Observable<BookingResponse[]> {
-    return this.http.get<BookingResponse[]>(`${this.baseUrl}/bookings/mine`);
+    return this.http.get<BookingResponse[]>(`${this.baseUrl}/bookings/mine`).pipe(
+      map((bookings) => bookings.map((booking) => this.normalizeBooking(booking)))
+    );
   }
 
   /** Get bookings for a specific trip (received reservations). */
   getTripBookings(tripId: number): Observable<BookingResponse[]> {
-    return this.http.get<BookingResponse[]>(`${this.baseUrl}/${tripId}/bookings`);
+    return this.http.get<BookingResponse[]>(`${this.baseUrl}/${tripId}/bookings`).pipe(
+      map((bookings) => bookings.map((booking) => this.normalizeBooking(booking)))
+    );
   }
 
   /** Accept a booking. */
   acceptBooking(tripId: number, bookingId: number): Observable<BookingResponse> {
-    return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/accept`, {});
+    return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/accept`, {}).pipe(
+      map((booking) => this.normalizeBooking(booking))
+    );
   }
 
   /** Confirm parcel handoff by validating the recipient code. */
@@ -91,12 +99,16 @@ export class TripService {
     bookingId: number,
     request: ConfirmBookingDeliveryRequest,
   ): Observable<BookingResponse> {
-    return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/deliver`, request);
+    return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/deliver`, request).pipe(
+      map((booking) => this.normalizeBooking(booking))
+    );
   }
 
   /** Reject a booking. */
   rejectBooking(tripId: number, bookingId: number): Observable<BookingResponse> {
-    return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/reject`, {});
+    return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/reject`, {}).pipe(
+      map((booking) => this.normalizeBooking(booking))
+    );
   }
 
   /** Remove an accepted booking (traveler only). Sends notification to sender. */
@@ -111,7 +123,9 @@ export class TripService {
 
   /** Cancel a booking (sender only). */
   cancelBooking(tripId: number, bookingId: number): Observable<BookingResponse> {
-    return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/cancel`, {});
+    return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/cancel`, {}).pipe(
+      map((booking) => this.normalizeBooking(booking))
+    );
   }
 
   private normalizeTrip(
@@ -133,6 +147,14 @@ export class TripService {
       availableWeight: normalizedAvailableWeight,
       travelerPhotoUrl: this.photoUrlService.normalizePhotoUrl(trip.travelerPhotoUrl),
       travelerRatingCount: trip.travelerRatingCount ?? 0,
+    };
+  }
+
+  private normalizeBooking(booking: BookingResponse): BookingResponse {
+    return {
+      ...booking,
+      senderPhotoUrl: this.photoUrlService.normalizePhotoUrl(booking.senderPhotoUrl),
+      packagePhotoUrl: this.photoUrlService.normalizePhotoUrl(booking.packagePhotoUrl),
     };
   }
 }

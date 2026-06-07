@@ -11,24 +11,7 @@ You are a UI/UX design expert specializing in high-quality Angular + Tailwind CS
 
 ## Colick Design System (mandatory)
 
-Always use these exact colors — never substitute with raw Tailwind defaults:
-
-| Token              | Hex       | Usage                              |
-|--------------------|-----------|------------------------------------|
-| `primary`          | `#023047` | Headers, primary buttons, nav      |
-| `secondary`        | `#219ebc` | Links, hover states, accents       |
-| `accent`           | `#fb8500` | CTAs, highlights, badges           |
-| `error`            | `#EF4444` | Error states                       |
-| `success`          | `#22C55E` | Success states                     |
-| `warning`          | `#F97316` | Warnings                           |
-| `background-primary`   | `#f5f5f5` | Default page background        |
-| `background-secondary` | `#F9FAFB` | Cards, sections                |
-| `background-dark`      | `#111827` | Dark sections, footers         |
-| `text-primary`     | `#111827` | Body text                          |
-| `text-secondary`   | `#6B7280` | Subtitles, labels                  |
-| `text-muted`       | `#9CA3AF` | Placeholders, captions             |
-
-**Font**: Poppins — apply `font-['Poppins']` or via Tailwind `fontFamily` config.
+use design instructions from .github/instructions/design-system.instructions.md
 
 ## Approach
 1. Think about the best visual representation of the component before writing code.

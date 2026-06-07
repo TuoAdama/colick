@@ -182,7 +182,6 @@ describe('DashboardPageComponent', () => {
     component.activeTab = 'received';
     component.myTrips = [selectedTrip];
     component.tripBookingsMap = { [selectedTrip.id]: [] };
-    component.selectedTripId = selectedTrip.id;
 
     fixture.detectChanges();
 
@@ -246,7 +245,6 @@ describe('DashboardPageComponent', () => {
     component.activeTab = 'received';
     component.myTrips = [selectedTrip];
     component.tripBookingsMap = { [selectedTrip.id]: [] };
-    component.selectedTripId = selectedTrip.id;
     fixture.detectChanges();
 
     const requestAnimationFrameSpy = spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => {
@@ -272,32 +270,34 @@ describe('DashboardPageComponent', () => {
     expect(component.shareCardError).toBe('');
   });
 
-  it('selects the trip before downloading it from the desktop options menu', async () => {
+  it('downloads the requested trip share card from the desktop options menu', async () => {
     const selectedTrip = buildTrip();
     component.activeTab = 'received';
     component.myTrips = [selectedTrip];
     component.tripBookingsMap = { [selectedTrip.id]: [] };
-    spyOn(component, 'selectTrip').and.callThrough();
     spyOn(component, 'downloadShareCardPng').and.resolveTo();
 
     component.handleDesktopTripShareCardDownload(selectedTrip.id);
 
-    expect(component.selectTrip).toHaveBeenCalledWith(selectedTrip.id);
     expect(component.downloadShareCardPng).toHaveBeenCalledWith(selectedTrip.id);
   });
 
-  it('selects the trip before marking it as completed from the desktop options menu', () => {
+  it('marks the requested trip as completed from the desktop options menu', () => {
     const selectedTrip = buildTrip();
     component.activeTab = 'received';
     component.myTrips = [selectedTrip];
     component.tripBookingsMap = { [selectedTrip.id]: [] };
-    spyOn(component, 'selectTrip').and.callThrough();
     spyOn(component, 'completeTrip');
 
     component.handleDesktopTripCompletion(selectedTrip.id);
 
-    expect(component.selectTrip).toHaveBeenCalledWith(selectedTrip.id);
     expect(component.completeTrip).toHaveBeenCalledWith(selectedTrip.id);
+  });
+
+  it('navigates to the dedicated reservation details page when selecting a trip', () => {
+    component.selectTrip(12);
+
+    expect(router.navigate).toHaveBeenCalledWith(['/trips', 12, 'reservations']);
   });
 
   it('deletes a trip when deletion is possible', () => {
@@ -326,7 +326,7 @@ describe('DashboardPageComponent', () => {
 
     expect(window.confirm).not.toHaveBeenCalled();
     expect(tripServiceMock.cancelTrip).not.toHaveBeenCalled();
-    expect(component.bookingActionError).toContain('ne peut pas être supprimé');
+    expect(component.receivedTripsActionError).toContain('ne peut pas être supprimé');
   });
 
   it('uses the expected received-trip status mapping', () => {

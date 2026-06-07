@@ -157,7 +157,7 @@ export class TripsManagementPageComponent implements OnInit {
 
   /** Navigate to trip bookings/details. */
   viewTripDetails(tripId: number): void {
-    void this.router.navigate(['/dashboard'], { queryParams: { tab: 'received', tripId } });
+    void this.router.navigate(['/trips', tripId, 'reservations']);
   }
 
   /** Navigate to edit a trip. */

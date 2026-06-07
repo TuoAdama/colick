@@ -15,6 +15,7 @@ export interface BookingResponse {
   tripId: number;
   senderId: number;
   senderName: string;
+  senderPhotoUrl?: string;
   title: string;
   weight: number;
   description?: string;

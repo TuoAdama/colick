@@ -219,15 +219,15 @@ describe('TripsManagementPageComponent', () => {
     });
 
     it('should return correct dot class for each status', () => {
-      expect(component.tripStatusDotClass('ACTIVE')).toBe('bg-success');
-      expect(component.tripStatusDotClass('COMPLETED')).toBe('bg-text-muted');
-      expect(component.tripStatusDotClass('CANCELLED')).toBe('bg-error');
+      expect(component.tripStatusDotClass('ACTIVE')).toBe('bg-accent');
+      expect(component.tripStatusDotClass('COMPLETED')).toBe('bg-success');
+      expect(component.tripStatusDotClass('CANCELLED')).toBe('bg-text-muted');
     });
 
     it('should return correct text class for each status', () => {
-      expect(component.tripStatusTextClass('ACTIVE')).toBe('text-success');
-      expect(component.tripStatusTextClass('COMPLETED')).toBe('text-text-muted');
-      expect(component.tripStatusTextClass('CANCELLED')).toBe('text-error');
+      expect(component.tripStatusTextClass('ACTIVE')).toBe('text-accent');
+      expect(component.tripStatusTextClass('COMPLETED')).toBe('text-success');
+      expect(component.tripStatusTextClass('CANCELLED')).toBe('text-text-muted');
     });
   });
 

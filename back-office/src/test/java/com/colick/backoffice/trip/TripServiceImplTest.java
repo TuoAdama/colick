@@ -7,6 +7,7 @@ import com.colick.backoffice.exception.ResourceNotFoundException;
 import com.colick.backoffice.exception.TripBookingConflictException;
 import com.colick.backoffice.exception.TripUpdateNotAllowedException;
 import com.colick.backoffice.exception.ValidationCodeDeliveryException;
+import com.colick.backoffice.file.FileStorageService;
 import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.location.entity.LocationType;
 import com.colick.backoffice.location.repository.LocationRepository;
@@ -43,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,6 +67,9 @@ class TripServiceImplTest {
 
     @Mock
     private TravelerReviewService travelerReviewService;
+
+    @Mock
+    private FileStorageService fileStorageService;
 
     @Spy
     private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
@@ -92,6 +97,7 @@ class TripServiceImplTest {
                 .firstName("Bob")
                 .lastName("Martin")
                 .email("bob@example.com")
+                .photoUrl("/uploads/bob.png")
                 .role(User.Role.USER)
                 .build();
 
@@ -112,6 +118,8 @@ class TripServiceImplTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
         lenient().when(travelerReviewService.getTravelerRatingSummaries(anyCollection()))
                 .thenReturn(Map.of());
+        lenient().when(fileStorageService.sanitizePublicUrl(nullable(String.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
@@ -300,6 +308,26 @@ class TripServiceImplTest {
 
         assertThat(bookings).hasSize(1);
         assertThat(bookings.get(0).getId()).isEqualTo(1L);
+        assertThat(bookings.get(0).getSenderPhotoUrl()).isEqualTo("/uploads/bob.png");
+    }
+
+    @Test
+    void getBookings_shouldHideBrokenUploadUrls() {
+        TripBooking pending = TripBooking.builder()
+                .id(1L).trip(sampleTrip).sender(sender)
+                .packagePhotoUrl("/uploads/package.png")
+                .status(TripBooking.BookingStatus.PENDING).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findByTrip(sampleTrip)).thenReturn(List.of(pending));
+        when(fileStorageService.sanitizePublicUrl("/uploads/bob.png")).thenReturn(null);
+        when(fileStorageService.sanitizePublicUrl("/uploads/package.png")).thenReturn(null);
+
+        List<TripBookingResponse> bookings = tripService.getBookings(10L, traveler);
+
+        assertThat(bookings).hasSize(1);
+        assertThat(bookings.get(0).getSenderPhotoUrl()).isNull();
+        assertThat(bookings.get(0).getPackagePhotoUrl()).isNull();
     }
 
     @Test

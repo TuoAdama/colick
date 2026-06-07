@@ -7,6 +7,7 @@ import com.colick.backoffice.exception.ResourceNotFoundException;
 import com.colick.backoffice.exception.TripBookingConflictException;
 import com.colick.backoffice.exception.TripUpdateNotAllowedException;
 import com.colick.backoffice.exception.ValidationCodeDeliveryException;
+import com.colick.backoffice.file.FileStorageService;
 import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.location.entity.LocationType;
 import com.colick.backoffice.location.repository.LocationRepository;
@@ -39,14 +40,16 @@ public class TripServiceImpl implements TripService {
     private final BookingValidationService bookingValidationService;
     private final TravelerReviewService travelerReviewService;
     private final LocalizedMessages localizedMessages;
+    private final FileStorageService fileStorageService;
 
     public TripServiceImpl(TripRepository tripRepository,
                            TripBookingRepository bookingRepository,
-                           EmailService emailService,
-                           LocationRepository locationRepository,
-                           BookingValidationService bookingValidationService,
-                           TravelerReviewService travelerReviewService,
-                           LocalizedMessages localizedMessages) {
+                            EmailService emailService,
+                            LocationRepository locationRepository,
+                            BookingValidationService bookingValidationService,
+                            TravelerReviewService travelerReviewService,
+                            LocalizedMessages localizedMessages,
+                            FileStorageService fileStorageService) {
         this.tripRepository = tripRepository;
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
@@ -54,6 +57,7 @@ public class TripServiceImpl implements TripService {
         this.bookingValidationService = bookingValidationService;
         this.travelerReviewService = travelerReviewService;
         this.localizedMessages = localizedMessages;
+        this.fileStorageService = fileStorageService;
     }
 
     @Override
@@ -157,7 +161,7 @@ public class TripServiceImpl implements TripService {
         assertTripOwner(trip, requester);
         return bookingRepository.findByTrip(trip).stream()
                 .filter(booking -> booking.getStatus() != TripBooking.BookingStatus.REMOVED)
-                .map(TripBookingResponse::from)
+                .map(this::toTripBookingResponse)
                 .toList();
     }
 
@@ -215,7 +219,7 @@ public class TripServiceImpl implements TripService {
             trip.getDestination()
         );
 
-        return TripBookingResponse.from(saved);
+        return toTripBookingResponse(saved);
     }
 
     @Override
@@ -227,7 +231,7 @@ public class TripServiceImpl implements TripService {
         }
 
         if (booking.getStatus() == TripBooking.BookingStatus.ACCEPTED) {
-            return TripBookingResponse.from(booking);
+            return toTripBookingResponse(booking);
         }
         if (booking.getStatus() != TripBooking.BookingStatus.PENDING) {
             throw new ConflictException(localizedMessages.get("error.trip.onlyPendingBookingsAcceptable"));
@@ -244,7 +248,7 @@ public class TripServiceImpl implements TripService {
             booking.getTrip().getDestination()
         );
 
-        return TripBookingResponse.from(saved);
+        return toTripBookingResponse(saved);
     }
 
     @Override
@@ -256,7 +260,7 @@ public class TripServiceImpl implements TripService {
         assertTripOwner(booking.getTrip(), requester);
 
         if (booking.getStatus() == TripBooking.BookingStatus.DELIVERED) {
-            return TripBookingResponse.from(booking);
+            return toTripBookingResponse(booking);
         }
         if (booking.getTrip().getStatus() != Trip.TripStatus.COMPLETED) {
             throw new ConflictException(localizedMessages.get("error.trip.completedRequiredForDelivery"));
@@ -274,7 +278,7 @@ public class TripServiceImpl implements TripService {
         booking.setStatus(TripBooking.BookingStatus.DELIVERED);
         booking.setDeliveredAt(LocalDateTime.now());
         bookingValidationService.invalidateValidationCode(booking);
-        return TripBookingResponse.from(bookingRepository.save(booking));
+        return toTripBookingResponse(bookingRepository.save(booking));
     }
 
     @Override
@@ -286,7 +290,7 @@ public class TripServiceImpl implements TripService {
         }
 
         if (booking.getStatus() == TripBooking.BookingStatus.REJECTED) {
-            return TripBookingResponse.from(booking);
+            return toTripBookingResponse(booking);
         }
         if (booking.getStatus() != TripBooking.BookingStatus.PENDING) {
             throw new ConflictException(localizedMessages.get("error.trip.onlyPendingBookingsRejectable"));
@@ -303,7 +307,7 @@ public class TripServiceImpl implements TripService {
             booking.getTrip().getDestination()
         );
 
-        return TripBookingResponse.from(saved);
+        return toTripBookingResponse(saved);
     }
 
     @Override
@@ -354,7 +358,7 @@ public class TripServiceImpl implements TripService {
                 booking.getTrip().getDepartureAddress(),
                 booking.getTrip().getDestination());
 
-        return TripBookingResponse.from(saved);
+        return toTripBookingResponse(saved);
     }
 
     private Trip findTripOrThrow(Long id) {
@@ -469,7 +473,7 @@ public class TripServiceImpl implements TripService {
     @Transactional(readOnly = true)
     public List<TripBookingResponse> getMyBookings(User user) {
         return bookingRepository.findBySender(user).stream()
-                .map(TripBookingResponse::from)
+                .map(this::toTripBookingResponse)
                 .toList();
     }
 
@@ -511,11 +515,20 @@ public class TripServiceImpl implements TripService {
                                         BigDecimal availableWeight,
                                         Map<Long, TravelerRatingSummary> travelerRatingSummaries) {
         TravelerRatingSummary summary = travelerRatingSummaries.get(trip.getTraveler().getId());
-        return TripResponse.from(
+        TripResponse response = TripResponse.from(
                 trip,
                 availableWeight,
                 summary != null ? summary.averageRating() : null,
                 summary != null ? summary.reviewCount() : 0L
         );
+        response.setTravelerPhotoUrl(fileStorageService.sanitizePublicUrl(response.getTravelerPhotoUrl()));
+        return response;
+    }
+
+    private TripBookingResponse toTripBookingResponse(TripBooking booking) {
+        TripBookingResponse response = TripBookingResponse.from(booking);
+        response.setSenderPhotoUrl(fileStorageService.sanitizePublicUrl(response.getSenderPhotoUrl()));
+        response.setPackagePhotoUrl(fileStorageService.sanitizePublicUrl(response.getPackagePhotoUrl()));
+        return response;
     }
 }
