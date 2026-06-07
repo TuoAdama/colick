@@ -1,0 +1,579 @@
+<div class="min-h-screen bg-background-primary font-['Inter'] text-text-primary">
+  <header class="fixed inset-x-0 top-0 z-40 h-14 border-b border-border bg-background-secondary/90 backdrop-blur-md">
+    <div class="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
+      <a routerLink="/" class="text-[2rem] font-bold leading-none tracking-[-0.02em] text-primary">
+        <span class="text-accent">Co</span>lick
+      </a>
+
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary transition hover:bg-background-primary hover:text-primary md:hidden"
+          aria-label="Ouvrir le menu"
+          [attr.aria-expanded]="isMobileMenuOpen"
+          (click)="openMobileMenu()"
+        >
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
+        @if (hasUserPhoto()) {
+          <img
+            [src]="userPhotoUrl()!"
+            (error)="onUserPhotoError()"
+            [alt]="'Photo de profil de ' + currentUserName()"
+            class="h-8 w-8 rounded-full border border-border object-cover"
+          />
+        } @else {
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-white">
+            {{ userInitials() }}
+          </span>
+        }
+      </div>
+    </div>
+  </header>
+
+  <aside class="fixed left-0 top-14 hidden h-[calc(100vh-56px)] w-64 flex-col border-r border-border bg-background-secondary px-2 py-4 md:flex">
+    <div class="mb-8 flex items-center gap-3 px-3">
+      @if (hasUserPhoto()) {
+        <img
+          [src]="userPhotoUrl()!"
+          (error)="onUserPhotoError()"
+          [alt]="'Photo de profil de ' + currentUserName()"
+          class="h-10 w-10 rounded-xl object-cover"
+        />
+      } @else {
+        <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-white">
+          {{ userInitials() }}
+        </span>
+      }
+      <p class="min-w-0 truncate text-sm font-bold text-primary">{{ currentUserName() }}</p>
+    </div>
+
+    <nav class="flex-1 space-y-1 px-1" aria-label="Navigation réservation">
+      <a
+        [routerLink]="['/dashboard']"
+        class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h8V3H3v10Zm10 8h8V11h-8v10Zm0-18v4h8V3h-8ZM3 21h8v-6H3v6Z" />
+        </svg>
+        Tableau de board
+      </a>
+      <a
+        [routerLink]="['/trips']"
+        class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M6 3h12M6 21h12M4 10l2 8m14-8-2 8" />
+        </svg>
+        Mes trajets
+      </a>
+      <a
+        [routerLink]="['/dashboard']"
+        [queryParams]="{ tab: 'received' }"
+        class="flex items-center gap-3 rounded-xl bg-primary/10 px-3 py-3 text-sm font-bold text-primary"
+        aria-current="page"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" />
+        </svg>
+        Mes demandes
+      </a>
+      <a
+        [routerLink]="['/messages']"
+        class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z" />
+        </svg>
+        Messages
+      </a>
+    </nav>
+
+    <div class="space-y-1 border-t border-border pt-4">
+      <a
+        [routerLink]="['/dashboard']"
+        [queryParams]="{ tab: 'profile' }"
+        class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+        </svg>
+        Réglages
+      </a>
+      <button
+        type="button"
+        class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-error/5 hover:text-error"
+        (click)="logout()"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-7.5a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 6 21h7.5a2.25 2.25 0 0 0 2.25-2.25V15" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H9m0 0 3-3m-3 3 3 3" />
+        </svg>
+        Deconnexion
+      </button>
+      <a
+        [routerLink]="['/propose']"
+        class="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-white transition hover:opacity-90"
+      >
+        Publier un trajet
+      </a>
+    </div>
+  </aside>
+
+  <main class="min-h-screen pb-12 pt-14 md:ml-64">
+    <div class="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8">
+      @if (isLoading && !booking) {
+        <section class="rounded-2xl border border-border bg-background-secondary px-5 py-16 text-center shadow-card" role="status" aria-live="polite">
+          <div class="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-border border-t-primary"></div>
+          <p class="mt-4 text-sm font-medium text-text-secondary">Chargement de la réservation...</p>
+        </section>
+      } @else if (loadError && !booking) {
+        <section class="rounded-2xl border border-error/20 bg-background-secondary px-5 py-12 text-center shadow-card" role="alert">
+          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-error/10 text-error">
+            <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.2 16c-.77 1.33.19 3 1.73 3Z" />
+            </svg>
+          </div>
+          <h1 class="mt-4 text-xl font-bold text-text-primary">Impossible d’afficher cette réservation</h1>
+          <p class="mt-2 text-sm text-text-secondary">{{ loadError }}</p>
+        </section>
+      } @else if (trip && booking) {
+        @if (actionError) {
+          <div class="mb-6 rounded-2xl border border-error/20 bg-error/10 px-4 py-3 text-sm text-error" role="alert">
+            {{ actionError }}
+          </div>
+        }
+
+        <section class="mb-6 overflow-hidden rounded-2xl border border-border bg-background-secondary shadow-card">
+          <div class="flex flex-col gap-5 p-5 sm:p-6">
+            <nav aria-label="Fil d’Ariane">
+              <a
+                [routerLink]="['/trips', trip.id, 'reservations']"
+                class="inline-flex items-center gap-2 text-sm font-medium text-text-secondary transition hover:text-primary"
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6" />
+                </svg>
+                Retour aux demandes du trajet
+              </a>
+            </nav>
+
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div class="min-w-0">
+                <span
+                  class="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em]"
+                  [class]="bookingStatusClass(booking.status)"
+                >
+                  {{ bookingStatusLabel(booking.status) }}
+                </span>
+
+                <h1 class="mt-3 text-2xl font-bold tracking-[-0.02em] text-text-primary sm:text-3xl">
+                  {{ routeLocationLabel(trip.departureAddress) }}
+                  <span class="mx-2 text-primary">→</span>
+                  {{ routeLocationLabel(trip.destination) }}
+                </h1>
+
+                <p class="mt-2 text-sm text-text-secondary">
+                  {{ trip.departureAddress }} → {{ trip.destination }}
+                </p>
+
+                <p class="mt-2 inline-flex items-center gap-2 text-sm text-text-secondary">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" />
+                  </svg>
+                  Départ le {{ trip.departureTime | date:'dd/MM/yyyy • HH:mm' }}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                class="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background-secondary px-4 py-3 text-sm font-semibold text-text-primary transition hover:-translate-y-px hover:bg-background-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                [disabled]="isProcessing"
+                (click)="messageSender()"
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z" />
+                </svg>
+                Message
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.9fr)]">
+          <div class="space-y-6">
+            <section class="rounded-2xl border border-border bg-background-secondary p-5 shadow-card sm:p-6">
+              <h2 class="text-lg font-bold text-text-primary">Expéditeur</h2>
+
+              <div class="mt-4 flex items-center gap-4">
+                @if (senderPhotoUrl(); as photoUrl) {
+                  <img
+                    [src]="photoUrl"
+                    [alt]="'Photo de profil de ' + booking.senderName"
+                    class="h-14 w-14 rounded-full border border-border object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    (error)="onSenderPhotoError()"
+                  />
+                } @else {
+                  <div class="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-primary/10 text-sm font-bold text-primary">
+                    {{ senderInitial() }}
+                  </div>
+                }
+
+                <div class="min-w-0">
+                  <p class="text-base font-bold text-text-primary">{{ booking.senderName }}</p>
+                  <p class="mt-1 text-sm text-text-secondary">
+                    Les informations publiques détaillées du profil ne sont pas disponibles sur cette réservation.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section class="rounded-2xl border border-border bg-background-secondary p-5 shadow-card sm:p-6">
+              <h2 class="text-lg font-bold text-text-primary">Détails du colis</h2>
+
+              <div class="mt-5 space-y-5">
+                <div>
+                  <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">Titre</p>
+                  <p class="mt-1 text-base font-semibold text-text-primary">{{ booking.title }}</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div class="rounded-xl bg-background-primary p-4">
+                    <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">Poids</p>
+                    <p class="mt-1 text-base font-semibold text-text-primary">{{ booking.weight | number:'1.0-2' }} kg</p>
+                  </div>
+
+                  <div class="rounded-xl bg-background-primary p-4">
+                    <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">Contact destinataire</p>
+                    <p class="mt-1 break-words text-sm font-medium text-text-primary">{{ booking.recipientContact }}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">Description</p>
+                  @if (booking.description) {
+                    <p class="mt-1 text-sm leading-6 text-text-secondary">{{ booking.description }}</p>
+                  } @else {
+                    <p class="mt-1 text-sm text-text-muted">Aucune description fournie.</p>
+                  }
+                </div>
+              </div>
+            </section>
+
+            @if (booking.packagePhotoUrl) {
+              <section class="overflow-hidden rounded-2xl border border-border bg-background-secondary shadow-card">
+                <div class="border-b border-border px-5 py-4 sm:px-6">
+                  <h2 class="text-lg font-bold text-text-primary">Photo du colis</h2>
+                </div>
+
+                <img
+                  [src]="booking.packagePhotoUrl"
+                  [alt]="'Photo du colis ' + booking.title"
+                  class="h-72 w-full object-cover sm:h-80"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </section>
+            }
+          </div>
+
+          <aside class="space-y-6 xl:sticky xl:top-20 xl:self-start">
+            <section class="overflow-hidden rounded-2xl border border-border bg-background-secondary shadow-card">
+              <div class="border-b border-border px-5 py-4 sm:px-6">
+                <h2 class="text-lg font-bold text-text-primary">Récapitulatif financier</h2>
+              </div>
+
+              <div class="space-y-4 px-5 py-5 sm:px-6">
+                <div class="flex items-center justify-between gap-4">
+                  <span class="text-sm text-text-secondary">Prix total payé</span>
+                  <span class="text-base font-semibold text-text-primary">{{ grossAmount() | number:'1.0-2' }} €</span>
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                  <span class="text-sm text-text-secondary">Commission Colick (7%)</span>
+                  <span class="text-sm font-semibold text-error">-{{ platformCommission() | number:'1.0-2' }} €</span>
+                </div>
+
+                <div class="flex items-center justify-between gap-4 rounded-xl bg-background-primary px-4 py-4">
+                  <span class="text-sm font-semibold text-text-primary">Votre gain net</span>
+                  <span class="text-xl font-bold text-primary">{{ netAmount() | number:'1.0-2' }} €</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="rounded-2xl border border-border bg-background-secondary p-5 shadow-card sm:p-6">
+              <h2 class="text-lg font-bold text-text-primary">Actions</h2>
+
+              @if (booking.status === 'PENDING') {
+                <p class="mt-2 text-sm text-text-secondary">
+                  Cette demande attend votre validation avant d’être confirmée sur ce trajet.
+                </p>
+
+                <div class="mt-5 space-y-3">
+                  <button
+                    type="button"
+                    class="inline-flex w-full items-center justify-center rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-secondary/20 disabled:opacity-50"
+                    [disabled]="isProcessing"
+                    (click)="acceptBooking()"
+                  >
+                    {{ isProcessing ? 'Traitement...' : 'Accepter la demande' }}
+                  </button>
+
+                  <button
+                    type="button"
+                    class="inline-flex w-full items-center justify-center rounded-xl border border-error/30 bg-background-secondary px-4 py-3 text-sm font-bold text-error transition hover:bg-error/5 focus:outline-none focus:ring-2 focus:ring-error/20 disabled:opacity-50"
+                    [disabled]="isProcessing"
+                    (click)="rejectBooking()"
+                  >
+                    Refuser la demande
+                  </button>
+                </div>
+              } @else if (booking.status === 'ACCEPTED') {
+                <div class="mt-4 space-y-4">
+                  @if (booking.deliveredAt) {
+                    <div class="rounded-xl border border-success/20 bg-success/10 px-4 py-3">
+                      <p class="text-sm font-semibold text-success">Colis remis</p>
+                      <p class="mt-1 text-xs text-text-secondary">
+                        Confirmé le {{ booking.deliveredAt | date:'dd/MM/yyyy à HH:mm' }}
+                      </p>
+                    </div>
+                  } @else {
+                    <div class="rounded-xl border border-success/20 bg-success/10 px-4 py-3">
+                      <p class="text-sm font-semibold text-success">Réservation acceptée</p>
+                      <p class="mt-1 text-xs text-text-secondary">
+                        Le colis est actuellement retenu sur votre trajet.
+                      </p>
+                    </div>
+
+                    @if (booking.validationDeliveryStatus === 'FAILED' && booking.validationCodeDeliveryFailedAt) {
+                      <div class="rounded-xl border border-error/20 bg-error/10 px-4 py-3">
+                        <p class="text-sm font-semibold text-error">Envoi du code échoué</p>
+                        <p class="mt-1 text-xs text-text-secondary">
+                          Échec le {{ booking.validationCodeDeliveryFailedAt | date:'dd/MM/yyyy à HH:mm' }}.
+                        </p>
+                      </div>
+                    }
+
+                    @if (canShowConfirmDelivery()) {
+                      <div class="rounded-xl border border-border bg-background-primary p-4">
+                        <label for="delivery-code" class="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-text-muted">
+                          Code de remise
+                        </label>
+
+                        <input
+                          id="delivery-code"
+                          type="text"
+                          inputmode="numeric"
+                          maxlength="6"
+                          [value]="deliveryCode"
+                          (input)="deliveryCode = $any($event.target).value"
+                          placeholder="000000"
+                          class="w-full rounded-xl border border-border bg-background-secondary px-4 py-3 text-sm tracking-[0.25em] text-text-primary placeholder:text-text-secondary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+
+                        <button
+                          type="button"
+                          class="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-secondary/20 disabled:opacity-50"
+                          [disabled]="deliveryCode.trim().length !== 6 || isProcessing"
+                          (click)="confirmBookingDelivery()"
+                        >
+                          {{ isProcessing ? 'Traitement...' : 'Confirmer la remise' }}
+                        </button>
+                      </div>
+                    } @else {
+                      <div class="rounded-xl border border-border bg-background-primary px-4 py-3">
+                        <p class="text-sm text-text-secondary">
+                          La confirmation de remise sera disponible dès qu’un code actif pourra être utilisé.
+                        </p>
+                      </div>
+                    }
+
+                    @if (canRemoveBooking()) {
+                      <button
+                        type="button"
+                        class="inline-flex w-full items-center justify-center rounded-xl border border-error/30 bg-background-secondary px-4 py-3 text-sm font-bold text-error transition hover:bg-error/5 focus:outline-none focus:ring-2 focus:ring-error/20 disabled:opacity-50"
+                        [disabled]="isProcessing"
+                        (click)="openRemoveBookingModal()"
+                      >
+                        Retirer la réservation
+                      </button>
+                    }
+                  }
+                </div>
+              } @else {
+                <div class="mt-4 rounded-xl bg-background-primary px-4 py-3">
+                  <p class="text-sm text-text-secondary">
+                    Cette réservation est en lecture seule dans son état actuel.
+                  </p>
+                </div>
+              }
+            </section>
+
+            <section class="rounded-2xl border border-border bg-background-secondary p-5 shadow-card sm:p-6">
+              <div class="flex items-start gap-3">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3 4 7v5c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V7l-8-4Z" />
+                  </svg>
+                </div>
+
+                <div>
+                  <h2 class="text-base font-bold text-text-primary">Conseil de sécurité</h2>
+                  <p class="mt-1 text-sm leading-6 text-text-secondary">
+                    Vérifiez le contenu du colis avec l’expéditeur lors de la remise et confirmez la livraison uniquement après validation.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </aside>
+        </div>
+      }
+    </div>
+  </main>
+</div>
+
+@if (isMobileMenuOpen) {
+  <div class="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu de navigation">
+    <div
+      class="absolute inset-0 bg-text-primary/40 backdrop-blur-sm"
+      aria-hidden="true"
+      (click)="closeMobileMenu()"
+    ></div>
+
+    <aside class="absolute left-0 top-0 flex h-full w-72 flex-col border-r border-border bg-background-secondary px-2 py-4 shadow-xl">
+      <div class="mb-6 flex items-center justify-between px-3">
+        <a
+          routerLink="/"
+          class="text-[1.5rem] font-bold leading-none tracking-[-0.02em] text-primary"
+          (click)="closeMobileMenu()"
+        >
+          <span class="text-accent">Co</span>lick
+        </a>
+        <button
+          type="button"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-xl text-text-secondary transition hover:bg-background-primary hover:text-primary"
+          aria-label="Fermer le menu"
+          (click)="closeMobileMenu()"
+        >
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="mb-6 flex items-center gap-3 rounded-xl bg-background-primary px-3 py-3">
+        @if (hasUserPhoto()) {
+          <img
+            [src]="userPhotoUrl()!"
+            (error)="onUserPhotoError()"
+            [alt]="'Photo de profil de ' + currentUserName()"
+            class="h-10 w-10 shrink-0 rounded-xl object-cover"
+          />
+        } @else {
+          <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-white">
+            {{ userInitials() }}
+          </span>
+        }
+        <div class="min-w-0">
+          <p class="truncate text-sm font-bold text-text-primary">{{ currentUserName() }}</p>
+          <p class="truncate text-[11px] text-text-secondary">{{ currentUserEmail() }}</p>
+        </div>
+      </div>
+
+      <nav class="flex-1 space-y-1 px-1" aria-label="Navigation mobile">
+        <a
+          [routerLink]="['/dashboard']"
+          class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
+          (click)="closeMobileMenu()"
+        >
+          <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h8V3H3v10Zm10 8h8V11h-8v10Zm0-18v4h8V3h-8ZM3 21h8v-6H3v6Z" />
+          </svg>
+          Tableau de board
+        </a>
+        <a
+          [routerLink]="['/trips']"
+          class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
+          (click)="closeMobileMenu()"
+        >
+          <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M6 3h12M6 21h12M4 10l2 8m14-8-2 8" />
+          </svg>
+          Mes trajets
+        </a>
+        <a
+          [routerLink]="['/dashboard']"
+          [queryParams]="{ tab: 'received' }"
+          class="flex items-center gap-3 rounded-xl bg-primary/10 px-3 py-3 text-sm font-bold text-primary"
+          aria-current="page"
+          (click)="closeMobileMenu()"
+        >
+          <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" />
+          </svg>
+          Mes demandes
+        </a>
+        <a
+          [routerLink]="['/messages']"
+          class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
+          (click)="closeMobileMenu()"
+        >
+          <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z" />
+          </svg>
+          Messages
+        </a>
+      </nav>
+
+      <div class="space-y-1 border-t border-border px-1 pt-4">
+        <a
+          [routerLink]="['/dashboard']"
+          [queryParams]="{ tab: 'profile' }"
+          class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
+          (click)="closeMobileMenu()"
+        >
+          <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+          </svg>
+          Réglages
+        </a>
+        <button
+          type="button"
+          class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-error/5 hover:text-error"
+          (click)="logout(); closeMobileMenu()"
+        >
+          <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-7.5a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 6 21h7.5a2.25 2.25 0 0 0 2.25-2.25V15" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H9m0 0 3-3m-3 3 3 3" />
+          </svg>
+          Déconnexion
+        </button>
+        <a
+          [routerLink]="['/propose']"
+          class="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-white transition hover:opacity-90"
+          (click)="closeMobileMenu()"
+        >
+          Publier un trajet
+        </a>
+      </div>
+    </aside>
+  </div>
+}
+
+<app-confirm-modal
+  [isOpen]="isRemoveBookingModalOpen"
+  title="Retirer cette réservation ?"
+  message="Cette action supprimera la réservation acceptée de votre trajet."
+  confirmLabel="Retirer la réservation"
+  variant="danger"
+  [isLoading]="isProcessing"
+  (confirmed)="confirmRemoveBooking()"
+  (cancelled)="closeRemoveBookingModal()"
+/>

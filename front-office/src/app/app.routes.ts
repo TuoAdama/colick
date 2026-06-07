@@ -98,6 +98,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'trips/:tripId/reservations/:bookingId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/reservation-booking-detail/reservation-booking-detail-page.component').then(
+        (m) => m.ReservationBookingDetailPageComponent
+      ),
+  },
+  {
     path: 'trips/:tripId/reservations',
     canActivate: [authGuard],
     loadComponent: () =>

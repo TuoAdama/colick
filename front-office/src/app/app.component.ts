@@ -17,6 +17,7 @@ import { filter } from 'rxjs';
 })
 export class AppComponent {
   private readonly router = inject(Router);
+  private readonly reservationShellRoutePattern = /^\/trips\/\d+\/reservations(?:\/\d+)?(?:[/?#]|$)/;
   /**
    * Application title
    */
@@ -33,6 +34,6 @@ export class AppComponent {
   }
 
   private updateSharedChrome(url: string): void {
-    this.showSharedChrome = !/^\/trips\/\d+\/reservations(?:[/?#]|$)/.test(url);
+    this.showSharedChrome = !this.reservationShellRoutePattern.test(url);
   }
 }
