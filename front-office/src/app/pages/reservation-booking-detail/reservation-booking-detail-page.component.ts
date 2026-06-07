@@ -192,6 +192,28 @@ export class ReservationBookingDetailPageComponent implements OnInit {
     this.senderPhotoLoadFailed = true;
   }
 
+  hasSenderReviews(): boolean {
+    return this.booking?.senderRatingAverage !== null
+      && this.booking?.senderRatingAverage !== undefined
+      && (this.booking?.senderRatingCount ?? 0) > 0;
+  }
+
+  senderReviewAverageLabel(): string {
+    const average = this.booking?.senderRatingAverage;
+    if (average === null || average === undefined) {
+      return '';
+    }
+
+    return new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(average);
+  }
+
+  senderReviewCountLabel(): string {
+    return `${this.booking?.senderRatingCount ?? 0} avis`;
+  }
+
   validationChannelLabel(channel?: BookingResponse['validationDeliveryChannel']): string {
     return channel === 'SMS' ? 'SMS' : 'e-mail';
   }

@@ -107,6 +107,8 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Documents');
     expect(fixture.nativeElement.textContent).toContain('Récapitulatif financier');
     expect(fixture.nativeElement.textContent).toContain('Juillet');
+    expect(fixture.nativeElement.textContent).toContain('4,8');
+    expect(fixture.nativeElement.textContent).toContain('(24 avis)');
   });
 
   it('shows an error state when the targeted booking cannot be found', () => {
@@ -207,6 +209,8 @@ function buildBooking(overrides: Partial<BookingResponse> = {}): BookingResponse
     tripId: 12,
     senderId: 55,
     senderName: 'Grace Hopper',
+    senderRatingAverage: 4.8,
+    senderRatingCount: 24,
     title: 'Documents',
     weight: 2,
     description: 'Dossier important',

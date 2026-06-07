@@ -19,6 +19,8 @@ public class TripBookingResponse {
     private Long senderId;
     private String senderName;
     private String senderPhotoUrl;
+    private Double senderRatingAverage;
+    private Long senderRatingCount;
     private String title;
     private BigDecimal weight;
     private String description;
@@ -36,13 +38,17 @@ public class TripBookingResponse {
     /**
      * Maps a {@link TripBooking} entity to a {@link TripBookingResponse} DTO.
      */
-    public static TripBookingResponse from(TripBooking booking) {
+    public static TripBookingResponse from(TripBooking booking,
+                                           Double senderRatingAverage,
+                                           Long senderRatingCount) {
         return TripBookingResponse.builder()
                 .id(booking.getId())
                 .tripId(booking.getTrip().getId())
                 .senderId(booking.getSender().getId())
                 .senderName(booking.getSender().getFirstName() + " " + booking.getSender().getLastName())
                 .senderPhotoUrl(booking.getSender().getPhotoUrl())
+                .senderRatingAverage(senderRatingAverage)
+                .senderRatingCount(senderRatingCount)
                 .title(booking.getTitle())
                 .weight(booking.getWeight())
                 .description(booking.getDescription())
