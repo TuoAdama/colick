@@ -148,8 +148,8 @@
           </div>
         }
 
-        <section class="mb-6 overflow-hidden rounded-2xl border border-border bg-background-secondary shadow-card">
-          <div class="flex flex-col gap-5 p-5 sm:p-6">
+        <section class="mb-8 border-b border-border pb-6">
+          <div class="flex flex-col gap-5">
             <nav aria-label="Fil d’Ariane">
               <a
                 [routerLink]="['/trips', trip.id, 'reservations']"
@@ -162,7 +162,7 @@
               </a>
             </nav>
 
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div class="min-w-0">
                 <span
                   class="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em]"
@@ -171,9 +171,21 @@
                   {{ bookingStatusLabel(booking.status) }}
                 </span>
 
-                <h1 class="mt-3 text-2xl font-bold tracking-[-0.02em] text-text-primary sm:text-3xl">
+                <h1 class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-2xl font-bold tracking-[-0.02em] text-text-primary sm:text-3xl">
                   {{ routeLocationLabel(trip.departureAddress) }}
-                  <span class="mx-2 text-primary">→</span>
+                  <svg
+                    class="h-7 w-7 shrink-0 text-primary sm:h-8 sm:w-8"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.25"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M4 12h14" />
+                    <path d="m13 6 6 6-6 6" />
+                  </svg>
                   {{ routeLocationLabel(trip.destination) }}
                 </h1>
 
@@ -191,7 +203,7 @@
 
               <button
                 type="button"
-                class="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background-secondary px-4 py-3 text-sm font-semibold text-text-primary transition hover:-translate-y-px hover:bg-background-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background-secondary px-4 py-3 text-sm font-semibold text-text-primary transition hover:-translate-y-px hover:bg-background-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 sm:w-auto lg:self-end"
                 [disabled]="isProcessing"
                 (click)="messageSender()"
               >
@@ -206,35 +218,40 @@
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.9fr)]">
           <div class="space-y-6">
-            <section class="rounded-2xl border border-border bg-background-secondary p-5 shadow-card sm:p-6">
-              <h2 class="text-lg font-bold text-text-primary">Expéditeur</h2>
-
-              <div class="mt-4 flex items-center gap-4">
+            <section class="rounded-xl border border-border bg-background-secondary p-5 sm:p-6">
+              <div class="flex items-center gap-4 sm:gap-5">
                 @if (senderPhotoUrl(); as photoUrl) {
                   <img
                     [src]="photoUrl"
                     [alt]="'Photo de profil de ' + booking.senderName"
-                    class="h-14 w-14 rounded-full border border-border object-cover"
+                    class="h-14 w-14 shrink-0 rounded-full border border-border object-cover"
                     loading="lazy"
                     decoding="async"
                     (error)="onSenderPhotoError()"
                   />
                 } @else {
-                  <div class="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-primary/10 text-sm font-bold text-primary">
+                  <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-sm font-bold text-primary">
                     {{ senderInitial() }}
                   </div>
                 }
 
-                <div class="min-w-0">
+                <div class="min-w-0 flex-1">
                   <p class="text-base font-bold text-text-primary">{{ booking.senderName }}</p>
                   <p class="mt-1 text-sm text-text-secondary">
                     Les informations publiques détaillées du profil ne sont pas disponibles sur cette réservation.
                   </p>
                 </div>
+
+                <button
+                  type="button"
+                  class="hidden shrink-0 text-sm font-bold text-primary transition hover:underline sm:inline-flex"
+                >
+                  Voir le profil
+                </button>
               </div>
             </section>
 
-            <section class="rounded-2xl border border-border bg-background-secondary p-5 shadow-card sm:p-6">
+            <section class="rounded-2xl border border-border bg-background-secondary p-5 sm:p-6">
               <h2 class="text-lg font-bold text-text-primary">Détails du colis</h2>
 
               <div class="mt-5 space-y-5">
@@ -267,7 +284,7 @@
             </section>
 
             @if (booking.packagePhotoUrl) {
-              <section class="overflow-hidden rounded-2xl border border-border bg-background-secondary shadow-card">
+              <section class="overflow-hidden rounded-2xl border border-border bg-background-secondary">
                 <div class="border-b border-border px-5 py-4 sm:px-6">
                   <h2 class="text-lg font-bold text-text-primary">Photo du colis</h2>
                 </div>
@@ -284,7 +301,7 @@
           </div>
 
           <aside class="space-y-6 xl:sticky xl:top-20 xl:self-start">
-            <section class="overflow-hidden rounded-2xl border border-border bg-background-secondary shadow-card">
+            <section class="overflow-hidden rounded-2xl border border-border bg-background-secondary">
               <div class="border-b border-border px-5 py-4 sm:px-6">
                 <h2 class="text-lg font-bold text-text-primary">Récapitulatif financier</h2>
               </div>
@@ -307,7 +324,7 @@
               </div>
             </section>
 
-            <section class="rounded-2xl border border-border bg-background-secondary p-5 shadow-card sm:p-6">
+            <section class="rounded-2xl border border-border bg-background-secondary p-5 sm:p-6">
               <h2 class="text-lg font-bold text-text-primary">Actions</h2>
 
               @if (booking.status === 'PENDING') {
@@ -415,7 +432,7 @@
               }
             </section>
 
-            <section class="rounded-2xl border border-border bg-background-secondary p-5 shadow-card sm:p-6">
+            <section class="rounded-2xl border border-border bg-background-secondary p-5 sm:p-6">
               <div class="flex items-start gap-3">
                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
