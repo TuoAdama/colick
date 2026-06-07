@@ -8,7 +8,7 @@ import { Trip } from '../../../models/trip.model';
   standalone: true,
   imports: [CommonModule],
   host: {
-    class: 'block h-full',
+    class: 'block xl:h-full',
   },
   templateUrl: './booking-request-card.component.html',
 })

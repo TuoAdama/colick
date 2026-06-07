@@ -4,26 +4,26 @@
      Expanded details panel (toggled by "Détails" button)
      ============================================================ -->
 <article
-  class="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-background-secondary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card"
+  class="flex flex-col overflow-hidden rounded-xl border border-border bg-background-secondary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card xl:h-full"
   [attr.data-trip-id]="tripId"
   [attr.aria-busy]="isProcessing"
 >
 
   <!-- ── Card Header: avatar · name · status ── -->
-  <div class="flex items-start justify-between p-5 pb-4">
+  <div class="flex items-start justify-between p-4 pb-3 sm:p-5 sm:pb-4">
     <div class="flex items-center gap-3">
       @if (senderPhotoUrl(); as photoUrl) {
         <img
           [src]="photoUrl"
           [alt]="'Photo de profil de ' + booking.senderName"
-          class="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
+          class="h-10 w-10 shrink-0 rounded-full border border-border object-cover sm:h-12 sm:w-12"
           loading="lazy"
           decoding="async"
           (error)="onSenderPhotoError()"
         />
       } @else {
         <div
-          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-sm font-bold text-primary"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-xs font-bold text-primary sm:h-12 sm:w-12 sm:text-sm"
           aria-hidden="true"
         >
           {{ senderInitial() }}
@@ -31,15 +31,15 @@
       }
 
       <div class="min-w-0">
-        <h3 class="font-bold text-text-primary">{{ booking.senderName }}</h3>
+        <h3 class="text-[15px] font-bold text-text-primary sm:text-base">{{ booking.senderName }}</h3>
         <!-- Fallback subtitle: package title acts as sender context -->
-        <p class="truncate text-sm text-text-secondary">{{ booking.title }}</p>
+        <p class="truncate text-[13px] text-text-secondary sm:text-sm">{{ booking.title }}</p>
       </div>
     </div>
 
     <!-- Status badge -->
     <span
-      class="shrink-0 rounded px-2 py-1 text-[11px] font-bold uppercase tracking-wide"
+      class="shrink-0 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wide sm:text-[11px]"
       [class]="statusBadgeClass(booking.status)"
     >
       {{ statusLabel(booking.status) }}
@@ -47,37 +47,37 @@
   </div>
 
   <!-- ── Divider ── -->
-  <hr class="mx-5 border-border" />
+  <hr class="mx-4 border-border sm:mx-5" />
 
   <!-- ── Card Body: 2-column grid ── -->
-  <div class="grid min-h-[8.5rem] flex-1 grid-cols-2 gap-6 px-5 py-4">
+  <div class="grid grid-cols-2 gap-4 px-4 py-3 sm:gap-6 sm:px-5 sm:py-4 xl:min-h-[8.5rem] xl:flex-1">
     <div>
-      <p class="mb-1 text-[11px] font-bold uppercase tracking-wide text-text-muted">Objet &amp; Type</p>
-      <p class="font-bold text-text-primary">{{ booking.title }}</p>
+      <p class="mb-1 text-[10px] font-bold uppercase tracking-wide text-text-muted sm:text-[11px]">Objet &amp; Type</p>
+      <p class="text-[15px] font-bold text-text-primary sm:text-base">{{ booking.title }}</p>
       @if (booking.description) {
-        <p class="text-sm italic text-text-secondary">{{ booking.description }}</p>
+        <p class="text-[13px] italic text-text-secondary sm:text-sm">{{ booking.description }}</p>
       } @else {
-        <p class="text-sm italic text-text-muted">—</p>
+        <p class="text-[13px] italic text-text-muted sm:text-sm">—</p>
       }
     </div>
 
     <div class="text-right">
-      <p class="mb-1 text-[11px] font-bold uppercase tracking-wide text-text-muted">Volume estimé</p>
-      <p class="font-bold text-text-primary">{{ booking.weight | number:'1.0-2' }} kg</p>
+      <p class="mb-1 text-[10px] font-bold uppercase tracking-wide text-text-muted sm:text-[11px]">Volume estimé</p>
+      <p class="text-[15px] font-bold text-text-primary sm:text-base">{{ booking.weight | number:'1.0-2' }} kg</p>
     </div>
   </div>
 
   <!-- ── Card Footer: gain + action buttons ── -->
   <div
-    class="mt-auto flex items-end justify-between border-t border-border/50 px-5 py-3"
+    class="flex items-end justify-between border-t border-border/50 px-4 py-3 sm:px-5 xl:mt-auto"
   >
     <!-- Gain proposé -->
     <div>
-      <p class="mb-1 text-[11px] font-bold uppercase tracking-wide text-text-muted">Gain Proposé</p>
+      <p class="mb-1 text-[10px] font-bold uppercase tracking-wide text-text-muted sm:text-[11px]">Gain Proposé</p>
       @if (reservationAmount() !== null) {
-        <p class="text-xl font-bold text-primary">{{ reservationAmount()! | number:'1.0-2' }} €</p>
+        <p class="text-lg font-bold text-primary sm:text-xl">{{ reservationAmount()! | number:'1.0-2' }} €</p>
       } @else {
-        <p class="text-xl font-bold text-text-muted">—</p>
+        <p class="text-lg font-bold text-text-muted sm:text-xl">—</p>
       }
     </div>
 
@@ -86,7 +86,7 @@
       <!-- Details toggle -->
       <button
         type="button"
-        class="rounded-xl border px-4 py-2 text-sm transition focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+        class="rounded-xl border px-3.5 py-2 text-[13px] transition focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 sm:px-4 sm:text-sm"
         [class]="isDetailsOpen
           ? 'border-primary bg-background-primary text-primary'
           : 'border-border bg-background-secondary text-text-primary hover:bg-background-primary'"
@@ -101,7 +101,7 @@
       @if (booking.status === 'PENDING') {
         <button
           type="button"
-          class="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-background-secondary transition hover:opacity-90 hover:shadow-primary-glow focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+          class="rounded-xl bg-primary px-3.5 py-2 text-[13px] font-bold text-background-secondary transition hover:opacity-90 hover:shadow-primary-glow focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
           [disabled]="isProcessing"
           (click)="onAccept()"
         >
@@ -113,7 +113,7 @@
       @if (booking.status === 'ACCEPTED') {
         <button
           type="button"
-          class="rounded-xl border border-error/30 bg-background-secondary px-4 py-2 text-sm font-bold text-error transition hover:bg-error/5 focus:outline-none focus:ring-2 focus:ring-error/20 disabled:cursor-not-allowed disabled:opacity-50"
+          class="rounded-xl border border-error/30 bg-background-secondary px-3.5 py-2 text-[13px] font-bold text-error transition hover:bg-error/5 focus:outline-none focus:ring-2 focus:ring-error/20 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
           [disabled]="isProcessing"
           (click)="onRemove()"
         >

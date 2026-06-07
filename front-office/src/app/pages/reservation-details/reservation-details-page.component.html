@@ -1,6 +1,6 @@
 <div class="min-h-screen bg-[#f9f9ff] font-['Inter'] text-[#181c22]">
   <header class="fixed inset-x-0 top-0 z-40 h-14 border-b border-[#c1c6d5] bg-white/90 backdrop-blur-md">
-    <div class="mx-auto flex h-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
+    <div class="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
       <a routerLink="/" class="text-[2rem] font-bold leading-none tracking-[-0.02em] text-[#015ab4]">
         Colick
       </a>
@@ -211,11 +211,11 @@
 
         <section class="mb-6">
           <div class="mb-4 flex items-center justify-between gap-3">
-            <h2 class="text-[2rem] font-bold leading-tight tracking-[-0.02em] text-[#181c22]">Demandes en cours</h2>
+            <h2 class="text-[1.625rem] font-bold leading-[1.15] tracking-[-0.02em] text-[#181c22] sm:text-[2rem] sm:leading-tight">Demandes en cours</h2>
 
             <button
               type="button"
-              class="inline-flex items-center gap-2 rounded-xl border border-[#e0e2eb] bg-white px-4 py-2 text-sm text-[#414753] transition hover:bg-[#f1f3fc]"
+              class="inline-flex items-center gap-2 rounded-xl border border-[#e0e2eb] bg-white px-3 py-2 text-[13px] text-[#414753] transition hover:bg-[#f1f3fc] sm:px-4 sm:text-sm"
               (click)="toggleExtendedFilters()"
             >
               <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -230,7 +230,7 @@
               @for (tab of primaryStatusTabs; track tab.value) {
                 <button
                   type="button"
-                  class="rounded-xl px-4 py-3 text-sm font-bold transition"
+                  class="rounded-xl px-3 py-2.5 text-[13px] font-bold transition sm:px-4 sm:py-3 sm:text-sm"
                   [class]="selectedTab === tab.value
                     ? 'bg-white text-[#015ab4] shadow-sm'
                     : 'text-[#6B6B6B]'"
@@ -248,7 +248,7 @@
                 @if (bookingCountForStatus(tab.value) > 0 || tab.value === 'ALL') {
                   <button
                     type="button"
-                    class="rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.05em] transition"
+                    class="rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] transition sm:text-xs"
                     [class]="selectedTab === tab.value
                       ? 'border-[#015ab4] bg-[#015ab4] text-white'
                       : 'border-[#c1c6d5] bg-white text-[#6B6B6B]'"
@@ -304,7 +304,7 @@
             </div>
 
             <div class="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <p class="text-sm text-[#6B6B6B]">
+              <p class="text-[13px] text-[#6B6B6B] sm:text-sm">
                 {{ currentRangeEnd() }} sur {{ filteredBookings().length }} demandes
               </p>
 
@@ -324,7 +324,7 @@
                   @for (page of pageNumbers(); track page) {
                     <button
                       type="button"
-                      class="inline-flex h-10 min-w-10 items-center justify-center rounded-xl border text-sm font-bold transition"
+                      class="inline-flex h-10 min-w-10 items-center justify-center rounded-xl border text-[13px] font-bold transition sm:text-sm"
                       [class]="page === currentPage
                         ? 'border-[#015ab4] bg-[#015ab4] text-white'
                         : 'border-[#e0e2eb] bg-white text-[#414753] hover:bg-[#f1f3fc]'"
