@@ -141,6 +141,33 @@ export class ReservationBookingDetailPageComponent implements OnInit {
     return location.split(',')[0]?.trim() || location;
   }
 
+  formattedDepartureDateTime(value?: string): string {
+    if (!value) {
+      return '';
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    const formattedDate = new Intl.DateTimeFormat('fr-FR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    }).format(date);
+    const [day = '', month = '', year = ''] = formattedDate.split(' ');
+    const capitalizedMonth = month ? `${month.charAt(0).toUpperCase()}${month.slice(1)}` : '';
+    const displayDate = [day, capitalizedMonth, year].filter(Boolean).join(' ');
+    const formattedTime = new Intl.DateTimeFormat('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(date);
+
+    return `${displayDate || formattedDate} • ${formattedTime}`;
+  }
+
   senderInitial(): string {
     return this.booking?.senderName?.trim().charAt(0).toUpperCase() || '?';
   }

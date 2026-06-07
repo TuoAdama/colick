@@ -106,6 +106,7 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(component.booking?.id).toBe(7);
     expect(fixture.nativeElement.textContent).toContain('Documents');
     expect(fixture.nativeElement.textContent).toContain('Récapitulatif financier');
+    expect(fixture.nativeElement.textContent).toContain('Juillet');
   });
 
   it('shows an error state when the targeted booking cannot be found', () => {

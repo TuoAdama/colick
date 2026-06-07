@@ -197,7 +197,7 @@
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" />
                   </svg>
-                  Départ le {{ trip.departureTime | date:'dd/MM/yyyy • HH:mm' }}
+                  Départ le {{ formattedDepartureDateTime(trip.departureTime) }}
                 </p>
               </div>
 
@@ -251,10 +251,10 @@
               </div>
             </section>
 
-            <section class="rounded-2xl border border-border bg-background-secondary p-5 sm:p-6">
-              <h2 class="text-lg font-bold text-text-primary">Détails du colis</h2>
+            <section>
+              <h2 class="text-[1.75rem] font-bold tracking-[-0.02em] text-text-primary">Détails du colis</h2>
 
-              <div class="mt-5 space-y-5">
+              <div class="mt-4 rounded-2xl border border-border bg-background-secondary p-5 sm:p-6">
                 <div>
                   <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">Titre</p>
                   <p class="mt-1 text-base font-semibold text-text-primary">{{ booking.title }}</p>
