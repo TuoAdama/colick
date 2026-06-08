@@ -10,6 +10,21 @@ export interface ConfirmBookingDeliveryRequest {
   validationCode: string;
 }
 
+export interface BookingSenderReviewResponse {
+  reviewerName: string;
+  rating: number;
+  comment?: string | null;
+  submittedAt?: string;
+}
+
+export interface BookingSenderProfileResponse {
+  completedTripCount: number;
+  sentPackageCount: number;
+  averageRating?: number | null;
+  reviewCount: number;
+  reviews: BookingSenderReviewResponse[];
+}
+
 export interface BookingResponse {
   id: number;
   tripId: number;

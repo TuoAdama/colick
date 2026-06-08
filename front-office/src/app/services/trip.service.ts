@@ -2,7 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { Trip, CreateTripDto, UpdateTripDto } from '../models/trip.model';
-import { CreateBookingRequest, BookingResponse, ConfirmBookingDeliveryRequest } from '../models/booking.model';
+import {
+  CreateBookingRequest,
+  BookingResponse,
+  BookingSenderProfileResponse,
+  ConfirmBookingDeliveryRequest,
+} from '../models/booking.model';
 import { PhotoUrlService } from './photo-url.service';
 
 /**
@@ -86,6 +91,13 @@ export class TripService {
     );
   }
 
+  /** Get sender profile data for a specific booking. */
+  getBookingSenderProfile(tripId: number, bookingId: number): Observable<BookingSenderProfileResponse> {
+    return this.http.get<BookingSenderProfileResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/sender-profile`).pipe(
+      map((profile) => this.normalizeBookingSenderProfile(profile))
+    );
+  }
+
   /** Accept a booking. */
   acceptBooking(tripId: number, bookingId: number): Observable<BookingResponse> {
     return this.http.put<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/accept`, {}).pipe(
@@ -156,6 +168,14 @@ export class TripService {
       senderPhotoUrl: this.photoUrlService.normalizePhotoUrl(booking.senderPhotoUrl),
       senderRatingCount: booking.senderRatingCount ?? 0,
       packagePhotoUrl: this.photoUrlService.normalizePhotoUrl(booking.packagePhotoUrl),
+    };
+  }
+
+  private normalizeBookingSenderProfile(profile: BookingSenderProfileResponse): BookingSenderProfileResponse {
+    return {
+      ...profile,
+      reviewCount: profile.reviewCount ?? 0,
+      reviews: profile.reviews ?? [],
     };
   }
 }

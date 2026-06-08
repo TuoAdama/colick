@@ -17,4 +17,6 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
     /** Returns all trips published by the given traveler, regardless of status. */
     List<Trip> findByTraveler(User traveler);
+
+    long countByTravelerAndStatus(User traveler, Trip.TripStatus status);
 }

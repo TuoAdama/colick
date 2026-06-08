@@ -104,6 +104,32 @@ class TravelerReviewRepositoryTest {
         assertThat(stats.get(0).getAverageRating()).isEqualTo(3.0d);
     }
 
+    @Test
+    void findSubmittedReviewsByTravelerId_shouldReturnSubmittedReviewsNewestFirst() {
+        User traveler = persistTraveler("ordered-traveler@example.com", "TRAVELER-ORDERED");
+
+        PersistedBooking firstBooking = persistAcceptedBooking(traveler, "ordered-one@example.com");
+        PersistedBooking secondBooking = persistAcceptedBooking(traveler, "ordered-two@example.com");
+        PersistedBooking thirdBooking = persistAcceptedBooking(traveler, "ordered-three@example.com");
+
+        TravelerReview newestReview = buildInvitation(firstBooking.booking(), "2".repeat(64));
+        newestReview.submit(5, "Excellent", LocalDateTime.now().minusDays(1));
+        travelerReviewRepository.save(newestReview);
+
+        TravelerReview olderReview = buildInvitation(secondBooking.booking(), "3".repeat(64));
+        olderReview.submit(4, "Tres bien", LocalDateTime.now().minusDays(3));
+        travelerReviewRepository.save(olderReview);
+
+        travelerReviewRepository.saveAndFlush(buildInvitation(thirdBooking.booking(), "4".repeat(64)));
+
+        List<TravelerReview> reviews = travelerReviewRepository.findSubmittedReviewsByTravelerId(traveler.getId());
+
+        assertThat(reviews).hasSize(2);
+        assertThat(reviews.get(0).getComment()).isEqualTo("Excellent");
+        assertThat(reviews.get(1).getComment()).isEqualTo("Tres bien");
+        assertThat(reviews.get(0).getBooking().getSender().getFirstName()).isEqualTo("Bob");
+    }
+
     private TravelerReview buildInvitation(TripBooking booking, String tokenHash) {
         return TravelerReview.builder()
                 .booking(booking)

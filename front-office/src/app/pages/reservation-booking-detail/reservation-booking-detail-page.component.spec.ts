@@ -111,6 +111,16 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('(24 avis)');
   });
 
+  it('provides a link to the sender profile page', () => {
+    createComponent();
+
+    const links = Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[];
+    const profileLink = links.find((link) => link.textContent?.includes('Voir le profil') ?? false);
+
+    expect(profileLink).toBeDefined();
+    expect(profileLink?.getAttribute('href')).toContain('/trips/12/reservations/7/profile');
+  });
+
   it('shows an error state when the targeted booking cannot be found', () => {
     tripServiceMock.getTripBookings.and.returnValue(of([buildBooking({ id: 99 })]));
 

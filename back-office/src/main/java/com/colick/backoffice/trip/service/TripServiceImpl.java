@@ -165,6 +165,25 @@ public class TripServiceImpl implements TripService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public TripBookingSenderProfileResponse getBookingSenderProfile(Long tripId, Long bookingId, User requester) {
+        TripBooking booking = findBookingOrThrow(tripId, bookingId);
+        assertTripOwner(booking.getTrip(), requester);
+
+        User sender = booking.getSender();
+        TravelerRatingSummary summary = travelerReviewService.getTravelerRatingSummaries(Set.of(sender.getId()))
+                .get(sender.getId());
+
+        return TripBookingSenderProfileResponse.builder()
+                .completedTripCount(tripRepository.countByTravelerAndStatus(sender, Trip.TripStatus.COMPLETED))
+                .sentPackageCount(bookingRepository.countBySender(sender))
+                .averageRating(summary != null ? summary.averageRating() : null)
+                .reviewCount(summary != null ? summary.reviewCount() : 0L)
+                .reviews(travelerReviewService.getSubmittedReviewsForTraveler(sender.getId()))
+                .build();
+    }
+
+    @Override
     public TripBookingResponse createBooking(Long tripId, CreateBookingRequest request, User sender) {
         Trip trip = findTripOrThrow(tripId);
 

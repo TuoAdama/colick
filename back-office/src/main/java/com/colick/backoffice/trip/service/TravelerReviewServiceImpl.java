@@ -6,6 +6,7 @@ import com.colick.backoffice.exception.ReviewSubmissionConflictException;
 import com.colick.backoffice.i18n.LocalizedMessages;
 import com.colick.backoffice.trip.dto.SubmitTravelerReviewRequest;
 import com.colick.backoffice.trip.dto.TravelerReviewResponse;
+import com.colick.backoffice.trip.dto.TripBookingSenderReviewResponse;
 import com.colick.backoffice.trip.entity.TravelerReview;
 import com.colick.backoffice.trip.entity.Trip;
 import com.colick.backoffice.trip.entity.TripBooking;
@@ -119,6 +120,18 @@ public class TravelerReviewServiceImpl implements TravelerReviewService {
                                 projection.getReviewCount()
                         )
                 ));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TripBookingSenderReviewResponse> getSubmittedReviewsForTraveler(Long travelerId) {
+        if (travelerId == null) {
+            return List.of();
+        }
+
+        return travelerReviewRepository.findSubmittedReviewsByTravelerId(travelerId).stream()
+                .map(TripBookingSenderReviewResponse::from)
+                .toList();
     }
 
     private TravelerReview findReviewByRawToken(String rawToken) {

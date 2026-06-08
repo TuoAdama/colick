@@ -26,4 +26,6 @@ public interface TripBookingRepository extends JpaRepository<TripBooking, Long> 
 
     /** Returns all booking requests submitted by the given user. */
     List<TripBooking> findBySender(User sender);
+
+    long countBySender(User sender);
 }
