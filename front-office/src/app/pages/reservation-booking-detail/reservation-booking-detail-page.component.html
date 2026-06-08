@@ -250,12 +250,12 @@
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  class="hidden shrink-0 text-sm font-bold text-primary transition hover:underline sm:inline-flex"
+                <a
+                  [routerLink]="['/trips', trip.id, 'reservations', booking.id, 'profile']"
+                  class="shrink-0 text-sm font-bold text-primary transition hover:underline sm:inline-flex"
                 >
                   Voir le profil
-                </button>
+                </a>
               </div>
             </section>
 

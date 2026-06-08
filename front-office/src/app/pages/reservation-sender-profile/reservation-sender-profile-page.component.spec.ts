@@ -6,11 +6,11 @@ import { Trip } from '../../models/trip.model';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 import { TripService } from '../../services/trip.service';
-import { ReservationBookingDetailPageComponent } from './reservation-booking-detail-page.component';
+import { ReservationSenderProfilePageComponent } from './reservation-sender-profile-page.component';
 
-describe('ReservationBookingDetailPageComponent', () => {
-  let fixture: ComponentFixture<ReservationBookingDetailPageComponent>;
-  let component: ReservationBookingDetailPageComponent;
+describe('ReservationSenderProfilePageComponent', () => {
+  let fixture: ComponentFixture<ReservationSenderProfilePageComponent>;
+  let component: ReservationSenderProfilePageComponent;
   let router: Router;
 
   const tripParamMap$ = new BehaviorSubject(convertToParamMap({ tripId: '12', bookingId: '7' }));
@@ -18,10 +18,6 @@ describe('ReservationBookingDetailPageComponent', () => {
   const tripServiceMock = {
     getTripById: jasmine.createSpy('getTripById'),
     getTripBookings: jasmine.createSpy('getTripBookings'),
-    acceptBooking: jasmine.createSpy('acceptBooking'),
-    rejectBooking: jasmine.createSpy('rejectBooking'),
-    removeBooking: jasmine.createSpy('removeBooking'),
-    confirmBookingDelivery: jasmine.createSpy('confirmBookingDelivery'),
   };
 
   const messagingServiceMock = {
@@ -44,25 +40,12 @@ describe('ReservationBookingDetailPageComponent', () => {
     tripParamMap$.next(convertToParamMap({ tripId: '12', bookingId: '7' }));
     tripServiceMock.getTripById.calls.reset();
     tripServiceMock.getTripBookings.calls.reset();
-    tripServiceMock.acceptBooking.calls.reset();
-    tripServiceMock.rejectBooking.calls.reset();
-    tripServiceMock.removeBooking.calls.reset();
-    tripServiceMock.confirmBookingDelivery.calls.reset();
     messagingServiceMock.startConversation.calls.reset();
     authServiceMock.getUser.calls.reset();
     authServiceMock.logout.calls.reset();
 
     tripServiceMock.getTripById.and.returnValue(of(buildTrip()));
     tripServiceMock.getTripBookings.and.returnValue(of([buildBooking()]));
-    tripServiceMock.acceptBooking.and.returnValue(of({ ...buildBooking(), status: 'ACCEPTED' }));
-    tripServiceMock.rejectBooking.and.returnValue(of({ ...buildBooking(), status: 'REJECTED' }));
-    tripServiceMock.removeBooking.and.returnValue(of(void 0));
-    tripServiceMock.confirmBookingDelivery.and.returnValue(of({
-      ...buildBooking(),
-      status: 'ACCEPTED',
-      validationCodeActive: false,
-      deliveredAt: '2025-07-15T10:00:00',
-    }));
     messagingServiceMock.startConversation.and.returnValue(of({
       id: 1,
       tripId: 12,
@@ -75,7 +58,7 @@ describe('ReservationBookingDetailPageComponent', () => {
     }));
 
     await TestBed.configureTestingModule({
-      imports: [ReservationBookingDetailPageComponent],
+      imports: [ReservationSenderProfilePageComponent],
       providers: [
         provideRouter([]),
         {
@@ -95,42 +78,21 @@ describe('ReservationBookingDetailPageComponent', () => {
   });
 
   function createComponent(): void {
-    fixture = TestBed.createComponent(ReservationBookingDetailPageComponent);
+    fixture = TestBed.createComponent(ReservationSenderProfilePageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   }
 
-  it('loads the selected booking and renders its core information', () => {
+  it('loads sender profile information and displays the description', () => {
     createComponent();
 
     expect(component.booking?.id).toBe(7);
-    expect(fixture.nativeElement.textContent).toContain('Documents');
-    expect(fixture.nativeElement.textContent).toContain('Récapitulatif financier');
-    expect(fixture.nativeElement.textContent).toContain('Juillet');
-    expect(fixture.nativeElement.textContent).toContain('4,8');
-    expect(fixture.nativeElement.textContent).toContain('(24 avis)');
+    expect(fixture.nativeElement.textContent).toContain('Grace Hopper');
+    expect(fixture.nativeElement.textContent).toContain('Description');
+    expect(fixture.nativeElement.textContent).toContain('Dossier important');
   });
 
-  it('provides a link to the sender profile page', () => {
-    createComponent();
-
-    const links = Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[];
-    const profileLink = links.find((link) => link.textContent?.includes('Voir le profil') ?? false);
-
-    expect(profileLink).toBeDefined();
-    expect(profileLink?.getAttribute('href')).toContain('/trips/12/reservations/7/profile');
-  });
-
-  it('shows an error state when the targeted booking cannot be found', () => {
-    tripServiceMock.getTripBookings.and.returnValue(of([buildBooking({ id: 99 })]));
-
-    createComponent();
-
-    expect(component.booking).toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Impossible de retrouver cette réservation pour ce trajet.');
-  });
-
-  it('starts a conversation with the sender and navigates to messages', () => {
+  it('starts a conversation with the sender', () => {
     createComponent();
 
     component.messageSender();
@@ -143,56 +105,22 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/messages']);
   });
 
-  it('accepts the booking and updates the page state', () => {
-    createComponent();
-
-    component.acceptBooking();
-
-    expect(tripServiceMock.acceptBooking).toHaveBeenCalledWith(12, 7);
-    expect(component.booking?.status).toBe('ACCEPTED');
-  });
-
-  it('confirms the booking delivery with the entered code', () => {
-    tripServiceMock.getTripBookings.and.returnValue(of([
-      buildBooking({
-        status: 'ACCEPTED',
-        validationCodeActive: true,
-      }),
-    ]));
+  it('shows an error state when booking cannot be found', () => {
+    tripServiceMock.getTripBookings.and.returnValue(of([buildBooking({ id: 99 })]));
 
     createComponent();
-    component.deliveryCode = '123456';
 
-    component.confirmBookingDelivery();
-
-    expect(tripServiceMock.confirmBookingDelivery).toHaveBeenCalledWith(12, 7, {
-      validationCode: '123456',
-    });
-    expect(component.booking?.deliveredAt).toBe('2025-07-15T10:00:00');
+    expect(component.booking).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Impossible de retrouver ce profil pour cette réservation.');
   });
 
-  it('removes the booking and navigates back to the reservations list', () => {
-    tripServiceMock.getTripBookings.and.returnValue(of([
-      buildBooking({
-        status: 'ACCEPTED',
-      }),
-    ]));
-
-    createComponent();
-    component.openRemoveBookingModal();
-    component.confirmRemoveBooking();
-
-    expect(tripServiceMock.removeBooking).toHaveBeenCalledWith(12, 7);
-    expect(router.navigate).toHaveBeenCalledWith(['/trips', 12, 'reservations']);
-  });
-
-  it('shows an error state when the booking detail request fails', () => {
+  it('shows an error state when profile request fails', () => {
     tripServiceMock.getTripById.and.returnValue(throwError(() => new Error('boom')));
     tripServiceMock.getTripBookings.and.returnValue(throwError(() => new Error('boom')));
 
     createComponent();
 
-    expect(fixture.nativeElement.textContent).toContain('Impossible de charger les détails de cette réservation.');
+    expect(fixture.nativeElement.textContent).toContain('Impossible de charger ce profil utilisateur.');
   });
 });
 
