@@ -41,6 +41,18 @@ public interface TravelerReviewRepository extends JpaRepository<TravelerReview, 
             """)
     List<TravelerRatingStatsProjection> findRatingStatsByTravelerIds(@Param("travelerIds") Collection<Long> travelerIds);
 
+    @Query("""
+            SELECT review
+            FROM TravelerReview review
+            JOIN FETCH review.booking booking
+            JOIN FETCH booking.sender sender
+            JOIN FETCH booking.trip trip
+            WHERE review.submittedAt IS NOT NULL
+              AND trip.traveler.id = :travelerId
+            ORDER BY review.submittedAt DESC
+            """)
+    List<TravelerReview> findSubmittedReviewsByTravelerId(@Param("travelerId") Long travelerId);
+
     interface TravelerRatingStatsProjection {
         Long getTravelerId();
         Double getAverageRating();

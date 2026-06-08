@@ -213,4 +213,30 @@ describe('TripService', () => {
       },
     ]);
   });
+
+  it('gets sender profile data for a booking', () => {
+    service.getBookingSenderProfile(12, 34).subscribe((profile) => {
+      expect(profile.completedTripCount).toBe(5);
+      expect(profile.sentPackageCount).toBe(9);
+      expect(profile.reviewCount).toBe(2);
+      expect(profile.reviews).toHaveSize(1);
+    });
+
+    const req = httpMock.expectOne('/api/trips/12/bookings/34/sender-profile');
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      completedTripCount: 5,
+      sentPackageCount: 9,
+      averageRating: 4.6,
+      reviewCount: 2,
+      reviews: [
+        {
+          reviewerName: 'Alice Martin',
+          rating: 5,
+          comment: 'Parfait',
+          submittedAt: '2025-03-02T16:00:00Z',
+        },
+      ],
+    });
+  });
 });

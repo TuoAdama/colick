@@ -2,9 +2,11 @@ package com.colick.backoffice.trip.service;
 
 import com.colick.backoffice.trip.dto.SubmitTravelerReviewRequest;
 import com.colick.backoffice.trip.dto.TravelerReviewResponse;
+import com.colick.backoffice.trip.dto.TripBookingSenderReviewResponse;
 import com.colick.backoffice.trip.entity.Trip;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,4 +25,7 @@ public interface TravelerReviewService {
 
     /** Returns aggregated rating summaries keyed by traveler identifier. */
     Map<Long, TravelerRatingSummary> getTravelerRatingSummaries(Collection<Long> travelerIds);
+
+    /** Returns submitted reviews for a traveler, ordered from newest to oldest. */
+    List<TripBookingSenderReviewResponse> getSubmittedReviewsForTraveler(Long travelerId);
 }

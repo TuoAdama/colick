@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
-import { BookingResponse } from '../../models/booking.model';
+import { BookingResponse, BookingSenderProfileResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
@@ -18,6 +18,7 @@ describe('ReservationSenderProfilePageComponent', () => {
   const tripServiceMock = {
     getTripById: jasmine.createSpy('getTripById'),
     getTripBookings: jasmine.createSpy('getTripBookings'),
+    getBookingSenderProfile: jasmine.createSpy('getBookingSenderProfile'),
   };
 
   const messagingServiceMock = {
@@ -40,12 +41,14 @@ describe('ReservationSenderProfilePageComponent', () => {
     tripParamMap$.next(convertToParamMap({ tripId: '12', bookingId: '7' }));
     tripServiceMock.getTripById.calls.reset();
     tripServiceMock.getTripBookings.calls.reset();
+    tripServiceMock.getBookingSenderProfile.calls.reset();
     messagingServiceMock.startConversation.calls.reset();
     authServiceMock.getUser.calls.reset();
     authServiceMock.logout.calls.reset();
 
     tripServiceMock.getTripById.and.returnValue(of(buildTrip()));
     tripServiceMock.getTripBookings.and.returnValue(of([buildBooking()]));
+    tripServiceMock.getBookingSenderProfile.and.returnValue(of(buildSenderProfile()));
     messagingServiceMock.startConversation.and.returnValue(of({
       id: 1,
       tripId: 12,
@@ -87,9 +90,12 @@ describe('ReservationSenderProfilePageComponent', () => {
     createComponent();
 
     expect(component.booking?.id).toBe(7);
+    expect(component.senderProfile?.completedTripCount).toBe(3);
+    expect(component.senderProfile?.sentPackageCount).toBe(11);
     expect(fixture.nativeElement.textContent).toContain('Grace Hopper');
     expect(fixture.nativeElement.textContent).toContain('Description');
     expect(fixture.nativeElement.textContent).toContain('Dossier important');
+    expect(fixture.nativeElement.textContent).toContain('Marc Bernard');
   });
 
   it('starts a conversation with the sender', () => {
@@ -117,10 +123,23 @@ describe('ReservationSenderProfilePageComponent', () => {
   it('shows an error state when profile request fails', () => {
     tripServiceMock.getTripById.and.returnValue(throwError(() => new Error('boom')));
     tripServiceMock.getTripBookings.and.returnValue(throwError(() => new Error('boom')));
+    tripServiceMock.getBookingSenderProfile.and.returnValue(throwError(() => new Error('boom')));
 
     createComponent();
 
     expect(fixture.nativeElement.textContent).toContain('Impossible de charger ce profil utilisateur.');
+  });
+
+  it('shows a message when the sender has no reviews', () => {
+    tripServiceMock.getBookingSenderProfile.and.returnValue(of(buildSenderProfile({
+      averageRating: null,
+      reviewCount: 0,
+      reviews: [],
+    })));
+
+    createComponent();
+
+    expect(fixture.nativeElement.textContent).toContain('Aucun avis pour le moment.');
   });
 });
 
@@ -155,6 +174,30 @@ function buildBooking(overrides: Partial<BookingResponse> = {}): BookingResponse
     recipientContact: '+22501020304',
     status: 'PENDING',
     validationCodeActive: false,
+    ...overrides,
+  };
+}
+
+function buildSenderProfile(overrides: Partial<BookingSenderProfileResponse> = {}): BookingSenderProfileResponse {
+  return {
+    completedTripCount: 3,
+    sentPackageCount: 11,
+    averageRating: 4.8,
+    reviewCount: 2,
+    reviews: [
+      {
+        reviewerName: 'Marc Bernard',
+        rating: 5,
+        comment: 'Tres fiable',
+        submittedAt: '2025-03-12T10:00:00',
+      },
+      {
+        reviewerName: 'Alice Leroy',
+        rating: 4,
+        comment: 'Bonne communication',
+        submittedAt: '2025-02-28T10:00:00',
+      },
+    ],
     ...overrides,
   };
 }

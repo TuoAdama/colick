@@ -6,6 +6,7 @@ import com.colick.backoffice.exception.ReviewSubmissionConflictException;
 import com.colick.backoffice.support.TestLocalizedMessages;
 import com.colick.backoffice.trip.dto.SubmitTravelerReviewRequest;
 import com.colick.backoffice.trip.dto.TravelerReviewResponse;
+import com.colick.backoffice.trip.dto.TripBookingSenderReviewResponse;
 import com.colick.backoffice.trip.entity.TravelerReview;
 import com.colick.backoffice.trip.entity.Trip;
 import com.colick.backoffice.trip.entity.TripBooking;
@@ -239,6 +240,28 @@ class TravelerReviewServiceImplTest {
         assertThat(result).containsKey(1L);
         assertThat(result.get(1L).averageRating()).isEqualTo(4.5);
         assertThat(result.get(1L).reviewCount()).isEqualTo(2L);
+    }
+
+    @Test
+    void getSubmittedReviewsForTraveler_shouldMapRepositoryReviews() {
+        TravelerReview review = TravelerReview.builder()
+                .id(1L)
+                .booking(acceptedBooking)
+                .tokenHash("hash")
+                .invitedAt(LocalDateTime.now().minusDays(4))
+                .rating(5)
+                .comment("Excellent")
+                .submittedAt(LocalDateTime.now().minusDays(1))
+                .build();
+        when(travelerReviewRepository.findSubmittedReviewsByTravelerId(traveler.getId()))
+                .thenReturn(List.of(review));
+
+        List<TripBookingSenderReviewResponse> result = travelerReviewService.getSubmittedReviewsForTraveler(traveler.getId());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getReviewerName()).isEqualTo("Bob Martin");
+        assertThat(result.get(0).getComment()).isEqualTo("Excellent");
+        assertThat(result.get(0).getRating()).isEqualTo(5);
     }
 
     @Test

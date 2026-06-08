@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -341,6 +342,40 @@ class TripServiceImplTest {
         assertThatThrownBy(() -> tripService.getBookings(10L, sender))
                 .isInstanceOf(AccessDeniedException.class);
         verify(bookingRepository, never()).findByTrip(any());
+    }
+
+    @Test
+    void getBookingSenderProfile_shouldReturnRealCountsAndReviews() {
+        TripBooking booking = TripBooking.builder()
+                .id(12L)
+                .trip(sampleTrip)
+                .sender(sender)
+                .title("Documents")
+                .status(TripBooking.BookingStatus.PENDING)
+                .build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(12L)).thenReturn(Optional.of(booking));
+        when(tripRepository.countByTravelerAndStatus(sender, Trip.TripStatus.COMPLETED)).thenReturn(4L);
+        when(bookingRepository.countBySender(sender)).thenReturn(9L);
+        when(travelerReviewService.getTravelerRatingSummaries(Set.of(sender.getId())))
+                .thenReturn(Map.of(sender.getId(), new TravelerRatingSummary(4.7, 2L)));
+        when(travelerReviewService.getSubmittedReviewsForTraveler(sender.getId()))
+                .thenReturn(List.of(TripBookingSenderReviewResponse.builder()
+                        .reviewerName("Claire Bernard")
+                        .rating(5)
+                        .comment("Parfait")
+                        .submittedAt(LocalDateTime.now().minusDays(2))
+                        .build()));
+
+        TripBookingSenderProfileResponse response = tripService.getBookingSenderProfile(10L, 12L, traveler);
+
+        assertThat(response.getCompletedTripCount()).isEqualTo(4L);
+        assertThat(response.getSentPackageCount()).isEqualTo(9L);
+        assertThat(response.getAverageRating()).isEqualTo(4.7);
+        assertThat(response.getReviewCount()).isEqualTo(2L);
+        assertThat(response.getReviews()).hasSize(1);
+        assertThat(response.getReviews().get(0).getReviewerName()).isEqualTo("Claire Bernard");
     }
 
     @Test

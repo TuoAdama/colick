@@ -240,34 +240,42 @@
           <section class="mt-10">
             <div class="mb-4 flex items-center justify-between">
               <h2 class="text-[2rem] font-bold tracking-[-0.03em] text-text-primary">Avis</h2>
-              <button type="button" class="text-sm font-semibold text-primary transition hover:underline">Voir tout</button>
-            </div>
-
-            <div class="space-y-4">
-              @for (review of senderReviews; track review.author) {
-                <article class="rounded-xl border border-border bg-background-secondary p-5">
-                  <div class="flex items-start justify-between gap-4">
-                    <div class="flex items-center gap-3">
-                      <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                        {{ review.author.charAt(0) }}
-                      </div>
-                      <div>
-                        <p class="text-xl font-bold tracking-[-0.02em] text-text-primary">{{ review.author }}</p>
-                        <p class="text-xs text-text-secondary">{{ review.date }}</p>
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-1 text-[#F4B740]">
-                      @for (star of reviewStars(review.rating); track star) {
-                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.291c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 0 0-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.291a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 0 0 .95-.69l1.07-3.292Z" />
-                        </svg>
-                      }
-                    </div>
-                  </div>
-                  <p class="mt-3 text-sm leading-6 text-text-secondary">{{ review.comment }}</p>
-                </article>
+              @if (hasSenderReviews()) {
+                <button type="button" class="text-sm font-semibold text-primary transition hover:underline">Voir tout</button>
               }
             </div>
+
+            @if (hasSenderReviews()) {
+              <div class="space-y-4">
+                @for (review of senderReviews(); track review.submittedAt + review.reviewerName) {
+                  <article class="rounded-xl border border-border bg-background-secondary p-5">
+                    <div class="flex items-start justify-between gap-4">
+                      <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                          {{ review.reviewerName.charAt(0) }}
+                        </div>
+                        <div>
+                          <p class="text-xl font-bold tracking-[-0.02em] text-text-primary">{{ review.reviewerName }}</p>
+                          <p class="text-xs text-text-secondary">{{ formattedReviewDate(review.submittedAt) }}</p>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1 text-[#F4B740]">
+                        @for (star of reviewStars(review.rating); track star) {
+                          <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.291c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 0 0-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.291a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 0 0 .95-.69l1.07-3.292Z" />
+                          </svg>
+                        }
+                      </div>
+                    </div>
+                    <p class="mt-3 text-sm leading-6 text-text-secondary">{{ review.comment || 'Aucun commentaire laissé.' }}</p>
+                  </article>
+                }
+              </div>
+            } @else {
+              <div class="rounded-xl border border-border bg-background-secondary px-5 py-6 text-sm text-text-secondary">
+                Aucun avis pour le moment.
+              </div>
+            }
           </section>
         </div>
       }
