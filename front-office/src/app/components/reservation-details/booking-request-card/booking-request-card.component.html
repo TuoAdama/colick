@@ -83,16 +83,12 @@
 
     <!-- Action buttons -->
     <div class="flex flex-wrap justify-end gap-2">
-      <!-- Details toggle -->
+      <!-- Booking details -->
       <button
         type="button"
-        class="rounded-xl border px-3.5 py-2 text-[13px] transition focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 sm:px-4 sm:text-sm"
-        [class]="isDetailsOpen
-          ? 'border-primary bg-background-primary text-primary'
-          : 'border-border bg-background-secondary text-text-primary hover:bg-background-primary'"
-        [attr.aria-expanded]="isDetailsOpen"
+        class="rounded-xl border border-border bg-background-secondary px-3.5 py-2 text-[13px] text-text-primary transition hover:bg-background-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 sm:px-4 sm:text-sm"
         [disabled]="isProcessing"
-        (click)="toggleDetails()"
+        (click)="goToDetails()"
       >
         Détails
       </button>
@@ -123,121 +119,4 @@
     </div>
   </div>
 
-  <!-- ── Collapsible Details Panel ── -->
-  @if (isDetailsOpen) {
-    <div class="space-y-4 border-t border-border bg-background-primary px-5 py-4 animate-fade-in">
-
-      <!-- Secondary action row -->
-      <div class="flex flex-wrap gap-2">
-        <!-- Message sender -->
-        <button
-          type="button"
-          class="inline-flex items-center gap-1.5 rounded-md border border-border bg-background-secondary px-3 py-2 text-sm font-medium text-text-primary transition hover:-translate-y-px hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
-          [disabled]="isProcessing"
-          (click)="onMessage()"
-        >
-          <!-- chat bubble icon -->
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z" />
-          </svg>
-          Envoyer un message
-        </button>
-
-        <!-- PENDING: Reject -->
-        @if (booking.status === 'PENDING') {
-          <button
-            type="button"
-            class="inline-flex items-center gap-1.5 rounded-md border border-error/20 bg-background-secondary px-3 py-2 text-sm font-medium text-error transition hover:-translate-y-px hover:bg-error/10 focus:outline-none focus:ring-2 focus:ring-error/20 disabled:opacity-50"
-            [disabled]="isProcessing"
-            (click)="onReject()"
-          >
-            Refuser
-          </button>
-        }
-      </div>
-
-      <!-- Recipient contact -->
-      <div class="rounded-md border border-border bg-background-secondary px-3 py-2.5">
-        <p class="text-[11px] font-bold uppercase tracking-wide text-text-muted">Contact destinataire</p>
-        <p class="mt-1 text-sm font-medium text-text-primary">{{ booking.recipientContact }}</p>
-      </div>
-
-      <!-- Package photo -->
-      @if (booking.packagePhotoUrl) {
-        <div>
-          <p class="mb-2 text-[11px] font-bold uppercase tracking-wide text-text-muted">Photo du colis</p>
-          <img
-            [src]="booking.packagePhotoUrl"
-            [alt]="'Photo du colis ' + booking.title"
-            class="h-44 w-full rounded-md border border-border object-cover"
-            loading="lazy"
-          />
-        </div>
-      }
-
-      <!-- Validation code info -->
-      @if (booking.validationCodeActive && booking.validationDeliveryChannel && booking.validationCodeSentAt) {
-        <div class="rounded-md border border-warning/20 bg-warning/10 px-4 py-3">
-          <p class="text-sm font-medium text-text-primary">Code de validation actif</p>
-          <p class="mt-1 text-xs text-text-secondary">
-            Envoyé par {{ validationChannelLabel(booking.validationDeliveryChannel) }}
-            le {{ booking.validationCodeSentAt | date:'dd/MM/yyyy à HH:mm' }}.
-          </p>
-        </div>
-      }
-
-      @if (booking.validationDeliveryStatus === 'FAILED' && booking.validationCodeDeliveryFailedAt) {
-        <div class="rounded-md border border-error/20 bg-error/10 px-4 py-3">
-          <p class="text-sm font-medium text-error">Envoi du code échoué</p>
-          <p class="mt-1 text-xs text-text-secondary">
-            Échec le {{ booking.validationCodeDeliveryFailedAt | date:'dd/MM/yyyy à HH:mm' }}
-          </p>
-        </div>
-      }
-
-      @if (booking.deliveredAt) {
-        <div class="rounded-md border border-success/20 bg-success/10 px-4 py-3">
-          <p class="text-sm font-medium text-success">Colis remis</p>
-          <p class="mt-1 text-xs text-text-secondary">
-            Confirmé le {{ booking.deliveredAt | date:'dd/MM/yyyy à HH:mm' }}
-          </p>
-        </div>
-      }
-
-      <!-- Delivery confirmation form -->
-      @if (canShowConfirmDelivery()) {
-        <div class="rounded-md border border-border bg-background-secondary p-4">
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div class="flex-1">
-              <label
-                [for]="'delivery-code-' + booking.id"
-                class="mb-2 block text-xs font-medium text-text-secondary"
-              >
-                Code de remise
-              </label>
-              <input
-                [id]="'delivery-code-' + booking.id"
-                type="text"
-                inputmode="numeric"
-                maxlength="6"
-                [value]="deliveryCode"
-                (input)="deliveryCode = $any($event.target).value"
-                placeholder="000000"
-                class="w-full rounded-md border border-border bg-background-secondary px-4 py-3 text-sm tracking-[0.25em] text-text-primary placeholder:text-text-secondary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
-            <button
-              type="button"
-              class="rounded-md bg-secondary px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-secondary/20 disabled:cursor-not-allowed disabled:opacity-50"
-              [disabled]="deliveryCode.trim().length !== 6 || isProcessing"
-              (click)="onConfirmDelivery()"
-            >
-              {{ isProcessing ? 'Traitement...' : 'Confirmer la remise' }}
-            </button>
-          </div>
-        </div>
-      }
-    </div>
-  }
 </article>

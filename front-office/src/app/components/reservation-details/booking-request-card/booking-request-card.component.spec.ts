@@ -1,16 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { BookingResponse } from '../../../models/booking.model';
 import { BookingRequestCardComponent } from './booking-request-card.component';
 
 describe('BookingRequestCardComponent', () => {
   let fixture: ComponentFixture<BookingRequestCardComponent>;
   let component: BookingRequestCardComponent;
+  let router: Router;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [BookingRequestCardComponent],
+      providers: [provideRouter([])],
     }).compileComponents();
 
+    router = TestBed.inject(Router);
+    spyOn(router, 'navigate').and.resolveTo(true);
     fixture = TestBed.createComponent(BookingRequestCardComponent);
     component = fixture.componentInstance;
     component.tripId = 12;
@@ -143,39 +148,10 @@ describe('BookingRequestCardComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('60 €');
   });
 
-  it('starts collapsed (isDetailsOpen is false by default)', () => {
-    expect(component.isDetailsOpen).toBeFalse();
-  });
+  it('navigates to the dedicated reservation detail page when clicking details', () => {
+    component.goToDetails();
 
-  it('toggleDetails() opens the details panel', () => {
-    expect(component.isDetailsOpen).toBeFalse();
-
-    component.toggleDetails();
-
-    expect(component.isDetailsOpen).toBeTrue();
-  });
-
-  it('toggleDetails() collapses the details panel when already open', () => {
-    component.isDetailsOpen = true;
-
-    component.toggleDetails();
-
-    expect(component.isDetailsOpen).toBeFalse();
-  });
-
-  it('details panel is not rendered when isDetailsOpen is false', () => {
-    component.isDetailsOpen = false;
-    fixture.detectChanges();
-
-    // Recipient contact only appears inside the details panel
-    expect(fixture.nativeElement.textContent).not.toContain('+22501020304');
-  });
-
-  it('details panel shows recipient contact when isDetailsOpen is true', () => {
-    component.isDetailsOpen = true;
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.textContent).toContain('+22501020304');
+    expect(router.navigate).toHaveBeenCalledWith(['/trips', 12, 'reservations', 7]);
   });
 
   it('statusBadgeClass() returns neutral style for pending status', () => {

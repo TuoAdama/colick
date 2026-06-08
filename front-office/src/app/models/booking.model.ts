@@ -16,6 +16,8 @@ export interface BookingResponse {
   senderId: number;
   senderName: string;
   senderPhotoUrl?: string;
+  senderRatingAverage?: number | null;
+  senderRatingCount?: number;
   title: string;
   weight: number;
   description?: string;

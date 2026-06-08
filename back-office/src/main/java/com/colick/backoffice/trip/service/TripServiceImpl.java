@@ -159,10 +159,9 @@ public class TripServiceImpl implements TripService {
     public List<TripBookingResponse> getBookings(Long tripId, User requester) {
         Trip trip = findTripOrThrow(tripId);
         assertTripOwner(trip, requester);
-        return bookingRepository.findByTrip(trip).stream()
+        return toTripBookingResponses(bookingRepository.findByTrip(trip).stream()
                 .filter(booking -> booking.getStatus() != TripBooking.BookingStatus.REMOVED)
-                .map(this::toTripBookingResponse)
-                .toList();
+                .toList());
     }
 
     @Override
@@ -472,9 +471,7 @@ public class TripServiceImpl implements TripService {
     @Override
     @Transactional(readOnly = true)
     public List<TripBookingResponse> getMyBookings(User user) {
-        return bookingRepository.findBySender(user).stream()
-                .map(this::toTripBookingResponse)
-                .toList();
+        return toTripBookingResponses(bookingRepository.findBySender(user));
     }
 
     /**
@@ -525,8 +522,33 @@ public class TripServiceImpl implements TripService {
         return response;
     }
 
+    private List<TripBookingResponse> toTripBookingResponses(List<TripBooking> bookings) {
+        Map<Long, TravelerRatingSummary> senderRatingSummaries = travelerReviewService.getTravelerRatingSummaries(
+                bookings.stream()
+                        .map(booking -> booking.getSender().getId())
+                        .collect(Collectors.toSet())
+        );
+
+        return bookings.stream()
+                .map(booking -> toTripBookingResponse(booking, senderRatingSummaries))
+                .toList();
+    }
+
     private TripBookingResponse toTripBookingResponse(TripBooking booking) {
-        TripBookingResponse response = TripBookingResponse.from(booking);
+        return toTripBookingResponse(
+                booking,
+                travelerReviewService.getTravelerRatingSummaries(Set.of(booking.getSender().getId()))
+        );
+    }
+
+    private TripBookingResponse toTripBookingResponse(TripBooking booking,
+                                                      Map<Long, TravelerRatingSummary> senderRatingSummaries) {
+        TravelerRatingSummary summary = senderRatingSummaries.get(booking.getSender().getId());
+        TripBookingResponse response = TripBookingResponse.from(
+                booking,
+                summary != null ? summary.averageRating() : null,
+                summary != null ? summary.reviewCount() : 0L
+        );
         response.setSenderPhotoUrl(fileStorageService.sanitizePublicUrl(response.getSenderPhotoUrl()));
         response.setPackagePhotoUrl(fileStorageService.sanitizePublicUrl(response.getPackagePhotoUrl()));
         return response;

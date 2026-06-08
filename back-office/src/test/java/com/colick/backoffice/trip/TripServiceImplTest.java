@@ -303,12 +303,16 @@ class TripServiceImplTest {
 
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findByTrip(sampleTrip)).thenReturn(List.of(pending, removed));
+        when(travelerReviewService.getTravelerRatingSummaries(anyCollection()))
+                .thenReturn(Map.of(sender.getId(), new TravelerRatingSummary(4.8, 24L)));
 
         List<TripBookingResponse> bookings = tripService.getBookings(10L, traveler);
 
         assertThat(bookings).hasSize(1);
         assertThat(bookings.get(0).getId()).isEqualTo(1L);
         assertThat(bookings.get(0).getSenderPhotoUrl()).isEqualTo("/uploads/bob.png");
+        assertThat(bookings.get(0).getSenderRatingAverage()).isEqualTo(4.8);
+        assertThat(bookings.get(0).getSenderRatingCount()).isEqualTo(24L);
     }
 
     @Test

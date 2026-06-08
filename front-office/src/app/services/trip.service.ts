@@ -154,6 +154,7 @@ export class TripService {
     return {
       ...booking,
       senderPhotoUrl: this.photoUrlService.normalizePhotoUrl(booking.senderPhotoUrl),
+      senderRatingCount: booking.senderRatingCount ?? 0,
       packagePhotoUrl: this.photoUrlService.normalizePhotoUrl(booking.packagePhotoUrl),
     };
   }

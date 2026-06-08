@@ -189,6 +189,7 @@ describe('TripService', () => {
     service.getTripBookings(12).subscribe((bookings) => {
       expect(bookings).toHaveSize(1);
       expect(bookings[0].senderPhotoUrl).toBe('/api/uploads/sender.png');
+      expect(bookings[0].senderRatingCount).toBe(12);
       expect(bookings[0].packagePhotoUrl).toBe('/api/uploads/package.png');
     });
 
@@ -201,6 +202,8 @@ describe('TripService', () => {
         senderId: 2,
         senderName: 'Alice Martin',
         senderPhotoUrl: 'uploads/sender.png',
+        senderRatingAverage: 4.8,
+        senderRatingCount: 12,
         title: 'Valise',
         weight: 2,
         packagePhotoUrl: '/uploads/package.png',

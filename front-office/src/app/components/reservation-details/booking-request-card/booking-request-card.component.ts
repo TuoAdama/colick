@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { BookingResponse } from '../../../models/booking.model';
 import { Trip } from '../../../models/trip.model';
 
@@ -13,6 +14,8 @@ import { Trip } from '../../../models/trip.model';
   templateUrl: './booking-request-card.component.html',
 })
 export class BookingRequestCardComponent {
+  private readonly router = inject(Router);
+
   @Input({ required: true }) booking!: BookingResponse;
   @Input({ required: true }) tripStatus!: Trip['status'];
   @Input() isProcessing = false;
@@ -26,7 +29,6 @@ export class BookingRequestCardComponent {
   @Output() confirmDelivery = new EventEmitter<{ bookingId: number; code: string }>();
 
   deliveryCode = '';
-  isDetailsOpen = false;
   private senderPhotoLoadFailed = false;
   private lastSenderPhotoUrl: string | null = null;
 
@@ -102,8 +104,12 @@ export class BookingRequestCardComponent {
       && !this.booking.deliveredAt;
   }
 
-  toggleDetails(): void {
-    this.isDetailsOpen = !this.isDetailsOpen;
+  goToDetails(): void {
+    if (this.isProcessing) {
+      return;
+    }
+
+    void this.router.navigate(['/trips', this.tripId, 'reservations', this.booking.id]);
   }
 
   onAccept(): void {
