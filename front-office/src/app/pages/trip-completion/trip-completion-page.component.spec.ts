@@ -88,10 +88,9 @@ describe('TripCompletionPageComponent', () => {
     expect(component.acceptedBookings().map((booking) => booking.id)).toEqual([1, 3]);
   });
 
-  it('renders the reservation shell chrome around the completion content', () => {
+  it('renders the completion content without the shell wrapper', () => {
     createComponent();
 
-    expect(fixture.nativeElement.textContent).toContain('Mes trajets');
     expect(fixture.nativeElement.textContent).toContain('Validation des codes de livraison');
   });
 

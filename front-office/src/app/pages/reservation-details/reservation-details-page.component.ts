@@ -1,11 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
 import { BookingRequestCardComponent } from '../../components/reservation-details/booking-request-card/booking-request-card.component';
-import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
 import { MessagingService } from '../../services/messaging.service';
 import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
@@ -17,7 +16,6 @@ type ReservationStatusTab = 'ALL' | BookingResponse['status'];
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     BookingRequestCardComponent,
     ConfirmModalComponent,
   ],
@@ -26,7 +24,6 @@ type ReservationStatusTab = 'ALL' | BookingResponse['status'];
 export class ReservationDetailsPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly authService = inject(AuthService);
   private readonly tripService = inject(TripService);
   private readonly messagingService = inject(MessagingService);
 
@@ -46,10 +43,6 @@ export class ReservationDetailsPageComponent implements OnInit {
   selectedTab: ReservationStatusTab = 'ALL';
   currentPage = 1;
   tripSummaryExpanded = false;
-  isMobileMenuOpen = false;
-
-  private profilePhotoLoadFailed = false;
-  private lastProfilePhotoUrl: string | null = null;
 
   readonly pageSize = 4;
   readonly primaryStatusTabs: ReadonlyArray<{ value: ReservationStatusTab; label: string }> = [
@@ -73,71 +66,8 @@ export class ReservationDetailsPageComponent implements OnInit {
     });
   }
 
-  currentUserName(): string {
-    const user = this.authService.getUser();
-    const name = [user?.firstName?.trim(), user?.lastName?.trim()]
-      .filter((value): value is string => !!value)
-      .join(' ')
-      .trim();
-
-    return name || 'Mon espace';
-  }
-
-  currentUserEmail(): string {
-    return this.authService.getUser()?.email ?? '';
-  }
-
-  hasUserPhoto(): boolean {
-    return !!this.userPhotoUrl();
-  }
-
-  userPhotoUrl(): string | null {
-    const photoUrl = this.authService.getUser()?.photoUrl?.trim() ?? null;
-    if (!photoUrl) {
-      this.profilePhotoLoadFailed = false;
-      this.lastProfilePhotoUrl = null;
-      return null;
-    }
-
-    if (photoUrl !== this.lastProfilePhotoUrl) {
-      this.profilePhotoLoadFailed = false;
-      this.lastProfilePhotoUrl = photoUrl;
-    }
-
-    return this.profilePhotoLoadFailed ? null : photoUrl;
-  }
-
-  userInitials(): string {
-    const user = this.authService.getUser();
-    const firstInitial = user?.firstName?.trim().charAt(0) ?? '';
-    const lastInitial = user?.lastName?.trim().charAt(0) ?? '';
-    const initials = `${firstInitial}${lastInitial}`.toUpperCase();
-
-    if (initials) {
-      return initials;
-    }
-
-    return user?.email?.trim().charAt(0).toUpperCase() ?? 'U';
-  }
-
-  onUserPhotoError(): void {
-    this.profilePhotoLoadFailed = true;
-  }
-
-  logout(): void {
-    this.authService.logout();
-  }
-
   toggleTripSummary(): void {
     this.tripSummaryExpanded = !this.tripSummaryExpanded;
-  }
-
-  openMobileMenu(): void {
-    this.isMobileMenuOpen = true;
-  }
-
-  closeMobileMenu(): void {
-    this.isMobileMenuOpen = false;
   }
 
   tripStatusLabel(status: Trip['status']): string {

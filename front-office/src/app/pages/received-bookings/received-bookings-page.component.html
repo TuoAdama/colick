@@ -1,0 +1,97 @@
+<div class="min-h-screen bg-background-primary pt-6 pb-12 font-['Poppins']">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6">
+    <div class="bg-white rounded-2xl shadow-sm p-6">
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 class="text-lg font-semibold text-text-primary">Réservations reçues</h2>
+        <a
+          routerLink="/propose"
+          class="inline-flex items-center justify-center gap-2 bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 shadow-lg shadow-secondary/30"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+          Proposer un voyage
+        </a>
+      </div>
+
+      @if (isLoadingTrips) {
+        <!-- Loading spinner -->
+        <div class="flex justify-center py-8" aria-label="Chargement en cours">
+          <div class="w-6 h-6 border-2 border-secondary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      } @else if (myTrips.length === 0) {
+        <div class="text-center py-10 text-text-secondary text-sm">
+          <div class="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+            <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+            </svg>
+          </div>
+          <p class="mb-5">Vous n'avez aucun trajet proposé pour le moment.</p>
+          <a
+            routerLink="/propose"
+            class="inline-flex items-center gap-2 bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 shadow-lg shadow-secondary/30"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+            Proposer un voyage
+          </a>
+        </div>
+      } @else {
+        @if (receivedTripsActionError) {
+          <div class="mb-4 rounded-lg bg-error/10 px-4 py-3 text-sm text-error" role="alert">
+            {{ receivedTripsActionError }}
+          </div>
+        }
+
+        @if (shareCardError) {
+          <div class="mb-4 rounded-lg bg-error/10 px-4 py-3 text-sm text-error" role="alert">
+            {{ shareCardError }}
+          </div>
+        }
+
+        <app-traveler-trips-desktop-list
+          [trips]="myTrips"
+          [tripBookingsMap]="tripBookingsMap"
+          [selectedTripId]="null"
+          [generatingShareCardTripId]="generatingShareCardTripId"
+          [isCancellingTrip]="isCancellingTrip"
+          [isDeletingTrip]="isDeletingTrip"
+          [completingTripId]="completingTripId"
+          (selectTrip)="selectTrip($event)"
+          (editTrip)="handleDesktopTripEdit($event)"
+          (deleteTrip)="handleDesktopTripDelete($event)"
+          (cancelTrip)="handleDesktopTripCancel($event)"
+          (downloadTripShareCard)="handleDesktopTripShareCardDownload($event)"
+          (markTripCompleted)="handleDesktopTripCompletion($event)"
+        />
+
+        <!-- Trip selection grid -->
+        <div class="grid gap-4 lg:hidden">
+          @for (trip of myTrips; track trip.id) {
+            <app-dashboard-received-mobile-card
+              [trip]="trip"
+              [bookingCount]="(tripBookingsMap[trip.id] || []).length"
+              [isSelected]="false"
+              [isGeneratingShareCard]="generatingShareCardTripId === trip.id"
+              [isCompletingTrip]="completingTripId === trip.id"
+              (viewTrip)="selectTrip($event)"
+              (editTrip)="editTrip($event)"
+              (downloadShareCard)="downloadShareCardPng($event)"
+              (markTripCompleted)="completeTrip($event)"
+              (cancelTrip)="cancelTrip($event)"
+            />
+          }
+        </div>
+
+        @if (shareCardData) {
+          <div class="pointer-events-none fixed -left-[9999px] top-0 opacity-0" aria-hidden="true">
+            <div #shareCardCapture class="w-[768px]">
+              <app-share-card-story [data]="shareCardData" />
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>
