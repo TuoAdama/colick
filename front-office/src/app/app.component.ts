@@ -17,7 +17,7 @@ import { filter } from 'rxjs';
 })
 export class AppComponent {
   private readonly router = inject(Router);
-  private readonly reservationShellRoutePattern = /^\/trips\/\d+\/reservations(?:\/\d+)?(?:[/?#]|$)/;
+  private readonly reservationShellRoutePattern = /^\/trips\/\d+\/reservations(?:\/[^?#]*)?(?:[?#].*)?$/;
   /**
    * Application title
    */

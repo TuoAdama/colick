@@ -224,13 +224,13 @@ describe('ReservationDetailsPageComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/messages']);
   });
 
-  it('marks the trip as completed', () => {
+  it('navigates to the trip completion page when finishing the trip', () => {
     createComponent();
 
     component.markTripCompleted();
 
-    expect(tripServiceMock.completeTrip).toHaveBeenCalledWith(12);
-    expect(component.trip?.status).toBe('COMPLETED');
+    expect(router.navigate).toHaveBeenCalledWith(['/trips', 12, 'reservations', 'complete']);
+    expect(tripServiceMock.completeTrip).not.toHaveBeenCalled();
   });
 
   it('cancels the trip and navigates back to the dashboard received tab', () => {

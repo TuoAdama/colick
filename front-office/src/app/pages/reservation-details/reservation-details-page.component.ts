@@ -233,16 +233,13 @@ export class ReservationDetailsPageComponent implements OnInit {
 
     this.isCompletingTrip = true;
     this.actionError = '';
-    this.tripService.completeTrip(this.trip.id).subscribe({
-      next: (updatedTrip) => {
-        this.trip = updatedTrip;
+    this.router.navigate(['/trips', this.trip.id, 'reservations', 'complete'])
+      .catch(() => {
+        this.actionError = 'Impossible d’ouvrir la page de fin de trajet.';
+      })
+      .finally(() => {
         this.isCompletingTrip = false;
-      },
-      error: (error: { error?: { message?: string } }) => {
-        this.actionError = error.error?.message || 'Impossible de marquer ce trajet comme terminé.';
-        this.isCompletingTrip = false;
-      },
-    });
+      });
   }
 
   openCancelTripModal(): void {

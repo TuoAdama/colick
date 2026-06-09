@@ -1,0 +1,92 @@
+<app-reservation-app-shell>
+  <div class="min-h-screen">
+    <div class="mx-auto max-w-4xl px-6 py-6">
+      <!-- Header Section -->
+      <header class="mb-8">
+        <h1 class="text-[32px] font-bold leading-[40px] tracking-[-0.02em] text-text-primary">
+          Validation des codes de livraison
+        </h1>
+        <p class="mt-2 max-w-2xl text-base text-text-secondary">
+          Entrez les codes de validation envoyés aux destinataires pour confirmer la remise de chaque colis et finaliser votre itinéraire.
+        </p>
+      </header>
+
+      @if (isLoading) {
+        <section class="border border-border bg-surface px-5 py-16 text-center" role="status" aria-live="polite" style="box-shadow: 0 4px 12px rgba(24,28,34,0.04)">
+          <div class="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-border border-t-primary"></div>
+          <p class="mt-4 text-sm font-medium text-text-secondary">Chargement des validations...</p>
+        </section>
+      } @else if (loadError) {
+        <section class="border border-error/20 bg-surface px-5 py-12 text-center" role="alert">
+          <h2 class="text-lg font-bold text-text-primary">Impossible de charger la validation</h2>
+          <p class="mt-2 text-sm text-text-secondary">{{ loadError }}</p>
+        </section>
+      } @else {
+        @if (actionError) {
+          <section class="mb-4 border border-error/20 bg-error/10 px-4 py-3 text-sm text-error" role="alert">
+            {{ actionError }}
+          </section>
+        }
+
+        @if (actionSuccess) {
+          <section class="mb-4 border border-success/20 bg-success/10 px-4 py-3 text-sm text-success" role="status" aria-live="polite">
+            {{ actionSuccess }}
+          </section>
+        }
+
+        @if (!acceptedBookings().length) {
+          <section class="border border-border bg-surface px-5 py-12 text-center" style="box-shadow: 0 4px 12px rgba(24,28,34,0.04)">
+            <p class="text-sm text-text-secondary">Aucun colis accepté à valider pour ce trajet.</p>
+          </section>
+        } @else {
+          <!-- Recipient Cards -->
+          <section class="grid grid-cols-1 gap-6 mb-8" aria-label="Liste des validations destinataires">
+            @for (booking of acceptedBookings(); track booking.id) {
+              <app-delivery-code-card
+                [booking]="booking"
+                [codeValue]="codeInputs[booking.id] ?? ''"
+                [isSubmitting]="isSubmittingBooking(booking.id)"
+                (codeChange)="updateCodeInput(booking.id, $event)"
+                (validate)="validateBookingCode(booking.id)"
+              />
+            }
+          </section>
+        }
+
+        <!-- Info Alert -->
+        <section class="border border-border bg-background-primary p-6 flex gap-4 mb-8" role="note" aria-label="Information sur les codes" style="box-shadow: 0 4px 12px rgba(24,28,34,0.04)">
+          <span class="material-symbols-outlined text-primary text-[24px]">info</span>
+          <div>
+            <h2 class="text-sm font-bold text-text-primary">À propos des codes de validation</h2>
+            <p class="mt-1 text-sm text-text-secondary">
+              Chaque destinataire a reçu un code unique par email. Demandez-leur de vous communiquer ce code lors de la remise du colis pour confirmer la livraison. En cas de problème, contactez le support.
+            </p>
+          </div>
+        </section>
+
+        <!-- Progress + Finalize (inline, not fixed) -->
+        <section class="pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+          <div class="flex items-center gap-4">
+            <div class="bg-border w-48 h-2 rounded-full overflow-hidden">
+              <div
+                class="bg-primary h-full transition-all duration-500"
+                [style.width.%]="progressPercent()"
+              ></div>
+            </div>
+            <p class="text-xs font-bold text-text-secondary">{{ validatedCount() }} / {{ acceptedBookings().length }} codes validés</p>
+          </div>
+
+          <button
+            type="button"
+            class="bg-primary text-white px-8 py-4 font-bold w-full md:w-auto flex items-center justify-center gap-4 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            [disabled]="isLoading || !trip || !allCodesValidated() || isFinalizing"
+            (click)="finalizeTrip()"
+          >
+            <span>{{ isFinalizing ? 'Finalisation...' : 'Finaliser le voyage' }}</span>
+            <span class="material-symbols-outlined">local_shipping</span>
+          </button>
+        </section>
+      }
+    </div>
+  </div>
+</app-reservation-app-shell>
