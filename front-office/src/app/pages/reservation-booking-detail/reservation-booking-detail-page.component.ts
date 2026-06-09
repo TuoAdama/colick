@@ -5,7 +5,6 @@ import { forkJoin } from 'rxjs';
 import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
 import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
-import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 import { TripService } from '../../services/trip.service';
 
@@ -18,7 +17,6 @@ import { TripService } from '../../services/trip.service';
 export class ReservationBookingDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly authService = inject(AuthService);
   private readonly tripService = inject(TripService);
   private readonly messagingService = inject(MessagingService);
 
@@ -29,11 +27,8 @@ export class ReservationBookingDetailPageComponent implements OnInit {
   loadError = '';
   actionError = '';
   deliveryCode = '';
-  isMobileMenuOpen = false;
   isRemoveBookingModalOpen = false;
 
-  private profilePhotoLoadFailed = false;
-  private lastProfilePhotoUrl: string | null = null;
   private senderPhotoLoadFailed = false;
   private lastSenderPhotoUrl: string | null = null;
 
@@ -52,69 +47,6 @@ export class ReservationBookingDetailPageComponent implements OnInit {
 
       this.loadBookingDetail(tripId, bookingId);
     });
-  }
-
-  currentUserName(): string {
-    const user = this.authService.getUser();
-    const name = [user?.firstName?.trim(), user?.lastName?.trim()]
-      .filter((value): value is string => !!value)
-      .join(' ')
-      .trim();
-
-    return name || 'Mon espace';
-  }
-
-  currentUserEmail(): string {
-    return this.authService.getUser()?.email ?? '';
-  }
-
-  hasUserPhoto(): boolean {
-    return !!this.userPhotoUrl();
-  }
-
-  userPhotoUrl(): string | null {
-    const photoUrl = this.authService.getUser()?.photoUrl?.trim() ?? null;
-    if (!photoUrl) {
-      this.profilePhotoLoadFailed = false;
-      this.lastProfilePhotoUrl = null;
-      return null;
-    }
-
-    if (photoUrl !== this.lastProfilePhotoUrl) {
-      this.profilePhotoLoadFailed = false;
-      this.lastProfilePhotoUrl = photoUrl;
-    }
-
-    return this.profilePhotoLoadFailed ? null : photoUrl;
-  }
-
-  userInitials(): string {
-    const user = this.authService.getUser();
-    const firstInitial = user?.firstName?.trim().charAt(0) ?? '';
-    const lastInitial = user?.lastName?.trim().charAt(0) ?? '';
-    const initials = `${firstInitial}${lastInitial}`.toUpperCase();
-
-    if (initials) {
-      return initials;
-    }
-
-    return user?.email?.trim().charAt(0).toUpperCase() ?? 'U';
-  }
-
-  onUserPhotoError(): void {
-    this.profilePhotoLoadFailed = true;
-  }
-
-  logout(): void {
-    this.authService.logout();
-  }
-
-  openMobileMenu(): void {
-    this.isMobileMenuOpen = true;
-  }
-
-  closeMobileMenu(): void {
-    this.isMobileMenuOpen = false;
   }
 
   bookingStatusLabel(status: BookingResponse['status']): string {

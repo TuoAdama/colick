@@ -3,12 +3,12 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
-  selector: 'app-reservation-app-shell',
+  selector: 'app-dashboard-shell',
   standalone: true,
   imports: [RouterLink],
-  templateUrl: './reservation-app-shell.component.html',
+  templateUrl: './dashboard-shell.component.html',
 })
-export class ReservationAppShellComponent {
+export class DashboardShellComponent {
   private readonly authService = inject(AuthService);
 
   isMobileMenuOpen = false;

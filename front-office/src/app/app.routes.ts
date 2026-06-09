@@ -5,6 +5,7 @@ import { guestGuard } from './guards/guest.guard';
 /**
  * Application route definitions.
  * Landing page loads eagerly; feature pages are lazy-loaded.
+ * Authenticated pages share a layout shell via a pathless parent route.
  */
 export const routes: Routes = [
   {
@@ -29,22 +30,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'propose/:id',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/propose-trip/propose-trip-page.component').then(
-        (m) => m.ProposeTripPageComponent
-      ),
-  },
-  {
-    path: 'propose',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/propose-trip/propose-trip-page.component').then(
-        (m) => m.ProposeTripPageComponent
-      ),
-  },
-  {
     path: 'login',
     canActivate: [guestGuard],
     loadComponent: () =>
@@ -58,13 +43,6 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/register/register-page.component').then(
         (m) => m.RegisterPageComponent
-      ),
-  },
-  {
-    path: 'messages',
-    loadComponent: () =>
-      import('./pages/messages/messages-page.component').then(
-        (m) => m.MessagesPageComponent
       ),
   },
   {
@@ -89,52 +67,78 @@ export const routes: Routes = [
         (m) => m.ResetPasswordPageComponent
       ),
   },
+  // ── Authenticated pages with dashboard shell layout ──────────────────────
   {
-    path: 'dashboard',
+    path: '',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./pages/dashboard/dashboard-page.component').then(
-        (m) => m.DashboardPageComponent
+      import('./shared/components/dashboard-layout/dashboard-layout.component').then(
+        (m) => m.DashboardLayoutComponent
       ),
-  },
-  {
-    path: 'trips/:tripId/reservations/:bookingId/profile',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/reservation-sender-profile/reservation-sender-profile-page.component').then(
-        (m) => m.ReservationSenderProfilePageComponent
-      ),
-  },
-  {
-    path: 'trips/:tripId/reservations/complete',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/trip-completion/trip-completion-page.component').then(
-        (m) => m.TripCompletionPageComponent
-      ),
-  },
-  {
-    path: 'trips/:tripId/reservations/:bookingId',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/reservation-booking-detail/reservation-booking-detail-page.component').then(
-        (m) => m.ReservationBookingDetailPageComponent
-      ),
-  },
-  {
-    path: 'trips/:tripId/reservations',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/reservation-details/reservation-details-page.component').then(
-        (m) => m.ReservationDetailsPageComponent
-      ),
-  },
-  {
-    path: 'trips',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/trips-management/trips-management-page.component').then(
-        (m) => m.TripsManagementPageComponent
-      ),
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./pages/dashboard/dashboard-page.component').then(
+            (m) => m.DashboardPageComponent
+          ),
+      },
+      {
+        path: 'trips/:tripId/reservations/:bookingId/profile',
+        loadComponent: () =>
+          import('./pages/reservation-sender-profile/reservation-sender-profile-page.component').then(
+            (m) => m.ReservationSenderProfilePageComponent
+          ),
+      },
+      {
+        path: 'trips/:tripId/reservations/complete',
+        loadComponent: () =>
+          import('./pages/trip-completion/trip-completion-page.component').then(
+            (m) => m.TripCompletionPageComponent
+          ),
+      },
+      {
+        path: 'trips/:tripId/reservations/:bookingId',
+        loadComponent: () =>
+          import('./pages/reservation-booking-detail/reservation-booking-detail-page.component').then(
+            (m) => m.ReservationBookingDetailPageComponent
+          ),
+      },
+      {
+        path: 'trips/:tripId/reservations',
+        loadComponent: () =>
+          import('./pages/reservation-details/reservation-details-page.component').then(
+            (m) => m.ReservationDetailsPageComponent
+          ),
+      },
+      {
+        path: 'trips',
+        loadComponent: () =>
+          import('./pages/trips-management/trips-management-page.component').then(
+            (m) => m.TripsManagementPageComponent
+          ),
+      },
+      {
+        path: 'propose/:id',
+        loadComponent: () =>
+          import('./pages/propose-trip/propose-trip-page.component').then(
+            (m) => m.ProposeTripPageComponent
+          ),
+      },
+      {
+        path: 'propose',
+        loadComponent: () =>
+          import('./pages/propose-trip/propose-trip-page.component').then(
+            (m) => m.ProposeTripPageComponent
+          ),
+      },
+      {
+        path: 'messages',
+        loadComponent: () =>
+          import('./pages/messages/messages-page.component').then(
+            (m) => m.MessagesPageComponent
+          ),
+      },
+    ],
   },
 ];

@@ -6,12 +6,11 @@ import { DeliveryCodeCardComponent } from '../../components/trip-completion/deli
 import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
 import { TripService } from '../../services/trip.service';
-import { ReservationAppShellComponent } from '../../shared/components/reservation-app-shell/reservation-app-shell.component';
 
 @Component({
   selector: 'app-trip-completion-page',
   standalone: true,
-  imports: [CommonModule, DeliveryCodeCardComponent, ReservationAppShellComponent],
+  imports: [CommonModule, DeliveryCodeCardComponent],
   templateUrl: './trip-completion-page.component.html',
 })
 export class TripCompletionPageComponent implements OnInit {
