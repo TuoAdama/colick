@@ -228,9 +228,41 @@ describe('ReservationDetailsPageComponent', () => {
     createComponent();
 
     component.markTripCompleted();
+    expect(component.isCompleteTripModalOpen).toBeTrue();
 
+    component.confirmCompleteTrip();
+
+    expect(tripServiceMock.completeTrip).toHaveBeenCalledWith(12);
     expect(router.navigate).toHaveBeenCalledWith(['/trips', 12, 'reservations', 'complete']);
-    expect(tripServiceMock.completeTrip).not.toHaveBeenCalled();
+    expect(component.isCompleteTripModalOpen).toBeFalse();
+    expect(component.isCompletingTrip).toBeFalse();
+  });
+
+  it('displays an error and keeps modal open when completeTrip API fails', () => {
+    createComponent();
+    tripServiceMock.completeTrip.and.returnValue(throwError(() => ({ error: { message: 'Trajet déjà terminé' } })));
+
+    component.markTripCompleted();
+    component.confirmCompleteTrip();
+
+    expect(tripServiceMock.completeTrip).toHaveBeenCalledWith(12);
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(component.isCompleteTripModalOpen).toBeTrue();
+    expect(component.completeTripError).toBe('Trajet déjà terminé');
+    expect(component.isCompletingTrip).toBeFalse();
+  });
+
+  it('closes the complete trip modal when cancelled', () => {
+    createComponent();
+
+    component.markTripCompleted();
+    expect(component.isCompleteTripModalOpen).toBeTrue();
+
+    component.completeTripError = 'Some error';
+    component.closeCompleteTripModal();
+    expect(component.isCompleteTripModalOpen).toBeFalse();
+    expect(component.completeTripError).toBe('');
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 
   it('cancels the trip and navigates back to the dashboard received tab', () => {

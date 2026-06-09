@@ -20,6 +20,8 @@ export class ConfirmModalComponent {
   /** 'danger' renders the confirm button in error red, 'primary' in navy */
   @Input() variant: 'danger' | 'primary' = 'danger';
   @Input() isLoading = false;
+  /** Optional error message displayed inside the modal body. */
+  @Input() errorMessage = '';
 
   @Output() confirmed = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();

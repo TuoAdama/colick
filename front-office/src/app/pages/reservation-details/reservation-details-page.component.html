@@ -528,3 +528,15 @@
   (confirmed)="confirmRemoveBooking()"
   (cancelled)="closeRemoveBookingModal()"
 />
+
+<app-confirm-modal
+  [isOpen]="isCompleteTripModalOpen"
+  title="Terminer le voyage ?"
+  message="Vous allez passer à l'étape de validation des codes de livraison. Cette action est irréversible."
+  confirmLabel="Confirmer"
+  variant="primary"
+  [isLoading]="isCompletingTrip"
+  [errorMessage]="completeTripError"
+  (confirmed)="confirmCompleteTrip()"
+  (cancelled)="closeCompleteTripModal()"
+/>

@@ -36,9 +36,11 @@ export class ReservationDetailsPageComponent implements OnInit {
   loadError = '';
   actionError = '';
   isCompletingTrip = false;
+  completeTripError = '';
   isCancellingTrip = false;
   processingBookingId: number | null = null;
   isCancelTripModalOpen = false;
+  isCompleteTripModalOpen = false;
   isRemoveBookingModalOpen = false;
   pendingRemoveBookingId: number | null = null;
   selectedTab: ReservationStatusTab = 'ALL';
@@ -231,15 +233,34 @@ export class ReservationDetailsPageComponent implements OnInit {
       return;
     }
 
+    this.isCompleteTripModalOpen = true;
+  }
+
+  closeCompleteTripModal(): void {
+    this.isCompleteTripModalOpen = false;
+    this.completeTripError = '';
+  }
+
+  confirmCompleteTrip(): void {
+    if (!this.trip || this.isCompletingTrip) {
+      return;
+    }
+
     this.isCompletingTrip = true;
+    this.completeTripError = '';
     this.actionError = '';
-    this.router.navigate(['/trips', this.trip.id, 'reservations', 'complete'])
-      .catch(() => {
-        this.actionError = 'Impossible d’ouvrir la page de fin de trajet.';
-      })
-      .finally(() => {
+
+    this.tripService.completeTrip(this.trip.id).subscribe({
+      next: () => {
         this.isCompletingTrip = false;
-      });
+        this.isCompleteTripModalOpen = false;
+        this.router.navigate(['/trips', this.trip!.id, 'reservations', 'complete']);
+      },
+      error: (error: { error?: { message?: string } }) => {
+        this.completeTripError = error.error?.message || 'Impossible de terminer ce trajet pour le moment.';
+        this.isCompletingTrip = false;
+      },
+    });
   }
 
   openCancelTripModal(): void {
@@ -421,6 +442,7 @@ export class ReservationDetailsPageComponent implements OnInit {
     this.tripSummaryExpanded = false;
     this.closeRemoveBookingModal();
     this.closeCancelTripModal();
+    this.closeCompleteTripModal();
 
     forkJoin({
       trip: this.tripService.getTripById(tripId),
