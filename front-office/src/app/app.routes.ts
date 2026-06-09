@@ -106,6 +106,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'trips/:tripId/reservations/complete',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/trip-completion/trip-completion-page.component').then(
+        (m) => m.TripCompletionPageComponent
+      ),
+  },
+  {
     path: 'trips/:tripId/reservations/:bookingId',
     canActivate: [authGuard],
     loadComponent: () =>
