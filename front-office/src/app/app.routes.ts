@@ -139,6 +139,20 @@ export const routes: Routes = [
             (m) => m.MessagesPageComponent
           ),
       },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./pages/settings/settings-page.component').then(
+            (m) => m.SettingsPageComponent
+          ),
+      },
+      {
+        path: 'received-bookings',
+        loadComponent: () =>
+          import('./pages/received-bookings/received-bookings-page.component').then(
+            (m) => m.ReceivedBookingsPageComponent
+          ),
+      },
     ],
   },
 ];

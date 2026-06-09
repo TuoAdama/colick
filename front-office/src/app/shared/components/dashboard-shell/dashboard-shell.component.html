@@ -75,10 +75,9 @@
         Mes trajets
       </a>
       <a
-        [routerLink]="['/dashboard']"
-        [queryParams]="{ tab: 'received' }"
+        [routerLink]="['/received-bookings']"
         routerLinkActive="bg-primary/10 font-bold text-primary"
-        [routerLinkActiveOptions]="{ exact: true }"
+        [routerLinkActiveOptions]="{ exact: false }"
         class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
       >
         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -101,10 +100,9 @@
 
     <div class="space-y-1 border-t border-border pt-4">
       <a
-        [routerLink]="['/dashboard']"
-        [queryParams]="{ tab: 'profile' }"
+        [routerLink]="['/settings']"
         routerLinkActive="bg-primary/10 font-bold text-primary"
-        [routerLinkActiveOptions]="{ exact: true }"
+        [routerLinkActiveOptions]="{ exact: false }"
         class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
       >
         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -212,10 +210,9 @@
           Mes trajets
         </a>
         <a
-          [routerLink]="['/dashboard']"
-          [queryParams]="{ tab: 'received' }"
+          [routerLink]="['/received-bookings']"
           routerLinkActive="bg-primary/10 font-bold text-primary"
-          [routerLinkActiveOptions]="{ exact: true }"
+          [routerLinkActiveOptions]="{ exact: false }"
           class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
           (click)="closeMobileMenu()"
         >
@@ -240,10 +237,9 @@
 
       <div class="space-y-1 border-t border-border px-1 pt-4">
         <a
-          [routerLink]="['/dashboard']"
-          [queryParams]="{ tab: 'profile' }"
+          [routerLink]="['/settings']"
           routerLinkActive="bg-primary/10 font-bold text-primary"
-          [routerLinkActiveOptions]="{ exact: true }"
+          [routerLinkActiveOptions]="{ exact: false }"
           class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
           (click)="closeMobileMenu()"
         >

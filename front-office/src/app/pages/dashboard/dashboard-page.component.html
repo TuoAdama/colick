@@ -1,5 +1,5 @@
-<div class="min-h-screen bg-background-primary pt-20 pb-12 font-['Poppins']">
-  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+<div class="min-h-screen bg-background-primary pt-6 pb-12 font-['Poppins']">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6">
 
     <!-- ── Profile header ──────────────────────────────────────────────────── -->
     <div class="bg-white rounded-2xl shadow-sm p-6 mb-6 flex items-center gap-4">
@@ -17,409 +17,68 @@
       </div>
     </div>
 
-    <!-- ── Tabs container ──────────────────────────────────────────────────── -->
-    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <!-- ── Sent bookings ───────────────────────────────────────────────────── -->
+    <div class="bg-white rounded-2xl shadow-sm p-6">
+      <h2 class="text-lg font-semibold text-text-primary mb-4">Mes demandes envoyées</h2>
 
-      <!-- Tab navigation bar -->
-      <div class="flex border-b border-gray-100 overflow-x-auto" role="tablist" aria-label="Sections du tableau de bord">
-        @for (tab of tabs; track tab.id) {
-          <button
-            (click)="setTab(tab.id)"
-            [class.text-primary]="activeTab === tab.id"
-            [class.border-primary]="activeTab === tab.id"
-            [class.border-b-2]="activeTab === tab.id"
-            [class.text-text-secondary]="activeTab !== tab.id"
-            class="flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition-colors duration-200 hover:text-primary shrink-0"
-            role="tab"
-            [attr.aria-selected]="activeTab === tab.id"
-            [attr.aria-controls]="'panel-' + tab.id"
-          >
-            <span [innerHTML]="tab.icon" class="w-4 h-4"></span>
-            {{ tab.label }}
-          </button>
-        }
-      </div>
-
-      <!-- ── Tab panels ────────────────────────────────────────────────────── -->
-      <div class="p-6">
-
-        <!-- ── Panel: Mon profil ────────────────────────────────────────────── -->
-        @if (activeTab === 'profile') {
-          <div class="space-y-6" id="panel-profile" role="tabpanel" aria-labelledby="tab-profile">
-            <div class="grid gap-6 lg:grid-cols-[18rem_1fr]">
-              <aside class="rounded-2xl border border-gray-200 bg-background-secondary p-6">
-                <div class="flex flex-col items-center text-center">
-                  <label for="photo-upload" class="relative mb-6 cursor-pointer" aria-label="Changer la photo de profil">
-                    <div class="h-32 w-32 overflow-hidden rounded-full border-4 border-gray-200 bg-secondary">
-                      @if (photoPreview) {
-                        <img [src]="photoPreview" alt="Photo de profil" class="h-full w-full object-cover" />
-                      } @else {
-                        <div class="flex h-full w-full items-center justify-center text-3xl font-bold uppercase text-white">
-                          {{ (currentUser$ | async)?.firstName?.charAt(0) }}{{ (currentUser$ | async)?.lastName?.charAt(0) }}
-                        </div>
-                      }
-                    </div>
-                    <span class="absolute bottom-0 right-0 inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent text-white shadow-lg">
-                      <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                      </svg>
-                    </span>
-                  </label>
-                  <input id="photo-upload" type="file" accept="image/*" class="sr-only" (change)="onPhotoSelected($event)" />
-
-                  <h2 class="text-2xl font-bold text-primary">Photo de profil</h2>
-                  <p class="mt-2 text-sm text-text-secondary">JPG, GIF ou PNG. Taille max 800 Ko</p>
-
-                  <label
-                    for="photo-upload"
-                    class="mt-6 inline-flex w-full cursor-pointer items-center justify-center rounded-xl border border-secondary px-4 py-2.5 text-sm font-medium text-secondary hover:bg-secondary/5"
+      @if (isLoadingSentBookings) {
+        <div class="flex justify-center py-8" aria-label="Chargement en cours">
+          <div class="w-6 h-6 border-2 border-secondary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      } @else if (myBookings.length === 0) {
+        <div class="text-center py-10 text-text-secondary text-sm">
+          Vous n'avez envoyé aucune demande pour le moment.
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (booking of myBookings; track booking.id) {
+            <div class="bg-background-secondary border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p class="font-medium text-text-primary text-sm">{{ booking.title }}</p>
+                <p class="text-text-secondary text-xs">
+                  {{ booking.weight }} kg · Contact : {{ booking.recipientContact }}
+                </p>
+                @if (booking.description) {
+                  <p class="text-text-muted text-xs mt-1">{{ booking.description }}</p>
+                }
+                @if (booking.validationCodeActive && booking.validationDeliveryChannel && booking.validationCodeSentAt) {
+                  <p class="text-success text-xs mt-1">
+                    Code actif envoyé par {{ validationChannelLabel(booking.validationDeliveryChannel) }}
+                    le {{ booking.validationCodeSentAt | date:'dd/MM/yyyy HH:mm' }}
+                  </p>
+                } @else if (booking.validationDeliveryStatus === 'FAILED' && booking.validationCodeDeliveryFailedAt) {
+                  <p class="text-warning text-xs mt-1">
+                    L'envoi du code a échoué le {{ booking.validationCodeDeliveryFailedAt | date:'dd/MM/yyyy HH:mm' }}.
+                  </p>
+                } @else if (booking.deliveredAt) {
+                  <p class="text-success text-xs mt-1">
+                    Colis remis le {{ booking.deliveredAt | date:'dd/MM/yyyy HH:mm' }}
+                  </p>
+                } @else if (booking.status === 'ACCEPTED' && !booking.validationCodeInvalidatedAt) {
+                  <p class="text-text-muted text-xs mt-1">
+                    Le code de validation est en cours d'envoi au destinataire.
+                  </p>
+                }
+              </div>
+              <!-- Status badge + cancel button -->
+              <div class="flex items-center gap-2 shrink-0">
+                <span [class]="statusClass(booking.status) + ' text-xs font-medium px-2.5 py-1 rounded-full'">
+                  {{ statusLabel(booking.status) }}
+                </span>
+                @if (booking.status === 'PENDING' || booking.status === 'ACCEPTED') {
+                  <button
+                    (click)="cancelMyBooking(booking)"
+                    class="text-xs font-semibold text-error hover:underline"
                   >
-                    Changer la photo
-                  </label>
-
-                  @if (isUploadingPhoto) {
-                    <p class="mt-3 text-xs text-secondary">Upload en cours…</p>
-                  }
-                  @if (photoError) {
-                    <p class="mt-2 text-xs text-error">{{ photoError }}</p>
-                  }
-                </div>
-              </aside>
-
-              <div class="space-y-6">
-                <section class="rounded-2xl border border-gray-200 bg-background-secondary p-5">
-                  <div class="flex items-center gap-2 text-primary">
-                    <svg class="h-5 w-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
-                    <h2 class="text-2xl font-bold">Informations personnelles</h2>
-                  </div>
-                  <div class="mt-4 border-t border-gray-200 pt-4 space-y-4">
-                    @if (infoSuccess) {
-                      <div class="rounded-lg bg-success/10 px-4 py-3 text-sm text-success" role="status">{{ infoSuccess }}</div>
-                    }
-                    @if (infoError) {
-                      <div class="rounded-lg bg-error/10 px-4 py-3 text-sm text-error" role="alert">{{ infoError }}</div>
-                    }
-                    @if (emailSuccess) {
-                      <div class="rounded-lg bg-success/10 px-4 py-3 text-sm text-success" role="status">{{ emailSuccess }}</div>
-                    }
-                    @if (emailError) {
-                      <div class="rounded-lg bg-error/10 px-4 py-3 text-sm text-error" role="alert">{{ emailError }}</div>
-                    }
-
-                    <div [formGroup]="infoForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <label for="firstName" class="mb-1 block text-sm font-medium text-text-secondary">Prénom</label>
-                        <input id="firstName" formControlName="firstName" type="text" autocomplete="given-name"
-                          class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
-                      </div>
-                      <div>
-                        <label for="lastName" class="mb-1 block text-sm font-medium text-text-secondary">Nom</label>
-                        <input id="lastName" formControlName="lastName" type="text" autocomplete="family-name"
-                          class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
-                      </div>
-                      <div class="sm:col-span-2">
-                        <label for="newEmail" class="mb-1 block text-sm font-medium text-text-secondary">Adresse e-mail</label>
-                        <div [formGroup]="emailForm">
-                          <input id="newEmail" formControlName="newEmail" type="email" autocomplete="email"
-                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="rounded-2xl border border-gray-200 bg-background-secondary p-5">
-                  <div class="flex items-center gap-2 text-primary">
-                    <svg class="h-5 w-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-4M10 6V5a2 2 0 114 0v1M10 6a2 2 0 104 0"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6"/>
-                    </svg>
-                    <h2 class="text-2xl font-bold">Vérification d'identité</h2>
-                  </div>
-                  <div class="mt-4 border-t border-gray-200 pt-4 space-y-3">
-                    @if (needsIdentityDocument()) {
-                      <div class="rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-text-primary">
-                        Ajoutez votre pièce d'identité pour finaliser votre profil Colick et sécuriser vos futures réservations.
-                      </div>
-                    }
-                    <div [formGroup]="infoForm">
-                      <label for="identityDocument" class="mb-1 block text-sm font-medium text-text-secondary">Numéro de pièce d'identité</label>
-                      <input id="identityDocument" formControlName="identityDocument" type="text"
-                        placeholder="Passeport, carte d'identité…"
-                        class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
-                    </div>
-                    <div>
-                      <label for="identityProofFile" class="mb-1 block text-sm font-medium text-text-secondary">Justificatif (fichier)</label>
-                      <input
-                        id="identityProofFile"
-                        type="file"
-                        accept=".pdf,.png,.jpg,.jpeg"
-                        (change)="onIdentityProofSelected($event)"
-                        class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-text-primary file:mr-3 file:rounded-lg file:border-0 file:bg-secondary/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-secondary hover:file:bg-secondary/20"
-                      />
-                      <p class="mt-1 text-xs text-text-muted">Formats acceptés : PDF, PNG, JPG, JPEG</p>
-                      @if (selectedIdentityProofFile) {
-                        <p class="mt-1 text-xs text-secondary">Fichier sélectionné : {{ selectedIdentityProofFile.name }}</p>
-                      }
-                    </div>
-                  </div>
-                </section>
-
-                <section class="rounded-2xl border border-gray-200 bg-background-secondary p-5">
-                  <div class="flex items-center gap-2 text-primary">
-                    <svg class="h-5 w-5 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 4v5c0 5-3.4 8.7-7 10-3.6-1.3-7-5-7-10V7l7-4z"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4"/>
-                    </svg>
-                    <h2 class="text-2xl font-bold">Sécurité</h2>
-                  </div>
-                  <div class="mt-4 border-t border-gray-200 pt-4">
-                    @if (hasLocalPassword()) {
-                      <div [formGroup]="passwordForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        @if (passwordSuccess) {
-                          <div class="sm:col-span-2 rounded-lg bg-success/10 px-4 py-3 text-sm text-success" role="status">{{ passwordSuccess }}</div>
-                        }
-                        @if (passwordError) {
-                          <div class="sm:col-span-2 rounded-lg bg-error/10 px-4 py-3 text-sm text-error" role="alert">{{ passwordError }}</div>
-                        }
-                        <div class="sm:col-span-2">
-                          <label for="oldPassword" class="mb-1 block text-sm font-medium text-text-secondary">Ancien mot de passe</label>
-                          <input id="oldPassword" formControlName="oldPassword" type="password" autocomplete="current-password" placeholder="••••••••"
-                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
-                        </div>
-                        <div>
-                          <label for="newPassword" class="mb-1 block text-sm font-medium leading-5 text-text-secondary sm:min-h-10">Nouveau mot de passe</label>
-                          <input id="newPassword" formControlName="newPassword" type="password" autocomplete="new-password" placeholder="••••••••"
-                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
-                        </div>
-                        <div>
-                          <label for="confirmPassword" class="mb-1 block text-sm font-medium leading-5 text-text-secondary sm:min-h-10">Confirmer le nouveau mot de passe</label>
-                          <input id="confirmPassword" formControlName="confirmPassword" type="password" autocomplete="new-password" placeholder="••••••••"
-                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" />
-                        </div>
-                      </div>
-                    } @else {
-                      <div class="rounded-xl border border-secondary/20 bg-secondary/10 px-4 py-3 text-sm text-text-primary">
-                        Votre compte utilise actuellement Google pour se connecter. Si vous souhaitez aussi definir un mot de passe local,
-                        utilisez le parcours <strong>Mot de passe oublie</strong> depuis l'ecran de connexion.
-                      </div>
-                    }
-                  </div>
-                </section>
-              </div>
-            </div>
-
-            <div class="flex justify-end gap-3">
-              <button
-                type="button"
-                (click)="resetProfileForms()"
-                class="inline-flex items-center justify-center rounded-xl border border-gray-300 px-6 py-2.5 text-sm font-semibold text-text-secondary transition hover:bg-white"
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                (click)="saveProfileChanges()"
-                [disabled]="infoForm.invalid || isSavingInfo || isSendingEmail || isSavingPassword || isUploadingPhoto"
-                class="inline-flex items-center justify-center rounded-xl bg-accent px-6 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {{ isSavingInfo || isSendingEmail || isSavingPassword ? 'Enregistrement…' : 'Enregistrer les modifications' }}
-              </button>
-            </div>
-          </div>
-        }
-
-        <!-- ── Panel: Mes chats ─────────────────────────────────────────────── -->
-        @if (activeTab === 'chats') {
-          <div class="text-center py-10" id="panel-chats" role="tabpanel" aria-labelledby="tab-chats">
-            <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
-              <svg class="w-8 h-8 text-secondary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-              </svg>
-            </div>
-            <h2 class="text-lg font-semibold text-text-primary mb-2">Mes conversations</h2>
-            <p class="text-text-secondary text-sm mb-6">
-              Retrouvez toutes vos conversations avec les voyageurs et expéditeurs.
-            </p>
-            <a
-              routerLink="/messages"
-              class="inline-flex items-center gap-2 bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 shadow-lg shadow-secondary/30"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-              </svg>
-              Ouvrir les chats
-            </a>
-          </div>
-        }
-
-        <!-- ── Panel: Réservations reçues ──────────────────────────────────── -->
-        @if (activeTab === 'received') {
-          <div id="panel-received" role="tabpanel" aria-labelledby="tab-received">
-            <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h2 class="text-lg font-semibold text-text-primary">Réservations reçues</h2>
-              <a
-                routerLink="/propose"
-                class="inline-flex items-center justify-center gap-2 bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 shadow-lg shadow-secondary/30"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                </svg>
-                Proposer un voyage
-              </a>
-            </div>
-
-            @if (isLoadingTrips) {
-              <!-- Loading spinner -->
-              <div class="flex justify-center py-8" aria-label="Chargement en cours">
-                <div class="w-6 h-6 border-2 border-secondary border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            } @else if (myTrips.length === 0) {
-              <div class="text-center py-10 text-text-secondary text-sm">
-                <div class="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
-                  <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                  </svg>
-                </div>
-                <p class="mb-5">Vous n'avez aucun trajet proposé pour le moment.</p>
-                <a
-                  routerLink="/propose"
-                  class="inline-flex items-center gap-2 bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-opacity-90 transition-all duration-200 shadow-lg shadow-secondary/30"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                  </svg>
-                  Proposer un voyage
-                </a>
-              </div>
-            } @else {
-              @if (receivedTripsActionError) {
-                <div class="mb-4 rounded-lg bg-error/10 px-4 py-3 text-sm text-error" role="alert">
-                  {{ receivedTripsActionError }}
-                </div>
-              }
-
-              @if (shareCardError) {
-                <div class="mb-4 rounded-lg bg-error/10 px-4 py-3 text-sm text-error" role="alert">
-                  {{ shareCardError }}
-                </div>
-              }
-
-              <app-traveler-trips-desktop-list
-                [trips]="myTrips"
-                [tripBookingsMap]="tripBookingsMap"
-                [selectedTripId]="null"
-                [generatingShareCardTripId]="generatingShareCardTripId"
-                [isCancellingTrip]="isCancellingTrip"
-                [isDeletingTrip]="isDeletingTrip"
-                [completingTripId]="completingTripId"
-                (selectTrip)="selectTrip($event)"
-                (editTrip)="handleDesktopTripEdit($event)"
-                (deleteTrip)="handleDesktopTripDelete($event)"
-                (cancelTrip)="handleDesktopTripCancel($event)"
-                (downloadTripShareCard)="handleDesktopTripShareCardDownload($event)"
-                (markTripCompleted)="handleDesktopTripCompletion($event)"
-              />
-
-              <!-- Trip selection grid -->
-              <div class="grid gap-4 lg:hidden">
-                @for (trip of myTrips; track trip.id) {
-                  <app-dashboard-received-mobile-card
-                    [trip]="trip"
-                    [bookingCount]="(tripBookingsMap[trip.id] || []).length"
-                    [isSelected]="false"
-                    [isGeneratingShareCard]="generatingShareCardTripId === trip.id"
-                    [isCompletingTrip]="completingTripId === trip.id"
-                    (viewTrip)="selectTrip($event)"
-                    (editTrip)="editTrip($event)"
-                    (downloadShareCard)="downloadShareCardPng($event)"
-                    (markTripCompleted)="completeTrip($event)"
-                    (cancelTrip)="cancelTrip($event)"
-                  />
+                    Annuler
+                  </button>
                 }
               </div>
-
-              @if (shareCardData) {
-                <div class="pointer-events-none fixed -left-[9999px] top-0 opacity-0" aria-hidden="true">
-                  <div #shareCardCapture class="w-[768px]">
-                    <app-share-card-story [data]="shareCardData" />
-                  </div>
-                </div>
-              }
-            }
-          </div>
-        }
-
-        <!-- ── Panel: Mes demandes ──────────────────────────────────────────── -->
-        @if (activeTab === 'sent') {
-          <div id="panel-sent" role="tabpanel" aria-labelledby="tab-sent">
-            <h2 class="text-lg font-semibold text-text-primary mb-4">Mes demandes envoyées</h2>
-
-            @if (isLoadingSentBookings) {
-              <div class="flex justify-center py-8" aria-label="Chargement en cours">
-                <div class="w-6 h-6 border-2 border-secondary border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            } @else if (myBookings.length === 0) {
-              <div class="text-center py-10 text-text-secondary text-sm">
-                Vous n'avez envoyé aucune demande pour le moment.
-              </div>
-            } @else {
-              <div class="space-y-3">
-                @for (booking of myBookings; track booking.id) {
-                  <div class="bg-background-secondary border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div>
-                      <p class="font-medium text-text-primary text-sm">{{ booking.title }}</p>
-                      <p class="text-text-secondary text-xs">
-                        {{ booking.weight }} kg · Contact : {{ booking.recipientContact }}
-                      </p>
-                      @if (booking.description) {
-                        <p class="text-text-muted text-xs mt-1">{{ booking.description }}</p>
-                      }
-                      @if (booking.validationCodeActive && booking.validationDeliveryChannel && booking.validationCodeSentAt) {
-                        <p class="text-success text-xs mt-1">
-                          Code actif envoyé par {{ validationChannelLabel(booking.validationDeliveryChannel) }}
-                          le {{ booking.validationCodeSentAt | date:'dd/MM/yyyy HH:mm' }}
-                        </p>
-                      } @else if (booking.validationDeliveryStatus === 'FAILED' && booking.validationCodeDeliveryFailedAt) {
-                        <p class="text-warning text-xs mt-1">
-                          L'envoi du code a échoué le {{ booking.validationCodeDeliveryFailedAt | date:'dd/MM/yyyy HH:mm' }}.
-                        </p>
-                      } @else if (booking.deliveredAt) {
-                        <p class="text-success text-xs mt-1">
-                          Colis remis le {{ booking.deliveredAt | date:'dd/MM/yyyy HH:mm' }}
-                        </p>
-                      } @else if (booking.status === 'ACCEPTED' && !booking.validationCodeInvalidatedAt) {
-                        <p class="text-text-muted text-xs mt-1">
-                          Le code de validation est en cours d’envoi au destinataire.
-                        </p>
-                      }
-                    </div>
-                    <!-- Status badge + cancel button -->
-                    <div class="flex items-center gap-2 shrink-0">
-                      <span [class]="statusClass(booking.status) + ' text-xs font-medium px-2.5 py-1 rounded-full'">
-                        {{ statusLabel(booking.status) }}
-                      </span>
-                      @if (booking.status === 'PENDING' || booking.status === 'ACCEPTED') {
-                        <button
-                          (click)="cancelMyBooking(booking)"
-                          class="text-xs font-semibold text-error hover:underline"
-                        >
-                          Annuler
-                        </button>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-        }
-
-      </div><!-- /p-6 -->
-    </div><!-- /tabs container -->
+            </div>
+          }
+        </div>
+      }
+    </div>
 
   </div>
 </div>
