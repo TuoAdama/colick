@@ -54,6 +54,8 @@
     <nav class="flex-1 space-y-1 px-1" aria-label="Navigation réservation">
       <a
         [routerLink]="['/dashboard']"
+        routerLinkActive="bg-primary/10 font-bold text-primary"
+        [routerLinkActiveOptions]="{ exact: true }"
         class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
       >
         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -63,6 +65,8 @@
       </a>
       <a
         [routerLink]="['/trips']"
+        routerLinkActive="bg-primary/10 font-bold text-primary"
+        [routerLinkActiveOptions]="{ exact: false }"
         class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
       >
         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -73,8 +77,9 @@
       <a
         [routerLink]="['/dashboard']"
         [queryParams]="{ tab: 'received' }"
-        class="flex items-center gap-3 rounded-xl bg-primary/10 px-3 py-3 text-sm font-bold text-primary"
-        aria-current="page"
+        routerLinkActive="bg-primary/10 font-bold text-primary"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
       >
         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" />
@@ -83,6 +88,8 @@
       </a>
       <a
         [routerLink]="['/messages']"
+        routerLinkActive="bg-primary/10 font-bold text-primary"
+        [routerLinkActiveOptions]="{ exact: false }"
         class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
       >
         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -96,6 +103,8 @@
       <a
         [routerLink]="['/dashboard']"
         [queryParams]="{ tab: 'profile' }"
+        routerLinkActive="bg-primary/10 font-bold text-primary"
+        [routerLinkActiveOptions]="{ exact: true }"
         class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
       >
         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -180,6 +189,8 @@
       <nav class="flex-1 space-y-1 px-1" aria-label="Navigation mobile">
         <a
           [routerLink]="['/dashboard']"
+          routerLinkActive="bg-primary/10 font-bold text-primary"
+          [routerLinkActiveOptions]="{ exact: true }"
           class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
           (click)="closeMobileMenu()"
         >
@@ -190,6 +201,8 @@
         </a>
         <a
           [routerLink]="['/trips']"
+          routerLinkActive="bg-primary/10 font-bold text-primary"
+          [routerLinkActiveOptions]="{ exact: false }"
           class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
           (click)="closeMobileMenu()"
         >
@@ -201,8 +214,9 @@
         <a
           [routerLink]="['/dashboard']"
           [queryParams]="{ tab: 'received' }"
-          class="flex items-center gap-3 rounded-xl bg-primary/10 px-3 py-3 text-sm font-bold text-primary"
-          aria-current="page"
+          routerLinkActive="bg-primary/10 font-bold text-primary"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
           (click)="closeMobileMenu()"
         >
           <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -212,6 +226,8 @@
         </a>
         <a
           [routerLink]="['/messages']"
+          routerLinkActive="bg-primary/10 font-bold text-primary"
+          [routerLinkActiveOptions]="{ exact: false }"
           class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
           (click)="closeMobileMenu()"
         >
@@ -226,6 +242,8 @@
         <a
           [routerLink]="['/dashboard']"
           [queryParams]="{ tab: 'profile' }"
+          routerLinkActive="bg-primary/10 font-bold text-primary"
+          [routerLinkActiveOptions]="{ exact: true }"
           class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
           (click)="closeMobileMenu()"
         >
