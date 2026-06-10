@@ -93,7 +93,9 @@ export class DashboardPageComponent implements OnInit {
     const requests = activeTrips.map(t => this.tripService.getTripBookings(t.id));
     forkJoin(requests).subscribe({
       next: (results) => {
-        this.receivedBookings = results.flat();
+        this.receivedBookings = results.flat().sort((a, b) =>
+          new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+        );
         this.isLoadingReceivedBookings = false;
       },
       error: () => { this.isLoadingReceivedBookings = false; },

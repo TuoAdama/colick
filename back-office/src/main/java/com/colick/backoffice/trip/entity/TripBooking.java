@@ -78,6 +78,15 @@ public class TripBooking {
     @Column
     private LocalDateTime deliveredAt;
 
+    /** Timestamp when the booking was created. */
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     public boolean hasActiveValidationCode() {
         return validationCode != null
                 && validationDeliveryStatus == ValidationDeliveryStatus.DELIVERED
