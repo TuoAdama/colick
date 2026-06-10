@@ -65,7 +65,11 @@ export class ReceivedBookingsPageComponent implements OnInit {
         if (trips.length === 0) { this.isLoadingTrips = false; return; }
         const requests = trips.map((t) => this.tripService.getTripBookings(t.id).pipe(catchError(() => of([]))));
         forkJoin(requests).subscribe((results) => {
-          trips.forEach((t, i) => { this.tripBookingsMap[t.id] = results[i] as BookingResponse[]; });
+          trips.forEach((t, i) => {
+            this.tripBookingsMap[t.id] = (results[i] as BookingResponse[]).sort((a, b) =>
+              new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+            );
+          });
           this.isLoadingTrips = false;
         });
       },

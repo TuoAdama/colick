@@ -93,7 +93,9 @@ export class DashboardPageComponent implements OnInit {
     const requests = activeTrips.map(t => this.tripService.getTripBookings(t.id));
     forkJoin(requests).subscribe({
       next: (results) => {
-        this.receivedBookings = results.flat();
+        this.receivedBookings = results.flat().sort((a, b) =>
+          new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+        );
         this.isLoadingReceivedBookings = false;
       },
       error: () => { this.isLoadingReceivedBookings = false; },
@@ -150,6 +152,11 @@ export class DashboardPageComponent implements OnInit {
       CANCELLED: 'bg-neutral/10 text-neutral',
       REMOVED: 'bg-neutral/10 text-text-secondary',
     } as Record<string, string>)[status] ?? 'bg-neutral/10 text-text-secondary';
+  }
+
+  /** Navigate to the booking detail page */
+  navigateToBookingDetail(booking: BookingResponse): void {
+    this.router.navigate(['/trips', booking.tripId, 'reservations', booking.id]);
   }
 
   getInitials(name: string): string {

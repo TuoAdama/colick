@@ -34,6 +34,8 @@ services:
       - "8080:8080"
     env_file:
       - .env.local
+    volumes:
+      - ./back-office/logs:/app/logs
     depends_on:
       - postgres
       - mailhog

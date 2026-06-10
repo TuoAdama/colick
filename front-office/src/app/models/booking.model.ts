@@ -46,4 +46,5 @@ export interface BookingResponse {
   validationCodeDeliveryFailedAt?: string;
   deliveredAt?: string;
   validationCodeActive: boolean;
+  createdAt?: string;
 }
