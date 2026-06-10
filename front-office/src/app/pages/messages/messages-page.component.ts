@@ -1,15 +1,16 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { MessagingService } from '../../services/messaging.service';
 import { AuthService } from '../../services/auth.service';
 import { ConversationResponse, MessageResponse } from '../../models/messaging.model';
-@Component({ selector: 'app-messages-page', standalone: true, imports: [CommonModule, FormsModule, RouterLink], templateUrl: './messages-page.component.html' })
+@Component({ selector: 'app-messages-page', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './messages-page.component.html' })
 export class MessagesPageComponent implements OnInit, OnDestroy {
   private readonly messagingService = inject(MessagingService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   conversations: ConversationResponse[] = [];
   selectedConversation: ConversationResponse | null = null;
   messages: MessageResponse[] = [];
@@ -54,5 +55,12 @@ export class MessagesPageComponent implements OnInit, OnDestroy {
   private stopPolling(): void { if (this.pollInterval) { clearInterval(this.pollInterval); this.pollInterval = null; } }
   isOwnMessage(m: MessageResponse): boolean { return m.senderId === this.currentUserId; }
   formatTime(d: string): string { return new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
+  goToPreviousPage(): void {
+    if (window.history.length > 1) {
+      this.location.back();
+      return;
+    }
+    this.router.navigate(['/dashboard']);
+  }
   goBack(): void { this.selectedConversation = null; this.messages = []; this.stopPolling(); this.loadConversations(); }
 }
