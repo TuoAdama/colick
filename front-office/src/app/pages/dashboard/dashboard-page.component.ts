@@ -154,6 +154,11 @@ export class DashboardPageComponent implements OnInit {
     } as Record<string, string>)[status] ?? 'bg-neutral/10 text-text-secondary';
   }
 
+  /** Navigate to the booking detail page */
+  navigateToBookingDetail(booking: BookingResponse): void {
+    this.router.navigate(['/trips', booking.tripId, 'reservations', booking.id]);
+  }
+
   getInitials(name: string): string {
     return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2);
   }
