@@ -20,14 +20,24 @@ export class MessagesPageComponent implements OnInit, OnDestroy {
   isSending = false;
   errorMessage = '';
   currentUserId: number | null = null;
+  isMobile = false;
   private pollInterval: ReturnType<typeof setInterval> | null = null;
+  private readonly resizeListener = (): void => {
+    this.updateViewportState();
+  };
+
   ngOnInit(): void {
     if (!this.authService.isLoggedIn()) { this.router.navigate(['/login']); return; }
     const user = this.authService.getUser();
     this.currentUserId = user?.id ?? null;
+    this.updateViewportState();
+    window.addEventListener('resize', this.resizeListener);
     this.loadConversations();
   }
-  ngOnDestroy(): void { this.stopPolling(); }
+  ngOnDestroy(): void {
+    this.stopPolling();
+    window.removeEventListener('resize', this.resizeListener);
+  }
   loadConversations(): void {
     this.isLoadingConversations = true;
     this.messagingService.getConversations().subscribe({
@@ -63,4 +73,8 @@ export class MessagesPageComponent implements OnInit, OnDestroy {
     this.router.navigate(['/dashboard']);
   }
   goBack(): void { this.selectedConversation = null; this.messages = []; this.stopPolling(); this.loadConversations(); }
+
+  private updateViewportState(): void {
+    this.isMobile = window.innerWidth < 768;
+  }
 }
