@@ -39,6 +39,18 @@ public class MessagingController {
     }
 
     /**
+     * Create a conversation (or reuse an existing one) without sending any message.
+     * Used to open a messaging thread before composing.
+     */
+    @PostMapping("/conversations/draft")
+    public ResponseEntity<ConversationResponse> createConversationDraft(
+            @Valid @RequestBody CreateConversationDraftRequest request,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(messagingService.createConversationDraft(request, currentUser));
+    }
+
+    /**
      * List all conversations for the currently authenticated user.
      */
     @GetMapping("/conversations")

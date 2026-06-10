@@ -313,16 +313,13 @@ export class ReservationDetailsPageComponent implements OnInit {
 
     this.processingBookingId = bookingId;
     this.actionError = '';
-    this.messagingService.startConversation({
+    this.messagingService.createConversationDraft({
       tripId: this.trip.id,
       recipientId: booking.senderId,
-      content:
-        `Bonjour, je vous contacte au sujet de votre réservation "${booking.title}" `
-        + `pour mon trajet ${this.trip.departureAddress} vers ${this.trip.destination}.`,
     }).subscribe({
-      next: () => {
+      next: (conversation) => {
         this.processingBookingId = null;
-        void this.router.navigate(['/messages']);
+        void this.router.navigate(['/messages'], { queryParams: { conversationId: conversation.id } });
       },
       error: () => {
         this.actionError = 'Impossible de démarrer la conversation.';

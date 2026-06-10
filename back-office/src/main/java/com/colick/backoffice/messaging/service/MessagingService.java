@@ -47,4 +47,14 @@ public interface MessagingService {
      * @return the created message
      */
     MessageResponse sendMessage(Long conversationId, SendMessageRequest request, User currentUser);
+
+    /**
+     * Creates a conversation (or reuses an existing one) without sending any message.
+     * Used to open a messaging thread before the user composes their first message.
+     *
+     * @param request     the draft-conversation request
+     * @param currentUser the authenticated user
+     * @return the conversation overview
+     */
+    ConversationResponse createConversationDraft(CreateConversationDraftRequest request, User currentUser);
 }

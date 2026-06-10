@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
-import { ConversationResponse, MessageResponse, StartConversationRequest, SendMessageRequest } from '../models/messaging.model';
+import { ConversationResponse, MessageResponse, StartConversationRequest, CreateConversationDraftRequest, SendMessageRequest } from '../models/messaging.model';
 @Injectable({ providedIn: 'root' })
 export class MessagingService {
   private readonly http = inject(HttpClient);
@@ -18,6 +18,9 @@ export class MessagingService {
   }
   startConversation(req: StartConversationRequest): Observable<ConversationResponse> {
     return this.http.post<ConversationResponse>(`${this.baseUrl}/conversations`, req);
+  }
+  createConversationDraft(req: CreateConversationDraftRequest): Observable<ConversationResponse> {
+    return this.http.post<ConversationResponse>(`${this.baseUrl}/conversations/draft`, req);
   }
   sendMessage(id: number, content: string): Observable<MessageResponse> {
     return this.http.post<MessageResponse>(`${this.baseUrl}/conversations/${id}/messages`, { content } as SendMessageRequest);

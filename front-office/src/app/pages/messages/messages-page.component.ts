@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MessagingService } from '../../services/messaging.service';
 import { AuthService } from '../../services/auth.service';
 import { ConversationResponse, MessageResponse } from '../../models/messaging.model';
@@ -10,6 +10,7 @@ export class MessagesPageComponent implements OnInit, OnDestroy {
   private readonly messagingService = inject(MessagingService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
   conversations: ConversationResponse[] = [];
   selectedConversation: ConversationResponse | null = null;
@@ -21,6 +22,7 @@ export class MessagesPageComponent implements OnInit, OnDestroy {
   errorMessage = '';
   currentUserId: number | null = null;
   isMobile = false;
+  private pendingConversationId: number | null = null;
   private pollInterval: ReturnType<typeof setInterval> | null = null;
   private readonly resizeListener = (): void => {
     this.updateViewportState();
@@ -32,6 +34,13 @@ export class MessagesPageComponent implements OnInit, OnDestroy {
     this.currentUserId = user?.id ?? null;
     this.updateViewportState();
     window.addEventListener('resize', this.resizeListener);
+    const conversationIdParam = this.route.snapshot.queryParamMap.get('conversationId');
+    if (conversationIdParam) {
+      const parsed = Number(conversationIdParam);
+      if (Number.isInteger(parsed) && parsed > 0) {
+        this.pendingConversationId = parsed;
+      }
+    }
     this.loadConversations();
   }
   ngOnDestroy(): void {
@@ -41,7 +50,17 @@ export class MessagesPageComponent implements OnInit, OnDestroy {
   loadConversations(): void {
     this.isLoadingConversations = true;
     this.messagingService.getConversations().subscribe({
-      next: (c) => { this.conversations = c; this.isLoadingConversations = false; },
+      next: (c) => {
+        this.conversations = c;
+        this.isLoadingConversations = false;
+        if (this.pendingConversationId) {
+          const target = c.find((conv) => conv.id === this.pendingConversationId);
+          this.pendingConversationId = null;
+          if (target) {
+            this.selectConversation(target);
+          }
+        }
+      },
       error: () => { this.errorMessage = 'Impossible de charger les conversations.'; this.isLoadingConversations = false; },
     });
   }

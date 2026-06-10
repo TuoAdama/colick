@@ -10,4 +10,7 @@ export interface MessageResponse {
 export interface StartConversationRequest {
   tripId: number; recipientId: number; content: string;
 }
+export interface CreateConversationDraftRequest {
+  tripId: number; recipientId: number;
+}
 export interface SendMessageRequest { content: string; }

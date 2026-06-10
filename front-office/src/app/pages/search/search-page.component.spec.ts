@@ -32,6 +32,7 @@ describe('SearchPageComponent', () => {
 
   const messagingServiceMock = {
     startConversation: jasmine.createSpy('startConversation').and.returnValue(of(null)),
+    createConversationDraft: jasmine.createSpy('createConversationDraft').and.returnValue(of({ id: 1 })),
   };
 
   const locationServiceMock = {
@@ -163,7 +164,7 @@ describe('SearchPageComponent', () => {
 
     component.contactTraveler(ownTrip);
 
-    expect(messagingServiceMock.startConversation).not.toHaveBeenCalled();
+    expect(messagingServiceMock.createConversationDraft).not.toHaveBeenCalled();
   });
 
   it('treats only pending and accepted bookings as active', () => {
