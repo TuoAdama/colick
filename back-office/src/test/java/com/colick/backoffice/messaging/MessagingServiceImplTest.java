@@ -367,4 +367,79 @@ class MessagingServiceImplTest {
         assertThat(conv.getUnreadCount()).isEqualTo(1L);
         assertThat(conv.getOtherParticipantName()).isEqualTo("Bob Martin");
     }
+
+    // ---- createConversationDraft --------------------------------------------
+
+    @Test
+    void createConversationDraft_shouldCreateConversationWithoutMessage() {
+        CreateConversationDraftRequest request = new CreateConversationDraftRequest();
+        request.setTripId(10L);
+        request.setRecipientId(2L);
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(bob));
+
+        when(conversationRepository.findByTripAndParticipant1AndParticipant2(sampleTrip, alice, bob))
+                .thenReturn(Optional.empty());
+        when(conversationRepository.findByTripAndParticipant1AndParticipant2(sampleTrip, bob, alice))
+                .thenReturn(Optional.empty());
+
+        when(conversationRepository.save(any(Conversation.class))).thenReturn(sampleConversation);
+
+        when(messageRepository.findTopByConversationOrderBySentAtDesc(sampleConversation))
+                .thenReturn(Optional.empty());
+        when(messageRepository.countByConversationAndReadFalseAndSenderNot(sampleConversation, alice))
+                .thenReturn(0L);
+
+        ConversationResponse response = messagingService.createConversationDraft(request, alice);
+
+        assertThat(response.getId()).isEqualTo(100L);
+        assertThat(response.getTripId()).isEqualTo(10L);
+        assertThat(response.getTripRoute()).isEqualTo("Paris → Abidjan");
+        assertThat(response.getOtherParticipantId()).isEqualTo(2L);
+        assertThat(response.getOtherParticipantName()).isEqualTo("Bob Martin");
+        assertThat(response.getLastMessage()).isNull();
+
+        verify(conversationRepository).save(any(Conversation.class));
+        verify(messageRepository, never()).save(any(Message.class));
+    }
+
+    @Test
+    void createConversationDraft_shouldReuseExistingConversation() {
+        CreateConversationDraftRequest request = new CreateConversationDraftRequest();
+        request.setTripId(10L);
+        request.setRecipientId(2L);
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(bob));
+
+        when(conversationRepository.findByTripAndParticipant1AndParticipant2(sampleTrip, alice, bob))
+                .thenReturn(Optional.of(sampleConversation));
+
+        when(messageRepository.findTopByConversationOrderBySentAtDesc(sampleConversation))
+                .thenReturn(Optional.empty());
+        when(messageRepository.countByConversationAndReadFalseAndSenderNot(sampleConversation, alice))
+                .thenReturn(0L);
+
+        ConversationResponse response = messagingService.createConversationDraft(request, alice);
+
+        assertThat(response.getId()).isEqualTo(100L);
+
+        verify(conversationRepository, never()).save(any(Conversation.class));
+        verify(messageRepository, never()).save(any(Message.class));
+    }
+
+    @Test
+    void createConversationDraft_shouldThrow_whenChattingWithSelf() {
+        CreateConversationDraftRequest request = new CreateConversationDraftRequest();
+        request.setTripId(10L);
+        request.setRecipientId(1L);
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(alice));
+
+        assertThatThrownBy(() -> messagingService.createConversationDraft(request, alice))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("yourself");
+    }
 }

@@ -26,6 +26,7 @@ describe('ReservationBookingDetailPageComponent', () => {
 
   const messagingServiceMock = {
     startConversation: jasmine.createSpy('startConversation'),
+    createConversationDraft: jasmine.createSpy('createConversationDraft'),
   };
 
   const authServiceMock = {
@@ -49,6 +50,7 @@ describe('ReservationBookingDetailPageComponent', () => {
     tripServiceMock.removeBooking.calls.reset();
     tripServiceMock.confirmBookingDelivery.calls.reset();
     messagingServiceMock.startConversation.calls.reset();
+    messagingServiceMock.createConversationDraft.calls.reset();
     authServiceMock.getUser.calls.reset();
     authServiceMock.logout.calls.reset();
 
@@ -70,6 +72,16 @@ describe('ReservationBookingDetailPageComponent', () => {
       otherParticipantId: 55,
       otherParticipantName: 'Grace Hopper',
       lastMessage: 'Bonjour',
+      unreadCount: 0,
+      createdAt: '2025-07-15T09:00:00',
+    }));
+    messagingServiceMock.createConversationDraft.and.returnValue(of({
+      id: 1,
+      tripId: 12,
+      tripRoute: 'Paris → Abidjan',
+      otherParticipantId: 55,
+      otherParticipantName: 'Grace Hopper',
+      lastMessage: null,
       unreadCount: 0,
       createdAt: '2025-07-15T09:00:00',
     }));
@@ -135,10 +147,9 @@ describe('ReservationBookingDetailPageComponent', () => {
 
     component.messageSender();
 
-    expect(messagingServiceMock.startConversation).toHaveBeenCalledWith({
+    expect(messagingServiceMock.createConversationDraft).toHaveBeenCalledWith({
       tripId: 12,
       recipientId: 55,
-      content: 'Bonjour, je vous contacte au sujet de votre réservation "Documents" pour mon trajet Paris, France vers Abidjan, Côte d\'Ivoire.',
     });
     expect(router.navigate).toHaveBeenCalledWith(['/messages'], { queryParams: { conversationId: 1 } });
   });

@@ -156,12 +156,9 @@ export class ReservationSenderProfilePageComponent implements OnInit {
 
     this.isProcessing = true;
     this.actionError = '';
-    this.messagingService.startConversation({
+    this.messagingService.createConversationDraft({
       tripId: this.trip.id,
       recipientId: this.booking.senderId,
-      content:
-        `Bonjour, je vous contacte au sujet de votre réservation "${this.booking.title}" `
-        + `pour mon trajet ${this.trip.departureAddress} vers ${this.trip.destination}.`,
     }).subscribe({
       next: (conversation) => {
         this.isProcessing = false;

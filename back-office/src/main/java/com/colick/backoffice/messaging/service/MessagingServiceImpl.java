@@ -121,6 +121,33 @@ public class MessagingServiceImpl implements MessagingService {
         return MessageResponse.from(messageRepository.save(message));
     }
 
+    @Override
+    public ConversationResponse createConversationDraft(CreateConversationDraftRequest request, User currentUser) {
+        Trip trip = tripRepository.findById(request.getTripId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        localizedMessages.get("error.trip.notFound", request.getTripId())));
+
+        User recipient = userRepository.findById(request.getRecipientId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        localizedMessages.get("error.user.notFound", request.getRecipientId())));
+
+        if (currentUser.getId().equals(recipient.getId())) {
+            throw new BadRequestException(localizedMessages.get("error.messaging.selfConversation"));
+        }
+
+        Conversation conversation = findExistingConversation(trip, currentUser, recipient)
+                .orElseGet(() -> {
+                    Conversation newConv = Conversation.builder()
+                            .trip(trip)
+                            .participant1(currentUser)
+                            .participant2(recipient)
+                            .build();
+                    return conversationRepository.save(newConv);
+                });
+
+        return toConversationResponse(conversation, currentUser);
+    }
+
     // ---- Private helpers ---------------------------------------------------
 
     /**

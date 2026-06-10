@@ -313,12 +313,9 @@ export class ReservationDetailsPageComponent implements OnInit {
 
     this.processingBookingId = bookingId;
     this.actionError = '';
-    this.messagingService.startConversation({
+    this.messagingService.createConversationDraft({
       tripId: this.trip.id,
       recipientId: booking.senderId,
-      content:
-        `Bonjour, je vous contacte au sujet de votre réservation "${booking.title}" `
-        + `pour mon trajet ${this.trip.departureAddress} vers ${this.trip.destination}.`,
     }).subscribe({
       next: (conversation) => {
         this.processingBookingId = null;
