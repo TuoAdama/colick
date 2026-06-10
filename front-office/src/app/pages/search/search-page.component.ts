@@ -264,7 +264,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       tripId: trip.id, recipientId: trip.travelerId,
       content: 'Bonjour, je suis interesse par votre voyage ' + trip.departureAddress + ' vers ' + trip.destination + '.',
     }).subscribe({
-      next: () => this.router.navigate(['/messages']),
+      next: (conversation) => this.router.navigate(['/messages'], { queryParams: { conversationId: conversation.id } }),
       error: () => { this.errorMessage = 'Impossible de demarrer la conversation.'; },
     });
   }

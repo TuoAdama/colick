@@ -211,7 +211,7 @@ describe('ReservationDetailsPageComponent', () => {
       recipientId: 55,
       content: 'Bonjour, je vous contacte au sujet de votre réservation "Documents" pour mon trajet Paris, France vers Abidjan, Côte d\'Ivoire.',
     });
-    expect(router.navigate).toHaveBeenCalledWith(['/messages']);
+    expect(router.navigate).toHaveBeenCalledWith(['/messages'], { queryParams: { conversationId: 1 } });
   });
 
   it('navigates to the trip completion page when finishing the trip', () => {
