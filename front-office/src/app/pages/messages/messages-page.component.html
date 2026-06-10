@@ -1,7 +1,7 @@
 <div class="min-h-screen bg-background-primary pt-20">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="flex items-center gap-3 mb-6">
-      <a routerLink="/search" class="text-text-secondary hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></a>
+      <a routerLink="/dashboard" class="text-text-secondary hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></a>
       <h1 class="text-2xl font-bold text-text-primary">Messages</h1>
     </div>
     @if (errorMessage) { <div class="bg-error/10 border border-error/20 text-error rounded-lg p-3 mb-4 text-sm" role="alert">{{ errorMessage }} <button type="button" class="ml-2 underline" (click)="errorMessage = ''">Fermer</button></div> }
