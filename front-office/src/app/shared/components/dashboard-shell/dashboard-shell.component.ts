@@ -11,6 +11,7 @@ import { AuthService } from '../../../services/auth.service';
 export class DashboardShellComponent {
   private readonly authService = inject(AuthService);
 
+  currentYear = new Date().getFullYear();
   isMobileMenuOpen = false;
   private profilePhotoLoadFailed = false;
   private lastProfilePhotoUrl: string | null = null;

@@ -18,6 +18,14 @@ import { filter } from 'rxjs';
 export class AppComponent {
   private readonly router = inject(Router);
   private readonly reservationShellRoutePattern = /^\/trips\/\d+\/reservations(?:\/[^?#]*)?(?:[?#].*)?$/;
+  private readonly dashboardShellRoutePatterns = [
+    /^\/dashboard(?:[?#].*)?$/,
+    /^\/trips(?:\/[^?#]*)?(?:[?#].*)?$/,
+    /^\/propose(?:\/[^?#]*)?(?:[?#].*)?$/,
+    /^\/messages(?:[?#].*)?$/,
+    /^\/settings(?:[?#].*)?$/,
+    /^\/received-bookings(?:[?#].*)?$/,
+  ];
   /**
    * Application title
    */
@@ -34,6 +42,8 @@ export class AppComponent {
   }
 
   private updateSharedChrome(url: string): void {
-    this.showSharedChrome = !this.reservationShellRoutePattern.test(url);
+    this.showSharedChrome =
+      !this.reservationShellRoutePattern.test(url) &&
+      !this.dashboardShellRoutePatterns.some((pattern) => pattern.test(url));
   }
 }
