@@ -441,6 +441,43 @@ public class TripServiceImpl implements TripService {
         return mapTrips(matchingTrips, true);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<TripResponse> getLandingFeed(String country, int limit) {
+        int boundedLimit = Math.max(1, Math.min(limit, 12));
+        LocalDateTime referenceTime = LocalDateTime.now();
+        List<Trip> activeUpcomingTrips = tripRepository.findByStatus(Trip.TripStatus.ACTIVE).stream()
+                .filter(trip -> departsAtOrAfter(trip, referenceTime))
+                .toList();
+
+        Set<String> countryTerms = expandSearchTerm(country);
+        List<Trip> localTrips = countryTerms == null
+                ? List.of()
+                : activeUpcomingTrips.stream()
+                        .filter(trip -> matchesAnyTerm(trip.getDepartureAddress(), countryTerms)
+                                || matchesAnyTerm(trip.getDestination(), countryTerms))
+                        .sorted(this::compareLatestPublishedTrips)
+                        .limit(boundedLimit)
+                        .toList();
+
+        if (!localTrips.isEmpty()) {
+            return mapTrips(localTrips, true);
+        }
+
+        return mapTrips(activeUpcomingTrips.stream()
+                .sorted(this::compareLatestPublishedTrips)
+                .limit(boundedLimit)
+                .toList(), true);
+    }
+
+    private int compareLatestPublishedTrips(Trip first, Trip second) {
+        LocalDateTime firstCreatedAt = first.getCreatedAt() != null ? first.getCreatedAt() : first.getDepartureTime();
+        LocalDateTime secondCreatedAt = second.getCreatedAt() != null ? second.getCreatedAt() : second.getDepartureTime();
+        return Comparator.nullsLast(LocalDateTime::compareTo)
+                .reversed()
+                .compare(firstCreatedAt, secondCreatedAt);
+    }
+
     private boolean departsAtOrAfter(Trip trip, LocalDateTime referenceTime) {
         LocalDateTime departureTime = trip.getDepartureTime();
         return departureTime != null && !departureTime.isBefore(referenceTime);

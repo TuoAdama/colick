@@ -60,6 +60,16 @@ public class Trip {
     @Builder.Default
     private TripStatus status = TripStatus.ACTIVE;
 
+    @Column
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    void setCreatedAtIfMissing() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+
     public enum TripStatus {
         ACTIVE, COMPLETED, CANCELLED
     }

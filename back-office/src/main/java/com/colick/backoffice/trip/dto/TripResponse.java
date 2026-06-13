@@ -26,6 +26,7 @@ public class TripResponse {
     private BigDecimal pricePerKilo;
     private boolean instantAcceptance;
     private Trip.TripStatus status;
+    private LocalDateTime createdAt;
     private Double travelerRatingAverage;
     private Long travelerRatingCount;
 
@@ -75,6 +76,7 @@ public class TripResponse {
                 .pricePerKilo(trip.getPricePerKilo())
                 .instantAcceptance(trip.isInstantAcceptance())
                 .status(trip.getStatus())
+                .createdAt(trip.getCreatedAt())
                 .travelerRatingAverage(travelerRatingAverage)
                 .travelerRatingCount(travelerRatingCount)
                 .availableWeight(availableWeight)

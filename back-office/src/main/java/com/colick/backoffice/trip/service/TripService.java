@@ -66,6 +66,13 @@ public interface TripService {
      */
     List<TripResponse> searchTrips(String departure, String destination);
 
+    /**
+     * Returns a small public feed for the landing page.
+     * When a country is provided, matching active trips are preferred before
+     * falling back to latest active trips.
+     */
+    List<TripResponse> getLandingFeed(String country, int limit);
+
     /** Returns all trips published by the given user (all statuses). */
     List<TripResponse> getMyTrips(User user);
 

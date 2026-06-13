@@ -35,6 +35,18 @@ export class TripService {
     );
   }
 
+  /** Get the small trip feed displayed on the landing page. */
+  getLandingFeed(country?: string, limit = 3): Observable<Trip[]> {
+    let params = new HttpParams().set('limit', limit);
+    if (country?.trim()) {
+      params = params.set('country', country.trim());
+    }
+
+    return this.http.get<Trip[]>(`${this.baseUrl}/landing-feed`, { params }).pipe(
+      map((trips) => trips.map((trip) => this.normalizeTrip(trip)))
+    );
+  }
+
   /** Create a new trip proposal. */
   createTrip(data: CreateTripDto): Observable<Trip> {
     return this.http.post<Trip>(this.baseUrl, data).pipe(

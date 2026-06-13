@@ -61,6 +61,14 @@ public class TripController {
         return ResponseEntity.ok(tripService.getAllTrips());
     }
 
+    /** Landing page feed: latest relevant active trips, optionally scoped by country. */
+    @GetMapping("/landing-feed")
+    public ResponseEntity<List<TripResponse>> getLandingFeed(
+            @RequestParam(required = false) String country,
+            @RequestParam(defaultValue = "3") int limit) {
+        return ResponseEntity.ok(tripService.getLandingFeed(country, limit));
+    }
+
     /** Get a trip by ID (public). */
     @GetMapping("/{id}")
     public ResponseEntity<TripResponse> getTripById(@PathVariable Long id) {

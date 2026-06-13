@@ -50,6 +50,35 @@ describe('TripService', () => {
     ]);
   });
 
+  it('gets landing feed with optional country and normalizes trips', () => {
+    service.getLandingFeed('France', 3).subscribe((trips) => {
+      expect(trips).toHaveSize(1);
+      expect(trips[0].travelerPhotoUrl).toBe('/api/uploads/traveler.png');
+      expect(trips[0].availableWeight).toBe(5);
+    });
+
+    const req = httpMock.expectOne('/api/trips/landing-feed?limit=3&country=France');
+    expect(req.request.method).toBe('GET');
+    req.flush([
+      {
+        id: 4,
+        travelerId: 2,
+        travelerName: 'Alice Martin',
+        travelerPhotoUrl: '/uploads/traveler.png',
+        travelerRatingAverage: 4.8,
+        departureAddress: 'Paris',
+        destination: 'Abidjan',
+        departureTime: '2026-07-02T08:00:00Z',
+        arrivalTime: '2026-07-02T16:00:00Z',
+        maxWeight: 20,
+        pricePerKilo: 15,
+        instantAcceptance: true,
+        status: 'ACTIVE',
+        availableWeight: 5,
+      },
+    ]);
+  });
+
   it('gets a trip by id and normalizes traveler photo URLs', () => {
     service.getTripById(12).subscribe((trip) => {
       expect(trip.id).toBe(12);
