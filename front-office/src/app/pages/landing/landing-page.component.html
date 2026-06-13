@@ -20,33 +20,56 @@
         </a>
       </div>
 
-      <div class="grid gap-2 rounded-2xl border border-border bg-white p-2.5 shadow-card md:grid-cols-[1fr_1fr_1fr_280px]">
-        <a routerLink="/search" [queryParams]="{ from: 'Paris' }" class="group flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition hover:bg-accent/10">
+      <form
+        class="grid gap-2 rounded-2xl border border-border bg-white p-2.5 shadow-card md:grid-cols-[1fr_1fr_1fr_280px]"
+        (ngSubmit)="searchTrips()"
+      >
+        <label class="group flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
           <span class="material-symbols-outlined text-accent" aria-hidden="true">location_on</span>
           <span>
             <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Depart</span>
-            <span class="block text-sm text-text-secondary group-hover:text-primary">Ville de depart</span>
+            <input
+              name="departure"
+              type="text"
+              [(ngModel)]="departureQuery"
+              class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary placeholder-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
+              placeholder="Ville de depart"
+              autocomplete="off"
+            />
           </span>
-        </a>
-        <a routerLink="/search" [queryParams]="{ to: 'Abidjan' }" class="group flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition hover:bg-accent/10">
+        </label>
+        <label class="group flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
           <span class="material-symbols-outlined text-accent" aria-hidden="true">near_me</span>
           <span>
             <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Destination</span>
-            <span class="block text-sm text-text-secondary group-hover:text-primary">Ou allez-vous ?</span>
+            <input
+              name="destination"
+              type="text"
+              [(ngModel)]="destinationQuery"
+              class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary placeholder-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
+              placeholder="Ou allez-vous ?"
+              autocomplete="off"
+            />
           </span>
-        </a>
-        <a routerLink="/search" class="group flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition hover:bg-accent/10">
+        </label>
+        <label class="group flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
           <span class="material-symbols-outlined text-primary" aria-hidden="true">calendar_today</span>
           <span>
             <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Date</span>
-            <span class="block text-sm text-text-secondary group-hover:text-primary">Quand ?</span>
+            <input
+              name="travelDate"
+              type="date"
+              [(ngModel)]="travelDate"
+              class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
+              aria-label="Date du trajet"
+            />
           </span>
-        </a>
-        <a routerLink="/search" class="inline-flex min-h-[68px] items-center justify-center gap-3 rounded-xl bg-primary px-7 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-accent">
+        </label>
+        <button type="submit" class="inline-flex min-h-[68px] items-center justify-center gap-3 rounded-xl bg-primary px-7 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-accent">
           Trouver un voyageur
           <span class="material-symbols-outlined text-lg" aria-hidden="true">rocket_launch</span>
-        </a>
-      </div>
+        </button>
+      </form>
     </div>
 
     <div class="mx-auto mt-12 grid max-w-[900px] gap-8 text-center sm:grid-cols-3">

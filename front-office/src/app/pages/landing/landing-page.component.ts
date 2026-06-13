@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 
 /**
  * LandingPageComponent - Assembles all landing page sections.
@@ -8,10 +9,30 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [RouterLink],
+  imports: [FormsModule, RouterLink],
   templateUrl: './landing-page.component.html',
 })
 export class LandingPageComponent {
+  private readonly router = inject(Router);
+
+  departureQuery = '';
+  destinationQuery = '';
+  travelDate = '';
+
+  searchTrips(): void {
+    const from = this.departureQuery.trim();
+    const to = this.destinationQuery.trim();
+    const date = this.travelDate.trim();
+
+    void this.router.navigate(['/search'], {
+      queryParams: {
+        ...(from && { from }),
+        ...(to && { to }),
+        ...(date && { date }),
+      },
+    });
+  }
+
   readonly stats = [
     {
       icon: 'travel_explore',
