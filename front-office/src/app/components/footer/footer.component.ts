@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 /**
  * FooterLink interface representing a navigation link
@@ -33,7 +34,7 @@ interface SocialLink {
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './footer.component.html',
 })
 export class FooterComponent {
@@ -47,29 +48,25 @@ export class FooterComponent {
    */
   footerSections: FooterSection[] = [
     {
-      title: 'Plateforme',
+      title: 'PLATEFORME',
       links: [
-        { label: 'Rechercher un voyage', href: '#' },
-        { label: 'Proposer un voyage', href: '#' },
-        { label: 'Comment ça marche', href: '#' },
-        { label: 'Tarifs', href: '#' },
+        { label: 'A propos de nous', href: '#' },
+        { label: 'Comment ca marche', href: '#securite' },
+        { label: 'Nos tarifs', href: '#' },
       ],
     },
     {
-      title: 'Support',
+      title: 'SUPPORT',
       links: [
         { label: "Centre d'aide", href: '#' },
-        { label: 'Nous contacter', href: '#' },
-        { label: 'FAQ', href: '#' },
-        { label: 'Signaler un problème', href: '#' },
+        { label: 'Confidentialite', href: '#' },
+        { label: 'Charte confiance', href: '#' },
       ],
     },
     {
-      title: 'Légal',
+      title: 'ON RECRUTE !',
       links: [
-        { label: 'Conditions générales', href: '#' },
-        { label: 'Politique de confidentialité', href: '#' },
-        { label: 'Mentions légales', href: '#' },
+        { label: 'Voir les offres', href: '#' },
       ],
     },
   ];
