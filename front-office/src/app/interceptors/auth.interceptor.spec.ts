@@ -101,6 +101,24 @@ describe('authInterceptor', () => {
     expect(authServiceMock.logout).not.toHaveBeenCalled();
   });
 
+  it('does NOT call logout when /api/trips/landing-feed returns 401', () => {
+    http.get('/api/trips/landing-feed?limit=3').subscribe({ error: () => {} });
+
+    const req = httpMock.expectOne('/api/trips/landing-feed?limit=3');
+    req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    expect(authServiceMock.logout).not.toHaveBeenCalled();
+  });
+
+  it('does NOT call logout when /api/locations/search returns 401', () => {
+    http.get('/api/locations/search?q=Pa').subscribe({ error: () => {} });
+
+    const req = httpMock.expectOne('/api/locations/search?q=Pa');
+    req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    expect(authServiceMock.logout).not.toHaveBeenCalled();
+  });
+
   // ── Non-401 errors must not trigger logout ──────────────────────────────
 
   it('does NOT call logout for a 403 error on a protected endpoint', () => {

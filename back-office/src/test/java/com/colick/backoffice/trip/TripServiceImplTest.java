@@ -113,6 +113,7 @@ class TripServiceImplTest {
                 .pricePerKilo(BigDecimal.valueOf(5))
                 .instantAcceptance(false)
                 .status(Trip.TripStatus.ACTIVE)
+                .createdAt(LocalDateTime.now().minusDays(1))
                 .build();
 
         lenient().when(bookingValidationService.normalizeRecipientContact(anyString()))
@@ -1099,6 +1100,69 @@ class TripServiceImplTest {
 
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getDepartureAddress()).isEqualTo("Paris");
+    }
+
+    @Test
+    void getLandingFeed_shouldPreferCountryMatchesAndRespectLimit() {
+        Trip localTrip = Trip.builder()
+                .id(11L).traveler(traveler)
+                .departureAddress("Lyon").destination("Dakar")
+                .departureTime(LocalDateTime.now().plusDays(3))
+                .arrivalTime(LocalDateTime.now().plusDays(4))
+                .maxWeight(BigDecimal.valueOf(12))
+                .pricePerKilo(BigDecimal.valueOf(9))
+                .status(Trip.TripStatus.ACTIVE)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Trip remoteTrip = Trip.builder()
+                .id(12L).traveler(traveler)
+                .departureAddress("Dakar").destination("Abidjan")
+                .departureTime(LocalDateTime.now().plusDays(2))
+                .arrivalTime(LocalDateTime.now().plusDays(3))
+                .maxWeight(BigDecimal.valueOf(14))
+                .pricePerKilo(BigDecimal.valueOf(7))
+                .status(Trip.TripStatus.ACTIVE)
+                .createdAt(LocalDateTime.now().plusDays(1))
+                .build();
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE))
+                .thenReturn(List.of(sampleTrip, localTrip, remoteTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "France"))
+                .thenReturn(List.of("Paris", "Lyon", "Marseille"));
+        when(bookingRepository.findByTripAndStatus(localTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.getLandingFeed("France", 1);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getId()).isEqualTo(11L);
+    }
+
+    @Test
+    void getLandingFeed_shouldFallbackToLatestTripsWhenCountryHasNoMatch() {
+        Trip latestTrip = Trip.builder()
+                .id(11L).traveler(traveler)
+                .departureAddress("Dakar").destination("Abidjan")
+                .departureTime(LocalDateTime.now().plusDays(3))
+                .arrivalTime(LocalDateTime.now().plusDays(4))
+                .maxWeight(BigDecimal.valueOf(12))
+                .pricePerKilo(BigDecimal.valueOf(9))
+                .status(Trip.TripStatus.ACTIVE)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE))
+                .thenReturn(List.of(sampleTrip, latestTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Belgique"))
+                .thenReturn(List.of("Bruxelles"));
+        when(bookingRepository.findByTripAndStatus(latestTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.getLandingFeed("Belgique", 1);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getId()).isEqualTo(11L);
     }
 
     @Test

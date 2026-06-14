@@ -68,7 +68,7 @@ describe('HeaderComponent', () => {
 
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Connexion');
-    expect(text).toContain('Recherche');
+    expect(text).not.toContain('Recherche');
     expect(text).not.toContain('Mes réservations');
     expect(text).not.toContain('Mes demandes');
   });

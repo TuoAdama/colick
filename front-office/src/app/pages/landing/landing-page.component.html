@@ -1,20 +1,259 @@
-<!-- Hero Section -->
-<app-hero />
+<section class="bg-white pt-24 sm:pt-28 lg:pt-24 pb-12 lg:pb-16">
+  <div class="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-[960px] text-center">
+      <h1 class="font-display text-4xl sm:text-5xl lg:text-[58px] font-bold leading-[1.08] text-primary tracking-tight">
+        Confiez vos colis a ceux qui
+        <span class="text-accent">voyagent.</span>
+      </h1>
+      <p class="mt-4 text-base sm:text-[18px] font-medium text-text-secondary">
+        Expediez vos colis avec des voyageurs de confiance.
+      </p>
+    </div>
 
-<!-- Stats Section -->
-<app-stats />
+    <div class="mx-auto mt-9 max-w-[1140px]">
+      <div class="mx-auto mb-5 flex w-fit rounded-full border border-border bg-background-primary p-1 text-xs font-semibold text-text-secondary">
+        <a routerLink="/search" class="rounded-full bg-white px-5 py-2 text-primary shadow-sm">
+          Envoi de colis
+        </a>
+        <a routerLink="/propose" class="rounded-full px-5 py-2 transition hover:text-primary">
+          Transport de colis
+        </a>
+      </div>
 
-<!-- How It Works Section -->
-<app-how-it-works />
+      <form
+        class="grid gap-2 rounded-2xl border border-border bg-white p-2.5 shadow-card md:grid-cols-[1fr_1fr_1fr_280px]"
+        (ngSubmit)="searchTrips()"
+      >
+        <label class="group relative flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
+          <span class="material-symbols-outlined text-accent" aria-hidden="true">location_on</span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Depart</span>
+            <input
+              name="departure"
+              type="text"
+              [(ngModel)]="departureQuery"
+              (input)="onDepartureInput()"
+              (focus)="showAutocomplete('departure')"
+              (blur)="closeAutocompleteSoon()"
+              class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary placeholder-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
+              placeholder="Ville de depart"
+              autocomplete="off"
+              role="combobox"
+              [attr.aria-expanded]="activeAutocomplete === 'departure'"
+              aria-autocomplete="list"
+            />
+          </span>
+          @if (isDepartureLoading) {
+            <span class="material-symbols-outlined animate-spin text-base text-accent" aria-hidden="true">progress_activity</span>
+          }
+          @if (activeAutocomplete === 'departure' && departureSuggestions.length > 0) {
+            <ul class="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 max-h-64 overflow-y-auto rounded-xl border border-border bg-white py-2 shadow-card" role="listbox">
+              @for (location of departureSuggestions; track location.id) {
+                <li>
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-accent/10"
+                    (mousedown)="selectLocation('departure', location)"
+                    role="option"
+                  >
+                    <span class="material-symbols-outlined text-base text-accent" aria-hidden="true">location_on</span>
+                    <span>
+                      <span class="block text-sm font-semibold text-primary">{{ location.name }}</span>
+                      <span class="block text-xs text-text-secondary">{{ location.country }}</span>
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </label>
+        <label class="group relative flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
+          <span class="material-symbols-outlined text-accent" aria-hidden="true">near_me</span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Destination</span>
+            <input
+              name="destination"
+              type="text"
+              [(ngModel)]="destinationQuery"
+              (input)="onDestinationInput()"
+              (focus)="showAutocomplete('destination')"
+              (blur)="closeAutocompleteSoon()"
+              class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary placeholder-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
+              placeholder="Ou allez-vous ?"
+              autocomplete="off"
+              role="combobox"
+              [attr.aria-expanded]="activeAutocomplete === 'destination'"
+              aria-autocomplete="list"
+            />
+          </span>
+          @if (isDestinationLoading) {
+            <span class="material-symbols-outlined animate-spin text-base text-accent" aria-hidden="true">progress_activity</span>
+          }
+          @if (activeAutocomplete === 'destination' && destinationSuggestions.length > 0) {
+            <ul class="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 max-h-64 overflow-y-auto rounded-xl border border-border bg-white py-2 shadow-card" role="listbox">
+              @for (location of destinationSuggestions; track location.id) {
+                <li>
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-accent/10"
+                    (mousedown)="selectLocation('destination', location)"
+                    role="option"
+                  >
+                    <span class="material-symbols-outlined text-base text-accent" aria-hidden="true">near_me</span>
+                    <span>
+                      <span class="block text-sm font-semibold text-primary">{{ location.name }}</span>
+                      <span class="block text-xs text-text-secondary">{{ location.country }}</span>
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </label>
+        <label class="group flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
+          <span class="material-symbols-outlined text-primary" aria-hidden="true">calendar_today</span>
+          <span>
+            <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Date</span>
+            <input
+              name="travelDate"
+              type="date"
+              [(ngModel)]="travelDate"
+              class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
+              aria-label="Date du trajet"
+            />
+          </span>
+        </label>
+        <button type="submit" class="inline-flex min-h-[68px] items-center justify-center gap-3 rounded-xl bg-primary px-7 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-accent">
+          Trouver un voyageur
+          <span class="material-symbols-outlined text-lg" aria-hidden="true">rocket_launch</span>
+        </button>
+      </form>
+    </div>
 
-<!-- Advantages Section -->
-<app-advantages />
+    <div class="mx-auto mt-12 grid max-w-[900px] gap-8 text-center sm:grid-cols-3">
+      @for (stat of stats; track stat.label) {
+        <div class="flex flex-col items-center">
+          <span [class]="'material-symbols-outlined mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full text-xl ' + stat.tone" aria-hidden="true">
+            {{ stat.icon }}
+          </span>
+          <p class="text-sm font-bold text-primary">{{ stat.value }}</p>
+          <p class="mt-1 max-w-40 text-xs leading-5 text-text-secondary">{{ stat.label }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
 
-<!-- Security Section -->
-<app-security />
+<section class="bg-white py-16 lg:py-24">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h2 class="font-display text-3xl sm:text-4xl font-bold text-primary tracking-tight">
+          Ne ratez pas le prochain depart.
+        </h2>
+        <p class="mt-3 text-sm italic text-text-secondary">
+          Trouvez le compagnon ideal pour votre colis.
+        </p>
+      </div>
+      <a routerLink="/search" class="inline-flex w-fit items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white transition hover:bg-accent">
+        Voir tous les trajets
+        <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
+      </a>
+    </div>
 
-<!-- Testimonials Section -->
-<app-testimonials />
+    @if (isTripsLoading) {
+      <div class="mt-10 grid gap-6 lg:grid-cols-3" aria-label="Chargement des trajets">
+        @for (item of [1, 2, 3]; track item) {
+          <article class="min-h-[300px] animate-pulse rounded-2xl border border-border bg-white p-7">
+            <div class="flex items-start justify-between gap-4">
+              <span class="h-6 w-20 rounded-full bg-background-primary"></span>
+              <span class="h-8 w-16 rounded bg-background-primary"></span>
+            </div>
+            <div class="mt-8 space-y-5">
+              <span class="block h-12 rounded bg-background-primary"></span>
+              <span class="block h-12 rounded bg-background-primary"></span>
+              <span class="block h-12 rounded-xl bg-background-primary"></span>
+            </div>
+            <div class="mt-8 border-t border-border pt-5">
+              <span class="block h-10 rounded bg-background-primary"></span>
+            </div>
+          </article>
+        }
+      </div>
+    } @else if (trips.length > 0) {
+      <div class="mt-10 grid gap-6 lg:grid-cols-3">
+      @for (trip of trips; track trip.id) {
+        <article class="rounded-2xl border border-border bg-white p-7 transition hover:-translate-y-1 hover:shadow-card">
+          <div class="flex items-start justify-between gap-4">
+            <span class="rounded-full bg-background-primary px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-text-muted">
+              {{ trip.tag }}
+            </span>
+            <p class="font-display text-2xl font-bold text-primary">
+              {{ trip.price }}<span class="font-body text-xs font-medium text-text-secondary">/kg</span>
+            </p>
+          </div>
 
-<!-- CTA Section -->
-<app-cta />
+          <div class="mt-8 space-y-5">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-widest text-text-muted">Depart</p>
+              <p class="mt-1 font-display text-lg font-semibold text-primary">{{ trip.departure }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-widest text-text-muted">Arrivee</p>
+              <p class="mt-1 font-display text-lg font-semibold text-primary">{{ trip.arrival }}</p>
+            </div>
+            <div class="flex items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-sm text-text-secondary">
+              <span class="material-symbols-outlined text-base text-primary" aria-hidden="true">calendar_today</span>
+              {{ trip.date }}
+            </div>
+          </div>
+
+          <div class="mt-8 flex items-center justify-between border-t border-border pt-5">
+            <div class="flex items-center gap-3">
+              <span [class]="'inline-flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold text-white ' + trip.avatarTone">
+                {{ trip.avatar }}
+              </span>
+              <span>
+                <span class="block text-sm font-bold text-primary">{{ trip.traveler }}</span>
+                <span class="block text-xs text-accent">★ {{ trip.rating }}</span>
+              </span>
+            </div>
+            <p class="text-xs font-medium text-text-secondary">{{ trip.capacity }}</p>
+          </div>
+        </article>
+      }
+      </div>
+    } @else {
+      <div class="mt-10 rounded-2xl border border-border bg-background-primary px-6 py-10 text-center">
+        <p class="font-display text-xl font-semibold text-primary">Aucun trajet disponible pour le moment.</p>
+        <p class="mt-2 text-sm text-text-secondary">Revenez bientot ou consultez tous les trajets publies.</p>
+      </div>
+    }
+  </div>
+</section>
+
+<section id="securite" class="bg-background-primary py-14 lg:py-20">
+  <div class="mx-auto max-w-[1140px] px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="font-display text-3xl sm:text-[34px] font-bold text-primary tracking-tight">
+        Votre securite,
+        <span class="text-accent">notre priorite</span>
+      </h2>
+      <p class="mt-4 text-sm text-text-secondary">
+        Rejoignez une communaute ou chaque etape est pensee pour votre tranquillite.
+      </p>
+    </div>
+
+    <div class="mt-10 grid gap-6 md:grid-cols-3">
+      @for (card of trustCards; track card.title) {
+        <article class="rounded-2xl border border-border bg-white p-7 text-center transition hover:-translate-y-1 hover:shadow-card">
+          <span [class]="'material-symbols-outlined mx-auto mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl ' + card.tone" aria-hidden="true">
+            {{ card.icon }}
+          </span>
+          <h3 class="font-display text-lg font-semibold text-primary">{{ card.title }}</h3>
+          <p class="mt-3 text-sm leading-6 text-text-secondary">{{ card.description }}</p>
+        </article>
+      }
+    </div>
+  </div>
+</section>
