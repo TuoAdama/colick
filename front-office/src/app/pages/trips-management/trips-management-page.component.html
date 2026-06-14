@@ -126,13 +126,16 @@
                     <button
                       type="button"
                       (click)="viewTripDetails(trip.id)"
-                      class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-text-secondary transition hover:bg-gray-200"
+                      class="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-text-secondary transition hover:bg-gray-200"
                       aria-label="Voir les demandes"
                     >
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                       </svg>
+                      <span class="absolute -right-1 -top-1 inline-flex min-w-[1.2rem] items-center justify-center rounded-full bg-accent px-1 text-[0.65rem] font-bold leading-5 text-white">
+                        {{ totalBookingCount(trip.id) }}
+                      </span>
                     </button>
 
                     <!-- Pencil icon — Edit with pending badge -->
