@@ -44,4 +44,15 @@ describe('DashboardShellComponent', () => {
     expect(text).toContain('CGU');
     expect(text).toContain('Contact/support');
   });
+
+  it('shows the clarified navigation labels in the sidebar and mobile menu', () => {
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent ?? '';
+
+    expect(text).toContain('Trajets publiés');
+    expect(text).toContain('Demandes reçues');
+    expect(text).not.toContain('Mes trajets');
+    expect(text).not.toContain('Mes demandes');
+  });
 });
