@@ -45,7 +45,7 @@ describe('AppComponent', () => {
       '/propose/42',
       '/messages',
       '/settings',
-      '/received-bookings',
+      '/sent-bookings',
     ];
 
     for (const route of dashboardRoutes) {
