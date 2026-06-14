@@ -72,6 +72,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   /** Success toast message after booking creation */
   bookingSuccessMessage = '';
 
+  /** Whether the mobile filters accordion is open */
+  areMobileFiltersOpen = false;
+
   readonly sortOptions: Array<{ value: TripSearchSort; label: string }> = [
     { value: 'price_asc', label: 'Prix le plus bas' },
     { value: 'departure_asc', label: 'Date de départ (Proche)' },
@@ -184,6 +187,10 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     if (this.isFormValid) {
       this.searchTrips();
     }
+  }
+
+  toggleMobileFilters(): void {
+    this.areMobileFiltersOpen = !this.areMobileFiltersOpen;
   }
 
   private searchTripsByCriteria(criteria: TripSearchCriteria): void {
