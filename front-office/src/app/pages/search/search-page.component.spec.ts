@@ -168,6 +168,66 @@ describe('SearchPageComponent', () => {
     });
   });
 
+  it('renders the mobile filters toggle and keeps mobile filters collapsed by default', () => {
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const toggle = host.querySelector('[data-testid="mobile-filters-toggle"]');
+    const panel = host.querySelector('[data-testid="mobile-filters-panel"]');
+
+    expect(toggle).not.toBeNull();
+    expect(toggle?.getAttribute('aria-expanded')).toBe('false');
+    expect(panel).toBeNull();
+  });
+
+  it('opens and closes the mobile filters panel', () => {
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const toggle = host.querySelector('[data-testid="mobile-filters-toggle"]') as HTMLButtonElement;
+
+    toggle.click();
+    fixture.detectChanges();
+
+    expect(component.areMobileFiltersOpen).toBeTrue();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(host.querySelector('[data-testid="mobile-filters-panel"]')).not.toBeNull();
+
+    toggle.click();
+    fixture.detectChanges();
+
+    expect(component.areMobileFiltersOpen).toBeFalse();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(host.querySelector('[data-testid="mobile-filters-panel"]')).toBeNull();
+  });
+
+  it('uses shared filter values and triggers search from mobile filter controls', () => {
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", isoCode: 'CI', type: 'CITY' };
+    component.areMobileFiltersOpen = true;
+    const searchSpy = spyOn(component, 'searchTrips').and.stub();
+
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const ratingSort = host.querySelector('[data-testid="mobile-sort-rating_desc"]') as HTMLInputElement;
+    const minPrice = host.querySelector('[data-testid="mobile-min-price"]') as HTMLInputElement;
+
+    ratingSort.click();
+    fixture.detectChanges();
+
+    expect(component.sort).toBe('rating_desc');
+    expect(searchSpy).toHaveBeenCalledTimes(1);
+
+    minPrice.value = '8';
+    minPrice.dispatchEvent(new Event('input'));
+    minPrice.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(component.minPrice).toBe(8);
+    expect(searchSpy).toHaveBeenCalledTimes(2);
+  });
+
   it('returns true for own trip and false for other trip', () => {
     authServiceMock.getUser.and.returnValue({ id: 7 });
     const ownTrip = { id: 1, travelerId: 7 } as Trip;

@@ -73,7 +73,87 @@
     </section>
 
     <div class="flex flex-col gap-8 lg:flex-row">
-      <aside class="flex w-full flex-col gap-6 lg:w-1/4" aria-label="Filtres de recherche">
+      <div class="flex flex-col gap-3 lg:hidden">
+        <button
+          type="button"
+          class="flex min-h-[56px] w-full items-center justify-between rounded-xl border border-[#E8E8EC] bg-white px-4 py-3 text-left shadow-sm transition hover:border-primary/30"
+          (click)="toggleMobileFilters()"
+          [attr.aria-expanded]="areMobileFiltersOpen"
+          aria-controls="mobile-search-filters"
+          data-testid="mobile-filters-toggle"
+        >
+          <span class="inline-flex items-center gap-3 text-base font-bold text-primary">
+            <svg class="h-5 w-5 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 5h18M6 12h12M10 19h4" />
+            </svg>
+            <span>Filtres</span>
+          </span>
+          <svg
+            class="h-5 w-5 text-text-secondary transition-transform"
+            [class.rotate-180]="areMobileFiltersOpen"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        @if (areMobileFiltersOpen) {
+          <div id="mobile-search-filters" class="flex flex-col gap-4" data-testid="mobile-filters-panel">
+            <section class="rounded-xl border border-[#E8E8EC] bg-white p-5">
+              <h2 class="mb-4 text-xl font-bold text-primary">Trier par</h2>
+              <div class="flex flex-col gap-3">
+                @for (option of sortOptions; track option.value) {
+                  <label class="flex cursor-pointer items-center gap-3 text-[15px] text-text-secondary">
+                    <input
+                      type="radio"
+                      name="mobile-sort"
+                      class="h-5 w-5 border-outline text-primary focus:ring-primary"
+                      [value]="option.value"
+                      [(ngModel)]="sort"
+                      (change)="onFilterChange()"
+                      [attr.data-testid]="'mobile-sort-' + option.value"
+                    />
+                    <span>{{ option.label }}</span>
+                  </label>
+                }
+              </div>
+            </section>
+
+            <section class="rounded-xl border border-[#E8E8EC] bg-white p-5">
+              <h2 class="mb-4 text-xl font-bold text-primary">Prix par kg</h2>
+              <div class="flex items-center gap-4">
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Min"
+                  [(ngModel)]="minPrice"
+                  (change)="onFilterChange()"
+                  class="w-1/2 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-primary/20"
+                  aria-label="Prix minimum par kilo"
+                  data-testid="mobile-min-price"
+                />
+                <span class="text-text-secondary">-</span>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Max"
+                  [(ngModel)]="maxPrice"
+                  (change)="onFilterChange()"
+                  class="w-1/2 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-primary/20"
+                  aria-label="Prix maximum par kilo"
+                  data-testid="mobile-max-price"
+                />
+              </div>
+            </section>
+          </div>
+        }
+      </div>
+
+      <aside class="hidden w-full flex-col gap-6 lg:flex lg:w-1/4" aria-label="Filtres de recherche">
         <section class="rounded-xl border border-[#E8E8EC] bg-white p-6">
           <h2 class="mb-4 text-2xl font-bold text-primary">Trier par</h2>
           <div class="flex flex-col gap-3">
