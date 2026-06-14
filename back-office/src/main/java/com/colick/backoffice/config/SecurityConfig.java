@@ -73,6 +73,7 @@ public class SecurityConfig {
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/locations/**").permitAll()
                 .requestMatchers("/trips/search").permitAll()
+                .requestMatchers(HttpMethod.GET, "/trips/landing-feed").permitAll()
                 .requestMatchers(
                     "/swagger-ui.html",
                     "/swagger-ui/**",

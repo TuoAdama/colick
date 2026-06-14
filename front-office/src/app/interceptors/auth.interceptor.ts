@@ -3,14 +3,31 @@ import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
-/**
- * URL prefixes that are public/unauthenticated and must never trigger
- * an automatic logout when they return 401 (e.g. wrong credentials on
- * the login endpoint, or public endpoints that happen to use 401).
- */
-const SKIP_LOGOUT_PREFIXES = [
-  '/api/auth/',   // login, google, forgot-password, reset-password …
+const PUBLIC_ENDPOINT_PREFIXES = [
+  '/api/auth/',
+  '/api/locations/',
 ];
+
+const PUBLIC_ENDPOINT_PATHS = new Set([
+  '/api/trips/search',
+  '/api/trips/landing-feed',
+]);
+
+function getRequestPath(url: string): string {
+  try {
+    return new URL(url, window.location.origin).pathname;
+  } catch {
+    return url;
+  }
+}
+
+function isPublicEndpoint(url: string): boolean {
+  const path = getRequestPath(url);
+  return (
+    PUBLIC_ENDPOINT_PREFIXES.some((prefix) => path.startsWith(prefix)) ||
+    PUBLIC_ENDPOINT_PATHS.has(path)
+  );
+}
 
 /**
  * Functional HTTP interceptor that:
@@ -34,7 +51,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (
         error instanceof HttpErrorResponse &&
         error.status === 401 &&
-        !SKIP_LOGOUT_PREFIXES.some((prefix) => req.url.startsWith(prefix))
+        !isPublicEndpoint(req.url)
       ) {
         // Token is expired or revoked — clear the session and redirect
         authService.logout();

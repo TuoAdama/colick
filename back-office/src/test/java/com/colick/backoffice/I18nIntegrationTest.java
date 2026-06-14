@@ -71,4 +71,14 @@ class I18nIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("Unauthorized"));
     }
+
+    @Test
+    void landingFeed_shouldBeAccessibleWithoutAuthentication() throws Exception {
+        mockMvc.perform(get("/api/trips/landing-feed")
+                        .contextPath("/api")
+                        .servletPath("/trips/landing-feed")
+                        .queryParam("limit", "3")
+                        .header("Accept-Language", "fr"))
+                .andExpect(status().isOk());
+    }
 }
