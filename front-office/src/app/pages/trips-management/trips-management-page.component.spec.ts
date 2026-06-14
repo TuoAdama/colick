@@ -11,6 +11,7 @@ import { BookingResponse } from '../../models/booking.model';
 describe('TripsManagementPageComponent', () => {
   let component: TripsManagementPageComponent;
   let fixture: ComponentFixture<TripsManagementPageComponent>;
+  let router: Router;
   let tripServiceSpy: jasmine.SpyObj<TripService>;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
   let shareCardMapperSpy: jasmine.SpyObj<ShareCardMapperService>;
@@ -94,6 +95,7 @@ describe('TripsManagementPageComponent', () => {
 
     fixture = TestBed.createComponent(TripsManagementPageComponent);
     component = fixture.componentInstance;
+    router = TestBed.inject(Router);
     fixture.detectChanges();
   });
 
@@ -195,6 +197,15 @@ describe('TripsManagementPageComponent', () => {
   });
 
   describe('Pending booking count', () => {
+    it('should return the total count of received bookings for a trip', () => {
+      expect(component.totalBookingCount(1)).toBe(2);
+    });
+
+    it('should return 0 for the total count when a trip has no bookings mapping', () => {
+      component.tripBookingsMap = {};
+      expect(component.totalBookingCount(999)).toBe(0);
+    });
+
     it('should return the count of PENDING bookings for a trip', () => {
       expect(component.pendingBookingCount(1)).toBe(1);
     });
@@ -202,6 +213,41 @@ describe('TripsManagementPageComponent', () => {
     it('should return 0 for a trip with no bookings mapping', () => {
       component.tripBookingsMap = {};
       expect(component.pendingBookingCount(999)).toBe(0);
+    });
+  });
+
+  describe('Template actions', () => {
+    it('should render the total booking count badge on the view button', () => {
+      const badge = fixture.nativeElement.querySelector(
+        'button[aria-label="Voir les demandes"] span'
+      ) as HTMLSpanElement | null;
+
+      expect(badge).not.toBeNull();
+      expect(badge?.textContent?.trim()).toBe('2');
+    });
+
+    it('should render 0 in the view badge when a trip has no bookings mapping', () => {
+      component.tripBookingsMap = {};
+      fixture.detectChanges();
+
+      const badge = fixture.nativeElement.querySelector(
+        'button[aria-label="Voir les demandes"] span'
+      ) as HTMLSpanElement | null;
+
+      expect(badge).not.toBeNull();
+      expect(badge?.textContent?.trim()).toBe('0');
+    });
+
+    it('should navigate to the trip reservations page from the view button', () => {
+      spyOn(router, 'navigate').and.resolveTo(true);
+
+      const viewButton = fixture.nativeElement.querySelector(
+        'button[aria-label="Voir les demandes"]'
+      ) as HTMLButtonElement;
+
+      viewButton.click();
+
+      expect(router.navigate).toHaveBeenCalledWith(['/trips', 1, 'reservations']);
     });
   });
 

@@ -165,6 +165,11 @@ export class TripsManagementPageComponent implements OnInit {
     void this.router.navigate(['/propose', tripId]);
   }
 
+  /** Get the total number of bookings received for a given trip. */
+  totalBookingCount(tripId: number): number {
+    return this.tripBookingsMap[tripId]?.length ?? 0;
+  }
+
   /** Get the number of pending bookings for a given trip. */
   pendingBookingCount(tripId: number): number {
     const bookings = this.tripBookingsMap[tripId] ?? [];
