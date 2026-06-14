@@ -1,5 +1,6 @@
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { UserResponse } from '../../models/auth.model';
 import { AuthService } from '../../services/auth.service';
@@ -16,9 +17,16 @@ const AUTHENTICATED_USER: UserResponse = {
   photoUrl: '/api/uploads/avatar.png',
 };
 
+@Component({
+  standalone: true,
+  template: '',
+})
+class TestRouteComponent {}
+
 describe('HeaderComponent', () => {
   let fixture: ComponentFixture<HeaderComponent>;
   let component: HeaderComponent;
+  let router: Router;
 
   // Drive auth state via currentUser$ so the template reacts reactively
   const currentUser$ = new BehaviorSubject<UserResponse | null>(null);
@@ -52,7 +60,10 @@ describe('HeaderComponent', () => {
     await TestBed.configureTestingModule({
       imports: [HeaderComponent],
       providers: [
-        provideRouter([]),
+        provideRouter([
+          { path: '', component: TestRouteComponent },
+          { path: 'search', component: TestRouteComponent },
+        ]),
         { provide: AuthService, useValue: authServiceMock },
         { provide: MessagingService, useValue: messagingServiceMock },
       ],
@@ -60,6 +71,7 @@ describe('HeaderComponent', () => {
 
     fixture = TestBed.createComponent(HeaderComponent);
     component = fixture.componentInstance;
+    router = TestBed.inject(Router);
   });
 
   it('shows guest actions when user is not authenticated', () => {
@@ -71,6 +83,20 @@ describe('HeaderComponent', () => {
     expect(text).not.toContain('Recherche');
     expect(text).not.toContain('Mes réservations');
     expect(text).not.toContain('Mes demandes');
+  });
+
+  it('marks search navigation as active on the search route', async () => {
+    await router.navigateByUrl('/search');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const links = Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[];
+    const searchLink = links.find((link) => (link.textContent ?? '').trim() === 'Trouver un trajet');
+
+    expect(searchLink).toBeDefined();
+    expect(searchLink?.className).toContain('text-primary');
+    expect(searchLink?.className).toContain('underline');
   });
 
   it('shows authenticated actions when user is authenticated', () => {

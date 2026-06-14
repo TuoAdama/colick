@@ -1,7 +1,7 @@
 <!-- Autocomplete input with dropdown suggestions -->
 <div class="autocomplete-wrapper relative">
   <!-- Label -->
-  @if (label) {
+  @if (label && variant === 'default') {
     <label class="block text-sm font-medium text-text-secondary mb-1.5">
       {{ label }}
     </label>
@@ -28,12 +28,20 @@
       (input)="onInputChange()"
       (keydown)="onKeyDown($event)"
       (focus)="onFocus()"
-      class="w-full pl-12 pr-10 py-3.5 bg-bg-secondary border border-gray-200 rounded-xl text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary transition-all"
+      [class]="variant === 'search'
+        ? 'w-full min-h-[76px] pl-12 pr-10 pt-8 pb-3 bg-[#FAFAFA] border border-[#E8E8EC] rounded-lg text-[15px] text-primary placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/20 transition-all'
+        : 'w-full pl-12 pr-10 py-3.5 bg-bg-secondary border border-gray-200 rounded-xl text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary transition-all'"
       role="combobox"
       [attr.aria-expanded]="isOpen"
       aria-autocomplete="list"
       aria-haspopup="listbox"
     />
+
+    @if (label && variant === 'search') {
+      <span class="pointer-events-none absolute left-12 top-3 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
+        {{ label }}
+      </span>
+    }
 
     <!-- Loading spinner -->
     @if (isLoading) {

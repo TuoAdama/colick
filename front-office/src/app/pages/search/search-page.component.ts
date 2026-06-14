@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AutocompleteComponent } from '../../shared/components/autocomplete/autocomplete.component';
 import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
 import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
-import { TripService } from '../../services/trip.service';
+import { TripSearchCriteria, TripSearchSort, TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 import { Location } from '../../models/location.model';
@@ -21,7 +22,7 @@ import { UserResponse } from '../../models/auth.model';
 @Component({
   selector: 'app-search-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, AutocompleteComponent, BookingModalComponent, UserAvatarComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AutocompleteComponent, BookingModalComponent, UserAvatarComponent],
   templateUrl: './search-page.component.html',
 })
 export class SearchPageComponent implements OnInit, OnDestroy {
@@ -42,6 +43,10 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   /** Initial values prefilled from URL query params */
   departureQuery = '';
   destinationQuery = '';
+  selectedDate = '';
+  sort: TripSearchSort = 'price_asc';
+  minPrice: number | null = null;
+  maxPrice: number | null = null;
 
   /** Search results */
   trips: Trip[] = [];
@@ -66,6 +71,12 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
   /** Success toast message after booking creation */
   bookingSuccessMessage = '';
+
+  readonly sortOptions: Array<{ value: TripSearchSort; label: string }> = [
+    { value: 'price_asc', label: 'Prix le plus bas' },
+    { value: 'departure_asc', label: 'Date de départ (Proche)' },
+    { value: 'rating_desc', label: 'Meilleurs avis' },
+  ];
 
   /**
    * Handle departure location selection from autocomplete
@@ -99,6 +110,10 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
       const from = params.get('from')?.trim() ?? '';
       const to = params.get('to')?.trim() ?? '';
+      const date = params.get('date')?.trim() ?? '';
+      const sort = this.parseSort(params.get('sort'));
+      const minPrice = this.parseOptionalNumber(params.get('minPrice'));
+      const maxPrice = this.parseOptionalNumber(params.get('maxPrice'));
 
       if (!from && !to) {
         return;
@@ -106,6 +121,10 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
       this.departureQuery = from;
       this.destinationQuery = to;
+      this.selectedDate = date;
+      this.sort = sort;
+      this.minPrice = minPrice;
+      this.maxPrice = maxPrice;
 
       if (from) {
         this.departure = this.createLocationFromQuery(from);
@@ -118,13 +137,14 @@ export class SearchPageComponent implements OnInit, OnDestroy {
         return;
       }
 
-      const searchKey = this.buildSearchKey(from, to);
+      const criteria = this.buildCriteria(from, to, date, sort, minPrice, maxPrice);
+      const searchKey = this.buildSearchKey(criteria);
       if (searchKey === this.lastAutoSearchKey) {
         return;
       }
 
       this.lastAutoSearchKey = searchKey;
-      this.searchTripsByNames(from, to);
+      this.searchTripsByCriteria(criteria);
     });
   }
 
@@ -139,27 +159,41 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
     const from = this.departure.name;
     const to = this.destination.name;
+    const criteria = this.buildCriteria(
+      from,
+      to,
+      this.selectedDate,
+      this.sort,
+      this.minPrice,
+      this.maxPrice
+    );
 
-    if (this.hasMatchingSearchParams(from, to)) {
-      this.lastAutoSearchKey = this.buildSearchKey(from, to);
-      this.searchTripsByNames(from, to);
+    if (this.hasMatchingSearchParams(criteria)) {
+      this.lastAutoSearchKey = this.buildSearchKey(criteria);
+      this.searchTripsByCriteria(criteria);
       return;
     }
 
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { from, to },
+      queryParams: this.toQueryParams(criteria),
     });
   }
 
-  private searchTripsByNames(departure: string, destination: string): void {
+  onFilterChange(): void {
+    if (this.isFormValid) {
+      this.searchTrips();
+    }
+  }
+
+  private searchTripsByCriteria(criteria: TripSearchCriteria): void {
     this.isLoading = true;
     this.hasSearched = true;
     this.errorMessage = '';
     this.trips = [];
 
     this.tripService
-      .searchTrips(departure, destination)
+      .searchTrips(criteria)
       .subscribe({
         next: (results) => {
           this.trips = results;
@@ -173,14 +207,68 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       });
   }
 
-  private hasMatchingSearchParams(departure: string, destination: string): boolean {
+  private hasMatchingSearchParams(criteria: TripSearchCriteria): boolean {
     const currentParams = this.route.snapshot.queryParamMap;
-    return currentParams.get('from')?.trim() === departure
-      && currentParams.get('to')?.trim() === destination;
+    return currentParams.get('from')?.trim() === criteria.departure
+      && currentParams.get('to')?.trim() === criteria.destination
+      && (currentParams.get('date')?.trim() ?? '') === (criteria.date ?? '')
+      && (this.parseSort(currentParams.get('sort'))) === criteria.sort
+      && this.parseOptionalNumber(currentParams.get('minPrice')) === (criteria.minPrice ?? null)
+      && this.parseOptionalNumber(currentParams.get('maxPrice')) === (criteria.maxPrice ?? null);
   }
 
-  private buildSearchKey(departure: string, destination: string): string {
-    return `${departure}::${destination}`;
+  private buildCriteria(
+    departure: string,
+    destination: string,
+    date: string,
+    sort: TripSearchSort,
+    minPrice: number | null,
+    maxPrice: number | null,
+  ): TripSearchCriteria {
+    return {
+      departure,
+      destination,
+      date: date || undefined,
+      sort,
+      minPrice,
+      maxPrice,
+    };
+  }
+
+  private toQueryParams(criteria: TripSearchCriteria): Record<string, string | number | null> {
+    return {
+      from: criteria.departure ?? null,
+      to: criteria.destination ?? null,
+      date: criteria.date ?? null,
+      sort: criteria.sort ?? null,
+      minPrice: criteria.minPrice ?? null,
+      maxPrice: criteria.maxPrice ?? null,
+    };
+  }
+
+  private buildSearchKey(criteria: TripSearchCriteria): string {
+    return JSON.stringify({
+      departure: criteria.departure ?? '',
+      destination: criteria.destination ?? '',
+      date: criteria.date ?? '',
+      sort: criteria.sort ?? '',
+      minPrice: criteria.minPrice ?? null,
+      maxPrice: criteria.maxPrice ?? null,
+    });
+  }
+
+  private parseSort(value: string | null): TripSearchSort {
+    return value === 'departure_asc' || value === 'rating_desc' || value === 'price_asc'
+      ? value
+      : 'price_asc';
+  }
+
+  private parseOptionalNumber(value: string | null): number | null {
+    if (value === null || value.trim() === '') {
+      return null;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
   private createLocationFromQuery(name: string): Location {
@@ -299,5 +387,12 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
   formatTravelerRatingAverage(trip: Trip): string {
     return (trip.travelerRatingAverage ?? 0).toFixed(1);
+  }
+
+  resultRouteLabel(): string {
+    if (!this.departure?.name || !this.destination?.name) {
+      return '';
+    }
+    return `${this.departure.name} -> ${this.destination.name}`;
   }
 }

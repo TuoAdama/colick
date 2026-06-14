@@ -6,12 +6,15 @@ import com.colick.backoffice.trip.dto.*;
 import com.colick.backoffice.trip.service.TripService;
 import com.colick.backoffice.user.entity.User;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -46,13 +49,17 @@ public class TripController {
     @GetMapping("/search")
     public ResponseEntity<List<TripResponse>> searchTrips(
             @RequestParam(required = false) String departure,
-            @RequestParam(required = false) String destination) {
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice) {
 
         if ((departure == null || departure.isBlank())
                 && (destination == null || destination.isBlank())) {
             throw new BadRequestException(localizedMessages.get("error.trip.searchCriteriaRequired"));
         }
-        return ResponseEntity.ok(tripService.searchTrips(departure, destination));
+        return ResponseEntity.ok(tripService.searchTrips(departure, destination, date, sort, minPrice, maxPrice));
     }
 
     /** List all active trips (public). */

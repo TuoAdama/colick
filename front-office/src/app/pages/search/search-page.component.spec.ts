@@ -84,7 +84,14 @@ describe('SearchPageComponent', () => {
     expect(component.destinationQuery).toBe('Abidjan');
     expect(component.departure?.name).toBe('Paris');
     expect(component.destination?.name).toBe('Abidjan');
-    expect(tripServiceMock.searchTrips).toHaveBeenCalledWith('Paris', 'Abidjan');
+    expect(tripServiceMock.searchTrips).toHaveBeenCalledWith({
+      departure: 'Paris',
+      destination: 'Abidjan',
+      date: undefined,
+      sort: 'price_asc',
+      minPrice: null,
+      maxPrice: null,
+    });
   });
 
   it('does not auto-search when query params are incomplete', () => {
@@ -107,29 +114,58 @@ describe('SearchPageComponent', () => {
   it('updates query params instead of searching immediately when criteria change', () => {
     component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
     component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", isoCode: 'CI', type: 'CITY' };
+    component.selectedDate = '2026-06-14';
+    component.sort = 'departure_asc';
+    component.minPrice = 8;
+    component.maxPrice = 15;
 
     component.searchTrips();
 
     expect(router.navigate).toHaveBeenCalledWith([], {
       relativeTo: activatedRoute,
-      queryParams: { from: 'Paris', to: 'Abidjan' },
+      queryParams: {
+        from: 'Paris',
+        to: 'Abidjan',
+        date: '2026-06-14',
+        sort: 'departure_asc',
+        minPrice: 8,
+        maxPrice: 15,
+      },
     });
     expect(tripServiceMock.searchTrips).not.toHaveBeenCalled();
   });
 
   it('retries the search immediately when the URL already matches the current criteria', () => {
-    setQueryParams({ from: 'Paris', to: 'Abidjan' });
+    setQueryParams({
+      from: 'Paris',
+      to: 'Abidjan',
+      date: '2026-06-14',
+      sort: 'rating_desc',
+      minPrice: '8',
+      maxPrice: '15',
+    });
     fixture.detectChanges();
     tripServiceMock.searchTrips.calls.reset();
     (router.navigate as jasmine.Spy).calls.reset();
 
     component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
     component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", isoCode: 'CI', type: 'CITY' };
+    component.selectedDate = '2026-06-14';
+    component.sort = 'rating_desc';
+    component.minPrice = 8;
+    component.maxPrice = 15;
 
     component.searchTrips();
 
     expect(router.navigate).not.toHaveBeenCalled();
-    expect(tripServiceMock.searchTrips).toHaveBeenCalledOnceWith('Paris', 'Abidjan');
+    expect(tripServiceMock.searchTrips).toHaveBeenCalledOnceWith({
+      departure: 'Paris',
+      destination: 'Abidjan',
+      date: '2026-06-14',
+      sort: 'rating_desc',
+      minPrice: 8,
+      maxPrice: 15,
+    });
   });
 
   it('returns true for own trip and false for other trip', () => {
@@ -233,6 +269,23 @@ describe('SearchPageComponent', () => {
     expect(image?.getAttribute('src')).toBe('/api/uploads/alice.png');
     expect(host.textContent).toContain('4.8');
     expect(host.textContent).toContain('12 avis');
+  });
+
+  it('renders the not found card when a search has no result', () => {
+    tripServiceMock.searchTrips.and.returnValue(of([]));
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
+
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const publishLink = host.querySelector('a[aria-label="Publier ma demande"]');
+    const alertButton = host.querySelector('button[aria-label="M\'alerter dès qu\'un trajet arrive"]');
+
+    expect(host.textContent).toContain('Aucun trajet trouvé');
+    expect(host.textContent).toContain('Créez une alerte');
+    expect(host.textContent).toContain('publiez votre demande');
+    expect(publishLink?.getAttribute('href')).toBe('/propose');
+    expect(alertButton).not.toBeNull();
   });
 
   it('renders traveler initials fallback when no photo is available', () => {

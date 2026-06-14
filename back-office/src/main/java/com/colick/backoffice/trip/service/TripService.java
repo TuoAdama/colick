@@ -3,6 +3,8 @@ package com.colick.backoffice.trip.service;
 import com.colick.backoffice.trip.dto.*;
 import com.colick.backoffice.user.entity.User;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -65,6 +67,24 @@ public interface TripService {
      * @return matching trips with their available weight computed
      */
     List<TripResponse> searchTrips(String departure, String destination);
+
+    /**
+     * Searches active trips by route and optional filters.
+     *
+     * @param departure   departure filter (optional)
+     * @param destination destination filter (optional)
+     * @param date        minimum departure date, inclusive (optional)
+     * @param sort        optional sort key: price_asc, departure_asc, rating_desc
+     * @param minPrice    minimum price per kilo, inclusive (optional)
+     * @param maxPrice    maximum price per kilo, inclusive (optional)
+     * @return matching trips with their available weight computed
+     */
+    List<TripResponse> searchTrips(String departure,
+                                   String destination,
+                                   LocalDate date,
+                                   String sort,
+                                   BigDecimal minPrice,
+                                   BigDecimal maxPrice);
 
     /**
      * Returns a small public feed for the landing page.

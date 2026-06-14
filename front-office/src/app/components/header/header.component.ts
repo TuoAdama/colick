@@ -1,9 +1,9 @@
 import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
-@Component({ selector: 'app-header', standalone: true, imports: [CommonModule, RouterLink, AsyncPipe], templateUrl: './header.component.html' })
+@Component({ selector: 'app-header', standalone: true, imports: [CommonModule, RouterLink, RouterLinkActive, AsyncPipe], templateUrl: './header.component.html' })
 export class HeaderComponent implements OnInit {
   readonly authService = inject(AuthService);
   readonly messagingService = inject(MessagingService);

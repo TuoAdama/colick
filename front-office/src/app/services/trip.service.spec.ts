@@ -20,14 +20,29 @@ describe('TripService', () => {
     httpMock.verify();
   });
 
-  it('searches trips and normalizes traveler photo URLs', () => {
-    service.searchTrips('Paris', 'Abidjan').subscribe((trips) => {
+  it('searches trips with filters and normalizes traveler photo URLs', () => {
+    service.searchTrips({
+      departure: 'Paris',
+      destination: 'Abidjan',
+      date: '2026-06-14',
+      sort: 'price_asc',
+      minPrice: 8,
+      maxPrice: 15,
+    }).subscribe((trips) => {
       expect(trips).toHaveSize(1);
       expect(trips[0].travelerPhotoUrl).toBe('/api/uploads/traveler.png');
       expect(trips[0].travelerRatingCount).toBe(12);
     });
 
-    const req = httpMock.expectOne('/api/trips/search?departure=Paris&destination=Abidjan');
+    const req = httpMock.expectOne((request) =>
+      request.url === '/api/trips/search'
+      && request.params.get('departure') === 'Paris'
+      && request.params.get('destination') === 'Abidjan'
+      && request.params.get('date') === '2026-06-14'
+      && request.params.get('sort') === 'price_asc'
+      && request.params.get('minPrice') === '8'
+      && request.params.get('maxPrice') === '15'
+    );
     expect(req.request.method).toBe('GET');
     req.flush([
       {

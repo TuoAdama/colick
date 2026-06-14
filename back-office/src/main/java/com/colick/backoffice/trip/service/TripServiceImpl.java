@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -426,8 +427,21 @@ public class TripServiceImpl implements TripService {
     @Override
     @Transactional(readOnly = true)
     public List<TripResponse> searchTrips(String departure, String destination) {
+        return searchTrips(departure, destination, null, null, null, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TripResponse> searchTrips(String departure,
+                                          String destination,
+                                          LocalDate date,
+                                          String sort,
+                                          BigDecimal minPrice,
+                                          BigDecimal maxPrice) {
         List<Trip> activeTrips = tripRepository.findByStatus(Trip.TripStatus.ACTIVE);
-        LocalDateTime searchReferenceTime = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime dateReferenceTime = date != null ? date.atStartOfDay() : now;
+        LocalDateTime searchReferenceTime = dateReferenceTime.isAfter(now) ? dateReferenceTime : now;
 
         Set<String> departureTerms = expandSearchTerm(departure);
         Set<String> destinationTerms = expandSearchTerm(destination);
@@ -436,9 +450,28 @@ public class TripServiceImpl implements TripService {
                 .filter(trip -> departsAtOrAfter(trip, searchReferenceTime))
                 .filter(t -> departureTerms == null || matchesAnyTerm(t.getDepartureAddress(), departureTerms))
                 .filter(t -> destinationTerms == null || matchesAnyTerm(t.getDestination(), destinationTerms))
+                .filter(t -> minPrice == null || t.getPricePerKilo().compareTo(minPrice) >= 0)
+                .filter(t -> maxPrice == null || t.getPricePerKilo().compareTo(maxPrice) <= 0)
                 .toList();
 
-        return mapTrips(matchingTrips, true);
+        List<TripResponse> responses = mapTrips(matchingTrips, true);
+        return sortSearchResults(responses, sort);
+    }
+
+    private List<TripResponse> sortSearchResults(List<TripResponse> trips, String sort) {
+        Comparator<TripResponse> comparator = switch (sort == null ? "" : sort) {
+            case "price_asc" -> Comparator.comparing(TripResponse::getPricePerKilo);
+            case "departure_asc" -> Comparator.comparing(TripResponse::getDepartureTime);
+            case "rating_desc" -> Comparator
+                    .comparing(TripResponse::getTravelerRatingAverage, Comparator.nullsLast(Comparator.reverseOrder()))
+                    .thenComparing(TripResponse::getTravelerRatingCount, Comparator.nullsLast(Comparator.reverseOrder()));
+            default -> null;
+        };
+
+        if (comparator == null) {
+            return trips;
+        }
+        return trips.stream().sorted(comparator).toList();
     }
 
     @Override

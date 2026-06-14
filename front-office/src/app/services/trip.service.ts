@@ -10,6 +10,17 @@ import {
 } from '../models/booking.model';
 import { PhotoUrlService } from './photo-url.service';
 
+export type TripSearchSort = 'price_asc' | 'departure_asc' | 'rating_desc';
+
+export interface TripSearchCriteria {
+  departure?: string;
+  destination?: string;
+  date?: string;
+  sort?: TripSearchSort;
+  minPrice?: number | null;
+  maxPrice?: number | null;
+}
+
 /**
  * Service responsible for trip search, creation, and booking operations.
  */
@@ -25,11 +36,28 @@ export class TripService {
     return value !== null && value !== undefined && !Number.isNaN(value);
   }
 
-  /** Search trips by departure and destination locations. */
-  searchTrips(departure: string, destination: string): Observable<Trip[]> {
-    const params = new HttpParams()
-      .set('departure', departure)
-      .set('destination', destination);
+  /** Search trips by route and optional filters. */
+  searchTrips(criteria: TripSearchCriteria): Observable<Trip[]> {
+    let params = new HttpParams();
+    if (criteria.departure?.trim()) {
+      params = params.set('departure', criteria.departure.trim());
+    }
+    if (criteria.destination?.trim()) {
+      params = params.set('destination', criteria.destination.trim());
+    }
+    if (criteria.date?.trim()) {
+      params = params.set('date', criteria.date.trim());
+    }
+    if (criteria.sort) {
+      params = params.set('sort', criteria.sort);
+    }
+    if (this.isValidNumber(criteria.minPrice)) {
+      params = params.set('minPrice', criteria.minPrice);
+    }
+    if (this.isValidNumber(criteria.maxPrice)) {
+      params = params.set('maxPrice', criteria.maxPrice);
+    }
+
     return this.http.get<Trip[]>(`${this.baseUrl}/search`, { params }).pipe(
       map((trips) => trips.map((trip) => this.normalizeTrip(trip)))
     );
