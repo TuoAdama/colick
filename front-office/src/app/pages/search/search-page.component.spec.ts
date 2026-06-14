@@ -271,6 +271,23 @@ describe('SearchPageComponent', () => {
     expect(host.textContent).toContain('12 avis');
   });
 
+  it('renders the not found card when a search has no result', () => {
+    tripServiceMock.searchTrips.and.returnValue(of([]));
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
+
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const publishLink = host.querySelector('a[aria-label="Publier ma demande"]');
+    const alertButton = host.querySelector('button[aria-label="M\'alerter dès qu\'un trajet arrive"]');
+
+    expect(host.textContent).toContain('Aucun trajet trouvé');
+    expect(host.textContent).toContain('Créez une alerte');
+    expect(host.textContent).toContain('publiez votre demande');
+    expect(publishLink?.getAttribute('href')).toBe('/propose');
+    expect(alertButton).not.toBeNull();
+  });
+
   it('renders traveler initials fallback when no photo is available', () => {
     tripServiceMock.searchTrips.and.returnValue(of([
       {

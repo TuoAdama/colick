@@ -152,9 +152,47 @@
         }
 
         @if (hasSearched && !isLoading && !errorMessage && trips.length === 0) {
-          <div class="rounded-xl border border-[#E8E8EC] bg-white p-10 text-center">
-            <h2 class="mb-2 text-2xl font-bold text-primary">Aucun trajet trouvé.</h2>
-            <p class="text-text-secondary">Modifiez vos critères pour élargir votre recherche.</p>
+          <div
+            class="flex min-h-[430px] items-center justify-center rounded-[28px] border border-[#E8E8EC] bg-white px-6 py-12 text-center shadow-[0_14px_40px_rgba(2,48,71,0.08)] sm:min-h-[500px] sm:px-10 lg:min-h-[560px]"
+          >
+            <div class="mx-auto flex w-full max-w-[820px] flex-col items-center justify-center">
+              <h2 class="text-3xl font-extrabold leading-tight text-primary sm:text-4xl">
+                Aucun trajet trouvé
+              </h2>
+              <p class="mt-8 max-w-[640px] text-base font-semibold leading-8 text-text-secondary sm:text-xl">
+                <strong class="font-extrabold">Créez une alerte</strong>
+                pour être informé dès qu'un trajet correspondant sera disponible, ou
+                <strong class="font-extrabold">publiez votre demande</strong>
+                pour permettre à un voyageur de vous contacter.
+              </p>
+
+              <div class="mt-12 flex w-full flex-col items-stretch justify-center gap-4 sm:mt-14 sm:flex-row sm:items-center">
+                <a
+                  routerLink="/propose"
+                  aria-label="Publier ma demande"
+                  class="inline-flex min-h-[64px] w-full items-center justify-center gap-4 rounded-lg border border-[#E0E4E8] bg-white px-5 py-4 text-base font-extrabold text-primary transition hover:border-primary/30 hover:bg-[#F8FAFB] sm:w-auto sm:min-w-[300px] sm:text-lg"
+                >
+                  <svg class="h-7 w-7 shrink-0" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                    <path d="M23.5 5.5L10.8 18.2" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M23.5 5.5L15.6 23.1L10.8 18.2L5.9 13.4L23.5 5.5Z" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M10.8 18.2L5.5 22.8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <span>Publier ma demande</span>
+                </a>
+
+                <button
+                  type="button"
+                  aria-label="M'alerter dès qu'un trajet arrive"
+                  class="inline-flex min-h-[64px] w-full cursor-default items-center justify-center gap-4 rounded-lg bg-accent px-5 py-4 text-base font-extrabold text-white shadow-[0_8px_18px_rgba(251,133,0,0.28)] sm:w-auto sm:min-w-[390px] sm:text-lg"
+                >
+                  <svg class="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M18 8.5A6 6 0 0 0 6 8.5c0 7-3 7-3 9h18c0-2-3-2-3-9Z" fill="currentColor" />
+                    <path d="M14.2 20a2.4 2.4 0 0 1-4.4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  </svg>
+                  <span>M'alerter dès qu'un trajet arrive</span>
+                </button>
+              </div>
+            </div>
           </div>
         }
 

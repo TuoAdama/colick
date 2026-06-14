@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AutocompleteComponent } from '../../shared/components/autocomplete/autocomplete.component';
 import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
@@ -22,7 +22,7 @@ import { UserResponse } from '../../models/auth.model';
 @Component({
   selector: 'app-search-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutocompleteComponent, BookingModalComponent, UserAvatarComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AutocompleteComponent, BookingModalComponent, UserAvatarComponent],
   templateUrl: './search-page.component.html',
 })
 export class SearchPageComponent implements OnInit, OnDestroy {
