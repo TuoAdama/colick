@@ -1,451 +1,279 @@
-<!-- Search Page -->
-<div class="min-h-screen bg-bg-primary" aria-labelledby="search-title">
-
-  <!-- ============================================================
-       1. PAGE HEADER — gradient banner with title and back link
-       ============================================================ -->
-  <section class="hero-gradient pt-24 pb-32 md:pb-40 relative overflow-hidden">
-    <!-- Decorative background blurs -->
-    <div
-      class="absolute top-10 right-0 w-72 h-72 bg-accent/20 rounded-full blur-3xl pointer-events-none"
-      aria-hidden="true"
-    ></div>
-    <div
-      class="absolute bottom-0 left-10 w-64 h-64 bg-secondary/30 rounded-full blur-3xl pointer-events-none"
-      aria-hidden="true"
-    ></div>
-
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      <!-- Back to home link -->
-      <a
-        routerLink="/"
-        class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-medium mb-6 group"
-        aria-label="Retour à l'accueil"
-      >
-        <svg
-          class="w-4 h-4 transition-transform group-hover:-translate-x-1"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-        Retour à l'accueil
-      </a>
-
-      <!-- Page title -->
-      <h1
-        id="search-title"
-        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-3"
-      >
-        Rechercher un voyage
+<div class="min-h-screen bg-[#FAFAFA] text-text-primary" aria-labelledby="search-title">
+  <main class="mx-auto w-full max-w-[1280px] px-4 py-8 md:px-16 md:py-14">
+    <section class="mb-10" aria-label="Formulaire de recherche">
+      <h1 id="search-title" class="mb-8 text-center text-3xl font-extrabold leading-tight text-primary md:text-left md:text-4xl">
+        Trouvez le trajet idéal pour votre colis.
       </h1>
 
-      <!-- Subtitle -->
-      <p class="text-white/80 text-base sm:text-lg max-w-xl">
-        Trouvez un voyageur de confiance pour envoyer vos colis
-      </p>
-    </div>
-  </section>
+      <div class="flex flex-col items-stretch gap-2 rounded-xl border border-[#E8E8EC] bg-white p-2 shadow-sm md:flex-row md:items-center">
+        <div class="w-full flex-1">
+          <app-autocomplete
+            label="DÉPART"
+            placeholder="Ville de départ"
+            [initialQuery]="departureQuery"
+            variant="search"
+            icon="M12 21s7-4.438 7-11a7 7 0 10-14 0c0 6.562 7 11 7 11zM12 13a3 3 0 100-6 3 3 0 000 6z"
+            (selected)="onDepartureSelected($event)"
+            (cleared)="departure = null"
+          ></app-autocomplete>
+        </div>
 
-  <!-- ============================================================
-       2. SEARCH FORM CARD — overlaps the header with negative margin
-       ============================================================ -->
-  <section
-    class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 md:-mt-24 relative z-20"
-    aria-label="Formulaire de recherche"
-  >
-    <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
-      <!-- Autocomplete inputs row -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
-        <!-- Departure autocomplete -->
-        <app-autocomplete
-          label="Ville de départ"
-          placeholder="Ex: Paris, France"
-          [initialQuery]="departureQuery"
-          icon="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-          (selected)="onDepartureSelected($event)"
-          (cleared)="departure = null"
-        ></app-autocomplete>
-
-        <!-- Destination autocomplete -->
-        <app-autocomplete
-          label="Ville de destination"
-          placeholder="Ex: Abidjan, Côte d'Ivoire"
-          [initialQuery]="destinationQuery"
-          icon="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-          (selected)="onDestinationSelected($event)"
-          (cleared)="destination = null"
-        ></app-autocomplete>
-      </div>
-
-      <!-- Search button -->
-      <button
-        type="button"
-        class="btn-primary w-full text-lg"
-        [disabled]="!isFormValid || isLoading"
-        [class.opacity-50]="!isFormValid || isLoading"
-        [class.cursor-not-allowed]="!isFormValid || isLoading"
-        (click)="searchTrips()"
-        aria-label="Rechercher des voyages"
-      >
-        <!-- Spinner shown during loading -->
-        @if (isLoading) {
-          <svg
-            class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        }
-
-        <!-- Search icon shown when idle -->
-        @if (!isLoading) {
-          <svg
-            class="w-5 h-5 mr-2"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        }
-
-        {{ isLoading ? 'Recherche...' : 'Rechercher' }}
-      </button>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       3. RESULTS SECTION — all states handled via @if
-       ============================================================ -->
-  <section
-    class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-20"
-    aria-live="polite"
-    aria-label="Résultats de recherche"
-  >
-
-    <!-- LOADING STATE -->
-    @if (isLoading) {
-      <div class="flex flex-col items-center justify-center py-16" role="status">
-        <svg
-          class="animate-spin h-12 w-12 text-secondary mb-4"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p class="text-text-secondary font-medium text-lg">Recherche en cours...</p>
-        <p class="text-text-muted text-sm mt-1">Nous cherchons les meilleurs voyages pour vous</p>
-      </div>
-    }
-
-    <!-- ERROR STATE -->
-    @if (errorMessage && !isLoading) {
-      <div class="bg-error/5 border border-error/20 rounded-2xl p-6 sm:p-8 text-center" role="alert">
-        <div class="w-14 h-14 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg
-            class="w-7 h-7 text-error"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        <div class="hidden items-center justify-center px-2 text-text-muted md:flex" aria-hidden="true">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
         </div>
-        <h2 class="text-lg font-semibold text-error mb-2">Erreur de recherche</h2>
-        <p class="text-text-secondary mb-6">{{ errorMessage }}</p>
+
+        <div class="w-full flex-1">
+          <app-autocomplete
+            label="DESTINATION"
+            placeholder="Où allez-vous ?"
+            [initialQuery]="destinationQuery"
+            variant="search"
+            icon="M3 11l18-8-8 18-2-8-8-2z"
+            (selected)="onDestinationSelected($event)"
+            (cleared)="destination = null"
+          ></app-autocomplete>
+        </div>
+
+        <label class="flex min-h-[76px] w-full flex-1 items-center gap-3 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-3 transition focus-within:ring-2 focus-within:ring-primary/20">
+          <svg class="h-6 w-6 shrink-0 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span class="flex min-w-0 flex-1 flex-col">
+            <span class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">DATE</span>
+            <input
+              type="date"
+              [(ngModel)]="selectedDate"
+              class="w-full border-none bg-transparent p-0 text-[15px] text-primary outline-none focus:ring-0"
+              aria-label="Date de départ minimum"
+            />
+          </span>
+        </label>
+
         <button
           type="button"
-          class="inline-flex items-center gap-2 bg-error text-white font-semibold px-6 py-2.5 rounded-full hover:bg-error/90 transition-colors"
+          class="flex min-h-[64px] w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-accent px-8 py-4 text-sm font-bold text-white transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+          [disabled]="!isFormValid || isLoading"
           (click)="searchTrips()"
-          aria-label="Réessayer la recherche"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Réessayer
+          @if (isLoading) {
+            <svg class="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          } @else {
+            <span>Rechercher</span>
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 110-14 7 7 0 010 14z" />
+            </svg>
+          }
         </button>
       </div>
-    }
+    </section>
 
-    <!-- EMPTY STATE (search performed, no results) -->
-    @if (hasSearched && !isLoading && !errorMessage && trips.length === 0) {
-      <div class="flex flex-col items-center justify-center py-16 text-center">
-        <!-- Plane illustration circle -->
-        <div class="w-24 h-24 bg-secondary/10 rounded-full flex items-center justify-center mb-6">
-          <svg
-            class="w-12 h-12 text-secondary"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-          </svg>
-        </div>
-        <h2 class="text-xl font-bold text-text-primary mb-2">Aucun voyage trouvé</h2>
-        <p class="text-text-secondary max-w-sm">
-          Essayez de modifier vos critères de recherche ou vérifiez l'orthographe des villes saisies.
-        </p>
-      </div>
-    }
+    <div class="flex flex-col gap-8 lg:flex-row">
+      <aside class="flex w-full flex-col gap-6 lg:w-1/4" aria-label="Filtres de recherche">
+        <section class="rounded-xl border border-[#E8E8EC] bg-white p-6">
+          <h2 class="mb-4 text-2xl font-bold text-primary">Trier par</h2>
+          <div class="flex flex-col gap-3">
+            @for (option of sortOptions; track option.value) {
+              <label class="flex cursor-pointer items-center gap-3 text-[15px] text-text-secondary">
+                <input
+                  type="radio"
+                  name="sort"
+                  class="h-5 w-5 border-outline text-primary focus:ring-primary"
+                  [value]="option.value"
+                  [(ngModel)]="sort"
+                  (change)="onFilterChange()"
+                />
+                <span>{{ option.label }}</span>
+              </label>
+            }
+          </div>
+        </section>
 
-    <!-- RESULTS LIST -->
-    @if (hasSearched && !isLoading && !errorMessage && trips.length > 0) {
-      <!-- Results count header -->
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg sm:text-xl font-bold text-text-primary">
-          {{ trips.length }} voyage{{ trips.length > 1 ? 's' : '' }} trouvé{{ trips.length > 1 ? 's' : '' }}
-        </h2>
-        <span class="text-sm text-text-muted hidden sm:inline">Triés par pertinence</span>
-      </div>
+        <section class="rounded-xl border border-[#E8E8EC] bg-white p-6">
+          <h2 class="mb-4 text-2xl font-bold text-primary">Prix par kg</h2>
+          <div class="flex items-center gap-4">
+            <input
+              type="number"
+              min="0"
+              placeholder="Min"
+              [(ngModel)]="minPrice"
+              (change)="onFilterChange()"
+              class="w-1/2 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-primary/20"
+              aria-label="Prix minimum par kilo"
+            />
+            <span class="text-text-secondary">-</span>
+            <input
+              type="number"
+              min="0"
+              placeholder="Max"
+              [(ngModel)]="maxPrice"
+              (change)="onFilterChange()"
+              class="w-1/2 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-primary/20"
+              aria-label="Prix maximum par kilo"
+            />
+          </div>
+        </section>
+      </aside>
 
-      <!-- Trip result cards -->
-      <div class="space-y-5">
-        @for (trip of trips; track trip.id) {
-          <article
-            class="bg-white rounded-xl shadow-md card-hover overflow-hidden"
-            [attr.aria-label]="'Voyage de ' + trip.departureAddress + ' vers ' + trip.destination"
-          >
-            <!-- TOP SECTION — Route info -->
-            <div class="px-5 sm:px-6 pt-5 sm:pt-6 pb-4">
-              <div class="flex items-center gap-3 flex-wrap">
-                <!-- Departure location -->
-                <div class="flex items-center gap-2 min-w-0">
-                  <div class="w-8 h-8 bg-secondary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                      <circle cx="12" cy="10" r="3" />
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    </svg>
-                  </div>
-                  <span class="font-semibold text-text-primary truncate text-sm sm:text-base">{{ trip.departureAddress }}</span>
-                </div>
-
-                <!-- Direction arrow -->
-                <svg class="w-5 h-5 text-text-muted flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-
-                <!-- Destination location -->
-                <div class="flex items-center gap-2 min-w-0">
-                  <div class="w-8 h-8 bg-accent/10 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                      <circle cx="12" cy="10" r="3" />
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    </svg>
-                  </div>
-                  <span class="font-semibold text-text-primary truncate text-sm sm:text-base">{{ trip.destination }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- MIDDLE SECTION — Key details grid -->
-            <div class="px-5 sm:px-6 pb-4">
-              <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <!-- Price per kilo -->
-                <div class="bg-accent/10 rounded-xl p-3 text-center">
-                  <div class="flex items-center justify-center gap-1 mb-1">
-                    <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span class="text-xs text-accent font-medium">Prix/kg</span>
-                  </div>
-                  <p class="text-lg font-bold text-accent">{{ trip.pricePerKilo }}&euro;/kg</p>
-                </div>
-
-                <!-- Available weight -->
-                <div class="bg-bg-secondary rounded-xl p-3 text-center">
-                  <div class="flex items-center justify-center gap-1 mb-1">
-                    <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                    </svg>
-                    <span class="text-xs text-text-muted font-medium">Poids dispo.</span>
-                  </div>
-                  <p class="text-lg font-bold text-text-primary">
-                    {{ trip.availableWeight }}<span class="text-sm font-normal text-text-secondary ml-0.5">kg</span>
-                  </p>
-                </div>
-
-                <!-- Departure date and time -->
-                <div class="bg-bg-secondary rounded-xl p-3 text-center">
-                  <div class="flex items-center justify-center gap-1 mb-1">
-                    <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span class="text-xs text-text-muted font-medium">Départ</span>
-                  </div>
-                  <p class="text-sm font-semibold text-text-primary">{{ formatDate(trip.departureTime) }}</p>
-                  <p class="text-xs text-text-secondary">{{ formatTime(trip.departureTime) }}</p>
-                </div>
-
-                <!-- Arrival date and time -->
-                <div class="bg-bg-secondary rounded-xl p-3 text-center">
-                  <div class="flex items-center justify-center gap-1 mb-1">
-                    <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span class="text-xs text-text-muted font-medium">Arrivée</span>
-                  </div>
-                  <p class="text-sm font-semibold text-text-primary">{{ formatDate(trip.arrivalTime) }}</p>
-                  <p class="text-xs text-text-secondary">{{ formatTime(trip.arrivalTime) }}</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- BOTTOM SECTION — Footer with traveler info and CTA -->
-            <div class="px-5 sm:px-6 py-4 bg-bg-secondary/60 border-t border-primary/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <!-- Left side: traveler avatar, name and trust signals -->
-              <div class="flex flex-1 items-start gap-3 sm:gap-4 min-w-0">
-                <div class="shrink-0" [attr.aria-label]="'Voyageur: ' + trip.travelerName">
-                  <app-user-avatar
-                    [name]="trip.travelerName"
-                    [photoUrl]="trip.travelerPhotoUrl"
-                    sizeClasses="w-12 h-12"
-                    textClasses="text-sm"
-                  ></app-user-avatar>
-                </div>
-
-                <div class="min-w-0 space-y-2">
-                  <div class="min-w-0">
-                    <span class="block truncate text-sm font-semibold text-text-primary">{{ trip.travelerName }}</span>
-                    <span class="text-xs text-text-muted">Voyageur</span>
-                  </div>
-
-                  <div class="flex flex-wrap items-center gap-2">
-                    @if ((trip.travelerRatingCount ?? 0) > 0 && trip.travelerRatingAverage !== null && trip.travelerRatingAverage !== undefined) {
-                      <span class="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-white px-3 py-1.5 text-xs font-medium text-text-secondary">
-                        <svg class="w-3.5 h-3.5 text-accent" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                          <path d="M9.049.927c.3-.921 1.603-.921 1.902 0l1.286 3.954a1 1 0 00.95.69h4.158c.969 0 1.371 1.24.588 1.81l-3.364 2.445a1 1 0 00-.364 1.118l1.285 3.955c.3.92-.755 1.688-1.54 1.118l-3.364-2.445a1 1 0 00-1.176 0l-3.364 2.445c-.784.57-1.838-.197-1.539-1.118l1.285-3.955a1 1 0 00-.364-1.118L.98 7.38c-.783-.57-.38-1.81.588-1.81h4.159a1 1 0 00.95-.69L9.05.927z" />
-                        </svg>
-                        <span class="font-semibold text-text-primary">{{ trip.travelerRatingAverage | number: '1.1-1' }}/5</span>
-                        <span aria-hidden="true">•</span>
-                        <span>{{ trip.travelerRatingCount }} avis</span>
-                      </span>
-                    } @else {
-                      <span class="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-white px-3 py-1.5 text-xs font-medium text-text-secondary">
-                        <svg class="w-3.5 h-3.5 text-text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6M7 3h10a2 2 0 012 2v14l-4-2-4 2-4-2-4 2V5a2 2 0 012-2z" />
-                        </svg>
-                        Aucun avis pour le moment
-                      </span>
-                    }
-
-                    <!-- Instant acceptance badge -->
-                    @if (trip.instantAcceptance) {
-                      <span class="inline-flex items-center gap-1 bg-success/10 text-success text-xs font-semibold px-3 py-1.5 rounded-full">
-                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                          <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" />
-                        </svg>
-                        Acceptation instantanée
-                      </span>
-                    }
-                  </div>
-                </div>
-              </div>
-
-              <!-- Right side: CTA buttons -->
-              @if (!isOwnTrip(trip)) {
-                <div class="flex flex-wrap items-center gap-2 sm:justify-end">
-                  <button type="button" class="inline-flex items-center gap-1.5 bg-secondary text-white font-semibold px-4 py-2.5 rounded-full text-sm hover:bg-secondary/90 transition-colors whitespace-nowrap" (click)="contactTraveler(trip)"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>Contacter</button>
-                  @if (hasActiveBookingForTrip(trip.id)) {
-                    <span class="inline-flex items-center gap-1.5 bg-primary/10 text-primary font-semibold px-4 py-2.5 rounded-full text-sm whitespace-nowrap">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      Demande envoyée
-                    </span>
-                  } @else {
-                    <button
-                      type="button"
-                      (click)="openBookingModal(trip)"
-                      class="btn-primary !px-5 !py-2.5 !rounded-full !text-sm whitespace-nowrap"
-                      [attr.aria-label]="'Envoyer une demande pour le voyage vers ' + trip.destination"
-                    >
-                      <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      Demande
-                    </button>
-                  }
-                </div>
-              } @else {
-                <span class="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full">
-                  Votre trajet
-                </span>
+      <section class="flex w-full flex-col gap-4 lg:w-3/4" aria-live="polite" aria-label="Résultats de recherche">
+        @if (hasSearched && !isLoading && !errorMessage) {
+          <div class="mb-2 flex items-center justify-between gap-4">
+            <p class="text-[15px] leading-relaxed text-text-secondary">
+              {{ trips.length }} trajet{{ trips.length > 1 ? 's' : '' }} trouvé{{ trips.length > 1 ? 's' : '' }}
+              @if (resultRouteLabel()) {
+                <span> pour <strong class="text-primary">{{ resultRouteLabel() }}</strong></span>
               }
-            </div>
-          </article>
-        } @empty {
-          <!-- Fallback empty state from @for directive -->
-          <div class="flex flex-col items-center justify-center py-16 text-center">
-            <div class="w-24 h-24 bg-secondary/10 rounded-full flex items-center justify-center mb-6">
-              <svg
-                class="w-12 h-12 text-secondary"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-              </svg>
-            </div>
-            <h2 class="text-xl font-bold text-text-primary mb-2">Aucun voyage trouvé</h2>
-            <p class="text-text-secondary max-w-sm">
-              Essayez de modifier vos critères de recherche ou vérifiez l'orthographe des villes saisies.
             </p>
           </div>
         }
-      </div>
-    }
 
-    <!-- INITIAL STATE — before any search has been performed -->
-    @if (!hasSearched && !isLoading) {
-      <div class="flex flex-col items-center justify-center py-16 text-center">
-        <div class="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mb-5">
-          <svg
-            class="w-10 h-10 text-secondary"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-          </svg>
-        </div>
-        <h2 class="text-lg font-semibold text-text-primary mb-2">Lancez votre recherche</h2>
-        <p class="text-text-secondary text-sm max-w-sm">
-          Sélectionnez une ville de départ et une destination pour découvrir les voyageurs disponibles.
-        </p>
-      </div>
-    }
+        @if (isLoading) {
+          <div class="flex flex-col items-center justify-center rounded-xl border border-[#E8E8EC] bg-white py-16" role="status">
+            <svg class="mb-4 h-10 w-10 animate-spin text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <p class="text-lg font-semibold text-primary">Recherche en cours...</p>
+          </div>
+        }
 
-  </section>
+        @if (errorMessage && !isLoading) {
+          <div class="rounded-xl border border-error/20 bg-white p-8 text-center" role="alert">
+            <h2 class="mb-2 text-xl font-bold text-error">Erreur de recherche</h2>
+            <p class="mb-6 text-text-secondary">{{ errorMessage }}</p>
+            <button type="button" class="rounded-lg bg-error px-6 py-3 text-sm font-bold text-white" (click)="searchTrips()">
+              Réessayer
+            </button>
+          </div>
+        }
 
-  <!-- Booking success toast -->
+        @if (hasSearched && !isLoading && !errorMessage && trips.length === 0) {
+          <div class="rounded-xl border border-[#E8E8EC] bg-white p-10 text-center">
+            <h2 class="mb-2 text-2xl font-bold text-primary">Aucun trajet trouvé.</h2>
+            <p class="text-text-secondary">Modifiez vos critères pour élargir votre recherche.</p>
+          </div>
+        }
+
+        @if (hasSearched && !isLoading && !errorMessage && trips.length > 0) {
+          @for (trip of trips; track trip.id) {
+            <article
+              class="flex flex-col gap-6 rounded-xl border border-[#E8E8EC] bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-lg md:flex-row"
+              [attr.aria-label]="'Trajet de ' + trip.departureAddress + ' vers ' + trip.destination"
+            >
+              <div class="flex flex-1 flex-col justify-between">
+                <div class="mb-4 flex items-start justify-between gap-4">
+                  <div class="flex min-w-0 flex-col gap-4">
+                    <div>
+                      <span class="rounded-full bg-[#E8E8EA] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
+                        Standard
+                      </span>
+                    </div>
+
+                    <div class="relative flex items-start gap-4">
+                      <div class="absolute bottom-2 left-1 top-2 flex flex-col items-center">
+                        <span class="z-10 h-2 w-2 rounded-full border-2 border-text-secondary bg-white"></span>
+                        <span class="-my-1 h-full w-px bg-[#E8E8EC]"></span>
+                        <span class="z-10 h-2 w-2 rounded-full bg-primary"></span>
+                      </div>
+
+                      <div class="flex flex-col gap-6 pl-8">
+                        <div>
+                          <p class="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">DÉPART</p>
+                          <p class="break-words text-2xl font-bold text-primary">{{ trip.departureAddress }}</p>
+                        </div>
+                        <div>
+                          <p class="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">ARRIVÉE</p>
+                          <p class="break-words text-2xl font-bold text-primary">{{ trip.destination }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="shrink-0 text-right">
+                    <p class="text-3xl font-extrabold leading-none text-primary">
+                      {{ trip.pricePerKilo }}€<span class="text-sm font-normal text-text-secondary">/kg</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mb-4 inline-flex self-start items-center gap-2 rounded-lg bg-[#FAFAFA] px-4 py-2">
+                  <svg class="h-4 w-4 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span class="text-sm font-bold text-primary">{{ formatDate(trip.departureTime) }}</span>
+                </div>
+
+                <div class="my-2 h-px w-full bg-[#E8E8EC]"></div>
+
+                <div class="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div class="flex items-center gap-3">
+                    <app-user-avatar
+                      [name]="trip.travelerName"
+                      [photoUrl]="trip.travelerPhotoUrl"
+                      sizeClasses="w-10 h-10"
+                      textClasses="text-xs"
+                    ></app-user-avatar>
+                    <div class="flex flex-col">
+                      <span class="text-sm font-bold text-primary">{{ trip.travelerName }}</span>
+                      <div class="flex items-center gap-1">
+                        <svg class="h-4 w-4 text-warning" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                          <path d="M9.049.927c.3-.921 1.603-.921 1.902 0l1.286 3.954a1 1 0 00.95.69h4.158c.969 0 1.371 1.24.588 1.81l-3.364 2.445a1 1 0 00-.364 1.118l1.285 3.955c.3.92-.755 1.688-1.54 1.118l-3.364-2.445a1 1 0 00-1.176 0l-3.364 2.445c-.784.57-1.838-.197-1.539-1.118l1.285-3.955a1 1 0 00-.364-1.118L.98 7.38c-.783-.57-.38-1.81.588-1.81h4.159a1 1 0 00.95-.69L9.05.927z" />
+                        </svg>
+                        <span class="text-xs text-text-secondary">
+                          {{ hasTravelerRating(trip) ? formatTravelerRatingAverage(trip) : 'Nouveau' }}
+                          @if (hasTravelerRating(trip)) {
+                            <span> · {{ trip.travelerRatingCount }} avis</span>
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4 sm:justify-end">
+                    <span class="text-right text-xs text-text-secondary">{{ trip.availableWeight }}kg libres</span>
+                    @if (!isOwnTrip(trip)) {
+                      @if (hasActiveBookingForTrip(trip.id)) {
+                        <span class="rounded-lg bg-primary/10 px-5 py-2 text-sm font-bold text-primary">Demande envoyée</span>
+                      } @else {
+                        <button
+                          type="button"
+                          class="rounded-lg bg-primary px-6 py-2 text-sm font-bold text-white shadow-sm transition hover:-translate-y-px hover:bg-primary/90"
+                          (click)="openBookingModal(trip)"
+                          [attr.aria-label]="'Choisir le trajet vers ' + trip.destination"
+                        >
+                          Choisir
+                        </button>
+                      }
+                    } @else {
+                      <span class="rounded-lg bg-primary/10 px-5 py-2 text-sm font-bold text-primary">Votre trajet</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </article>
+          }
+        }
+
+        @if (!hasSearched && !isLoading) {
+          <div class="rounded-xl border border-[#E8E8EC] bg-white p-10 text-center">
+            <h2 class="mb-2 text-2xl font-bold text-primary">Lancez votre recherche.</h2>
+            <p class="text-text-secondary">Sélectionnez un départ et une destination pour découvrir les trajets disponibles.</p>
+          </div>
+        }
+      </section>
+    </div>
+  </main>
+
   @if (bookingSuccessMessage) {
-    <div class="fixed bottom-6 right-6 bg-success text-white px-6 py-3 rounded-xl shadow-lg z-50">
+    <div class="fixed bottom-6 right-6 z-50 rounded-xl bg-success px-6 py-3 text-white shadow-lg">
       {{ bookingSuccessMessage }}
     </div>
   }
 
-  <!-- Booking Modal -->
   <app-booking-modal
     [trip]="selectedTrip"
     [isOpen]="isBookingModalOpen"

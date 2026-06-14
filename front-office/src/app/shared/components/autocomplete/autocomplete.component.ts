@@ -43,6 +43,9 @@ export class AutocompleteComponent implements OnInit, OnDestroy, OnChanges {
   /** SVG path for the icon displayed in the input */
   @Input() icon = '';
 
+  /** Visual density/style variant. */
+  @Input() variant: 'default' | 'search' = 'default';
+
   /** Emits the selected location */
   @Output() selected = new EventEmitter<Location>();
 

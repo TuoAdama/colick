@@ -33,6 +33,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -1100,6 +1101,192 @@ class TripServiceImplTest {
 
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getDepartureAddress()).isEqualTo("Paris");
+    }
+
+    @Test
+    void searchTrips_shouldFilterFromSelectedDateInclusive() {
+        LocalDate selectedDate = LocalDate.now().plusDays(3);
+        Trip beforeSelectedDate = Trip.builder()
+                .id(11L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(selectedDate.minusDays(1).atTime(12, 0))
+                .arrivalTime(selectedDate.minusDays(1).atTime(18, 0))
+                .maxWeight(BigDecimal.valueOf(15))
+                .pricePerKilo(BigDecimal.valueOf(8))
+                .status(Trip.TripStatus.ACTIVE).build();
+        Trip onSelectedDate = Trip.builder()
+                .id(12L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(selectedDate.atTime(9, 0))
+                .arrivalTime(selectedDate.atTime(16, 0))
+                .maxWeight(BigDecimal.valueOf(18))
+                .pricePerKilo(BigDecimal.valueOf(9))
+                .status(Trip.TripStatus.ACTIVE).build();
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE))
+                .thenReturn(List.of(beforeSelectedDate, onSelectedDate));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(onSelectedDate, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null, selectedDate, null, null, null);
+
+        assertThat(results).extracting(TripResponse::getId).containsExactly(12L);
+    }
+
+    @Test
+    void searchTrips_shouldFilterByMinAndMaxPrice() {
+        Trip cheapTrip = Trip.builder()
+                .id(11L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(LocalDateTime.now().plusDays(2))
+                .arrivalTime(LocalDateTime.now().plusDays(3))
+                .maxWeight(BigDecimal.valueOf(15))
+                .pricePerKilo(BigDecimal.valueOf(7))
+                .status(Trip.TripStatus.ACTIVE).build();
+        Trip matchingTrip = Trip.builder()
+                .id(12L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(LocalDateTime.now().plusDays(3))
+                .arrivalTime(LocalDateTime.now().plusDays(4))
+                .maxWeight(BigDecimal.valueOf(18))
+                .pricePerKilo(BigDecimal.valueOf(10))
+                .status(Trip.TripStatus.ACTIVE).build();
+        Trip expensiveTrip = Trip.builder()
+                .id(13L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(LocalDateTime.now().plusDays(4))
+                .arrivalTime(LocalDateTime.now().plusDays(5))
+                .maxWeight(BigDecimal.valueOf(18))
+                .pricePerKilo(BigDecimal.valueOf(18))
+                .status(Trip.TripStatus.ACTIVE).build();
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE))
+                .thenReturn(List.of(cheapTrip, matchingTrip, expensiveTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(matchingTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips(
+                "Paris", null, null, null, BigDecimal.valueOf(8), BigDecimal.valueOf(15));
+
+        assertThat(results).extracting(TripResponse::getId).containsExactly(12L);
+    }
+
+    @Test
+    void searchTrips_shouldSortByPriceAsc() {
+        Trip expensiveTrip = Trip.builder()
+                .id(11L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(LocalDateTime.now().plusDays(2))
+                .arrivalTime(LocalDateTime.now().plusDays(3))
+                .maxWeight(BigDecimal.valueOf(15))
+                .pricePerKilo(BigDecimal.valueOf(15))
+                .status(Trip.TripStatus.ACTIVE).build();
+        Trip cheapTrip = Trip.builder()
+                .id(12L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(LocalDateTime.now().plusDays(3))
+                .arrivalTime(LocalDateTime.now().plusDays(4))
+                .maxWeight(BigDecimal.valueOf(18))
+                .pricePerKilo(BigDecimal.valueOf(8))
+                .status(Trip.TripStatus.ACTIVE).build();
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(expensiveTrip, cheapTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(expensiveTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(cheapTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null, null, "price_asc", null, null);
+
+        assertThat(results).extracting(TripResponse::getId).containsExactly(12L, 11L);
+    }
+
+    @Test
+    void searchTrips_shouldSortByDepartureAsc() {
+        Trip laterTrip = Trip.builder()
+                .id(11L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(LocalDateTime.now().plusDays(5))
+                .arrivalTime(LocalDateTime.now().plusDays(6))
+                .maxWeight(BigDecimal.valueOf(15))
+                .pricePerKilo(BigDecimal.valueOf(8))
+                .status(Trip.TripStatus.ACTIVE).build();
+        Trip earlierTrip = Trip.builder()
+                .id(12L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(LocalDateTime.now().plusDays(2))
+                .arrivalTime(LocalDateTime.now().plusDays(3))
+                .maxWeight(BigDecimal.valueOf(18))
+                .pricePerKilo(BigDecimal.valueOf(10))
+                .status(Trip.TripStatus.ACTIVE).build();
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(laterTrip, earlierTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(laterTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(earlierTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null, null, "departure_asc", null, null);
+
+        assertThat(results).extracting(TripResponse::getId).containsExactly(12L, 11L);
+    }
+
+    @Test
+    void searchTrips_shouldSortByRatingDescWithUnratedTripsLast() {
+        User betterTraveler = User.builder().id(3L).firstName("Claire").lastName("Diallo").role(User.Role.USER).build();
+        User unratedTraveler = User.builder().id(4L).firstName("Noah").lastName("Kone").role(User.Role.USER).build();
+        Trip lowerRatedTrip = Trip.builder()
+                .id(11L).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(LocalDateTime.now().plusDays(2))
+                .arrivalTime(LocalDateTime.now().plusDays(3))
+                .maxWeight(BigDecimal.valueOf(15))
+                .pricePerKilo(BigDecimal.valueOf(8))
+                .status(Trip.TripStatus.ACTIVE).build();
+        Trip betterRatedTrip = Trip.builder()
+                .id(12L).traveler(betterTraveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(LocalDateTime.now().plusDays(3))
+                .arrivalTime(LocalDateTime.now().plusDays(4))
+                .maxWeight(BigDecimal.valueOf(18))
+                .pricePerKilo(BigDecimal.valueOf(10))
+                .status(Trip.TripStatus.ACTIVE).build();
+        Trip unratedTrip = Trip.builder()
+                .id(13L).traveler(unratedTraveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(LocalDateTime.now().plusDays(4))
+                .arrivalTime(LocalDateTime.now().plusDays(5))
+                .maxWeight(BigDecimal.valueOf(18))
+                .pricePerKilo(BigDecimal.valueOf(11))
+                .status(Trip.TripStatus.ACTIVE).build();
+
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE))
+                .thenReturn(List.of(lowerRatedTrip, betterRatedTrip, unratedTrip));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris"))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(lowerRatedTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(betterRatedTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(unratedTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of());
+        when(travelerReviewService.getTravelerRatingSummaries(anyCollection()))
+                .thenReturn(Map.of(
+                        traveler.getId(), new TravelerRatingSummary(4.2, 3L),
+                        betterTraveler.getId(), new TravelerRatingSummary(4.9, 8L)
+                ));
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null, null, "rating_desc", null, null);
+
+        assertThat(results).extracting(TripResponse::getId).containsExactly(12L, 11L, 13L);
     }
 
     @Test
