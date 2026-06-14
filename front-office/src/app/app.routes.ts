@@ -147,10 +147,10 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'received-bookings',
+        path: 'sent-bookings',
         loadComponent: () =>
-          import('./pages/received-bookings/received-bookings-page.component').then(
-            (m) => m.ReceivedBookingsPageComponent
+          import('./pages/sent-bookings/sent-bookings-page.component').then(
+            (m) => m.SentBookingsPageComponent
           ),
       },
     ],

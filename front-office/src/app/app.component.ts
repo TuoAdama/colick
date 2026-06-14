@@ -24,7 +24,7 @@ export class AppComponent {
     /^\/propose(?:\/[^?#]*)?(?:[?#].*)?$/,
     /^\/messages(?:[?#].*)?$/,
     /^\/settings(?:[?#].*)?$/,
-    /^\/received-bookings(?:[?#].*)?$/,
+    /^\/sent-bookings(?:[?#].*)?$/,
   ];
   /**
    * Application title

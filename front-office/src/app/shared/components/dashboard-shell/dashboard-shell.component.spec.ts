@@ -51,7 +51,7 @@ describe('DashboardShellComponent', () => {
     const text = fixture.nativeElement.textContent ?? '';
 
     expect(text).toContain('Trajets publiés');
-    expect(text).toContain('Demandes reçues');
+    expect(text).toContain('Demandes envoyées');
     expect(text).not.toContain('Mes trajets');
     expect(text).not.toContain('Mes demandes');
   });
