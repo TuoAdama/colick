@@ -21,6 +21,7 @@ import com.colick.backoffice.trip.service.BookingValidationService;
 import com.colick.backoffice.trip.service.TravelerRatingSummary;
 import com.colick.backoffice.trip.service.TravelerReviewService;
 import com.colick.backoffice.trip.service.TripServiceImpl;
+import com.colick.backoffice.tripalert.service.TripAlertService;
 import com.colick.backoffice.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,6 +73,9 @@ class TripServiceImplTest {
 
     @Mock
     private FileStorageService fileStorageService;
+
+    @Mock
+    private TripAlertService tripAlertService;
 
     @Spy
     private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
@@ -142,6 +146,7 @@ class TripServiceImplTest {
         assertThat(response.getDepartureAddress()).isEqualTo("Paris");
         assertThat(response.getDestination()).isEqualTo("Abidjan");
         verify(tripRepository).save(any(Trip.class));
+        verify(tripAlertService).notifyMatchingAlerts(sampleTrip);
     }
 
     @Test

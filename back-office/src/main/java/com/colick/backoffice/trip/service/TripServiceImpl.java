@@ -16,6 +16,7 @@ import com.colick.backoffice.trip.entity.Trip;
 import com.colick.backoffice.trip.entity.TripBooking;
 import com.colick.backoffice.trip.repository.TripBookingRepository;
 import com.colick.backoffice.trip.repository.TripRepository;
+import com.colick.backoffice.tripalert.service.TripAlertService;
 import com.colick.backoffice.user.entity.User;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,7 @@ public class TripServiceImpl implements TripService {
     private final TravelerReviewService travelerReviewService;
     private final LocalizedMessages localizedMessages;
     private final FileStorageService fileStorageService;
+    private final TripAlertService tripAlertService;
 
     public TripServiceImpl(TripRepository tripRepository,
                            TripBookingRepository bookingRepository,
@@ -50,7 +52,8 @@ public class TripServiceImpl implements TripService {
                             BookingValidationService bookingValidationService,
                             TravelerReviewService travelerReviewService,
                             LocalizedMessages localizedMessages,
-                            FileStorageService fileStorageService) {
+                            FileStorageService fileStorageService,
+                            TripAlertService tripAlertService) {
         this.tripRepository = tripRepository;
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
@@ -59,6 +62,7 @@ public class TripServiceImpl implements TripService {
         this.travelerReviewService = travelerReviewService;
         this.localizedMessages = localizedMessages;
         this.fileStorageService = fileStorageService;
+        this.tripAlertService = tripAlertService;
     }
 
     @Override
@@ -73,7 +77,9 @@ public class TripServiceImpl implements TripService {
                 .pricePerKilo(request.getPricePerKilo())
                 .instantAcceptance(request.isInstantAcceptance())
                 .build();
-        return toTripResponse(tripRepository.save(trip), null, Map.of());
+        Trip savedTrip = tripRepository.save(trip);
+        tripAlertService.notifyMatchingAlerts(savedTrip);
+        return toTripResponse(savedTrip, null, Map.of());
     }
 
     @Override

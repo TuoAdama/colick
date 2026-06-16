@@ -263,15 +263,36 @@
                 <button
                   type="button"
                   aria-label="M'alerter dès qu'un trajet arrive"
-                  class="inline-flex min-h-[56px] w-full cursor-default items-center justify-center gap-3 rounded-lg bg-accent px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(251,133,0,0.28)] sm:w-auto sm:min-w-[320px] sm:text-base"
+                  class="inline-flex min-h-[56px] w-full items-center justify-center gap-3 rounded-lg bg-accent px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(251,133,0,0.28)] transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[320px] sm:text-base"
+                  [disabled]="isCreatingAlert"
+                  (click)="createAlertForCurrentSearch()"
                 >
-                  <svg class="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M18 8.5A6 6 0 0 0 6 8.5c0 7-3 7-3 9h18c0-2-3-2-3-9Z" fill="currentColor" />
-                    <path d="M14.2 20a2.4 2.4 0 0 1-4.4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                  </svg>
-                  <span>M'alerter dès qu'un trajet arrive</span>
+                  @if (isCreatingAlert) {
+                    <svg class="h-6 w-6 shrink-0 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    <span>Creation...</span>
+                  } @else {
+                    <svg class="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M18 8.5A6 6 0 0 0 6 8.5c0 7-3 7-3 9h18c0-2-3-2-3-9Z" fill="currentColor" />
+                      <path d="M14.2 20a2.4 2.4 0 0 1-4.4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    <span>M'alerter dès qu'un trajet arrive</span>
+                  }
                 </button>
               </div>
+
+              @if (alertSuccessMessage) {
+                <p class="mt-4 rounded-lg bg-success/10 px-4 py-3 text-sm font-semibold text-success" role="status">
+                  {{ alertSuccessMessage }}
+                </p>
+              }
+              @if (alertErrorMessage) {
+                <p class="mt-4 rounded-lg bg-error/10 px-4 py-3 text-sm font-semibold text-error" role="alert">
+                  {{ alertErrorMessage }}
+                </p>
+              }
             </div>
           </div>
         }
