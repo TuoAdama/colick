@@ -7,6 +7,7 @@ import { AutocompleteComponent } from '../../shared/components/autocomplete/auto
 import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
 import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
 import { TripSearchCriteria, TripSearchSort, TripService } from '../../services/trip.service';
+import { TripAlertService } from '../../services/trip-alert.service';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 import { Location } from '../../models/location.model';
@@ -27,6 +28,7 @@ import { UserResponse } from '../../models/auth.model';
 })
 export class SearchPageComponent implements OnInit, OnDestroy {
   private readonly tripService = inject(TripService);
+  private readonly tripAlertService = inject(TripAlertService);
   private readonly authService = inject(AuthService);
   private readonly messagingService = inject(MessagingService);
   private readonly router = inject(Router);
@@ -71,6 +73,11 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
   /** Success toast message after booking creation */
   bookingSuccessMessage = '';
+
+  /** Alert creation state for no-result searches */
+  isCreatingAlert = false;
+  alertSuccessMessage = '';
+  alertErrorMessage = '';
 
   /** Whether the mobile filters accordion is open */
   areMobileFiltersOpen = false;
@@ -360,6 +367,49 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: (conversation) => this.router.navigate(['/messages'], { queryParams: { conversationId: conversation.id } }),
       error: () => { this.errorMessage = 'Impossible de demarrer la conversation.'; },
+    });
+  }
+
+  createAlertForCurrentSearch(): void {
+    if (!this.departure?.name || !this.destination?.name || this.isCreatingAlert) {
+      return;
+    }
+    if (!this.authService.isLoggedIn()) {
+      void this.router.navigate(['/login']);
+      return;
+    }
+
+    const criteria = this.buildCriteria(
+      this.departure.name,
+      this.destination.name,
+      this.selectedDate,
+      this.sort,
+      this.minPrice,
+      this.maxPrice
+    );
+
+    this.isCreatingAlert = true;
+    this.alertSuccessMessage = '';
+    this.alertErrorMessage = '';
+
+    this.tripAlertService.createAlert({
+      departure: criteria.departure ?? '',
+      destination: criteria.destination ?? '',
+      date: criteria.date,
+      sort: criteria.sort,
+      minPrice: criteria.minPrice,
+      maxPrice: criteria.maxPrice,
+    }).subscribe({
+      next: (alert) => {
+        this.alertSuccessMessage = alert.alreadyExists
+          ? 'Cette alerte est deja active dans votre espace.'
+          : "Alerte activee. Vous serez informe des qu'un trajet correspondant sera disponible.";
+        this.isCreatingAlert = false;
+      },
+      error: () => {
+        this.alertErrorMessage = "Impossible de creer l'alerte pour le moment.";
+        this.isCreatingAlert = false;
+      },
     });
   }
 

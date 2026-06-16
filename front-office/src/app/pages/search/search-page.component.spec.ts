@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { SearchPageComponent } from './search-page.component';
 import { TripService } from '../../services/trip.service';
+import { TripAlertService } from '../../services/trip-alert.service';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 import { LocationService } from '../../services/location.service';
@@ -35,6 +36,10 @@ describe('SearchPageComponent', () => {
     createConversationDraft: jasmine.createSpy('createConversationDraft').and.returnValue(of({ id: 1 })),
   };
 
+  const tripAlertServiceMock = {
+    createAlert: jasmine.createSpy('createAlert').and.returnValue(of({ id: 1 })),
+  };
+
   const locationServiceMock = {
     searchLocations: jasmine.createSpy('searchLocations').and.returnValue(of([])),
   };
@@ -55,6 +60,7 @@ describe('SearchPageComponent', () => {
           useValue: routeMock,
         },
         { provide: TripService, useValue: tripServiceMock },
+        { provide: TripAlertService, useValue: tripAlertServiceMock },
         { provide: AuthService, useValue: authServiceMock },
         { provide: MessagingService, useValue: messagingServiceMock },
         { provide: LocationService, useValue: locationServiceMock },
@@ -68,6 +74,10 @@ describe('SearchPageComponent', () => {
     spyOn(router, 'navigate').and.resolveTo(true);
     tripServiceMock.searchTrips.calls.reset();
     tripServiceMock.searchTrips.and.returnValue(of([]));
+    tripAlertServiceMock.createAlert.calls.reset();
+    tripAlertServiceMock.createAlert.and.returnValue(of({ id: 1 }));
+    authServiceMock.isLoggedIn.and.returnValue(false);
+    authServiceMock.getUser.and.returnValue(null);
   });
 
   function setQueryParams(params: Record<string, string>): void {
@@ -346,6 +356,62 @@ describe('SearchPageComponent', () => {
     expect(host.textContent).toContain('publiez votre demande');
     expect(publishLink?.getAttribute('href')).toBe('/propose');
     expect(alertButton).not.toBeNull();
+  });
+
+  it('redirects to login when creating an alert while unauthenticated', () => {
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", isoCode: 'CI', type: 'CITY' };
+
+    component.createAlertForCurrentSearch();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/login']);
+    expect(tripAlertServiceMock.createAlert).not.toHaveBeenCalled();
+  });
+
+  it('creates an alert from the current search criteria', () => {
+    authServiceMock.isLoggedIn.and.returnValue(true);
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", isoCode: 'CI', type: 'CITY' };
+    component.selectedDate = '2026-06-20';
+    component.sort = 'departure_asc';
+    component.minPrice = 5;
+    component.maxPrice = 15;
+
+    component.createAlertForCurrentSearch();
+
+    expect(tripAlertServiceMock.createAlert).toHaveBeenCalledOnceWith({
+      departure: 'Paris',
+      destination: 'Abidjan',
+      date: '2026-06-20',
+      sort: 'departure_asc',
+      minPrice: 5,
+      maxPrice: 15,
+    });
+    expect(component.isCreatingAlert).toBeFalse();
+    expect(component.alertSuccessMessage).toContain('Alerte activee');
+  });
+
+  it('shows a dedicated message when the alert already exists', () => {
+    authServiceMock.isLoggedIn.and.returnValue(true);
+    tripAlertServiceMock.createAlert.and.returnValue(of({ id: 1, alreadyExists: true }));
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", isoCode: 'CI', type: 'CITY' };
+
+    component.createAlertForCurrentSearch();
+
+    expect(component.alertSuccessMessage).toContain('deja active');
+  });
+
+  it('shows an error when alert creation fails', () => {
+    authServiceMock.isLoggedIn.and.returnValue(true);
+    tripAlertServiceMock.createAlert.and.returnValue(throwError(() => new Error('failed')));
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
+    component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", isoCode: 'CI', type: 'CITY' };
+
+    component.createAlertForCurrentSearch();
+
+    expect(component.isCreatingAlert).toBeFalse();
+    expect(component.alertErrorMessage).toContain("Impossible de creer l'alerte");
   });
 
   it('renders traveler initials fallback when no photo is available', () => {

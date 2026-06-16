@@ -140,6 +140,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'alerts',
+        loadComponent: () =>
+          import('./pages/alerts/alerts-page.component').then(
+            (m) => m.AlertsPageComponent
+          ),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./pages/settings/settings-page.component').then(

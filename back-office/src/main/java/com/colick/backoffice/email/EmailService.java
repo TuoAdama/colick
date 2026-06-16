@@ -14,6 +14,8 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.util.Locale;
 import java.util.Map;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * Service for sending transactional emails.
@@ -240,6 +242,29 @@ public class EmailService {
                         "departureAddress", departureAddress,
                         "destination", destination,
                         "reviewUrl", reviewUrl,
+                        "supportEmail", supportEmail
+                )
+        );
+    }
+
+    public void sendTripAlertMatchEmail(String to,
+                                        String firstName,
+                                        String departureAddress,
+                                        String destination,
+                                        LocalDateTime departureTime,
+                                        BigDecimal pricePerKilo,
+                                        String searchUrl) {
+        sendTemplateEmail(
+                to,
+                "email.subject.tripAlertMatch",
+                "email/trip-alert-match",
+                Map.of(
+                        "firstName", firstName,
+                        "departureAddress", departureAddress,
+                        "destination", destination,
+                        "departureTime", departureTime,
+                        "pricePerKilo", pricePerKilo,
+                        "searchUrl", searchUrl,
                         "supportEmail", supportEmail
                 )
         );
