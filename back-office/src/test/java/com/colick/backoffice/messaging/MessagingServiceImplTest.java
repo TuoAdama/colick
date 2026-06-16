@@ -8,6 +8,8 @@ import com.colick.backoffice.messaging.entity.Conversation;
 import com.colick.backoffice.messaging.entity.Message;
 import com.colick.backoffice.messaging.repository.ConversationRepository;
 import com.colick.backoffice.messaging.repository.MessageRepository;
+import com.colick.backoffice.parcelrequest.entity.ParcelRequest;
+import com.colick.backoffice.parcelrequest.repository.ParcelRequestRepository;
 import com.colick.backoffice.messaging.service.MessagingServiceImpl;
 import com.colick.backoffice.support.TestLocalizedMessages;
 import com.colick.backoffice.trip.entity.Trip;
@@ -48,6 +50,9 @@ class MessagingServiceImplTest {
     private TripRepository tripRepository;
 
     @Mock
+    private ParcelRequestRepository parcelRequestRepository;
+
+    @Mock
     private UserRepository userRepository;
 
     @Spy
@@ -59,7 +64,9 @@ class MessagingServiceImplTest {
     private User alice;
     private User bob;
     private Trip sampleTrip;
+    private ParcelRequest sampleParcelRequest;
     private Conversation sampleConversation;
+    private Conversation sampleParcelConversation;
 
     @BeforeEach
     void setUp() {
@@ -95,6 +102,28 @@ class MessagingServiceImplTest {
         sampleConversation = Conversation.builder()
                 .id(100L)
                 .trip(sampleTrip)
+                .participant1(alice)
+                .participant2(bob)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        sampleParcelRequest = ParcelRequest.builder()
+                .id(20L)
+                .sender(alice)
+                .departure("Paris")
+                .normalizedDeparture("paris")
+                .destination("Abidjan")
+                .normalizedDestination("abidjan")
+                .packageTitle("Documents")
+                .weight(BigDecimal.ONE)
+                .status(ParcelRequest.ParcelRequestStatus.ACTIVE)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        sampleParcelConversation = Conversation.builder()
+                .id(200L)
+                .parcelRequest(sampleParcelRequest)
                 .participant1(alice)
                 .participant2(bob)
                 .createdAt(LocalDateTime.now())
@@ -142,12 +171,91 @@ class MessagingServiceImplTest {
         assertThat(response.getId()).isEqualTo(100L);
         assertThat(response.getTripId()).isEqualTo(10L);
         assertThat(response.getTripRoute()).isEqualTo("Paris → Abidjan");
+        assertThat(response.getContextType()).isEqualTo("TRIP");
+        assertThat(response.getContextId()).isEqualTo(10L);
+        assertThat(response.getContextRoute()).isEqualTo("Paris → Abidjan");
         assertThat(response.getOtherParticipantId()).isEqualTo(2L);
         assertThat(response.getOtherParticipantName()).isEqualTo("Bob Martin");
         assertThat(response.getLastMessage()).isEqualTo("Hello, I have a parcel to send!");
 
         verify(conversationRepository).save(any(Conversation.class));
         verify(messageRepository).save(any(Message.class));
+    }
+
+    @Test
+    void createConversationDraft_shouldCreateParcelRequestConversation() {
+        CreateConversationDraftRequest request = new CreateConversationDraftRequest();
+        request.setParcelRequestId(20L);
+        request.setRecipientId(2L);
+
+        when(parcelRequestRepository.findById(20L)).thenReturn(Optional.of(sampleParcelRequest));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(bob));
+        when(conversationRepository.findByParcelRequestAndParticipant1AndParticipant2(sampleParcelRequest, alice, bob))
+                .thenReturn(Optional.empty());
+        when(conversationRepository.findByParcelRequestAndParticipant1AndParticipant2(sampleParcelRequest, bob, alice))
+                .thenReturn(Optional.empty());
+        when(conversationRepository.save(any(Conversation.class))).thenReturn(sampleParcelConversation);
+        when(messageRepository.findTopByConversationOrderBySentAtDesc(sampleParcelConversation))
+                .thenReturn(Optional.empty());
+        when(messageRepository.countByConversationAndReadFalseAndSenderNot(sampleParcelConversation, alice))
+                .thenReturn(0L);
+
+        ConversationResponse response = messagingService.createConversationDraft(request, alice);
+
+        assertThat(response.getId()).isEqualTo(200L);
+        assertThat(response.getTripId()).isNull();
+        assertThat(response.getTripRoute()).isNull();
+        assertThat(response.getContextType()).isEqualTo("PARCEL_REQUEST");
+        assertThat(response.getContextId()).isEqualTo(20L);
+        assertThat(response.getContextRoute()).isEqualTo("Paris → Abidjan");
+        verify(conversationRepository).save(argThat(conversation ->
+                conversation.getTrip() == null && conversation.getParcelRequest().equals(sampleParcelRequest)
+        ));
+    }
+
+    @Test
+    void startConversation_shouldSendMessageForParcelRequestConversation() {
+        StartConversationRequest request = new StartConversationRequest();
+        request.setParcelRequestId(20L);
+        request.setRecipientId(2L);
+        request.setContent("Bonjour, je voyage bientot.");
+
+        Message savedMessage = Message.builder()
+                .id(20L)
+                .conversation(sampleParcelConversation)
+                .sender(alice)
+                .content("Bonjour, je voyage bientot.")
+                .sentAt(LocalDateTime.now())
+                .read(false)
+                .build();
+
+        when(parcelRequestRepository.findById(20L)).thenReturn(Optional.of(sampleParcelRequest));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(bob));
+        when(conversationRepository.findByParcelRequestAndParticipant1AndParticipant2(sampleParcelRequest, alice, bob))
+                .thenReturn(Optional.of(sampleParcelConversation));
+        when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+        when(messageRepository.findTopByConversationOrderBySentAtDesc(sampleParcelConversation))
+                .thenReturn(Optional.of(savedMessage));
+        when(messageRepository.countByConversationAndReadFalseAndSenderNot(sampleParcelConversation, alice))
+                .thenReturn(0L);
+
+        ConversationResponse response = messagingService.startConversation(request, alice);
+
+        assertThat(response.getId()).isEqualTo(200L);
+        assertThat(response.getContextType()).isEqualTo("PARCEL_REQUEST");
+        assertThat(response.getLastMessage()).isEqualTo("Bonjour, je voyage bientot.");
+        verify(messageRepository).save(any(Message.class));
+    }
+
+    @Test
+    void startConversation_shouldThrowWhenContextIsMissing() {
+        StartConversationRequest request = new StartConversationRequest();
+        request.setRecipientId(2L);
+        request.setContent("Hello");
+
+        assertThatThrownBy(() -> messagingService.startConversation(request, alice))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("context");
     }
 
     @Test

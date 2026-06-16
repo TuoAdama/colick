@@ -133,6 +133,20 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'parcel-requests/new',
+        loadComponent: () =>
+          import('./pages/parcel-request-form/parcel-request-form-page.component').then(
+            (m) => m.ParcelRequestFormPageComponent
+          ),
+      },
+      {
+        path: 'parcel-requests',
+        loadComponent: () =>
+          import('./pages/parcel-requests/parcel-requests-page.component').then(
+            (m) => m.ParcelRequestsPageComponent
+          ),
+      },
+      {
         path: 'messages',
         loadComponent: () =>
           import('./pages/messages/messages-page.component').then(

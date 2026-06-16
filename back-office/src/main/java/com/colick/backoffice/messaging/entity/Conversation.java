@@ -1,6 +1,7 @@
 package com.colick.backoffice.messaging.entity;
 
 import com.colick.backoffice.trip.entity.Trip;
+import com.colick.backoffice.parcelrequest.entity.ParcelRequest;
 import com.colick.backoffice.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,8 +13,10 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "conversations",
-       uniqueConstraints = @UniqueConstraint(
-               columnNames = {"trip_id", "participant1_id", "participant2_id"}))
+       uniqueConstraints = {
+               @UniqueConstraint(columnNames = {"trip_id", "participant1_id", "participant2_id"}),
+               @UniqueConstraint(columnNames = {"parcel_request_id", "participant1_id", "participant2_id"})
+       })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,9 +28,13 @@ public class Conversation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "trip_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trip_id")
     private Trip trip;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parcel_request_id")
+    private ParcelRequest parcelRequest;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "participant1_id", nullable = false)

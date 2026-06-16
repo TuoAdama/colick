@@ -27,6 +27,7 @@ public class PostgresStatusConstraintSynchronizer implements ApplicationRunner {
 
         synchronizeTripStatusConstraint();
         synchronizeTripBookingStatusConstraint();
+        synchronizeConversationContextSchema();
     }
 
     private void synchronizeTripStatusConstraint() {
@@ -42,6 +43,16 @@ public class PostgresStatusConstraintSynchronizer implements ApplicationRunner {
         jdbcTemplate.execute(
                 "ALTER TABLE trip_bookings ADD CONSTRAINT trip_bookings_status_check " +
                         "CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED', 'REMOVED', 'DELIVERED'))"
+        );
+    }
+
+    private void synchronizeConversationContextSchema() {
+        jdbcTemplate.execute("ALTER TABLE conversations ALTER COLUMN trip_id DROP NOT NULL");
+        jdbcTemplate.execute("ALTER TABLE conversations DROP CONSTRAINT IF EXISTS conversations_exactly_one_context_check");
+        jdbcTemplate.execute(
+                "ALTER TABLE conversations ADD CONSTRAINT conversations_exactly_one_context_check " +
+                        "CHECK ((trip_id IS NOT NULL AND parcel_request_id IS NULL) " +
+                        "OR (trip_id IS NULL AND parcel_request_id IS NOT NULL))"
         );
     }
 }

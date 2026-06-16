@@ -1,0 +1,115 @@
+<div class="min-h-screen bg-background-primary pt-20 pb-12">
+  <main class="mx-auto max-w-4xl px-4 sm:px-6">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-primary">Publier une demande de colis</h1>
+      <p class="mt-2 text-sm text-text-secondary">Votre demande sera visible par les voyageurs connectés.</p>
+    </div>
+
+    <form class="rounded-2xl bg-white p-6 shadow-sm" (ngSubmit)="submit()">
+      @if (errorMessage) {
+        <div class="mb-5 rounded-lg border border-error/20 bg-error/10 px-4 py-3 text-sm font-medium text-error" role="alert">
+          {{ errorMessage }}
+        </div>
+      }
+
+      <div class="grid gap-5 md:grid-cols-2">
+        <app-autocomplete
+          label="DÉPART"
+          placeholder="Ville de départ"
+          [initialQuery]="departureQuery"
+          variant="search"
+          icon="M12 21s7-4.438 7-11a7 7 0 10-14 0c0 6.562 7 11 7 11zM12 13a3 3 0 100-6 3 3 0 000 6z"
+          (selected)="onDepartureSelected($event)"
+          (cleared)="departure = null"
+        ></app-autocomplete>
+
+        <app-autocomplete
+          label="DESTINATION"
+          placeholder="Ville de destination"
+          [initialQuery]="destinationQuery"
+          variant="search"
+          icon="M3 11l18-8-8 18-2-8-8-2z"
+          (selected)="onDestinationSelected($event)"
+          (cleared)="destination = null"
+        ></app-autocomplete>
+
+        <label class="flex flex-col gap-2">
+          <span class="text-sm font-semibold text-primary">Date souhaitée</span>
+          <input
+            type="date"
+            [(ngModel)]="desiredDate"
+            name="desiredDate"
+            class="min-h-[48px] rounded-lg border border-border bg-background-primary px-4 text-sm text-primary outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        </label>
+
+        <label class="flex flex-col gap-2">
+          <span class="text-sm font-semibold text-primary">Poids du colis *</span>
+          <input
+            type="number"
+            min="0.1"
+            step="0.1"
+            [(ngModel)]="weight"
+            name="weight"
+            required
+            class="min-h-[48px] rounded-lg border border-border bg-background-primary px-4 text-sm text-primary outline-none focus:ring-2 focus:ring-primary/20"
+            placeholder="Ex. 2.5"
+          />
+        </label>
+      </div>
+
+      <label class="mt-5 flex flex-col gap-2">
+        <span class="text-sm font-semibold text-primary">Titre du colis *</span>
+        <input
+          type="text"
+          [(ngModel)]="packageTitle"
+          name="packageTitle"
+          required
+          class="min-h-[48px] rounded-lg border border-border bg-background-primary px-4 text-sm text-primary outline-none focus:ring-2 focus:ring-primary/20"
+          placeholder="Documents, vêtement, petit appareil..."
+        />
+      </label>
+
+      <label class="mt-5 flex flex-col gap-2">
+        <span class="text-sm font-semibold text-primary">Description</span>
+        <textarea
+          [(ngModel)]="description"
+          name="description"
+          rows="4"
+          class="rounded-lg border border-border bg-background-primary px-4 py-3 text-sm text-primary outline-none focus:ring-2 focus:ring-primary/20"
+          placeholder="Dimensions, fragilité, consignes utiles..."
+        ></textarea>
+      </label>
+
+      <label class="mt-5 flex flex-col gap-2">
+        <span class="text-sm font-semibold text-primary">Photo du colis</span>
+        <input
+          type="file"
+          accept="image/*"
+          class="rounded-lg border border-dashed border-border bg-background-primary px-4 py-3 text-sm text-text-secondary"
+          (change)="onPhotoSelected($event)"
+        />
+        @if (selectedPhotoName) {
+          <span class="text-xs text-text-secondary">{{ selectedPhotoName }}</span>
+        }
+      </label>
+
+      <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          class="inline-flex min-h-[48px] items-center justify-center rounded-lg border border-border px-5 text-sm font-semibold text-primary transition hover:bg-background-primary"
+          (click)="cancel()"
+        >
+          Annuler
+        </button>
+        <button
+          type="submit"
+          class="inline-flex min-h-[48px] items-center justify-center rounded-lg bg-accent px-6 text-sm font-bold text-white transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
+          [disabled]="!isFormValid || isSubmitting"
+        >
+          {{ isSubmitting ? 'Publication...' : 'Publier ma demande' }}
+        </button>
+      </div>
+    </form>
+  </main>
+</div>

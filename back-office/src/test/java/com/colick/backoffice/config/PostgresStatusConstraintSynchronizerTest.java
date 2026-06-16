@@ -49,6 +49,13 @@ class PostgresStatusConstraintSynchronizerTest {
                 "ALTER TABLE trip_bookings ADD CONSTRAINT trip_bookings_status_check " +
                         "CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED', 'REMOVED', 'DELIVERED'))"
         );
+        verify(jdbcTemplate).execute("ALTER TABLE conversations ALTER COLUMN trip_id DROP NOT NULL");
+        verify(jdbcTemplate).execute("ALTER TABLE conversations DROP CONSTRAINT IF EXISTS conversations_exactly_one_context_check");
+        verify(jdbcTemplate).execute(
+                "ALTER TABLE conversations ADD CONSTRAINT conversations_exactly_one_context_check " +
+                        "CHECK ((trip_id IS NOT NULL AND parcel_request_id IS NULL) " +
+                        "OR (trip_id IS NULL AND parcel_request_id IS NOT NULL))"
+        );
         verify(connection).close();
     }
 
