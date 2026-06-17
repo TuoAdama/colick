@@ -32,7 +32,8 @@ interface LandingTripCard {
 interface LandingParcelRequestCard {
   id: number;
   senderId: number;
-  route: string;
+  departure: string;
+  arrival: string;
   title: string;
   weight: string;
   date: string;
@@ -74,6 +75,7 @@ export class LandingPageComponent {
   isDestinationLoading = false;
   isTripsLoading = true;
   isParcelRequestsLoading = false;
+  hasSearchedParcelRequests = false;
   parcelRequestsError = '';
   contactingParcelRequestId: number | null = null;
   activeMode: LandingMode = 'send';
@@ -109,17 +111,14 @@ export class LandingPageComponent {
 
   selectMode(mode: LandingMode): void {
     this.activeMode = mode;
-    if (mode === 'transport' && this.authService.isLoggedIn() && this.parcelRequests.length === 0) {
-      this.loadParcelRequests();
-    }
   }
 
-  viewAllParcelRequests(): void {
+  searchParcelRequests(): void {
     if (!this.authService.isLoggedIn()) {
       void this.router.navigate(['/login']);
       return;
     }
-    void this.router.navigate(['/parcel-requests']);
+    this.loadParcelRequests();
   }
 
   publishTrip(): void {
@@ -286,7 +285,16 @@ export class LandingPageComponent {
   private loadParcelRequests(): void {
     this.isParcelRequestsLoading = true;
     this.parcelRequestsError = '';
-    this.parcelRequestService.getAvailableRequests().subscribe({
+    const departure = this.departure?.name ?? this.departureQuery.trim();
+    const destination = this.destination?.name ?? this.destinationQuery.trim();
+    const date = this.travelDate.trim();
+
+    this.hasSearchedParcelRequests = true;
+    this.parcelRequestService.getAvailableRequests({
+      departure,
+      destination,
+      date,
+    }).subscribe({
       next: (requests) => {
         this.parcelRequests = requests
           .slice(0, 3)
@@ -322,7 +330,8 @@ export class LandingPageComponent {
     return {
       id: request.id,
       senderId: request.senderId,
-      route: `${request.departure} → ${request.destination}`,
+      departure: request.departure,
+      arrival: request.destination,
       title: request.packageTitle,
       weight: `${this.formatWeight(request.weight)}kg`,
       date: request.desiredDate ? this.formatDate(`${request.desiredDate}T00:00:00`) : 'Date flexible',
