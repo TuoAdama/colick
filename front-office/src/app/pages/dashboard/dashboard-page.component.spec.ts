@@ -142,6 +142,24 @@ describe('DashboardPageComponent', () => {
     expect(component.myBookings).toEqual(mockSentBookings);
   });
 
+  it('navigates to sent booking detail when clicking a sent booking row', () => {
+    const sentBookingRow = fixture.nativeElement.querySelector('tbody tr[role="link"]') as HTMLTableRowElement;
+
+    sentBookingRow.click();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/sent-bookings', 20, 200]);
+  });
+
+  it('cancels a sent booking without navigating to its detail', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    const cancelButton = fixture.nativeElement.querySelector('tbody button') as HTMLButtonElement;
+
+    cancelButton.click();
+
+    expect(tripServiceMock.cancelBooking).toHaveBeenCalledWith(20, 200);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
   it('loads my trips on init', () => {
     expect(tripServiceMock.getMyTrips).toHaveBeenCalled();
     expect(component.myTrips).toEqual(mockTrips);

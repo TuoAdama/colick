@@ -182,6 +182,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'sent-bookings/:tripId/:bookingId',
+        loadComponent: () =>
+          import('./pages/sent-booking-detail/sent-booking-detail-page.component').then(
+            (m) => m.SentBookingDetailPageComponent
+          ),
+      },
+      {
         path: 'sent-bookings',
         loadComponent: () =>
           import('./pages/sent-bookings/sent-bookings-page.component').then(

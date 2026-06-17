@@ -102,7 +102,8 @@ export class DashboardPageComponent implements OnInit {
     });
   }
 
-  cancelMyBooking(booking: BookingResponse): void {
+  cancelMyBooking(booking: BookingResponse, event?: Event): void {
+    event?.stopPropagation();
     if (!confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) return;
     this.tripService.cancelBooking(booking.tripId, booking.id).subscribe({
       next: (updated) => {
@@ -157,6 +158,10 @@ export class DashboardPageComponent implements OnInit {
   /** Navigate to the booking detail page */
   navigateToBookingDetail(booking: BookingResponse): void {
     this.router.navigate(['/trips', booking.tripId, 'reservations', booking.id]);
+  }
+
+  navigateToSentBookingDetail(booking: BookingResponse): void {
+    this.router.navigate(['/sent-bookings', booking.tripId, booking.id]);
   }
 
   getInitials(name: string): string {

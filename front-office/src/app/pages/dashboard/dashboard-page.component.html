@@ -138,7 +138,15 @@
                 </thead>
                 <tbody class="divide-y divide-border">
                   @for (booking of myBookings; track booking.id) {
-                    <tr>
+                    <tr
+                      class="cursor-pointer transition-colors hover:bg-background-primary"
+                      tabindex="0"
+                      role="link"
+                      [attr.aria-label]="'Voir le détail de la demande ' + booking.title"
+                      (click)="navigateToSentBookingDetail(booking)"
+                      (keydown.enter)="navigateToSentBookingDetail(booking)"
+                      (keydown.space)="navigateToSentBookingDetail(booking); $event.preventDefault()"
+                    >
                       <td class="py-3">
                         <p class="font-medium text-text-primary">{{ booking.title }}</p>
                         <p class="text-xs text-text-secondary">{{ booking.weight }} kg</p>
@@ -154,7 +162,7 @@
                       </td>
                       <td class="py-3 text-right">
                         @if (booking.status === 'PENDING' || booking.status === 'ACCEPTED') {
-                          <button (click)="cancelMyBooking(booking)" class="text-xs font-semibold text-error hover:underline">
+                          <button (click)="cancelMyBooking(booking, $event)" class="text-xs font-semibold text-error hover:underline">
                             Annuler
                           </button>
                         }
@@ -168,7 +176,15 @@
             <!-- Cards (mobile) -->
             <div class="sm:hidden space-y-3">
               @for (booking of myBookings; track booking.id) {
-                <div class="border border-border rounded-lg p-4">
+                <div
+                  class="border border-border rounded-lg p-4 cursor-pointer transition-colors hover:border-secondary/40"
+                  tabindex="0"
+                  role="link"
+                  [attr.aria-label]="'Voir le détail de la demande ' + booking.title"
+                  (click)="navigateToSentBookingDetail(booking)"
+                  (keydown.enter)="navigateToSentBookingDetail(booking)"
+                  (keydown.space)="navigateToSentBookingDetail(booking); $event.preventDefault()"
+                >
                   <div class="flex items-center justify-between mb-2">
                     <p class="font-medium text-text-primary text-sm">{{ booking.title }}</p>
                     <span [class]="'text-xs font-medium px-2 py-0.5 rounded-full ' + statusClass(booking.status)">
@@ -177,7 +193,7 @@
                   </div>
                   <p class="text-xs text-text-secondary">{{ booking.weight }} kg · {{ booking.recipientContact }}</p>
                   @if (booking.status === 'PENDING' || booking.status === 'ACCEPTED') {
-                    <button (click)="cancelMyBooking(booking)" class="mt-2 text-xs font-semibold text-error hover:underline">
+                    <button (click)="cancelMyBooking(booking, $event)" class="mt-2 text-xs font-semibold text-error hover:underline">
                       Annuler
                     </button>
                   }
