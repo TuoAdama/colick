@@ -155,6 +155,33 @@ describe('ProposeTripPageComponent', () => {
     });
   });
 
+  it('renders a compact centered layout without the hero banner', () => {
+    setRouteId();
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const header = host.querySelector('[data-testid="propose-trip-header"]') as HTMLElement | null;
+    const formRegion = host.querySelector('[data-testid="propose-trip-form-region"]') as HTMLElement | null;
+    const formWrapper = host.querySelector('[data-testid="propose-trip-form-wrapper"]') as HTMLElement | null;
+    const formCard = host.querySelector('[data-testid="propose-trip-form-card"]') as HTMLElement | null;
+
+    expect(host.querySelector('section.hero-gradient')).toBeNull();
+    expect(header).not.toBeNull();
+    expect(header?.textContent).toContain('Proposer un voyage');
+    expect(header?.className).toContain('max-w-2xl');
+    expect(header?.className).not.toContain('rounded-3xl');
+    expect(header?.className).not.toContain('bg-white');
+    expect(host.textContent).toContain('Retour à l\'accueil');
+    expect(host.textContent).not.toContain('Nouveau trajet');
+    expect(formRegion).not.toBeNull();
+    expect(formWrapper).not.toBeNull();
+    expect(formCard).not.toBeNull();
+    expect(formWrapper?.className).toContain('mx-auto');
+    expect(formWrapper?.className).toContain('max-w-3xl');
+    expect(host.textContent).toContain('Ville de départ *');
+    expect(host.textContent).toContain('Destination *');
+  });
+
   it('blocks editing when the loaded trip is not active', () => {
     tripServiceMock.getTripById.and.returnValue(of({
       id: 15,
