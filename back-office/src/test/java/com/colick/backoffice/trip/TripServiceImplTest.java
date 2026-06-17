@@ -356,7 +356,7 @@ class TripServiceImplTest {
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
 
         assertThatThrownBy(() -> tripService.getBookings(10L, sender))
-                .isInstanceOf(AccessDeniedException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
         verify(bookingRepository, never()).findByTrip(any());
     }
 

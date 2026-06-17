@@ -165,7 +165,10 @@ public class TripServiceImpl implements TripService {
     @Transactional(readOnly = true)
     public List<TripBookingResponse> getBookings(Long tripId, User requester) {
         Trip trip = findTripOrThrow(tripId);
-        assertTripOwner(trip, requester);
+        if (!trip.getTraveler().getId().equals(requester.getId())
+                && requester.getRole() != User.Role.ADMIN) {
+            throw new ResourceNotFoundException(localizedMessages.get("error.trip.notFound", tripId));
+        }
         return toTripBookingResponses(bookingRepository.findByTrip(trip).stream()
                 .filter(booking -> booking.getStatus() != TripBooking.BookingStatus.REMOVED)
                 .toList());

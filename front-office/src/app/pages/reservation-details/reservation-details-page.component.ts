@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { BookingResponse } from '../../models/booking.model';
@@ -382,7 +383,12 @@ export class ReservationDetailsPageComponent implements OnInit {
         this.currentPage = 1;
         this.isLoading = false;
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 404) {
+          void this.router.navigate(['/404']);
+          return;
+        }
+
         this.trip = null;
         this.bookings = [];
         this.loadError = 'Impossible de charger les détails de cette réservation.';
