@@ -1,73 +1,26 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ParcelRequest } from '../../models/parcel-request.model';
 import { ParcelRequestService } from '../../services/parcel-request.service';
-import { MessagingService } from '../../services/messaging.service';
-
-type ParcelRequestsTab = 'available' | 'mine';
 
 @Component({
   selector: 'app-parcel-requests-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, RouterLink],
   templateUrl: './parcel-requests-page.component.html',
 })
 export class ParcelRequestsPageComponent implements OnInit {
   private readonly parcelRequestService = inject(ParcelRequestService);
-  private readonly messagingService = inject(MessagingService);
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
 
-  activeTab: ParcelRequestsTab = 'available';
-
-  availableRequests: ParcelRequest[] = [];
   myRequests: ParcelRequest[] = [];
-  isLoadingAvailable = false;
   isLoadingMine = false;
   actionError = '';
-  contactingRequestId: number | null = null;
   closingRequestId: number | null = null;
   cancellingRequestId: number | null = null;
 
-  departureFilter = '';
-  destinationFilter = '';
-  dateFilter = '';
-
   ngOnInit(): void {
-    const tab = this.route.snapshot.queryParamMap.get('tab');
-    this.activeTab = tab === 'mine' ? 'mine' : 'available';
-    this.loadAvailableRequests();
     this.loadMyRequests();
-  }
-
-  setTab(tab: ParcelRequestsTab): void {
-    this.activeTab = tab;
-    void this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { tab },
-      queryParamsHandling: 'merge',
-    });
-  }
-
-  loadAvailableRequests(): void {
-    this.isLoadingAvailable = true;
-    this.actionError = '';
-    this.parcelRequestService.getAvailableRequests({
-      departure: this.departureFilter,
-      destination: this.destinationFilter,
-      date: this.dateFilter,
-    }).subscribe({
-      next: (requests) => {
-        this.availableRequests = requests;
-        this.isLoadingAvailable = false;
-      },
-      error: () => {
-        this.actionError = 'Impossible de charger les demandes disponibles.';
-        this.isLoadingAvailable = false;
-      },
-    });
   }
 
   loadMyRequests(): void {
@@ -85,27 +38,6 @@ export class ParcelRequestsPageComponent implements OnInit {
     });
   }
 
-  contactSender(request: ParcelRequest): void {
-    if (this.contactingRequestId !== null) {
-      return;
-    }
-
-    this.contactingRequestId = request.id;
-    this.actionError = '';
-    this.messagingService.createConversationDraft({
-      parcelRequestId: request.id,
-      recipientId: request.senderId,
-    }).subscribe({
-      next: (conversation) => {
-        void this.router.navigate(['/messages'], { queryParams: { conversationId: conversation.id } });
-      },
-      error: () => {
-        this.actionError = 'Impossible de demarrer la conversation.';
-        this.contactingRequestId = null;
-      },
-    });
-  }
-
   closeRequest(request: ParcelRequest): void {
     if (this.closingRequestId !== null) {
       return;
@@ -116,7 +48,6 @@ export class ParcelRequestsPageComponent implements OnInit {
       next: (updated) => {
         this.myRequests = this.myRequests.map((current) => current.id === updated.id ? updated : current);
         this.closingRequestId = null;
-        this.loadAvailableRequests();
       },
       error: () => {
         this.actionError = 'Impossible de fermer cette demande.';
@@ -141,7 +72,6 @@ export class ParcelRequestsPageComponent implements OnInit {
           current.id === request.id ? { ...current, status: 'CANCELLED' } : current
         );
         this.cancellingRequestId = null;
-        this.loadAvailableRequests();
       },
       error: () => {
         this.actionError = 'Impossible d’annuler cette demande.';
