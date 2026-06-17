@@ -92,9 +92,11 @@ describe('DashboardPageComponent', () => {
       senderName: 'Ada Lovelace',
       title: 'Vêtements',
       weight: 5,
+      description: 'Effets personnels pour le voyage',
       recipientContact: '+33 7 00 00 00 00',
       status: 'PENDING',
       validationCodeActive: false,
+      createdAt: '2025-05-14T09:55:00',
     },
   ];
 
@@ -142,17 +144,26 @@ describe('DashboardPageComponent', () => {
     expect(component.myBookings).toEqual(mockSentBookings);
   });
 
-  it('navigates to sent booking detail when clicking a sent booking row', () => {
-    const sentBookingRow = fixture.nativeElement.querySelector('tbody tr[role="link"]') as HTMLTableRowElement;
+  it('renders sent bookings as cards matching the upcoming trips pattern', () => {
+    const sentBookingCard = fixture.nativeElement.querySelector('article[role="link"]') as HTMLElement;
 
-    sentBookingRow.click();
+    expect(sentBookingCard.textContent).toContain('Vêtements');
+    expect(sentBookingCard.textContent).toContain('5 kg');
+    expect(sentBookingCard.textContent).toContain('+33 7 00 00 00 00');
+    expect(sentBookingCard.textContent).toContain('Mai');
+  });
+
+  it('navigates to sent booking detail when clicking a sent booking card', () => {
+    const sentBookingCard = fixture.nativeElement.querySelector('article[role="link"]') as HTMLElement;
+
+    sentBookingCard.click();
 
     expect(router.navigate).toHaveBeenCalledWith(['/sent-bookings', 20, 200]);
   });
 
   it('cancels a sent booking without navigating to its detail', () => {
     spyOn(window, 'confirm').and.returnValue(true);
-    const cancelButton = fixture.nativeElement.querySelector('tbody button') as HTMLButtonElement;
+    const cancelButton = fixture.nativeElement.querySelector('article[role="link"] button') as HTMLButtonElement;
 
     cancelButton.click();
 
@@ -239,6 +250,10 @@ describe('DashboardPageComponent', () => {
     expect(component.statusLabel('ACCEPTED')).toBe('Acceptée');
     expect(component.statusLabel('REJECTED')).toBe('Refusée');
     expect(component.statusLabel('CANCELLED')).toBe('Annulée');
+  });
+
+  it('formatBookingDate returns a compact date block for createdAt', () => {
+    expect(component.formatBookingDate('2025-05-14T09:55:00')).toEqual({ day: '14', month: 'Mai' });
   });
 
   it('getInitials returns correct initials', () => {

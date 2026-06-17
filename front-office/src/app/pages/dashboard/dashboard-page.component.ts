@@ -175,6 +175,21 @@ export class DashboardPageComponent implements OnInit {
     return { day, month: months[date.getMonth()] };
   }
 
+  formatBookingDate(dateStr?: string): { day: string; month: string } {
+    if (!dateStr) {
+      return { day: '--', month: 'N/A' };
+    }
+
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) {
+      return { day: '--', month: 'N/A' };
+    }
+
+    const day = date.getDate().toString().padStart(2, '0');
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+    return { day, month: months[date.getMonth()] };
+  }
+
   formatTime(dateStr: string): string {
     const date = new Date(dateStr);
     return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
