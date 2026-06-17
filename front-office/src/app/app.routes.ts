@@ -23,6 +23,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'parcel-search',
+    loadComponent: () =>
+      import('./pages/parcel-search/parcel-search-page.component').then(
+        (m) => m.ParcelSearchPageComponent
+      ),
+  },
+  {
     path: 'traveler-review',
     loadComponent: () =>
       import('./pages/review/review-page.component').then(
@@ -130,6 +137,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/propose-trip/propose-trip-page.component').then(
             (m) => m.ProposeTripPageComponent
+          ),
+      },
+      {
+        path: 'parcel-requests/new',
+        loadComponent: () =>
+          import('./pages/parcel-request-form/parcel-request-form-page.component').then(
+            (m) => m.ParcelRequestFormPageComponent
+          ),
+      },
+      {
+        path: 'parcel-requests',
+        loadComponent: () =>
+          import('./pages/parcel-requests/parcel-requests-page.component').then(
+            (m) => m.ParcelRequestsPageComponent
           ),
       },
       {

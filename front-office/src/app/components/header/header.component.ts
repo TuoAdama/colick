@@ -1,12 +1,13 @@
 import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 @Component({ selector: 'app-header', standalone: true, imports: [CommonModule, RouterLink, RouterLinkActive, AsyncPipe], templateUrl: './header.component.html' })
 export class HeaderComponent implements OnInit {
   readonly authService = inject(AuthService);
   readonly messagingService = inject(MessagingService);
+  private readonly router = inject(Router);
   isMobileMenuOpen = false;
   isProfileMenuOpen = false;
   private profilePhotoLoadFailed = false;
@@ -63,5 +64,9 @@ export class HeaderComponent implements OnInit {
     const initials = `${firstInitial}${lastInitial}`.toUpperCase();
     if (initials) return initials;
     return user?.email?.trim().charAt(0).toUpperCase() ?? 'U';
+  }
+
+  isParcelFlowActive(): boolean {
+    return this.router.url.startsWith('/parcel-search') || this.router.url.startsWith('/propose');
   }
 }

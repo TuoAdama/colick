@@ -17,7 +17,7 @@
                 <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">{{ conv.otherParticipantName.charAt(0).toUpperCase() }}</div>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center justify-between mb-1"><span class="font-semibold text-sm text-text-primary truncate">{{ conv.otherParticipantName }}</span>@if (conv.unreadCount > 0) { <span class="bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">{{ conv.unreadCount }}</span> }</div>
-                  <span class="block text-xs text-secondary font-medium truncate mb-0.5">{{ conv.tripRoute }}</span>
+                  <span class="block text-xs text-secondary font-medium truncate mb-0.5">{{ conv.contextRoute || conv.tripRoute }}</span>
                   @if (conv.lastMessage) { <span class="block text-xs text-text-muted truncate">{{ conv.lastMessage }}</span> }
                 </div>
               </button>
@@ -31,7 +31,7 @@
           <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3 bg-white">
             <button type="button" class="md:hidden p-1 text-text-secondary hover:text-primary" (click)="goBack()"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
             <div class="w-9 h-9 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">{{ selectedConversation.otherParticipantName.charAt(0).toUpperCase() }}</div>
-            <div class="min-w-0"><span class="font-semibold text-text-primary text-sm truncate block">{{ selectedConversation.otherParticipantName }}</span><span class="text-xs text-secondary truncate block">{{ selectedConversation.tripRoute }}</span></div>
+            <div class="min-w-0"><span class="font-semibold text-text-primary text-sm truncate block">{{ selectedConversation.otherParticipantName }}</span><span class="text-xs text-secondary truncate block">{{ selectedConversation.contextRoute || selectedConversation.tripRoute }}</span></div>
           </div>
           <div class="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-background-secondary">
             @if (isLoadingMessages) { <div class="flex items-center justify-center py-12"><svg class="animate-spin h-8 w-8 text-secondary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></div> }

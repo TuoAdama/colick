@@ -8,6 +8,8 @@ import com.colick.backoffice.messaging.entity.Conversation;
 import com.colick.backoffice.messaging.entity.Message;
 import com.colick.backoffice.messaging.repository.ConversationRepository;
 import com.colick.backoffice.messaging.repository.MessageRepository;
+import com.colick.backoffice.parcelrequest.entity.ParcelRequest;
+import com.colick.backoffice.parcelrequest.repository.ParcelRequestRepository;
 import com.colick.backoffice.trip.entity.Trip;
 import com.colick.backoffice.trip.repository.TripRepository;
 import com.colick.backoffice.user.entity.User;
@@ -29,27 +31,27 @@ public class MessagingServiceImpl implements MessagingService {
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final TripRepository tripRepository;
+    private final ParcelRequestRepository parcelRequestRepository;
     private final UserRepository userRepository;
     private final LocalizedMessages localizedMessages;
 
     public MessagingServiceImpl(ConversationRepository conversationRepository,
                                 MessageRepository messageRepository,
                                 TripRepository tripRepository,
+                                ParcelRequestRepository parcelRequestRepository,
                                 UserRepository userRepository,
                                 LocalizedMessages localizedMessages) {
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
         this.tripRepository = tripRepository;
+        this.parcelRequestRepository = parcelRequestRepository;
         this.userRepository = userRepository;
         this.localizedMessages = localizedMessages;
     }
 
     @Override
     public ConversationResponse startConversation(StartConversationRequest request, User currentUser) {
-        Trip trip = tripRepository.findById(request.getTripId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        localizedMessages.get("error.trip.notFound", request.getTripId())));
-
+        ConversationContext context = resolveContext(request.getTripId(), request.getParcelRequestId());
         User recipient = userRepository.findById(request.getRecipientId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         localizedMessages.get("error.user.notFound", request.getRecipientId())));
@@ -58,11 +60,11 @@ public class MessagingServiceImpl implements MessagingService {
             throw new BadRequestException(localizedMessages.get("error.messaging.selfConversation"));
         }
 
-        // Look for an existing conversation in both directions
-        Conversation conversation = findExistingConversation(trip, currentUser, recipient)
+        Conversation conversation = findExistingConversation(context, currentUser, recipient)
                 .orElseGet(() -> {
                     Conversation newConv = Conversation.builder()
-                            .trip(trip)
+                            .trip(context.trip())
+                            .parcelRequest(context.parcelRequest())
                             .participant1(currentUser)
                             .participant2(recipient)
                             .build();
@@ -123,10 +125,7 @@ public class MessagingServiceImpl implements MessagingService {
 
     @Override
     public ConversationResponse createConversationDraft(CreateConversationDraftRequest request, User currentUser) {
-        Trip trip = tripRepository.findById(request.getTripId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        localizedMessages.get("error.trip.notFound", request.getTripId())));
-
+        ConversationContext context = resolveContext(request.getTripId(), request.getParcelRequestId());
         User recipient = userRepository.findById(request.getRecipientId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         localizedMessages.get("error.user.notFound", request.getRecipientId())));
@@ -135,10 +134,11 @@ public class MessagingServiceImpl implements MessagingService {
             throw new BadRequestException(localizedMessages.get("error.messaging.selfConversation"));
         }
 
-        Conversation conversation = findExistingConversation(trip, currentUser, recipient)
+        Conversation conversation = findExistingConversation(context, currentUser, recipient)
                 .orElseGet(() -> {
                     Conversation newConv = Conversation.builder()
-                            .trip(trip)
+                            .trip(context.trip())
+                            .parcelRequest(context.parcelRequest())
                             .participant1(currentUser)
                             .participant2(recipient)
                             .build();
@@ -154,9 +154,13 @@ public class MessagingServiceImpl implements MessagingService {
      * Finds an existing conversation for a trip between two users,
      * checking both orderings of participant1/participant2.
      */
-    private Optional<Conversation> findExistingConversation(Trip trip, User userA, User userB) {
-        return conversationRepository.findByTripAndParticipant1AndParticipant2(trip, userA, userB)
-                .or(() -> conversationRepository.findByTripAndParticipant1AndParticipant2(trip, userB, userA));
+    private Optional<Conversation> findExistingConversation(ConversationContext context, User userA, User userB) {
+        if (context.trip() != null) {
+            return conversationRepository.findByTripAndParticipant1AndParticipant2(context.trip(), userA, userB)
+                    .or(() -> conversationRepository.findByTripAndParticipant1AndParticipant2(context.trip(), userB, userA));
+        }
+        return conversationRepository.findByParcelRequestAndParticipant1AndParticipant2(context.parcelRequest(), userA, userB)
+                .or(() -> conversationRepository.findByParcelRequestAndParticipant1AndParticipant2(context.parcelRequest(), userB, userA));
     }
 
     private Conversation findConversationOrThrow(Long id) {
@@ -195,17 +199,68 @@ public class MessagingServiceImpl implements MessagingService {
         long unreadCount = messageRepository
                 .countByConversationAndReadFalseAndSenderNot(conversation, currentUser);
 
-        Trip trip = conversation.getTrip();
+        ConversationContext context = resolveContext(conversation);
 
         return ConversationResponse.builder()
                 .id(conversation.getId())
-                .tripId(trip.getId())
-                .tripRoute(trip.getDepartureAddress() + " → " + trip.getDestination())
+                .tripId(context.trip() != null ? context.trip().getId() : null)
+                .tripRoute(context.trip() != null ? context.route() : null)
+                .contextType(context.type())
+                .contextId(context.id())
+                .contextRoute(context.route())
                 .otherParticipantId(otherParticipant.getId())
                 .otherParticipantName(otherParticipant.getFirstName() + " " + otherParticipant.getLastName())
                 .lastMessage(lastMessageContent)
                 .unreadCount(unreadCount)
                 .createdAt(conversation.getCreatedAt())
                 .build();
+    }
+
+    private ConversationContext resolveContext(Long tripId, Long parcelRequestId) {
+        if ((tripId == null) == (parcelRequestId == null)) {
+            throw new BadRequestException(localizedMessages.get("error.messaging.invalidContext"));
+        }
+        if (tripId != null) {
+            Trip trip = tripRepository.findById(tripId)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            localizedMessages.get("error.trip.notFound", tripId)));
+            return ConversationContext.forTrip(trip);
+        }
+        ParcelRequest parcelRequest = parcelRequestRepository.findById(parcelRequestId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        localizedMessages.get("error.parcelRequest.notFound", parcelRequestId)));
+        return ConversationContext.forParcelRequest(parcelRequest);
+    }
+
+    private ConversationContext resolveContext(Conversation conversation) {
+        if (conversation.getTrip() != null) {
+            return ConversationContext.forTrip(conversation.getTrip());
+        }
+        if (conversation.getParcelRequest() != null) {
+            return ConversationContext.forParcelRequest(conversation.getParcelRequest());
+        }
+        throw new BadRequestException(localizedMessages.get("error.messaging.invalidContext"));
+    }
+
+    private record ConversationContext(String type, Long id, String route, Trip trip, ParcelRequest parcelRequest) {
+        static ConversationContext forTrip(Trip trip) {
+            return new ConversationContext(
+                    "TRIP",
+                    trip.getId(),
+                    trip.getDepartureAddress() + " → " + trip.getDestination(),
+                    trip,
+                    null
+            );
+        }
+
+        static ConversationContext forParcelRequest(ParcelRequest parcelRequest) {
+            return new ConversationContext(
+                    "PARCEL_REQUEST",
+                    parcelRequest.getId(),
+                    parcelRequest.getDeparture() + " → " + parcelRequest.getDestination(),
+                    null,
+                    parcelRequest
+            );
+        }
     }
 }

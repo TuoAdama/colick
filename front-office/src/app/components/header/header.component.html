@@ -24,7 +24,15 @@
       >
         Trouver un trajet
       </a>
-      <a routerLink="/propose" class="transition hover:text-secondary">
+      <a
+        routerLink="/propose"
+        class="transition hover:text-secondary"
+        [class.text-primary]="isParcelFlowActive()"
+        [class.underline]="isParcelFlowActive()"
+        [class.decoration-accent]="isParcelFlowActive()"
+        [class.decoration-2]="isParcelFlowActive()"
+        [class.underline-offset-8]="isParcelFlowActive()"
+      >
         Transporter un colis
       </a>
     </div>

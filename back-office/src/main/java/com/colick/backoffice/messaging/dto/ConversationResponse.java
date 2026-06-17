@@ -18,6 +18,11 @@ public class ConversationResponse {
     /** Human-readable route, e.g. "Paris → Abidjan". */
     private String tripRoute;
 
+    /** Conversation context type. Kept separate from trip fields for backward compatibility. */
+    private String contextType;
+    private Long contextId;
+    private String contextRoute;
+
     private Long otherParticipantId;
     private String otherParticipantName;
 

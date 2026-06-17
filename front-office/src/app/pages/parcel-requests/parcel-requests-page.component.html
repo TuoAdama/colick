@@ -1,0 +1,83 @@
+<div class="min-h-screen bg-background-primary pt-20 pb-12">
+  <main class="mx-auto max-w-6xl px-4 sm:px-6">
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-primary">Demandes de colis</h1>
+        <p class="mt-2 text-sm text-text-secondary">Gérez vos publications et mettez à jour le statut de vos demandes.</p>
+      </div>
+      <a
+        routerLink="/parcel-requests/new"
+        class="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-accent px-5 text-sm font-bold text-white transition hover:bg-accent/90"
+      >
+        Publier une demande
+      </a>
+    </div>
+
+    @if (actionError) {
+      <div class="mb-5 rounded-lg border border-error/20 bg-error/10 px-4 py-3 text-sm font-medium text-error" role="alert">
+        {{ actionError }}
+      </div>
+    }
+
+    <section aria-label="Mes publications">
+      @if (isLoadingMine) {
+        <div class="flex justify-center py-12">
+          <div class="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent"></div>
+        </div>
+      } @else if (myRequests.length === 0) {
+        <div class="rounded-xl bg-white px-6 py-12 text-center shadow-sm">
+          <p class="text-sm text-text-secondary">Vous n’avez encore publié aucune demande.</p>
+          <a routerLink="/parcel-requests/new" class="mt-5 inline-flex min-h-[44px] items-center rounded-lg bg-accent px-5 text-sm font-bold text-white">
+            Publier une demande
+          </a>
+        </div>
+      } @else {
+        <div class="grid gap-4">
+          @for (request of myRequests; track request.id) {
+            <article class="rounded-xl border border-border bg-white p-5 shadow-sm">
+              <div class="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <h2 class="text-lg font-bold text-primary">{{ request.departure }} → {{ request.destination }}</h2>
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="statusClass(request.status)">{{ statusLabel(request.status) }}</span>
+                  </div>
+                  <p class="mt-3 text-sm font-semibold text-text-primary">{{ request.packageTitle }} · {{ request.weight }} kg</p>
+                  <div class="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-secondary">
+                    <span>{{ dateLabel(request.desiredDate) }}</span>
+                    @if (createdAtLabel(request.createdAt); as createdAt) {
+                      <span>Publiee le {{ createdAt }}</span>
+                    }
+                  </div>
+                  @if (request.description) {
+                    <p class="mt-3 max-w-3xl text-sm leading-6 text-text-secondary">{{ request.description }}</p>
+                  }
+                </div>
+                @if (request.packagePhotoUrl) {
+                  <img [src]="request.packagePhotoUrl" [alt]="request.packageTitle" class="h-24 w-24 rounded-lg object-cover" />
+                }
+                <div class="flex flex-col gap-2 md:min-w-40">
+                  <button
+                    type="button"
+                    class="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-primary px-4 text-sm font-semibold text-primary transition hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+                    [disabled]="request.status !== 'ACTIVE' || closingRequestId === request.id"
+                    (click)="closeRequest(request)"
+                  >
+                    {{ closingRequestId === request.id ? 'Fermeture...' : 'Marquer trouvée' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-error px-4 text-sm font-semibold text-error transition hover:bg-error/5 disabled:cursor-not-allowed disabled:opacity-50"
+                    [disabled]="request.status !== 'ACTIVE' || cancellingRequestId === request.id"
+                    (click)="cancelRequest(request)"
+                  >
+                    {{ cancellingRequestId === request.id ? 'Annulation...' : 'Annuler' }}
+                  </button>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  </main>
+</div>

@@ -12,122 +12,256 @@
 
     <div class="mx-auto mt-9 max-w-[1140px]">
       <div class="mx-auto mb-5 flex w-fit rounded-full border border-border bg-background-primary p-1 text-xs font-semibold text-text-secondary">
-        <a routerLink="/search" class="rounded-full bg-white px-5 py-2 text-primary shadow-sm">
+        <button
+          type="button"
+          class="rounded-full px-5 py-2 transition"
+          [class.bg-white]="activeMode === 'send'"
+          [class.text-primary]="activeMode === 'send'"
+          [class.shadow-sm]="activeMode === 'send'"
+          [class.hover:text-primary]="activeMode !== 'send'"
+          (click)="selectMode('send')"
+        >
           Envoi de colis
-        </a>
-        <a routerLink="/propose" class="rounded-full px-5 py-2 transition hover:text-primary">
+        </button>
+        <button
+          type="button"
+          class="rounded-full px-5 py-2 transition"
+          [class.bg-white]="activeMode === 'transport'"
+          [class.text-primary]="activeMode === 'transport'"
+          [class.shadow-sm]="activeMode === 'transport'"
+          [class.hover:text-primary]="activeMode !== 'transport'"
+          (click)="selectMode('transport')"
+        >
           Transport de colis
-        </a>
+        </button>
       </div>
 
-      <form
-        class="grid gap-2 rounded-2xl border border-border bg-white p-2.5 shadow-card md:grid-cols-[1fr_1fr_1fr_280px]"
-        (ngSubmit)="searchTrips()"
-      >
-        <label class="group relative flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
-          <span class="material-symbols-outlined text-accent" aria-hidden="true">location_on</span>
-          <span class="min-w-0 flex-1">
-            <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Depart</span>
-            <input
-              name="departure"
-              type="text"
-              [(ngModel)]="departureQuery"
-              (input)="onDepartureInput()"
-              (focus)="showAutocomplete('departure')"
-              (blur)="closeAutocompleteSoon()"
-              class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary placeholder-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
-              placeholder="Ville de depart"
-              autocomplete="off"
-              role="combobox"
-              [attr.aria-expanded]="activeAutocomplete === 'departure'"
-              aria-autocomplete="list"
-            />
-          </span>
-          @if (isDepartureLoading) {
-            <span class="material-symbols-outlined animate-spin text-base text-accent" aria-hidden="true">progress_activity</span>
-          }
-          @if (activeAutocomplete === 'departure' && departureSuggestions.length > 0) {
-            <ul class="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 max-h-64 overflow-y-auto rounded-xl border border-border bg-white py-2 shadow-card" role="listbox">
-              @for (location of departureSuggestions; track location.id) {
-                <li>
-                  <button
-                    type="button"
-                    class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-accent/10"
-                    (mousedown)="selectLocation('departure', location)"
-                    role="option"
-                  >
-                    <span class="material-symbols-outlined text-base text-accent" aria-hidden="true">location_on</span>
-                    <span>
-                      <span class="block text-sm font-semibold text-primary">{{ location.name }}</span>
-                      <span class="block text-xs text-text-secondary">{{ location.country }}</span>
-                    </span>
-                  </button>
-                </li>
-              }
-            </ul>
-          }
-        </label>
-        <label class="group relative flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
-          <span class="material-symbols-outlined text-accent" aria-hidden="true">near_me</span>
-          <span class="min-w-0 flex-1">
-            <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Destination</span>
-            <input
-              name="destination"
-              type="text"
-              [(ngModel)]="destinationQuery"
-              (input)="onDestinationInput()"
-              (focus)="showAutocomplete('destination')"
-              (blur)="closeAutocompleteSoon()"
-              class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary placeholder-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
-              placeholder="Ou allez-vous ?"
-              autocomplete="off"
-              role="combobox"
-              [attr.aria-expanded]="activeAutocomplete === 'destination'"
-              aria-autocomplete="list"
-            />
-          </span>
-          @if (isDestinationLoading) {
-            <span class="material-symbols-outlined animate-spin text-base text-accent" aria-hidden="true">progress_activity</span>
-          }
-          @if (activeAutocomplete === 'destination' && destinationSuggestions.length > 0) {
-            <ul class="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 max-h-64 overflow-y-auto rounded-xl border border-border bg-white py-2 shadow-card" role="listbox">
-              @for (location of destinationSuggestions; track location.id) {
-                <li>
-                  <button
-                    type="button"
-                    class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-accent/10"
-                    (mousedown)="selectLocation('destination', location)"
-                    role="option"
-                  >
-                    <span class="material-symbols-outlined text-base text-accent" aria-hidden="true">near_me</span>
-                    <span>
-                      <span class="block text-sm font-semibold text-primary">{{ location.name }}</span>
-                      <span class="block text-xs text-text-secondary">{{ location.country }}</span>
-                    </span>
-                  </button>
-                </li>
-              }
-            </ul>
-          }
-        </label>
-        <label class="group flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
-          <span class="material-symbols-outlined text-primary" aria-hidden="true">calendar_today</span>
-          <span>
-            <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Date</span>
-            <input
-              name="travelDate"
-              type="date"
-              [(ngModel)]="travelDate"
-              class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
-              aria-label="Date du trajet"
-            />
-          </span>
-        </label>
-        <button type="submit" class="inline-flex min-h-[68px] items-center justify-center gap-3 rounded-xl bg-primary px-7 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-accent">
-          Trouver un voyageur
-          <span class="material-symbols-outlined text-lg" aria-hidden="true">rocket_launch</span>
-        </button>
-      </form>
+      @if (activeMode === 'send') {
+        <form
+          class="grid gap-2 rounded-2xl border border-border bg-white p-2.5 shadow-card md:grid-cols-[1fr_1fr_1fr_280px]"
+          (ngSubmit)="searchTrips()"
+        >
+          <label class="group relative flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
+            <span class="material-symbols-outlined text-accent" aria-hidden="true">location_on</span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Depart</span>
+              <input
+                name="departure"
+                type="text"
+                [(ngModel)]="departureQuery"
+                (input)="onDepartureInput()"
+                (focus)="showAutocomplete('departure')"
+                (blur)="closeAutocompleteSoon()"
+                class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary placeholder-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
+                placeholder="Ville de depart"
+                autocomplete="off"
+                role="combobox"
+                [attr.aria-expanded]="activeAutocomplete === 'departure'"
+                aria-autocomplete="list"
+              />
+            </span>
+            @if (isDepartureLoading) {
+              <span class="material-symbols-outlined animate-spin text-base text-accent" aria-hidden="true">progress_activity</span>
+            }
+            @if (activeAutocomplete === 'departure' && departureSuggestions.length > 0) {
+              <ul class="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 max-h-64 overflow-y-auto rounded-xl border border-border bg-white py-2 shadow-card" role="listbox">
+                @for (location of departureSuggestions; track location.id) {
+                  <li>
+                    <button
+                      type="button"
+                      class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-accent/10"
+                      (mousedown)="selectLocation('departure', location)"
+                      role="option"
+                    >
+                      <span class="material-symbols-outlined text-base text-accent" aria-hidden="true">location_on</span>
+                      <span>
+                        <span class="block text-sm font-semibold text-primary">{{ location.name }}</span>
+                        <span class="block text-xs text-text-secondary">{{ location.country }}</span>
+                      </span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </label>
+          <label class="group relative flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
+            <span class="material-symbols-outlined text-accent" aria-hidden="true">near_me</span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Destination</span>
+              <input
+                name="destination"
+                type="text"
+                [(ngModel)]="destinationQuery"
+                (input)="onDestinationInput()"
+                (focus)="showAutocomplete('destination')"
+                (blur)="closeAutocompleteSoon()"
+                class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary placeholder-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
+                placeholder="Ou allez-vous ?"
+                autocomplete="off"
+                role="combobox"
+                [attr.aria-expanded]="activeAutocomplete === 'destination'"
+                aria-autocomplete="list"
+              />
+            </span>
+            @if (isDestinationLoading) {
+              <span class="material-symbols-outlined animate-spin text-base text-accent" aria-hidden="true">progress_activity</span>
+            }
+            @if (activeAutocomplete === 'destination' && destinationSuggestions.length > 0) {
+              <ul class="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 max-h-64 overflow-y-auto rounded-xl border border-border bg-white py-2 shadow-card" role="listbox">
+                @for (location of destinationSuggestions; track location.id) {
+                  <li>
+                    <button
+                      type="button"
+                      class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-accent/10"
+                      (mousedown)="selectLocation('destination', location)"
+                      role="option"
+                    >
+                      <span class="material-symbols-outlined text-base text-accent" aria-hidden="true">near_me</span>
+                      <span>
+                        <span class="block text-sm font-semibold text-primary">{{ location.name }}</span>
+                        <span class="block text-xs text-text-secondary">{{ location.country }}</span>
+                      </span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </label>
+          <label class="group flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
+            <span class="material-symbols-outlined text-primary" aria-hidden="true">calendar_today</span>
+            <span>
+              <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Date</span>
+              <input
+                name="travelDate"
+                type="date"
+                [(ngModel)]="travelDate"
+                class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
+                aria-label="Date du trajet"
+              />
+            </span>
+          </label>
+          <button type="submit" class="inline-flex min-h-[68px] items-center justify-center gap-3 rounded-xl bg-primary px-7 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-accent">
+            Trouver un voyageur
+            <span class="material-symbols-outlined text-lg" aria-hidden="true">rocket_launch</span>
+          </button>
+        </form>
+      } @else {
+        <form
+          class="grid gap-2 rounded-2xl border border-border bg-white p-2.5 shadow-card md:grid-cols-[1fr_1fr_1fr_280px]"
+          (ngSubmit)="searchParcelRequests()"
+        >
+          <label class="group relative flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
+            <span class="material-symbols-outlined text-accent" aria-hidden="true">location_on</span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Depart</span>
+              <input
+                name="transportDeparture"
+                type="text"
+                [(ngModel)]="departureQuery"
+                (input)="onDepartureInput()"
+                (focus)="showAutocomplete('departure')"
+                (blur)="closeAutocompleteSoon()"
+                class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary placeholder-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
+                placeholder="Ville de depart"
+                autocomplete="off"
+                role="combobox"
+                [attr.aria-expanded]="activeAutocomplete === 'departure'"
+                aria-autocomplete="list"
+              />
+            </span>
+            @if (isDepartureLoading) {
+              <span class="material-symbols-outlined animate-spin text-base text-accent" aria-hidden="true">progress_activity</span>
+            }
+            @if (activeAutocomplete === 'departure' && departureSuggestions.length > 0) {
+              <ul class="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 max-h-64 overflow-y-auto rounded-xl border border-border bg-white py-2 shadow-card" role="listbox">
+                @for (location of departureSuggestions; track location.id) {
+                  <li>
+                    <button
+                      type="button"
+                      class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-accent/10"
+                      (mousedown)="selectLocation('departure', location)"
+                      role="option"
+                    >
+                      <span class="material-symbols-outlined text-base text-accent" aria-hidden="true">location_on</span>
+                      <span>
+                        <span class="block text-sm font-semibold text-primary">{{ location.name }}</span>
+                        <span class="block text-xs text-text-secondary">{{ location.country }}</span>
+                      </span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </label>
+          <label class="group relative flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
+            <span class="material-symbols-outlined text-accent" aria-hidden="true">near_me</span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Destination</span>
+              <input
+                name="transportDestination"
+                type="text"
+                [(ngModel)]="destinationQuery"
+                (input)="onDestinationInput()"
+                (focus)="showAutocomplete('destination')"
+                (blur)="closeAutocompleteSoon()"
+                class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary placeholder-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
+                placeholder="Ou allez-vous ?"
+                autocomplete="off"
+                role="combobox"
+                [attr.aria-expanded]="activeAutocomplete === 'destination'"
+                aria-autocomplete="list"
+              />
+            </span>
+            @if (isDestinationLoading) {
+              <span class="material-symbols-outlined animate-spin text-base text-accent" aria-hidden="true">progress_activity</span>
+            }
+            @if (activeAutocomplete === 'destination' && destinationSuggestions.length > 0) {
+              <ul class="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 max-h-64 overflow-y-auto rounded-xl border border-border bg-white py-2 shadow-card" role="listbox">
+                @for (location of destinationSuggestions; track location.id) {
+                  <li>
+                    <button
+                      type="button"
+                      class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-accent/10"
+                      (mousedown)="selectLocation('destination', location)"
+                      role="option"
+                    >
+                      <span class="material-symbols-outlined text-base text-accent" aria-hidden="true">near_me</span>
+                      <span>
+                        <span class="block text-sm font-semibold text-primary">{{ location.name }}</span>
+                        <span class="block text-xs text-text-secondary">{{ location.country }}</span>
+                      </span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </label>
+          <label class="group flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
+            <span class="material-symbols-outlined text-primary" aria-hidden="true">event_available</span>
+            <span>
+              <span class="block text-[10px] font-bold uppercase tracking-widest text-text-muted">Date souhaitee</span>
+              <input
+                name="transportDate"
+                type="date"
+                [(ngModel)]="travelDate"
+                class="block w-full border-0 bg-transparent p-0 text-sm text-text-secondary outline-none ring-0 transition group-hover:text-primary focus:text-primary focus:outline-none focus:ring-0"
+                aria-label="Date souhaitée"
+              />
+            </span>
+          </label>
+          <button type="submit" class="inline-flex min-h-[68px] items-center justify-center gap-3 rounded-xl bg-primary px-7 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-accent">
+            Voir les demandes
+            <span class="material-symbols-outlined text-lg" aria-hidden="true">inventory_2</span>
+          </button>
+        </form>
+
+        <div class="mt-5 flex justify-center">
+          <button type="button" class="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl border border-primary px-5 text-sm font-bold text-primary transition hover:bg-primary/5" (click)="publishTrip()">
+            Publier un trajet
+            <span class="material-symbols-outlined text-base" aria-hidden="true">add_circle</span>
+          </button>
+        </div>
+      }
     </div>
 
     <div class="mx-auto mt-12 grid max-w-[900px] gap-8 text-center sm:grid-cols-3">

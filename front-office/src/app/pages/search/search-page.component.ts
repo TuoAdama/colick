@@ -452,4 +452,12 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     }
     return `${this.departure.name} -> ${this.destination.name}`;
   }
+
+  parcelRequestQueryParams(): Record<string, string | null> {
+    return {
+      from: this.departure?.name ?? null,
+      to: this.destination?.name ?? null,
+      date: this.selectedDate || null,
+    };
+  }
 }

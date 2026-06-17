@@ -63,6 +63,8 @@ describe('HeaderComponent', () => {
         provideRouter([
           { path: '', component: TestRouteComponent },
           { path: 'search', component: TestRouteComponent },
+          { path: 'parcel-search', component: TestRouteComponent },
+          { path: 'propose', component: TestRouteComponent },
         ]),
         { provide: AuthService, useValue: authServiceMock },
         { provide: MessagingService, useValue: messagingServiceMock },
@@ -97,6 +99,36 @@ describe('HeaderComponent', () => {
     expect(searchLink).toBeDefined();
     expect(searchLink?.className).toContain('text-primary');
     expect(searchLink?.className).toContain('underline');
+  });
+
+  it('marks parcel navigation as active on the parcel search route', async () => {
+    await router.navigateByUrl('/parcel-search?from=Nantes&to=Yamoussoukro');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const links = Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[];
+    const parcelLink = links.find((link) => (link.textContent ?? '').trim() === 'Transporter un colis');
+    const searchLink = links.find((link) => (link.textContent ?? '').trim() === 'Trouver un trajet');
+
+    expect(parcelLink).toBeDefined();
+    expect(parcelLink?.className).toContain('text-primary');
+    expect(parcelLink?.className).toContain('underline');
+    expect(searchLink?.className).not.toContain('text-primary');
+  });
+
+  it('keeps parcel navigation active on the propose route', async () => {
+    await router.navigateByUrl('/propose');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const links = Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[];
+    const parcelLink = links.find((link) => (link.textContent ?? '').trim() === 'Transporter un colis');
+
+    expect(parcelLink).toBeDefined();
+    expect(parcelLink?.className).toContain('text-primary');
+    expect(parcelLink?.className).toContain('underline');
   });
 
   it('shows authenticated actions when user is authenticated', () => {

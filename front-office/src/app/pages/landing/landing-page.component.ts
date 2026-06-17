@@ -1,14 +1,16 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, Subscription, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 import { Location } from '../../models/location.model';
 import { Trip } from '../../models/trip.model';
+import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
 import { TripService } from '../../services/trip.service';
 
 type AutocompleteField = 'departure' | 'destination';
+type LandingMode = 'send' | 'transport';
 
 interface LandingTripCard {
   id: number;
@@ -35,7 +37,9 @@ interface LandingTripCard {
   templateUrl: './landing-page.component.html',
 })
 export class LandingPageComponent {
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
   private readonly locationService = inject(LocationService);
   private readonly tripService = inject(TripService);
   private readonly departureSearchSubject = new Subject<string>();
@@ -53,9 +57,19 @@ export class LandingPageComponent {
   isDepartureLoading = false;
   isDestinationLoading = false;
   isTripsLoading = true;
+  activeMode: LandingMode = 'send';
   trips: LandingTripCard[] = [];
 
+  get isLoggedIn(): boolean {
+    return this.authService.isLoggedIn();
+  }
+
   ngOnInit(): void {
+    this.subscriptions.add(
+      this.route.queryParamMap.subscribe((params) => {
+        this.activeMode = params.get('mode') === 'transport' ? 'transport' : 'send';
+      })
+    );
     this.setupAutocomplete();
     this.loadTripsFromApproximatePosition();
   }
@@ -76,6 +90,43 @@ export class LandingPageComponent {
         ...(date && { date }),
       },
     });
+  }
+
+  selectMode(mode: LandingMode): void {
+    if (this.activeMode === mode) {
+      return;
+    }
+
+    this.activeMode = mode;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        mode: mode === 'transport' ? 'transport' : null,
+      },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  searchParcelRequests(): void {
+    const from = this.departure?.name ?? this.departureQuery.trim();
+    const to = this.destination?.name ?? this.destinationQuery.trim();
+    const date = this.travelDate.trim();
+
+    void this.router.navigate(['/parcel-search'], {
+      queryParams: {
+        ...(from && { from }),
+        ...(to && { to }),
+        ...(date && { date }),
+      },
+    });
+  }
+
+  publishTrip(): void {
+    if (!this.authService.isLoggedIn()) {
+      void this.router.navigate(['/login']);
+      return;
+    }
+    void this.router.navigate(['/propose']);
   }
 
   onDepartureInput(): void {

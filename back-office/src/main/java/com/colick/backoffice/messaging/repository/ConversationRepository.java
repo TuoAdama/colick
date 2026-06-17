@@ -1,6 +1,7 @@
 package com.colick.backoffice.messaging.repository;
 
 import com.colick.backoffice.messaging.entity.Conversation;
+import com.colick.backoffice.parcelrequest.entity.ParcelRequest;
 import com.colick.backoffice.trip.entity.Trip;
 import com.colick.backoffice.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,6 +25,11 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
      * @return the conversation if it exists
      */
     Optional<Conversation> findByTripAndParticipant1AndParticipant2(Trip trip, User participant1, User participant2);
+
+    Optional<Conversation> findByParcelRequestAndParticipant1AndParticipant2(
+            ParcelRequest parcelRequest,
+            User participant1,
+            User participant2);
 
     /**
      * Finds all conversations where the given user is either participant1 or participant2.
