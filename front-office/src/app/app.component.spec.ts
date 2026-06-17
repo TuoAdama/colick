@@ -46,6 +46,7 @@ describe('AppComponent', () => {
       '/messages',
       '/settings',
       '/sent-bookings',
+      '/sent-bookings/7/7',
     ];
 
     for (const route of dashboardRoutes) {
