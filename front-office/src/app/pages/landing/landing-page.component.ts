@@ -4,12 +4,9 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, Subscription, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 import { Location } from '../../models/location.model';
-import { ParcelRequest } from '../../models/parcel-request.model';
 import { Trip } from '../../models/trip.model';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
-import { MessagingService } from '../../services/messaging.service';
-import { ParcelRequestService } from '../../services/parcel-request.service';
 import { TripService } from '../../services/trip.service';
 
 type AutocompleteField = 'departure' | 'destination';
@@ -29,19 +26,6 @@ interface LandingTripCard {
   avatarTone: string;
 }
 
-interface LandingParcelRequestCard {
-  id: number;
-  senderId: number;
-  departure: string;
-  arrival: string;
-  title: string;
-  weight: string;
-  date: string;
-  sender: string;
-  avatar: string;
-  description: string;
-}
-
 /**
  * LandingPageComponent - Assembles all landing page sections.
  * This is the main entry point for the '/' route.
@@ -57,8 +41,6 @@ export class LandingPageComponent {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly locationService = inject(LocationService);
-  private readonly messagingService = inject(MessagingService);
-  private readonly parcelRequestService = inject(ParcelRequestService);
   private readonly tripService = inject(TripService);
   private readonly departureSearchSubject = new Subject<string>();
   private readonly destinationSearchSubject = new Subject<string>();
@@ -75,13 +57,8 @@ export class LandingPageComponent {
   isDepartureLoading = false;
   isDestinationLoading = false;
   isTripsLoading = true;
-  isParcelRequestsLoading = false;
-  hasSearchedParcelRequests = false;
-  parcelRequestsError = '';
-  contactingParcelRequestId: number | null = null;
   activeMode: LandingMode = 'send';
   trips: LandingTripCard[] = [];
-  parcelRequests: LandingParcelRequestCard[] = [];
 
   get isLoggedIn(): boolean {
     return this.authService.isLoggedIn();
@@ -131,11 +108,17 @@ export class LandingPageComponent {
   }
 
   searchParcelRequests(): void {
-    if (!this.authService.isLoggedIn()) {
-      void this.router.navigate(['/login']);
-      return;
-    }
-    this.loadParcelRequests();
+    const from = this.departure?.name ?? this.departureQuery.trim();
+    const to = this.destination?.name ?? this.destinationQuery.trim();
+    const date = this.travelDate.trim();
+
+    void this.router.navigate(['/parcel-search'], {
+      queryParams: {
+        ...(from && { from }),
+        ...(to && { to }),
+        ...(date && { date }),
+      },
+    });
   }
 
   publishTrip(): void {
@@ -144,31 +127,6 @@ export class LandingPageComponent {
       return;
     }
     void this.router.navigate(['/propose']);
-  }
-
-  contactSender(request: LandingParcelRequestCard): void {
-    if (!this.authService.isLoggedIn()) {
-      void this.router.navigate(['/login']);
-      return;
-    }
-    if (this.contactingParcelRequestId !== null) {
-      return;
-    }
-
-    this.contactingParcelRequestId = request.id;
-    this.parcelRequestsError = '';
-    this.messagingService.createConversationDraft({
-      parcelRequestId: request.id,
-      recipientId: request.senderId,
-    }).subscribe({
-      next: (conversation) => {
-        void this.router.navigate(['/messages'], { queryParams: { conversationId: conversation.id } });
-      },
-      error: () => {
-        this.parcelRequestsError = 'Impossible de demarrer la conversation.';
-        this.contactingParcelRequestId = null;
-      },
-    });
   }
 
   onDepartureInput(): void {
@@ -299,33 +257,6 @@ export class LandingPageComponent {
     });
   }
 
-  private loadParcelRequests(): void {
-    this.isParcelRequestsLoading = true;
-    this.parcelRequestsError = '';
-    const departure = this.departure?.name ?? this.departureQuery.trim();
-    const destination = this.destination?.name ?? this.destinationQuery.trim();
-    const date = this.travelDate.trim();
-
-    this.hasSearchedParcelRequests = true;
-    this.parcelRequestService.getAvailableRequests({
-      departure,
-      destination,
-      date,
-    }).subscribe({
-      next: (requests) => {
-        this.parcelRequests = requests
-          .slice(0, 3)
-          .map((request) => this.toLandingParcelRequestCard(request));
-        this.isParcelRequestsLoading = false;
-      },
-      error: () => {
-        this.parcelRequests = [];
-        this.parcelRequestsError = 'Impossible de charger les demandes de colis.';
-        this.isParcelRequestsLoading = false;
-      },
-    });
-  }
-
   private toLandingTripCard(trip: Trip, index: number): LandingTripCard {
     const avatarTones = ['bg-primary', 'bg-accent', 'bg-secondary'];
     return {
@@ -340,21 +271,6 @@ export class LandingPageComponent {
       capacity: `${this.formatWeight(trip.availableWeight)}kg libres`,
       avatar: this.getInitials(trip.travelerName),
       avatarTone: avatarTones[index % avatarTones.length],
-    };
-  }
-
-  private toLandingParcelRequestCard(request: ParcelRequest): LandingParcelRequestCard {
-    return {
-      id: request.id,
-      senderId: request.senderId,
-      departure: request.departure,
-      arrival: request.destination,
-      title: request.packageTitle,
-      weight: `${this.formatWeight(request.weight)}kg`,
-      date: request.desiredDate ? this.formatDate(`${request.desiredDate}T00:00:00`) : 'Date flexible',
-      sender: request.senderName,
-      avatar: this.getInitials(request.senderName),
-      description: request.description ?? 'Demande de transport disponible pour un voyageur sur cet itineraire.',
     };
   }
 

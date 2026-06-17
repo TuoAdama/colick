@@ -1,10 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
-import { MessagingService } from '../../services/messaging.service';
-import { ParcelRequestService } from '../../services/parcel-request.service';
 import { TripService } from '../../services/trip.service';
 import { LandingPageComponent } from './landing-page.component';
 
@@ -13,33 +11,12 @@ describe('LandingPageComponent', () => {
   let component: LandingPageComponent;
   let router: Router;
 
-  const parcelRequest = {
-    id: 12,
-    senderId: 7,
-    senderName: 'Alice Sender',
-    departure: 'Paris',
-    destination: 'Abidjan',
-    desiredDate: '2026-07-01',
-    packageTitle: 'Documents',
-    weight: 2,
-    description: 'Petit colis fragile',
-    status: 'ACTIVE' as const,
-  };
-
   const authServiceMock = {
     isLoggedIn: jasmine.createSpy('isLoggedIn').and.returnValue(true),
   };
 
   const locationServiceMock = {
     searchLocations: jasmine.createSpy('searchLocations').and.returnValue(of([])),
-  };
-
-  const messagingServiceMock = {
-    createConversationDraft: jasmine.createSpy('createConversationDraft').and.returnValue(of({ id: 99 })),
-  };
-
-  const parcelRequestServiceMock = {
-    getAvailableRequests: jasmine.createSpy('getAvailableRequests').and.returnValue(of([parcelRequest])),
   };
 
   const tripServiceMock = {
@@ -53,8 +30,6 @@ describe('LandingPageComponent', () => {
         provideRouter([]),
         { provide: AuthService, useValue: authServiceMock },
         { provide: LocationService, useValue: locationServiceMock },
-        { provide: MessagingService, useValue: messagingServiceMock },
-        { provide: ParcelRequestService, useValue: parcelRequestServiceMock },
         { provide: TripService, useValue: tripServiceMock },
       ],
     }).compileComponents();
@@ -64,10 +39,6 @@ describe('LandingPageComponent', () => {
     router = TestBed.inject(Router);
     spyOn(router, 'navigate').and.resolveTo(true);
     authServiceMock.isLoggedIn.and.returnValue(true);
-    messagingServiceMock.createConversationDraft.calls.reset();
-    messagingServiceMock.createConversationDraft.and.returnValue(of({ id: 99 }));
-    parcelRequestServiceMock.getAvailableRequests.calls.reset();
-    parcelRequestServiceMock.getAvailableRequests.and.returnValue(of([parcelRequest]));
     tripServiceMock.getLandingFeed.calls.reset();
     tripServiceMock.getLandingFeed.and.returnValue(of([]));
   });
@@ -105,7 +76,7 @@ describe('LandingPageComponent', () => {
     expect(component.activeMode).toBe('transport');
   });
 
-  it('searches parcel requests with departure, destination and date', () => {
+  it('navigates to the dedicated parcel search page with query params', () => {
     fixture.detectChanges();
     component.selectMode('transport');
     component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
@@ -113,61 +84,22 @@ describe('LandingPageComponent', () => {
     component.travelDate = '2026-07-01';
 
     component.searchParcelRequests();
-    fixture.detectChanges();
 
-    expect(parcelRequestServiceMock.getAvailableRequests).toHaveBeenCalledWith({
-      departure: 'Paris',
-      destination: 'Abidjan',
-      date: '2026-07-01',
+    expect(router.navigate).toHaveBeenCalledWith(['/parcel-search'], {
+      queryParams: {
+        from: 'Paris',
+        to: 'Abidjan',
+        date: '2026-07-01',
+      },
     });
-    expect(fixture.nativeElement.textContent).toContain('Demande colis');
-    expect(fixture.nativeElement.textContent).toContain('Documents · 2kg');
   });
 
-  it('opens a conversation from a parcel request result', () => {
+  it('does not render parcel request results on the landing page', () => {
     fixture.detectChanges();
     component.selectMode('transport');
-    component.searchParcelRequests();
-
-    component.contactSender(component.parcelRequests[0]);
-
-    expect(messagingServiceMock.createConversationDraft).toHaveBeenCalledWith({
-      parcelRequestId: 12,
-      recipientId: 7,
-    });
-    expect(router.navigate).toHaveBeenCalledWith(['/messages'], { queryParams: { conversationId: 99 } });
-  });
-
-  it('shows an empty state after a search without results', () => {
-    parcelRequestServiceMock.getAvailableRequests.and.returnValue(of([]));
-    fixture.detectChanges();
-    component.selectMode('transport');
-
-    component.searchParcelRequests();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Aucune demande trouvee.');
-  });
-
-  it('shows an error state when parcel request search fails', () => {
-    parcelRequestServiceMock.getAvailableRequests.and.returnValue(throwError(() => new Error('failed')));
-    fixture.detectChanges();
-    component.selectMode('transport');
-
-    component.searchParcelRequests();
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.textContent).toContain('Impossible de charger les demandes de colis.');
-  });
-
-  it('redirects unauthenticated users to login when searching parcel requests', () => {
-    authServiceMock.isLoggedIn.and.returnValue(false);
-    fixture.detectChanges();
-    component.selectMode('transport');
-
-    component.searchParcelRequests();
-
-    expect(router.navigate).toHaveBeenCalledWith(['/login']);
-    expect(parcelRequestServiceMock.getAvailableRequests).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).not.toContain('Demande colis');
+    expect(fixture.nativeElement.textContent).not.toContain('Aucune demande trouvee.');
   });
 });

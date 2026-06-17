@@ -23,6 +23,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'parcel-search',
+    loadComponent: () =>
+      import('./pages/parcel-search/parcel-search-page.component').then(
+        (m) => m.ParcelSearchPageComponent
+      ),
+  },
+  {
     path: 'traveler-review',
     loadComponent: () =>
       import('./pages/review/review-page.component').then(
