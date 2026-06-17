@@ -15,4 +15,13 @@ describe('app routes', () => {
     expect(childRoute).toBeDefined();
     expect(childRoute?.loadComponent).toBeDefined();
   });
+
+  it('defines a public 404 route and a wildcard redirect', () => {
+    const notFoundRoute = routes.find((currentRoute) => currentRoute.path === '404');
+    const wildcardRoute = routes.find((currentRoute) => currentRoute.path === '**');
+
+    expect(notFoundRoute).toBeDefined();
+    expect(notFoundRoute?.loadComponent).toBeDefined();
+    expect(wildcardRoute).toEqual(jasmine.objectContaining({ redirectTo: '/404' }));
+  });
 });

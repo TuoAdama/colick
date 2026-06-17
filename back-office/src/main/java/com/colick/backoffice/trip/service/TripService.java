@@ -33,6 +33,9 @@ public interface TripService {
     /** Returns all booking requests for a trip. */
     List<TripBookingResponse> getBookings(Long tripId, User requester);
 
+    /** Returns a single booking for a trip when visible to the requester. */
+    TripBookingResponse getBookingById(Long tripId, Long bookingId, User requester);
+
     /** Returns sender profile data for the selected booking. */
     TripBookingSenderProfileResponse getBookingSenderProfile(Long tripId, Long bookingId, User requester);
 

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { BookingResponse } from '../../models/booking.model';
@@ -136,6 +137,16 @@ describe('ReservationDetailsPageComponent', () => {
     createComponent();
 
     expect(fixture.nativeElement.textContent).toContain('Impossible de charger les détails de cette réservation.');
+  });
+
+  it('redirects to 404 when the reservation details request returns not found', () => {
+    tripServiceMock.getTripBookings.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 404 }))
+    );
+
+    createComponent();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/404']);
   });
 
   it('defaults to the pending tab when pending bookings are available', () => {

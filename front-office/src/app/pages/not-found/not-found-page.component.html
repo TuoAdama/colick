@@ -1,0 +1,30 @@
+<main class="min-h-[70vh] bg-background-primary">
+  <div class="mx-auto flex max-w-[960px] flex-col items-center justify-center px-4 py-20 text-center sm:px-6 lg:px-8">
+    <span class="rounded-full border border-border bg-background-secondary px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-text-muted">
+      Erreur 404
+    </span>
+
+    <h1 class="mt-6 text-4xl font-bold tracking-[-0.03em] text-text-primary sm:text-5xl">
+      Cette page est introuvable
+    </h1>
+
+    <p class="mt-4 max-w-xl text-base leading-7 text-text-secondary sm:text-lg">
+      Le contenu que vous cherchez n’existe pas ou vous n’êtes pas autorisé à y accéder.
+    </p>
+
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+      <a
+        routerLink="/dashboard"
+        class="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white transition hover:opacity-90"
+      >
+        Retour au tableau de bord
+      </a>
+      <a
+        routerLink="/"
+        class="inline-flex items-center justify-center rounded-xl border border-border bg-background-secondary px-5 py-3 text-sm font-bold text-text-primary transition hover:text-primary"
+      >
+        Aller à l’accueil
+      </a>
+    </div>
+  </div>
+</main>
