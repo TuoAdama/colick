@@ -131,6 +131,13 @@ export class TripService {
     );
   }
 
+  /** Get a single booking for a specific trip (received reservation detail). */
+  getTripBookingById(tripId: number, bookingId: number): Observable<BookingResponse> {
+    return this.http.get<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}`).pipe(
+      map((booking) => this.normalizeBooking(booking))
+    );
+  }
+
   /** Get sender profile data for a specific booking. */
   getBookingSenderProfile(tripId: number, bookingId: number): Observable<BookingSenderProfileResponse> {
     return this.http.get<BookingSenderProfileResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/sender-profile`).pipe(

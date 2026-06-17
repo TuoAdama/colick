@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { BookingResponse } from '../../models/booking.model';
@@ -17,7 +18,7 @@ describe('ReservationBookingDetailPageComponent', () => {
 
   const tripServiceMock = {
     getTripById: jasmine.createSpy('getTripById'),
-    getTripBookings: jasmine.createSpy('getTripBookings'),
+    getTripBookingById: jasmine.createSpy('getTripBookingById'),
     acceptBooking: jasmine.createSpy('acceptBooking'),
     rejectBooking: jasmine.createSpy('rejectBooking'),
     removeBooking: jasmine.createSpy('removeBooking'),
@@ -44,7 +45,7 @@ describe('ReservationBookingDetailPageComponent', () => {
   beforeEach(async () => {
     tripParamMap$.next(convertToParamMap({ tripId: '12', bookingId: '7' }));
     tripServiceMock.getTripById.calls.reset();
-    tripServiceMock.getTripBookings.calls.reset();
+    tripServiceMock.getTripBookingById.calls.reset();
     tripServiceMock.acceptBooking.calls.reset();
     tripServiceMock.rejectBooking.calls.reset();
     tripServiceMock.removeBooking.calls.reset();
@@ -55,7 +56,7 @@ describe('ReservationBookingDetailPageComponent', () => {
     authServiceMock.logout.calls.reset();
 
     tripServiceMock.getTripById.and.returnValue(of(buildTrip()));
-    tripServiceMock.getTripBookings.and.returnValue(of([buildBooking()]));
+    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking()));
     tripServiceMock.acceptBooking.and.returnValue(of({ ...buildBooking(), status: 'ACCEPTED' }));
     tripServiceMock.rejectBooking.and.returnValue(of({ ...buildBooking(), status: 'REJECTED' }));
     tripServiceMock.removeBooking.and.returnValue(of(void 0));
@@ -133,13 +134,15 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(profileLink?.getAttribute('href')).toContain('/trips/12/reservations/7/profile');
   });
 
-  it('shows an error state when the targeted booking cannot be found', () => {
-    tripServiceMock.getTripBookings.and.returnValue(of([buildBooking({ id: 99 })]));
+  it('redirects to 404 when the targeted booking cannot be found', () => {
+    tripServiceMock.getTripBookingById.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 404 }))
+    );
 
     createComponent();
 
     expect(component.booking).toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Impossible de retrouver cette réservation pour ce trajet.');
+    expect(router.navigate).toHaveBeenCalledWith(['/404']);
   });
 
   it('starts a conversation with the sender and navigates to messages', () => {
@@ -164,12 +167,10 @@ describe('ReservationBookingDetailPageComponent', () => {
   });
 
   it('confirms the booking delivery with the entered code', () => {
-    tripServiceMock.getTripBookings.and.returnValue(of([
-      buildBooking({
-        status: 'ACCEPTED',
-        validationCodeActive: true,
-      }),
-    ]));
+    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking({
+      status: 'ACCEPTED',
+      validationCodeActive: true,
+    })));
 
     createComponent();
     component.deliveryCode = '123456';
@@ -183,11 +184,9 @@ describe('ReservationBookingDetailPageComponent', () => {
   });
 
   it('removes the booking and navigates back to the reservations list', () => {
-    tripServiceMock.getTripBookings.and.returnValue(of([
-      buildBooking({
-        status: 'ACCEPTED',
-      }),
-    ]));
+    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking({
+      status: 'ACCEPTED',
+    })));
 
     createComponent();
     component.openRemoveBookingModal();
@@ -199,7 +198,7 @@ describe('ReservationBookingDetailPageComponent', () => {
 
   it('shows an error state when the booking detail request fails', () => {
     tripServiceMock.getTripById.and.returnValue(throwError(() => new Error('boom')));
-    tripServiceMock.getTripBookings.and.returnValue(throwError(() => new Error('boom')));
+    tripServiceMock.getTripBookingById.and.returnValue(throwError(() => new Error('boom')));
 
     createComponent();
 

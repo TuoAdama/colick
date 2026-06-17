@@ -120,6 +120,16 @@ public class TripController {
         return ResponseEntity.ok(tripService.getBookings(id, currentUser));
     }
 
+    /** Returns a single booking request for a trip. */
+    @GetMapping("/{id}/bookings/{bookingId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TripBookingResponse> getBookingById(
+            @PathVariable Long id,
+            @PathVariable Long bookingId,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(tripService.getBookingById(id, bookingId, currentUser));
+    }
+
     /** Returns the sender profile data associated with a booking. */
     @GetMapping("/{id}/bookings/{bookingId}/sender-profile")
     @PreAuthorize("isAuthenticated()")

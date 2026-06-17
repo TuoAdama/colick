@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { BookingResponse, BookingSenderProfileResponse } from '../../models/booking.model';
@@ -17,7 +18,7 @@ describe('ReservationSenderProfilePageComponent', () => {
 
   const tripServiceMock = {
     getTripById: jasmine.createSpy('getTripById'),
-    getTripBookings: jasmine.createSpy('getTripBookings'),
+    getTripBookingById: jasmine.createSpy('getTripBookingById'),
     getBookingSenderProfile: jasmine.createSpy('getBookingSenderProfile'),
   };
 
@@ -41,7 +42,7 @@ describe('ReservationSenderProfilePageComponent', () => {
   beforeEach(async () => {
     tripParamMap$.next(convertToParamMap({ tripId: '12', bookingId: '7' }));
     tripServiceMock.getTripById.calls.reset();
-    tripServiceMock.getTripBookings.calls.reset();
+    tripServiceMock.getTripBookingById.calls.reset();
     tripServiceMock.getBookingSenderProfile.calls.reset();
     messagingServiceMock.startConversation.calls.reset();
     messagingServiceMock.createConversationDraft.calls.reset();
@@ -49,7 +50,7 @@ describe('ReservationSenderProfilePageComponent', () => {
     authServiceMock.logout.calls.reset();
 
     tripServiceMock.getTripById.and.returnValue(of(buildTrip()));
-    tripServiceMock.getTripBookings.and.returnValue(of([buildBooking()]));
+    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking()));
     tripServiceMock.getBookingSenderProfile.and.returnValue(of(buildSenderProfile()));
     messagingServiceMock.startConversation.and.returnValue(of({
       id: 1,
@@ -122,23 +123,34 @@ describe('ReservationSenderProfilePageComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/messages'], { queryParams: { conversationId: 1 } });
   });
 
-  it('shows an error state when booking cannot be found', () => {
-    tripServiceMock.getTripBookings.and.returnValue(of([buildBooking({ id: 99 })]));
+  it('redirects to 404 when booking cannot be found', () => {
+    tripServiceMock.getTripBookingById.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 404 }))
+    );
 
     createComponent();
 
-    expect(component.booking).toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Impossible de retrouver ce profil pour cette réservation.');
+    expect(router.navigate).toHaveBeenCalledWith(['/404']);
   });
 
   it('shows an error state when profile request fails', () => {
     tripServiceMock.getTripById.and.returnValue(throwError(() => new Error('boom')));
-    tripServiceMock.getTripBookings.and.returnValue(throwError(() => new Error('boom')));
+    tripServiceMock.getTripBookingById.and.returnValue(throwError(() => new Error('boom')));
     tripServiceMock.getBookingSenderProfile.and.returnValue(throwError(() => new Error('boom')));
 
     createComponent();
 
     expect(fixture.nativeElement.textContent).toContain('Impossible de charger ce profil utilisateur.');
+  });
+
+  it('redirects to 404 when the sender profile request fails with 404', () => {
+    tripServiceMock.getBookingSenderProfile.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 404 }))
+    );
+
+    createComponent();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/404']);
   });
 
   it('shows a message when the sender has no reviews', () => {

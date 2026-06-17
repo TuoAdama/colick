@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
@@ -310,18 +311,19 @@ export class ReservationBookingDetailPageComponent implements OnInit {
 
     forkJoin({
       trip: this.tripService.getTripById(tripId),
-      bookings: this.tripService.getTripBookings(tripId),
+      booking: this.tripService.getTripBookingById(tripId, bookingId),
     }).subscribe({
-      next: ({ trip, bookings }) => {
+      next: ({ trip, booking }) => {
         this.trip = trip;
-        this.booking = bookings.find((currentBooking) => currentBooking.id === bookingId) ?? null;
+        this.booking = booking;
         this.isLoading = false;
-
-        if (!this.booking) {
-          this.loadError = 'Impossible de retrouver cette réservation pour ce trajet.';
-        }
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 404) {
+          void this.router.navigate(['/404']);
+          return;
+        }
+
         this.trip = null;
         this.booking = null;
         this.loadError = 'Impossible de charger les détails de cette réservation.';

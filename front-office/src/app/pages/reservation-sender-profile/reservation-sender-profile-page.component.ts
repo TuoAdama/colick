@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import {
@@ -180,20 +181,21 @@ export class ReservationSenderProfilePageComponent implements OnInit {
 
     forkJoin({
       trip: this.tripService.getTripById(tripId),
-      bookings: this.tripService.getTripBookings(tripId),
+      booking: this.tripService.getTripBookingById(tripId, bookingId),
       senderProfile: this.tripService.getBookingSenderProfile(tripId, bookingId),
     }).subscribe({
-      next: ({ trip, bookings, senderProfile }) => {
+      next: ({ trip, booking, senderProfile }) => {
         this.trip = trip;
+        this.booking = booking;
         this.senderProfile = senderProfile;
-        this.booking = bookings.find((currentBooking) => currentBooking.id === bookingId) ?? null;
         this.isLoading = false;
-
-        if (!this.booking) {
-          this.loadError = 'Impossible de retrouver ce profil pour cette réservation.';
-        }
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 404) {
+          void this.router.navigate(['/404']);
+          return;
+        }
+
         this.trip = null;
         this.booking = null;
         this.senderProfile = null;

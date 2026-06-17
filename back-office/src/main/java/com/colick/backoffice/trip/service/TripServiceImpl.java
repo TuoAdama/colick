@@ -173,9 +173,14 @@ public class TripServiceImpl implements TripService {
 
     @Override
     @Transactional(readOnly = true)
+    public TripBookingResponse getBookingById(Long tripId, Long bookingId, User requester) {
+        return toTripBookingResponse(findVisibleBookingOrThrow(tripId, bookingId, requester));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public TripBookingSenderProfileResponse getBookingSenderProfile(Long tripId, Long bookingId, User requester) {
-        TripBooking booking = findBookingOrThrow(tripId, bookingId);
-        assertTripOwner(booking.getTrip(), requester);
+        TripBooking booking = findVisibleBookingOrThrow(tripId, bookingId, requester);
 
         User sender = booking.getSender();
         TravelerRatingSummary summary = travelerReviewService.getTravelerRatingSummaries(Set.of(sender.getId()))
@@ -396,6 +401,21 @@ public class TripServiceImpl implements TripService {
         return bookingRepository.findById(bookingId)
                 .filter(b -> b.getTrip().getId().equals(tripId))
                 .orElseThrow(() -> new ResourceNotFoundException(localizedMessages.get("error.booking.notFound", bookingId)));
+    }
+
+    private TripBooking findVisibleBookingOrThrow(Long tripId, Long bookingId, User requester) {
+        TripBooking booking = findBookingOrThrow(tripId, bookingId);
+
+        if (booking.getStatus() == TripBooking.BookingStatus.REMOVED) {
+            throw new ResourceNotFoundException(localizedMessages.get("error.booking.notFound", bookingId));
+        }
+
+        if (!booking.getTrip().getTraveler().getId().equals(requester.getId())
+                && requester.getRole() != User.Role.ADMIN) {
+            throw new ResourceNotFoundException(localizedMessages.get("error.booking.notFound", bookingId));
+        }
+
+        return booking;
     }
 
     private void assertTripOwner(Trip trip, User requester) {

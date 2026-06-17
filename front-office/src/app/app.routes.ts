@@ -74,6 +74,13 @@ export const routes: Routes = [
         (m) => m.ResetPasswordPageComponent
       ),
   },
+  {
+    path: '404',
+    loadComponent: () =>
+      import('./pages/not-found/not-found-page.component').then(
+        (m) => m.NotFoundPageComponent
+      ),
+  },
   // ── Authenticated pages with dashboard shell layout ──────────────────────
   {
     path: '',
@@ -182,5 +189,9 @@ export const routes: Routes = [
           ),
       },
     ],
+  },
+  {
+    path: '**',
+    redirectTo: '/404',
   },
 ];
