@@ -80,6 +80,9 @@ describe('ParcelSearchPageComponent', () => {
       date: '2026-07-01',
     });
     expect(fixture.nativeElement.textContent).toContain('Demande colis');
+    expect(fixture.nativeElement.textContent).toContain('Depart');
+    expect(fixture.nativeElement.textContent).toContain('Arrivee');
+    expect(fixture.nativeElement.textContent).toContain('01 juil. 2026');
     expect(fixture.nativeElement.textContent).toContain('Documents · 2kg');
   });
 
@@ -140,5 +143,19 @@ describe('ParcelSearchPageComponent', () => {
     createComponent();
 
     expect(fixture.nativeElement.textContent).toContain('Impossible de charger les demandes de colis.');
+  });
+
+  it('renders Date flexible in the same date chip when desiredDate is missing', async () => {
+    parcelRequestServiceMock.getAvailableRequests.and.returnValue(of([
+      {
+        ...parcelRequest,
+        desiredDate: undefined,
+      },
+    ]));
+    await router.navigateByUrl('/parcel-search?from=Paris&to=Abidjan');
+
+    createComponent();
+
+    expect(fixture.nativeElement.textContent).toContain('Date flexible');
   });
 });

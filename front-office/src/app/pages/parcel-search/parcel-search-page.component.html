@@ -135,10 +135,25 @@
                 <span class="h-6 w-28 rounded-full bg-background-primary"></span>
                 <span class="h-10 w-10 rounded-xl bg-background-primary"></span>
               </div>
-              <div class="mt-8 space-y-5">
-                <span class="block h-12 rounded bg-background-primary"></span>
-                <span class="block h-12 rounded bg-background-primary"></span>
-                <span class="block h-12 rounded-xl bg-background-primary"></span>
+              <div class="mt-8">
+                <div class="relative flex items-start gap-4">
+                  <div class="absolute bottom-2 left-1 top-2 flex flex-col items-center">
+                    <span class="z-10 h-2 w-2 rounded-full bg-background-primary"></span>
+                    <span class="-my-1 h-full w-px bg-background-primary"></span>
+                    <span class="z-10 h-2 w-2 rounded-full bg-background-primary"></span>
+                  </div>
+                  <div class="flex w-full flex-col gap-6 pl-8">
+                    <div class="space-y-2">
+                      <span class="block h-3 w-20 rounded-full bg-background-primary"></span>
+                      <span class="block h-8 w-40 rounded-full bg-background-primary"></span>
+                    </div>
+                    <div class="space-y-2">
+                      <span class="block h-3 w-20 rounded-full bg-background-primary"></span>
+                      <span class="block h-8 w-40 rounded-full bg-background-primary"></span>
+                    </div>
+                  </div>
+                </div>
+                <span class="mt-6 block h-11 w-40 rounded-lg bg-background-primary"></span>
               </div>
               <div class="mt-8 border-t border-border pt-5">
                 <span class="block h-10 rounded bg-background-primary"></span>
@@ -176,19 +191,32 @@
                 <span class="material-symbols-outlined rounded-xl bg-background-primary p-2 text-xl text-primary" aria-hidden="true">inventory_2</span>
               </div>
 
+              <div class="mt-8">
+                <div class="relative flex items-start gap-4">
+                  <div class="absolute bottom-2 left-1 top-2 flex flex-col items-center">
+                    <span class="z-10 h-2 w-2 rounded-full border-2 border-text-secondary bg-white"></span>
+                    <span class="-my-1 h-full w-px bg-[#E8E8EC]"></span>
+                    <span class="z-10 h-2 w-2 rounded-full bg-primary"></span>
+                  </div>
+
+                  <div class="flex flex-col gap-6 pl-8">
+                    <div>
+                      <p class="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">Depart</p>
+                      <p class="break-words text-2xl font-bold text-primary">{{ request.departure }}</p>
+                    </div>
+                    <div>
+                      <p class="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">Arrivee</p>
+                      <p class="break-words text-2xl font-bold text-primary">{{ request.destination }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#FAFAFA] px-4 py-2">
+                  <span class="material-symbols-outlined text-base text-text-secondary" aria-hidden="true">calendar_today</span>
+                  <span class="text-sm font-bold text-primary">{{ dateLabel(request.desiredDate) }}</span>
+                </div>
+              </div>
+
               <div class="mt-8 space-y-5">
-                <div>
-                  <p class="text-[10px] font-bold uppercase tracking-widest text-text-muted">Depart</p>
-                  <p class="mt-1 font-display text-lg font-semibold text-primary">{{ request.departure }}</p>
-                </div>
-                <div>
-                  <p class="text-[10px] font-bold uppercase tracking-widest text-text-muted">Destination</p>
-                  <p class="mt-1 font-display text-lg font-semibold text-primary">{{ request.destination }}</p>
-                </div>
-                <div class="flex items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-sm text-text-secondary">
-                  <span class="material-symbols-outlined text-base text-primary" aria-hidden="true">event_available</span>
-                  {{ dateLabel(request.desiredDate) }}
-                </div>
                 <div>
                   <p class="text-sm font-bold text-primary">{{ request.packageTitle }} · {{ formatWeight(request.weight) }}kg</p>
                   <p class="mt-2 line-clamp-2 text-xs leading-5 text-text-secondary">
