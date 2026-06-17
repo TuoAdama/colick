@@ -83,6 +83,28 @@ describe('LandingPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Publier un trajet');
   });
 
+  it('updates the URL query param when switching tabs', () => {
+    fixture.detectChanges();
+
+    component.selectMode('transport');
+
+    expect(router.navigate).toHaveBeenCalledWith([], {
+      relativeTo: jasmine.anything(),
+      queryParams: { mode: 'transport' },
+      queryParamsHandling: 'merge',
+    });
+  });
+
+  it('reads the active tab from the URL query param on init', async () => {
+    await router.navigateByUrl('/?mode=transport');
+
+    fixture = TestBed.createComponent(LandingPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.activeMode).toBe('transport');
+  });
+
   it('searches parcel requests with departure, destination and date', () => {
     fixture.detectChanges();
     component.selectMode('transport');

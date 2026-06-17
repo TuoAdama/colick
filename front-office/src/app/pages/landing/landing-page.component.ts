@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, Subscription, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 import { Location } from '../../models/location.model';
@@ -53,6 +53,7 @@ interface LandingParcelRequestCard {
   templateUrl: './landing-page.component.html',
 })
 export class LandingPageComponent {
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly locationService = inject(LocationService);
@@ -87,6 +88,11 @@ export class LandingPageComponent {
   }
 
   ngOnInit(): void {
+    this.subscriptions.add(
+      this.route.queryParamMap.subscribe((params) => {
+        this.activeMode = params.get('mode') === 'transport' ? 'transport' : 'send';
+      })
+    );
     this.setupAutocomplete();
     this.loadTripsFromApproximatePosition();
   }
@@ -110,7 +116,18 @@ export class LandingPageComponent {
   }
 
   selectMode(mode: LandingMode): void {
+    if (this.activeMode === mode) {
+      return;
+    }
+
     this.activeMode = mode;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        mode: mode === 'transport' ? 'transport' : null,
+      },
+      queryParamsHandling: 'merge',
+    });
   }
 
   searchParcelRequests(): void {
