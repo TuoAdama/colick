@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { TripsManagementPageComponent, TripStatusFilter } from './trips-management-page.component';
 import { TripService } from '../../services/trip.service';
@@ -12,6 +12,9 @@ describe('TripsManagementPageComponent', () => {
   let component: TripsManagementPageComponent;
   let fixture: ComponentFixture<TripsManagementPageComponent>;
   let router: Router;
+  let routeMock: {
+    snapshot: { queryParamMap: ReturnType<typeof convertToParamMap> };
+  };
   let tripServiceSpy: jasmine.SpyObj<TripService>;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
   let shareCardMapperSpy: jasmine.SpyObj<ShareCardMapperService>;
@@ -69,6 +72,10 @@ describe('TripsManagementPageComponent', () => {
   ];
 
   beforeEach(async () => {
+    routeMock = {
+      snapshot: { queryParamMap: convertToParamMap({}) },
+    };
+
     tripServiceSpy = jasmine.createSpyObj('TripService', ['getMyTrips', 'getTripBookings', 'completeTrip']);
     tripServiceSpy.getMyTrips.and.returnValue(of(mockTrips.map((t) => ({ ...t }))));
     tripServiceSpy.getTripBookings.and.returnValue(of([...mockBookings]));
@@ -87,6 +94,7 @@ describe('TripsManagementPageComponent', () => {
       imports: [TripsManagementPageComponent],
       providers: [
         provideRouter([]),
+        { provide: ActivatedRoute, useValue: routeMock },
         { provide: TripService, useValue: tripServiceSpy },
         { provide: AuthService, useValue: authServiceSpy },
         { provide: ShareCardMapperService, useValue: shareCardMapperSpy },
@@ -217,6 +225,37 @@ describe('TripsManagementPageComponent', () => {
   });
 
   describe('Template actions', () => {
+    it('should show a success alert when arriving from trip creation and clean the URL flag', () => {
+      routeMock.snapshot.queryParamMap = convertToParamMap({ created: '1' });
+      const navigateSpy = spyOn(router, 'navigate').and.resolveTo(true);
+
+      fixture = TestBed.createComponent(TripsManagementPageComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      const alert = fixture.nativeElement.querySelector(
+        '[data-testid="trip-created-success-alert"]'
+      ) as HTMLDivElement | null;
+
+      expect(component.creationSuccessMessage).toBe('Votre trajet a été créé avec succès.');
+      expect(alert?.textContent).toContain('Votre trajet a été créé avec succès.');
+      expect(navigateSpy).toHaveBeenCalledWith([], {
+        relativeTo: TestBed.inject(ActivatedRoute),
+        queryParams: { created: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    });
+
+    it('should not show a success alert without the creation flag', () => {
+      const alert = fixture.nativeElement.querySelector(
+        '[data-testid="trip-created-success-alert"]'
+      ) as HTMLDivElement | null;
+
+      expect(component.creationSuccessMessage).toBe('');
+      expect(alert).toBeNull();
+    });
+
     it('should render a dashboard link from the trips page header', () => {
       const dashboardLink = fixture.nativeElement.querySelector(
         '[data-testid="trips-dashboard-link"]'

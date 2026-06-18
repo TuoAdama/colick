@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import * as htmlToImage from 'html-to-image';
@@ -29,6 +29,7 @@ export class TripsManagementPageComponent implements OnInit {
   private readonly shareCardMapperService = inject(ShareCardMapperService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   @ViewChild('shareCardCapture') private shareCardCapture?: ElementRef<HTMLElement>;
 
   // ── Data ──────────────────────────────────────────────────────────────────
@@ -36,6 +37,7 @@ export class TripsManagementPageComponent implements OnInit {
   tripBookingsMap: Record<number, BookingResponse[]> = {};
   isLoading = false;
   loadError = '';
+  creationSuccessMessage = '';
 
   // ── Filters ───────────────────────────────────────────────────────────────
   activeFilter: TripStatusFilter = 'ALL';
@@ -65,7 +67,22 @@ export class TripsManagementPageComponent implements OnInit {
       this.router.navigate(['/login']);
       return;
     }
+    this.consumeCreationSuccessFlag();
     this.loadTrips();
+  }
+
+  private consumeCreationSuccessFlag(): void {
+    if (this.route.snapshot.queryParamMap.get('created') !== '1') {
+      return;
+    }
+
+    this.creationSuccessMessage = 'Votre trajet a été créé avec succès.';
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { created: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   /** Load all trips belonging to the current user along with their bookings. */

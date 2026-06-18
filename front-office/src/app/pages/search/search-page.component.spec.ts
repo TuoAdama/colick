@@ -354,7 +354,7 @@ describe('SearchPageComponent', () => {
     expect(host.textContent).toContain('Aucun trajet trouvé');
     expect(host.textContent).toContain('Créez une alerte');
     expect(host.textContent).toContain('publiez votre demande');
-    expect(publishLink?.getAttribute('href')).toBe('/propose');
+    expect(publishLink?.getAttribute('href')).toBe('/parcel-requests/new?from=Paris&to=Abidjan');
     expect(alertButton).not.toBeNull();
   });
 

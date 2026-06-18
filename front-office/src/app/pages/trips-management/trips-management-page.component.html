@@ -1,5 +1,15 @@
 <div class="min-h-screen bg-bg-primary px-4 pb-12 pt-6 font-sans sm:px-6 md:pt-20">
   <div class="mx-auto max-w-6xl">
+    @if (creationSuccessMessage) {
+      <div
+        class="mb-6 rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm font-medium text-success md:mb-8 md:px-5"
+        role="status"
+        aria-live="polite"
+        data-testid="trip-created-success-alert"
+      >
+        {{ creationSuccessMessage }}
+      </div>
+    }
 
     <!-- ── Section Header ──────────────────────────────────────────────────── -->
     <div class="mb-6 md:mb-8 md:flex md:items-start md:justify-between">

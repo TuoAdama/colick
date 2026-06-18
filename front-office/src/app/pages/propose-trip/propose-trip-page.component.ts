@@ -220,7 +220,7 @@ export class ProposeTripPageComponent implements OnInit {
           this.router.navigate(['/dashboard'], { queryParams: { tab: 'received' } });
           return;
         }
-        this.router.navigate(['/search']);
+        this.router.navigate(['/trips'], { queryParams: { created: '1' } });
       },
       error: (err: unknown) => {
         this.isLoading = false;
