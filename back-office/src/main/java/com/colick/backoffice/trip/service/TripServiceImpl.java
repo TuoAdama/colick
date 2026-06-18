@@ -177,7 +177,7 @@ public class TripServiceImpl implements TripService {
     @Override
     @Transactional(readOnly = true)
     public TripBookingResponse getBookingById(Long tripId, Long bookingId, User requester) {
-        return toTripBookingResponse(findVisibleBookingOrThrow(tripId, bookingId, requester));
+        return toTripBookingResponse(findVisibleBookingOrThrow(tripId, bookingId, requester, true));
     }
 
     @Override
@@ -407,6 +407,10 @@ public class TripServiceImpl implements TripService {
     }
 
     private TripBooking findVisibleBookingOrThrow(Long tripId, Long bookingId, User requester) {
+        return findVisibleBookingOrThrow(tripId, bookingId, requester, false);
+    }
+
+    private TripBooking findVisibleBookingOrThrow(Long tripId, Long bookingId, User requester, boolean allowSender) {
         TripBooking booking = findBookingOrThrow(tripId, bookingId);
 
         if (booking.getStatus() == TripBooking.BookingStatus.REMOVED) {
@@ -414,6 +418,7 @@ public class TripServiceImpl implements TripService {
         }
 
         if (!booking.getTrip().getTraveler().getId().equals(requester.getId())
+                && !(allowSender && booking.getSender().getId().equals(requester.getId()))
                 && requester.getRole() != User.Role.ADMIN) {
             throw new ResourceNotFoundException(localizedMessages.get("error.booking.notFound", bookingId));
         }

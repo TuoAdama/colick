@@ -102,7 +102,8 @@ export class DashboardPageComponent implements OnInit {
     });
   }
 
-  cancelMyBooking(booking: BookingResponse): void {
+  cancelMyBooking(booking: BookingResponse, event?: Event): void {
+    event?.stopPropagation();
     if (!confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) return;
     this.tripService.cancelBooking(booking.tripId, booking.id).subscribe({
       next: (updated) => {
@@ -159,12 +160,31 @@ export class DashboardPageComponent implements OnInit {
     this.router.navigate(['/trips', booking.tripId, 'reservations', booking.id]);
   }
 
+  navigateToSentBookingDetail(booking: BookingResponse): void {
+    this.router.navigate(['/sent-bookings', booking.tripId, booking.id]);
+  }
+
   getInitials(name: string): string {
     return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2);
   }
 
   formatTripDate(dateStr: string): { day: string; month: string } {
     const date = new Date(dateStr);
+    const day = date.getDate().toString().padStart(2, '0');
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+    return { day, month: months[date.getMonth()] };
+  }
+
+  formatBookingDate(dateStr?: string): { day: string; month: string } {
+    if (!dateStr) {
+      return { day: '--', month: 'N/A' };
+    }
+
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) {
+      return { day: '--', month: 'N/A' };
+    }
+
     const day = date.getDate().toString().padStart(2, '0');
     const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
     return { day, month: months[date.getMonth()] };
