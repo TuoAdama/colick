@@ -91,7 +91,7 @@ describe('ProposeTripPageComponent', () => {
     paramMapSubject.next(paramMap);
   }
 
-  it('creates a trip in creation mode and redirects to search', () => {
+  it('creates a trip in creation mode and redirects to trips management with a success flag', () => {
     setRouteId();
     fixture.detectChanges();
 
@@ -114,7 +114,9 @@ describe('ProposeTripPageComponent', () => {
       pricePerKilo: 15,
       instantAcceptance: true,
     });
-    expect(router.navigate).toHaveBeenCalledWith(['/search']);
+    expect(router.navigate).toHaveBeenCalledWith(['/trips'], {
+      queryParams: { created: '1' },
+    });
   });
 
   it('loads an active trip in edit mode, pre-fills the form and updates it', () => {
