@@ -11,12 +11,12 @@
         <a
           routerLink="/dashboard"
           data-testid="trips-dashboard-link"
-          class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-primary shadow-sm transition hover:border-primary/30 hover:bg-primary/5 md:hidden"
+          class="inline-flex shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-2 text-primary shadow-sm transition hover:border-primary/30 hover:bg-primary/5 md:hidden"
+          aria-label="Retour au dashboard"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h8V3H3v10Zm10 8h8V11h-8v10Zm0-18v4h8V3h-8ZM3 21h8v-6H3v6Z" />
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Dashboard
         </a>
       </div>
       <a
@@ -196,7 +196,13 @@
 
           <div class="divide-y divide-gray-100">
             @for (trip of paginatedTrips; track trip.id) {
-              <article class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-5" data-testid="mobile-trip-row">
+              <button
+                type="button"
+                class="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-5 text-left transition hover:bg-bg-secondary active:bg-bg-secondary"
+                data-testid="mobile-trip-row"
+                (click)="viewTripDetails(trip.id)"
+                [attr.aria-label]="'Voir les demandes pour ' + trip.departureAddress + ' vers ' + trip.destination"
+              >
                 <div class="min-w-0">
                   <p class="truncate text-sm font-bold text-primary">{{ trip.departureAddress }} → {{ trip.destination }}</p>
                   <p class="mt-1 text-[0.7rem] font-medium text-text-muted">{{ formatTripDate(trip.departureTime) }}</p>
@@ -204,7 +210,7 @@
                 <span class="inline-flex min-w-12 justify-center rounded-lg bg-bg-secondary px-3 py-1.5 text-[0.7rem] font-bold text-primary">
                   {{ trip.maxWeight }} kg
                 </span>
-              </article>
+              </button>
             }
           </div>
         </div>
