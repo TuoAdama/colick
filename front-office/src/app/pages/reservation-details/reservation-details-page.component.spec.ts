@@ -195,6 +195,39 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.usedWeightPercentage()).toBe(35);
   });
 
+  it('renders mobile trip actions in the summary card', () => {
+    createComponent();
+
+    component.toggleTripSummary();
+    fixture.detectChanges();
+
+    const editLink = fixture.nativeElement.querySelector(
+      'a[aria-label="Modifier le trajet"]'
+    ) as HTMLAnchorElement | null;
+    const deleteButton = fixture.nativeElement.querySelector(
+      'button[aria-label="Supprimer le trajet"]'
+    ) as HTMLButtonElement | null;
+
+    expect(editLink).not.toBeNull();
+    expect(editLink?.getAttribute('href')).toContain('/propose/12');
+    expect(deleteButton).not.toBeNull();
+  });
+
+  it('opens the cancel trip modal from the mobile delete button', () => {
+    createComponent();
+
+    component.toggleTripSummary();
+    fixture.detectChanges();
+
+    const deleteButton = fixture.nativeElement.querySelector(
+      'button[aria-label="Supprimer le trajet"]'
+    ) as HTMLButtonElement;
+
+    deleteButton.click();
+
+    expect(component.isCancelTripModalOpen).toBeTrue();
+  });
+
   it('accepts a booking and updates it in the page state', () => {
     createComponent();
 
