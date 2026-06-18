@@ -71,6 +71,32 @@
                   <p class="mt-1 font-bold text-text-primary">{{ bookings.length }} total</p>
                 </div>
               </div>
+
+              <div class="grid grid-cols-2 gap-3 md:hidden">
+                <a
+                  [routerLink]="['/propose', trip.id]"
+                  class="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/30 bg-background-secondary px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/5"
+                  aria-label="Modifier le trajet"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10.5-10.5a2.121 2.121 0 10-3-3L5 17v3z" />
+                  </svg>
+                  Modifier
+                </a>
+
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-2 rounded-xl border border-error/30 bg-background-secondary px-4 py-2.5 text-sm font-semibold text-error transition hover:bg-error/5"
+                  [disabled]="isCompletingTrip || isCancellingTrip"
+                  (click)="openCancelTripModal()"
+                  aria-label="Supprimer le trajet"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12m-10 0V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m-8 0v12a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V7m-6 0h6" />
+                  </svg>
+                  Supprimer
+                </button>
+              </div>
             </div>
           }
         </div>

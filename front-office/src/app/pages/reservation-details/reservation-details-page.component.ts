@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
@@ -19,6 +19,7 @@ type ReservationStatusTab = 'ALL' | BookingResponse['status'];
     CommonModule,
     BookingRequestCardComponent,
     ConfirmModalComponent,
+    RouterLink,
   ],
   templateUrl: './reservation-details-page.component.html',
 })

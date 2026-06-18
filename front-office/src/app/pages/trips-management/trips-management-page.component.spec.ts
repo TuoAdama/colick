@@ -217,6 +217,40 @@ describe('TripsManagementPageComponent', () => {
   });
 
   describe('Template actions', () => {
+    it('should render a dashboard link from the trips page header', () => {
+      const dashboardLink = fixture.nativeElement.querySelector(
+        '[data-testid="trips-dashboard-link"]'
+      ) as HTMLAnchorElement | null;
+
+      expect(dashboardLink).not.toBeNull();
+      expect(dashboardLink?.getAttribute('href')).toContain('/dashboard');
+      expect(dashboardLink?.getAttribute('aria-label')).toBe('Retour au dashboard');
+    });
+
+    it('should keep the propose trip call to action accessible', () => {
+      const proposeLink = Array.from(
+        fixture.nativeElement.querySelectorAll('a')
+      ).find((link): link is HTMLAnchorElement =>
+        (link as HTMLAnchorElement).textContent?.includes('Proposer un voyage') ?? false
+      );
+
+      expect(proposeLink).toBeDefined();
+      expect(proposeLink?.getAttribute('href')).toContain('/propose');
+    });
+
+    it('should render trips in the compact mobile list with route, date and capacity', () => {
+      const mobileRows = fixture.nativeElement.querySelectorAll(
+        '[data-testid="mobile-trip-row"]'
+      ) as NodeListOf<HTMLButtonElement>;
+
+      expect(mobileRows.length).toBe(5);
+      expect(mobileRows[0].textContent).toContain('Paris');
+      expect(mobileRows[0].textContent).toContain('Lyon');
+      expect(mobileRows[0].textContent).toContain('15 Mars 2024');
+      expect(mobileRows[0].textContent).toContain('20 kg');
+      expect(mobileRows[0].getAttribute('aria-label')).toContain('Voir les demandes');
+    });
+
     it('should render the total booking count badge on the view button', () => {
       const badge = fixture.nativeElement.querySelector(
         'button[aria-label="Voir les demandes"] span'
@@ -246,6 +280,18 @@ describe('TripsManagementPageComponent', () => {
       ) as HTMLButtonElement;
 
       viewButton.click();
+
+      expect(router.navigate).toHaveBeenCalledWith(['/trips', 1, 'reservations']);
+    });
+
+    it('should navigate to trip reservations when clicking a mobile row', () => {
+      spyOn(router, 'navigate').and.resolveTo(true);
+
+      const mobileRow = fixture.nativeElement.querySelector(
+        '[data-testid="mobile-trip-row"]'
+      ) as HTMLButtonElement;
+
+      mobileRow.click();
 
       expect(router.navigate).toHaveBeenCalledWith(['/trips', 1, 'reservations']);
     });
