@@ -153,6 +153,12 @@ describe('DashboardPageComponent', () => {
     expect(sentBookingCard.textContent).toContain('Mai');
   });
 
+  it('does not render the deprecated mobile bottom navigation', () => {
+    const bottomNavigation = fixture.nativeElement.querySelector('nav.fixed.bottom-0') as HTMLElement | null;
+
+    expect(bottomNavigation).toBeNull();
+  });
+
   it('navigates to sent booking detail when clicking a sent booking card', () => {
     const sentBookingCard = fixture.nativeElement.querySelector('article[role="link"]') as HTMLElement;
 
