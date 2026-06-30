@@ -324,7 +324,11 @@
 />
 
 @if (shareCardData) {
-  <div class="fixed left-[-9999px] top-0" #shareCardCapture>
+  <div
+    class="pointer-events-none fixed left-0 top-0 -z-10 h-[1920px] w-[1080px] overflow-hidden"
+    aria-hidden="true"
+    #shareCardCapture
+  >
     <app-share-card-story [data]="shareCardData" />
   </div>
 }
