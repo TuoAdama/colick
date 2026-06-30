@@ -97,6 +97,27 @@
                   Supprimer
                 </button>
               </div>
+
+              @if (trip.status === 'ACTIVE') {
+                <button
+                  type="button"
+                  class="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-wait disabled:opacity-70 md:hidden"
+                  [disabled]="isGeneratingShareCard"
+                  (click)="shareTripAnnouncement()"
+                  aria-label="Partager l'annonce"
+                  data-testid="share-trip-announcement-button"
+                >
+                  @if (isGeneratingShareCard) {
+                    <span class="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true"></span>
+                    Génération...
+                  } @else {
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8.59 13.51 15.42 17.49M15.41 6.51 8.59 10.49M7 14a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm10 6a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm0-12a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
+                    </svg>
+                    Partager l'annonce
+                  }
+                </button>
+              }
             </div>
           }
         </div>
@@ -301,3 +322,9 @@
   (confirmed)="confirmCompleteTrip()"
   (cancelled)="closeCompleteTripModal()"
 />
+
+@if (shareCardData) {
+  <div class="fixed left-[-9999px] top-0" #shareCardCapture>
+    <app-share-card-story [data]="shareCardData" />
+  </div>
+}

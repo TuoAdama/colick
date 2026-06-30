@@ -5,6 +5,7 @@ import { TripsManagementPageComponent, TripStatusFilter } from './trips-manageme
 import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
 import { ShareCardMapperService } from '../../services/share-card-mapper.service';
+import { ShareCardExportService } from '../../services/share-card-export.service';
 import { Trip } from '../../models/trip.model';
 import { BookingResponse } from '../../models/booking.model';
 
@@ -18,6 +19,7 @@ describe('TripsManagementPageComponent', () => {
   let tripServiceSpy: jasmine.SpyObj<TripService>;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
   let shareCardMapperSpy: jasmine.SpyObj<ShareCardMapperService>;
+  let shareCardExportSpy: jasmine.SpyObj<ShareCardExportService>;
 
   const mockTrips: Trip[] = [
     {
@@ -89,6 +91,15 @@ describe('TripsManagementPageComponent', () => {
 
     shareCardMapperSpy = jasmine.createSpyObj('ShareCardMapperService', ['mapActiveTripToShareCard', 'buildFileDate']);
     shareCardMapperSpy.buildFileDate.and.returnValue('2024-03-15');
+    shareCardExportSpy = jasmine.createSpyObj('ShareCardExportService', [
+      'generateQrCodeDataUrl',
+      'captureElementAsPngFile',
+      'downloadFile',
+    ]);
+    shareCardExportSpy.generateQrCodeDataUrl.and.resolveTo('data:image/png;base64,qr');
+    shareCardExportSpy.captureElementAsPngFile.and.resolveTo(
+      new File(['png'], 'colick-carte-partage-2024-03-15.png', { type: 'image/png' })
+    );
 
     await TestBed.configureTestingModule({
       imports: [TripsManagementPageComponent],
@@ -98,6 +109,7 @@ describe('TripsManagementPageComponent', () => {
         { provide: TripService, useValue: tripServiceSpy },
         { provide: AuthService, useValue: authServiceSpy },
         { provide: ShareCardMapperService, useValue: shareCardMapperSpy },
+        { provide: ShareCardExportService, useValue: shareCardExportSpy },
       ],
     }).compileComponents();
 

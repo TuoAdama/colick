@@ -1,13 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
+import { ShareCardData } from '../../models/share-card.model';
 import { BookingRequestCardComponent } from '../../components/reservation-details/booking-request-card/booking-request-card.component';
+import { ShareCardStoryComponent } from '../../components/share-card-story/share-card-story.component';
 import { TripService } from '../../services/trip.service';
 import { MessagingService } from '../../services/messaging.service';
+import { AuthService } from '../../services/auth.service';
+import { ShareCardMapperService } from '../../services/share-card-mapper.service';
+import { ShareCardExportService } from '../../services/share-card-export.service';
 import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
 
 type ReservationStatusTab = 'ALL' | BookingResponse['status'];
@@ -18,6 +23,7 @@ type ReservationStatusTab = 'ALL' | BookingResponse['status'];
   imports: [
     CommonModule,
     BookingRequestCardComponent,
+    ShareCardStoryComponent,
     ConfirmModalComponent,
     RouterLink,
   ],
@@ -28,6 +34,11 @@ export class ReservationDetailsPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly tripService = inject(TripService);
   private readonly messagingService = inject(MessagingService);
+  private readonly authService = inject(AuthService);
+  private readonly shareCardMapperService = inject(ShareCardMapperService);
+  private readonly shareCardExportService = inject(ShareCardExportService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  @ViewChild('shareCardCapture') private shareCardCapture?: ElementRef<HTMLElement>;
 
   trip: Trip | null = null;
   bookings: BookingResponse[] = [];
@@ -45,6 +56,8 @@ export class ReservationDetailsPageComponent implements OnInit {
   selectedTab: ReservationStatusTab = 'ALL';
   currentPage = 1;
   tripSummaryExpanded = false;
+  isGeneratingShareCard = false;
+  shareCardData: ShareCardData | null = null;
 
   readonly pageSize = 4;
   readonly primaryStatusTabs: ReadonlyArray<{ value: ReservationStatusTab; label: string }> = [
@@ -158,6 +171,52 @@ export class ReservationDetailsPageComponent implements OnInit {
     }
 
     void this.router.navigate(['/propose', this.trip.id]);
+  }
+
+  async shareTripAnnouncement(): Promise<void> {
+    const user = this.authService.getUser();
+    if (!this.trip || this.trip.status !== 'ACTIVE' || this.isGeneratingShareCard || !user) {
+      return;
+    }
+
+    this.isGeneratingShareCard = true;
+    this.actionError = '';
+
+    try {
+      const shareCardData = this.shareCardMapperService.mapActiveTripToShareCard(this.trip, user, {
+        availableWeight: this.remainingWeight(),
+        shareOrigin: this.resolveShareOrigin(),
+      });
+
+      this.shareCardData = {
+        ...shareCardData,
+        qrCodeDataUrl: await this.shareCardExportService.generateQrCodeDataUrl(shareCardData.shareUrl ?? ''),
+      };
+      this.cdr.detectChanges();
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+      const captureElement = this.shareCardCapture?.nativeElement;
+      if (!captureElement) {
+        throw new Error('Share card capture element missing');
+      }
+
+      const pngFile = await this.shareCardExportService.captureElementAsPngFile(
+        captureElement,
+        `colick-annonce-${this.shareCardMapperService.buildFileDate(this.trip.departureTime)}.png`
+      );
+
+      await this.shareCardExportService.shareOrDownloadPng(pngFile, {
+        title: 'Trajet disponible sur Colick',
+        text: shareCardData.routeLabel
+          ? `Trajet disponible ${shareCardData.routeLabel}`
+          : 'Trajet disponible sur Colick',
+      });
+    } catch {
+      this.actionError = "Impossible de générer l'image de partage pour le moment.";
+    } finally {
+      this.isGeneratingShareCard = false;
+      this.shareCardData = null;
+    }
   }
 
   markTripCompleted(): void {
@@ -369,6 +428,8 @@ export class ReservationDetailsPageComponent implements OnInit {
     this.actionError = '';
     this.processingBookingId = null;
     this.tripSummaryExpanded = false;
+    this.isGeneratingShareCard = false;
+    this.shareCardData = null;
     this.closeRemoveBookingModal();
     this.closeCancelTripModal();
     this.closeCompleteTripModal();
@@ -430,5 +491,13 @@ export class ReservationDetailsPageComponent implements OnInit {
 
   private matchesStatusFilter(booking: BookingResponse): boolean {
     return this.selectedTab === 'ALL' || booking.status === this.selectedTab;
+  }
+
+  private resolveShareOrigin(): string | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    return window.location.origin;
   }
 }
