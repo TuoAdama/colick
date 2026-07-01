@@ -65,6 +65,21 @@ describe('ShareCardStoryComponent', () => {
     expect(root?.className).toContain('w-[1080px]');
   });
 
+  it('keeps the QR code block inside the fixed CTA panel', () => {
+    component.data = {
+      qrCodeDataUrl: 'data:image/png;base64,qr',
+    };
+    fixture.detectChanges();
+
+    const qrImage = fixture.nativeElement.querySelector('img[alt="QR code de réservation"]') as HTMLImageElement | null;
+    const qrBox = qrImage?.parentElement as HTMLElement | null;
+    const ctaPanel = qrBox?.closest('section') as HTMLElement | null;
+
+    expect(ctaPanel?.className).toContain('h-[360px]');
+    expect(qrBox?.className).toContain('h-[200px]');
+    expect(qrBox?.className).toContain('w-[200px]');
+  });
+
   it('shows safe fallback values when optional fields are missing', () => {
     component.data = {
       departureCity: null,
