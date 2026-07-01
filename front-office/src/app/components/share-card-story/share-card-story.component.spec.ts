@@ -54,6 +54,8 @@ describe('ShareCardStoryComponent', () => {
     expect(text).toContain('colick.test/search');
     expect(text).toContain('#T0001');
     expect(text).toContain('Colick');
+    expect(text).not.toContain('Transaction sécurisée');
+    expect(text).not.toContain('Prélèvement de 7%');
   });
 
   it('uses a fixed 9:16 export surface', () => {
