@@ -229,6 +229,36 @@ class TripServiceImplTest {
     }
 
     @Test
+    void getTripByReference_shouldReturnTripWithAvailableWeight_whenFound() {
+        TripBooking acceptedBooking = TripBooking.builder()
+                .id(1L)
+                .trip(sampleTrip)
+                .sender(sender)
+                .weight(BigDecimal.valueOf(3))
+                .status(TripBooking.BookingStatus.ACCEPTED)
+                .build();
+        when(tripRepository.findByReferenceIgnoreCase("trp-2026-000010")).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of(acceptedBooking));
+
+        TripResponse response = tripService.getTripByReference("trp-2026-000010");
+
+        assertThat(response.getId()).isEqualTo(10L);
+        assertThat(response.getReference()).isEqualTo("TRP-2026-000010");
+        assertThat(response.getAvailableWeight()).isEqualByComparingTo(BigDecimal.valueOf(17));
+        verify(tripRepository).findByReferenceIgnoreCase("trp-2026-000010");
+    }
+
+    @Test
+    void getTripByReference_shouldThrow_whenReferenceDoesNotExist() {
+        when(tripRepository.findByReferenceIgnoreCase("TRP-404")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tripService.getTripByReference("TRP-404"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("TRP-404");
+    }
+
+    @Test
     void updateTrip_shouldUpdateActiveTripAndNotifyAcceptedBookingSenders() {
         UpdateTripRequest request = new UpdateTripRequest();
         request.setDepartureAddress("Lyon");

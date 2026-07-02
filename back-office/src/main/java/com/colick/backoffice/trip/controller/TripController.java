@@ -76,6 +76,12 @@ public class TripController {
         return ResponseEntity.ok(tripService.getLandingFeed(country, limit));
     }
 
+    /** Get a public trip by its business reference. */
+    @GetMapping("/reference/{reference}")
+    public ResponseEntity<TripResponse> getTripByReference(@PathVariable String reference) {
+        return ResponseEntity.ok(tripService.getTripByReference(reference));
+    }
+
     /** Get a trip by ID (public). */
     @GetMapping("/{id}")
     public ResponseEntity<TripResponse> getTripById(@PathVariable Long id) {

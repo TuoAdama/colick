@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * JPA repository for {@link Trip} entities.
@@ -18,6 +19,8 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
     /** Returns all trips published by the given traveler, regardless of status. */
     List<Trip> findByTraveler(User traveler);
+
+    Optional<Trip> findByReferenceIgnoreCase(String reference);
 
     long countByTravelerAndStatus(User traveler, Trip.TripStatus status);
 

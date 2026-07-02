@@ -48,15 +48,12 @@ describe('ShareCardMapperService', () => {
     expect(result.travelerPhotoUrl).toBe('/photos/ada.png');
     expect(result.availableWeightLabel).toBe('8,5 kg');
     expect(result.pricePerKiloLabel).toBe('12€ / kg');
-    expect(result.shareUrl).toContain('https://colick.test/search?');
-    expect(result.shareUrl).toContain('from=Paris%2C+France');
-    expect(result.shareUrl).toContain('to=Abidjan%2C+C%C3%B4te+d%27Ivoire');
-    expect(result.shareUrl).toContain('date=2025-07-14');
-    expect(result.shareUrlLabel).toBe('colick.test/search');
+    expect(result.shareUrl).toBe('https://colick.test/trips/ref/TRP-2026-000001');
+    expect(result.shareUrlLabel).toBe('colick.test/trips/ref/TRP-2026-000001');
     expect(result.tripReference).toBe('TRP-2026-000001');
   });
 
-  it('falls back to a local reference when the API reference is missing', () => {
+  it('falls back to search URL and local reference when the API reference is missing', () => {
     const result = service.mapActiveTripToShareCard(buildTrip({
       id: 13,
       reference: undefined,
@@ -67,6 +64,9 @@ describe('ShareCardMapperService', () => {
       phone: '+33 6 00 00 00 00',
     });
 
+    expect(result.shareUrl).toContain('/search?');
+    expect(result.shareUrl).toContain('from=Paris');
+    expect(result.shareUrl).toContain('to=Abidjan');
     expect(result.tripReference).toBe('#T000D');
   });
 

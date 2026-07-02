@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthResponse, UserResponse } from '../../models/auth.model';
 import { AuthService } from '../../services/auth.service';
 import { GoogleAuthButtonComponent } from '../../components/google-auth-button/google-auth-button.component';
@@ -19,6 +19,7 @@ export class LoginPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -70,6 +71,12 @@ export class LoginPageComponent {
   private navigateAfterAuth(response: AuthResponse): void {
     if (this.requiresIdentityDocument(response.user)) {
       this.router.navigate(['/dashboard'], { queryParams: { tab: 'profile', completeProfile: 'identity' } });
+      return;
+    }
+
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (returnUrl?.startsWith('/') && !returnUrl.startsWith('//')) {
+      void this.router.navigateByUrl(returnUrl);
       return;
     }
 

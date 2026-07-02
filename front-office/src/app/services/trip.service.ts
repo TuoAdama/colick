@@ -89,6 +89,13 @@ export class TripService {
     );
   }
 
+  /** Get a public trip by its business reference. */
+  getTripByReference(reference: string): Observable<Trip> {
+    return this.http.get<Trip>(`${this.baseUrl}/reference/${encodeURIComponent(reference)}`).pipe(
+      map((trip) => this.normalizeTrip(trip))
+    );
+  }
+
   /** Update an existing trip proposal. */
   updateTrip(tripId: number, data: UpdateTripDto): Observable<Trip> {
     return this.http.put<Trip>(`${this.baseUrl}/${tripId}`, data).pipe(

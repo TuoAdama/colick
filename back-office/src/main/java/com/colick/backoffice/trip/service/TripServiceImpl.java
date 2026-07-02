@@ -101,6 +101,19 @@ public class TripServiceImpl implements TripService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public TripResponse getTripByReference(String reference) {
+        Trip trip = tripRepository.findByReferenceIgnoreCase(reference)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        localizedMessages.get("error.trip.referenceNotFound", reference)));
+        return toTripResponse(
+                trip,
+                computeAvailableWeight(trip),
+                travelerReviewService.getTravelerRatingSummaries(Set.of(trip.getTraveler().getId()))
+        );
+    }
+
+    @Override
     public TripResponse updateTrip(Long id, UpdateTripRequest request, User requester) {
         Trip trip = findTripOrThrow(id);
         assertTripOwner(trip, requester);

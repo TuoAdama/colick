@@ -206,6 +206,15 @@ export class ShareCardMapperService {
   }
 
   private buildShareUrl(trip: Trip, shareOrigin?: string | null): string {
+    const reference = this.normalizeOptionalText(trip.reference);
+    const normalizedOrigin = this.normalizeOptionalText(shareOrigin)
+      ?? this.resolveCurrentOrigin();
+
+    if (reference) {
+      const path = `/trips/ref/${encodeURIComponent(reference)}`;
+      return normalizedOrigin ? `${normalizedOrigin}${path}` : path;
+    }
+
     const queryParams = new URLSearchParams({
       from: trip.departureAddress,
       to: trip.destination,
@@ -215,8 +224,6 @@ export class ShareCardMapperService {
       queryParams.set('date', date);
     }
 
-    const normalizedOrigin = this.normalizeOptionalText(shareOrigin)
-      ?? this.resolveCurrentOrigin();
     const path = `/search?${queryParams.toString()}`;
     return normalizedOrigin ? `${normalizedOrigin}${path}` : path;
   }

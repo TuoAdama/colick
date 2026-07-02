@@ -110,6 +110,15 @@ describe('authInterceptor', () => {
     expect(authServiceMock.logout).not.toHaveBeenCalled();
   });
 
+  it('does NOT call logout when /api/trips/reference returns 401', () => {
+    http.get('/api/trips/reference/TRP-2026-000013').subscribe({ error: () => {} });
+
+    const req = httpMock.expectOne('/api/trips/reference/TRP-2026-000013');
+    req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    expect(authServiceMock.logout).not.toHaveBeenCalled();
+  });
+
   it('does NOT call logout when /api/locations/search returns 401', () => {
     http.get('/api/locations/search?q=Pa').subscribe({ error: () => {} });
 
