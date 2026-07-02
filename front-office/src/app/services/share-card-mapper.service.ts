@@ -45,7 +45,7 @@ export class ShareCardMapperService {
       pricePerKiloLabel: this.formatPricePerKilo(trip.pricePerKilo),
       shareUrl,
       shareUrlLabel: this.formatShareUrlLabel(shareUrl),
-      tripReference: this.buildTripReference(trip.id),
+      tripReference: this.normalizeOptionalText(trip.reference) ?? this.buildTripReference(trip.id),
     };
   }
 

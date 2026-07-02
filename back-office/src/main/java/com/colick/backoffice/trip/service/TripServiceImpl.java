@@ -44,6 +44,7 @@ public class TripServiceImpl implements TripService {
     private final LocalizedMessages localizedMessages;
     private final FileStorageService fileStorageService;
     private final TripAlertService tripAlertService;
+    private final TripReferenceGenerator tripReferenceGenerator;
 
     public TripServiceImpl(TripRepository tripRepository,
                            TripBookingRepository bookingRepository,
@@ -53,7 +54,8 @@ public class TripServiceImpl implements TripService {
                             TravelerReviewService travelerReviewService,
                             LocalizedMessages localizedMessages,
                             FileStorageService fileStorageService,
-                            TripAlertService tripAlertService) {
+                            TripAlertService tripAlertService,
+                            TripReferenceGenerator tripReferenceGenerator) {
         this.tripRepository = tripRepository;
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
@@ -63,6 +65,7 @@ public class TripServiceImpl implements TripService {
         this.localizedMessages = localizedMessages;
         this.fileStorageService = fileStorageService;
         this.tripAlertService = tripAlertService;
+        this.tripReferenceGenerator = tripReferenceGenerator;
     }
 
     @Override
@@ -78,6 +81,8 @@ public class TripServiceImpl implements TripService {
                 .instantAcceptance(request.isInstantAcceptance())
                 .build();
         Trip savedTrip = tripRepository.save(trip);
+        savedTrip.setReference(tripReferenceGenerator.generate(savedTrip));
+        savedTrip = tripRepository.save(savedTrip);
         tripAlertService.notifyMatchingAlerts(savedTrip);
         return toTripResponse(savedTrip, null, Map.of());
     }

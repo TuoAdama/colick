@@ -12,6 +12,7 @@ describe('ShareCardMapperService', () => {
 
   it('maps active trip data with FR date formatting', () => {
     const trip = buildTrip({
+      reference: 'TRP-2026-000001',
       departureAddress: 'Paris, France',
       destination: "Abidjan, Côte d'Ivoire",
       departureTime: '2025-07-14T12:00:00Z',
@@ -52,7 +53,21 @@ describe('ShareCardMapperService', () => {
     expect(result.shareUrl).toContain('to=Abidjan%2C+C%C3%B4te+d%27Ivoire');
     expect(result.shareUrl).toContain('date=2025-07-14');
     expect(result.shareUrlLabel).toBe('colick.test/search');
-    expect(result.tripReference).toBe('#T0001');
+    expect(result.tripReference).toBe('TRP-2026-000001');
+  });
+
+  it('falls back to a local reference when the API reference is missing', () => {
+    const result = service.mapActiveTripToShareCard(buildTrip({
+      id: 13,
+      reference: undefined,
+    }), {
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: 'traveler@example.com',
+      phone: '+33 6 00 00 00 00',
+    });
+
+    expect(result.tripReference).toBe('#T000D');
   });
 
   it('masks optional fields when source data is missing', () => {

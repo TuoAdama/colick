@@ -415,11 +415,18 @@ describe('ReservationDetailsPageComponent', () => {
     });
     expect(component.bookings[0].deliveredAt).toBe('2025-07-15T10:00:00');
   });
+
+  it('displays the trip business reference in the trip summary', () => {
+    createComponent();
+
+    expect(fixture.nativeElement.textContent).toContain('TRP-2026-000012');
+  });
 });
 
 function buildTrip(): Trip {
   return {
     id: 12,
+    reference: 'TRP-2026-000012',
     travelerId: 1,
     travelerName: 'Ada Lovelace',
     departureAddress: 'Paris, France',

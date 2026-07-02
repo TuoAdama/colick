@@ -22,6 +22,7 @@ export type UpdateTripDto = CreateTripDto;
  */
 export interface Trip {
   id: number;
+  reference?: string;
   travelerId: number;
   travelerName: string;
   travelerPhotoUrl?: string;

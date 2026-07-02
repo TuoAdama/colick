@@ -32,7 +32,13 @@
                 <h1 class="text-base font-bold text-text-primary">
                   {{ trip.departureAddress }} → {{ trip.destination }}
                 </h1>
-                <p class="text-sm text-text-secondary">{{ trip.departureTime | date:'dd/MM • HH:mm' }}</p>
+                <p class="text-sm text-text-secondary">
+                  {{ trip.departureTime | date:'dd/MM • HH:mm' }}
+                  @if (trip.reference) {
+                    <span class="mx-1 text-text-muted">•</span>
+                    <span class="font-semibold text-primary">{{ trip.reference }}</span>
+                  }
+                </p>
               </div>
             </div>
 

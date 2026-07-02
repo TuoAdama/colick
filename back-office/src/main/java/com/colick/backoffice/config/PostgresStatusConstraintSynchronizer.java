@@ -27,6 +27,7 @@ public class PostgresStatusConstraintSynchronizer implements ApplicationRunner {
 
         synchronizeTripStatusConstraint();
         synchronizeTripBookingStatusConstraint();
+        synchronizeTripReferenceSchema();
         synchronizeConversationContextSchema();
     }
 
@@ -44,6 +45,17 @@ public class PostgresStatusConstraintSynchronizer implements ApplicationRunner {
                 "ALTER TABLE trip_bookings ADD CONSTRAINT trip_bookings_status_check " +
                         "CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED', 'REMOVED', 'DELIVERED'))"
         );
+    }
+
+    private void synchronizeTripReferenceSchema() {
+        jdbcTemplate.execute("ALTER TABLE trips ADD COLUMN IF NOT EXISTS reference VARCHAR(32)");
+        jdbcTemplate.execute(
+                "UPDATE trips " +
+                        "SET reference = 'TRP-' || EXTRACT(YEAR FROM COALESCE(created_at, CURRENT_TIMESTAMP))::int || '-' || LPAD(id::text, 6, '0') " +
+                        "WHERE reference IS NULL OR BTRIM(reference) = ''"
+        );
+        jdbcTemplate.execute("CREATE UNIQUE INDEX IF NOT EXISTS trips_reference_unique_idx ON trips(reference)");
+        jdbcTemplate.execute("ALTER TABLE trips ALTER COLUMN reference SET NOT NULL");
     }
 
     private void synchronizeConversationContextSchema() {
