@@ -252,7 +252,7 @@ export class ShareCardMapperService {
   private formatShareUrlLabel(value: string): string {
     try {
       const url = new URL(value, this.resolveCurrentOrigin() ?? 'https://colick.com');
-      return `${url.host}${url.pathname}`;
+      return url.toString();
     } catch {
       return value;
     }

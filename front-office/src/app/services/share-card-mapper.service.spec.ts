@@ -49,7 +49,7 @@ describe('ShareCardMapperService', () => {
     expect(result.availableWeightLabel).toBe('8,5 kg');
     expect(result.pricePerKiloLabel).toBe('12€ / kg');
     expect(result.shareUrl).toBe('https://colick.test/trips/ref/TRP-2026-000001');
-    expect(result.shareUrlLabel).toBe('colick.test/trips/ref/TRP-2026-000001');
+    expect(result.shareUrlLabel).toBe('https://colick.test/trips/ref/TRP-2026-000001');
     expect(result.tripReference).toBe('TRP-2026-000001');
   });
 

@@ -94,14 +94,30 @@
               @if (isOwnTrip()) {
                 <p class="rounded-xl bg-primary/10 px-5 py-4 text-center text-sm font-bold text-primary">C'est votre trajet.</p>
               } @else {
-                <button
-                  type="button"
-                  class="inline-flex w-full items-center justify-center rounded-xl bg-primary px-6 py-4 text-sm font-extrabold text-white shadow-sm transition hover:bg-primary/90"
-                  (click)="openBookingModal()"
-                  data-testid="book-reference-trip-button"
-                >
-                  Réserver ce trajet
-                </button>
+                <div class="grid gap-3">
+                  <button
+                    type="button"
+                    class="inline-flex w-full items-center justify-center rounded-xl bg-primary px-6 py-4 text-sm font-extrabold text-white shadow-sm transition hover:bg-primary/90"
+                    (click)="openBookingModal()"
+                    data-testid="book-reference-trip-button"
+                  >
+                    Envoyer une demande
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex w-full items-center justify-center rounded-xl border-2 border-primary bg-white px-6 py-4 text-sm font-extrabold text-primary transition hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-60"
+                    (click)="contactTraveler()"
+                    [disabled]="isContactingTraveler"
+                    data-testid="contact-reference-trip-button"
+                  >
+                    {{ isContactingTraveler ? 'Ouverture de la conversation...' : 'Contacter le voyageur' }}
+                  </button>
+                </div>
+              }
+              @if (actionErrorMessage) {
+                <p class="mt-4 rounded-xl bg-error/10 px-4 py-3 text-center text-sm font-semibold text-error" role="alert">
+                  {{ actionErrorMessage }}
+                </p>
               }
             </div>
           </aside>

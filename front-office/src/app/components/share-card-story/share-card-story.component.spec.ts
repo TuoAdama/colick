@@ -31,9 +31,9 @@ describe('ShareCardStoryComponent', () => {
       email: 'ada@example.com',
       availableWeightLabel: '12 kg',
       pricePerKiloLabel: '10,00 € / kg',
-      shareUrlLabel: 'colick.test/search',
+      shareUrlLabel: 'colick.test/trips/ref/TRP-2026-000001',
       qrCodeDataUrl: 'data:image/png;base64,qr',
-      tripReference: '#T0001',
+      tripReference: 'TRP-2026-000001',
     };
     fixture.detectChanges();
 
@@ -51,8 +51,8 @@ describe('ShareCardStoryComponent', () => {
     expect(text).toContain('10,00 € / kg');
     expect(text).toContain('Abidjan');
     expect(text).toContain("Côte d'Ivoire");
-    expect(text).toContain('colick.test/search');
-    expect(text).toContain('#T0001');
+    expect(text).toContain('colick.test/trips/ref/TRP-2026-000001');
+    expect(text).toContain('TRP-2026-000001');
     expect(text).toContain('Colick');
     expect(text).not.toContain('Transaction sécurisée');
     expect(text).not.toContain('Prélèvement de 7%');
@@ -80,6 +80,23 @@ describe('ShareCardStoryComponent', () => {
     expect(ctaPanel?.className).toContain('h-[360px]');
     expect(qrBox?.className).toContain('h-[200px]');
     expect(qrBox?.className).toContain('w-[200px]');
+  });
+
+  it('renders the full share URL without truncation styling', () => {
+    component.data = {
+      shareUrlLabel: 'https://colick.com/trips/ref/TRP-2026-000013',
+      tripReference: 'TRP-2026-000013',
+    };
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const urlElement = Array.from(host.querySelectorAll('span'))
+      .find((element) => element.textContent?.includes('https://colick.com/trips/ref/TRP-2026-000013')) as HTMLElement | undefined;
+
+    expect(host.textContent).toContain('https://colick.com/trips/ref/TRP-2026-000013');
+    expect(host.textContent).toContain('TRP-2026-000013');
+    expect(urlElement?.className).toContain('break-all');
+    expect(urlElement?.className).not.toContain('truncate');
   });
 
   it('shows safe fallback values when optional fields are missing', () => {

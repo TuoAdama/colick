@@ -3,6 +3,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angul
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { Trip } from '../../models/trip.model';
 import { AuthService } from '../../services/auth.service';
+import { MessagingService } from '../../services/messaging.service';
 import { TripService } from '../../services/trip.service';
 import { TripReferencePageComponent } from './trip-reference-page.component';
 
@@ -22,12 +23,25 @@ describe('TripReferencePageComponent', () => {
     getUser: jasmine.createSpy('getUser'),
   };
 
+  const messagingServiceMock = {
+    createConversationDraft: jasmine.createSpy('createConversationDraft'),
+  };
+
   beforeEach(async () => {
     paramMap$.next(convertToParamMap({ reference: 'TRP-2026-000013' }));
     tripServiceMock.getTripByReference.calls.reset();
     tripServiceMock.createBooking.calls.reset();
+    messagingServiceMock.createConversationDraft.calls.reset();
     tripServiceMock.getTripByReference.and.returnValue(of(buildTrip()));
     tripServiceMock.createBooking.and.returnValue(of({ id: 1, title: 'Colis', tripId: 13 }));
+    messagingServiceMock.createConversationDraft.and.returnValue(of({
+      id: 42,
+      otherParticipantId: 2,
+      otherParticipantName: 'Alice Martin',
+      lastMessage: null,
+      unreadCount: 0,
+      createdAt: '2026-07-03T10:00:00Z',
+    }));
     authServiceMock.isLoggedIn.calls.reset();
     authServiceMock.getUser.calls.reset();
     authServiceMock.isLoggedIn.and.returnValue(false);
@@ -45,6 +59,7 @@ describe('TripReferencePageComponent', () => {
         },
         { provide: TripService, useValue: tripServiceMock },
         { provide: AuthService, useValue: authServiceMock },
+        { provide: MessagingService, useValue: messagingServiceMock },
       ],
     }).compileComponents();
 
@@ -64,6 +79,8 @@ describe('TripReferencePageComponent', () => {
     expect(host.textContent).toContain('Paris, France');
     expect(host.textContent).toContain("Abidjan, Côte d'Ivoire");
     expect(host.textContent).toContain('8 kg disponibles');
+    expect(host.textContent).toContain('Envoyer une demande');
+    expect(host.textContent).toContain('Contacter le voyageur');
   });
 
   it('redirects anonymous users to login with returnUrl when booking is requested', () => {
@@ -82,6 +99,42 @@ describe('TripReferencePageComponent', () => {
     component.openBookingModal();
 
     expect(component.isBookingModalOpen).toBeTrue();
+  });
+
+  it('redirects anonymous users to login with returnUrl when contact is requested', () => {
+    component.contactTraveler();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: '/trips/ref/TRP-2026-000013' },
+    });
+    expect(messagingServiceMock.createConversationDraft).not.toHaveBeenCalled();
+  });
+
+  it('creates a draft conversation with the traveler for authenticated users', () => {
+    authServiceMock.isLoggedIn.and.returnValue(true);
+    authServiceMock.getUser.and.returnValue({ id: 99 });
+
+    component.contactTraveler();
+
+    expect(messagingServiceMock.createConversationDraft).toHaveBeenCalledWith({
+      tripId: 13,
+      recipientId: 2,
+    });
+    expect(router.navigate).toHaveBeenCalledWith(['/messages'], {
+      queryParams: { conversationId: 42 },
+    });
+  });
+
+  it('shows an error when the draft conversation cannot be created', () => {
+    authServiceMock.isLoggedIn.and.returnValue(true);
+    authServiceMock.getUser.and.returnValue({ id: 99 });
+    messagingServiceMock.createConversationDraft.and.returnValue(throwError(() => new Error('failed')));
+
+    component.contactTraveler();
+    fixture.detectChanges();
+
+    expect(component.actionErrorMessage).toContain('Impossible de démarrer la conversation');
+    expect(component.isContactingTraveler).toBeFalse();
   });
 
   it('shows an error when the reference cannot be resolved', () => {

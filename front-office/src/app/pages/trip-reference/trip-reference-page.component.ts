@@ -6,6 +6,7 @@ import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
 import { UserResponse } from '../../models/auth.model';
 import { AuthService } from '../../services/auth.service';
+import { MessagingService } from '../../services/messaging.service';
 import { TripService } from '../../services/trip.service';
 import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
 import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
@@ -21,12 +22,15 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly tripService = inject(TripService);
   private readonly authService = inject(AuthService);
+  private readonly messagingService = inject(MessagingService);
   private routeSubscription?: Subscription;
 
   trip: Trip | null = null;
   isLoading = true;
   errorMessage = '';
+  actionErrorMessage = '';
   isBookingModalOpen = false;
+  isContactingTraveler = false;
   bookingSuccessMessage = '';
 
   ngOnInit(): void {
@@ -58,6 +62,35 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
     }
 
     this.isBookingModalOpen = true;
+  }
+
+  contactTraveler(): void {
+    if (!this.trip || this.isOwnTrip() || this.isContactingTraveler) {
+      return;
+    }
+
+    if (!this.authService.isLoggedIn()) {
+      void this.router.navigate(['/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+
+    this.isContactingTraveler = true;
+    this.actionErrorMessage = '';
+    this.messagingService.createConversationDraft({
+      tripId: this.trip.id,
+      recipientId: this.trip.travelerId,
+    }).subscribe({
+      next: (conversation) => {
+        this.isContactingTraveler = false;
+        void this.router.navigate(['/messages'], { queryParams: { conversationId: conversation.id } });
+      },
+      error: () => {
+        this.actionErrorMessage = 'Impossible de démarrer la conversation avec le voyageur.';
+        this.isContactingTraveler = false;
+      },
+    });
   }
 
   closeBookingModal(): void {
@@ -110,6 +143,7 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
   private loadTrip(reference: string): void {
     this.isLoading = true;
     this.errorMessage = '';
+    this.actionErrorMessage = '';
     this.trip = null;
 
     this.tripService.getTripByReference(reference).subscribe({
