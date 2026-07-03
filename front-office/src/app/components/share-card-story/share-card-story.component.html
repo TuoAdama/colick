@@ -173,14 +173,11 @@
         <div class="mt-4 rounded-xl bg-secondary px-8 py-4 text-center text-[1.35rem] font-extrabold uppercase text-white shadow-[0_10px_24px_rgba(33,158,188,0.30)]">
           Réserver ce trajet →
         </div>
-        <div class="mt-4 flex items-start gap-4 rounded-[14px] bg-secondary/10 px-4 py-3 text-secondary">
-          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white">
-            <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.71" />
-            </svg>
-          </span>
-          <span class="min-w-0 break-all text-[0.98rem] font-extrabold leading-tight">{{ data?.shareUrlLabel || 'colick.com/trips/ref/TRP-YYYY-XXXXXX' }}</span>
+        <div class="mt-4 rounded-[14px] bg-secondary/10 px-4 py-3 text-secondary">
+          <p class="text-[0.78rem] font-extrabold uppercase tracking-[0.08em]">Lien direct</p>
+          <p class="mt-1 break-all text-[0.86rem] font-extrabold leading-[1.12]">
+            {{ data?.shareUrlLabel || 'https://colick.com/trips/ref/TRP-YYYY-XXXXXX' }}
+          </p>
         </div>
       </div>
 

@@ -51,6 +51,7 @@ describe('ShareCardStoryComponent', () => {
     expect(text).toContain('10,00 € / kg');
     expect(text).toContain('Abidjan');
     expect(text).toContain("Côte d'Ivoire");
+    expect(text).toContain('Lien direct');
     expect(text).toContain('colick.test/trips/ref/TRP-2026-000001');
     expect(text).toContain('TRP-2026-000001');
     expect(text).toContain('Colick');
@@ -90,7 +91,7 @@ describe('ShareCardStoryComponent', () => {
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
-    const urlElement = Array.from(host.querySelectorAll('span'))
+    const urlElement = Array.from(host.querySelectorAll('p'))
       .find((element) => element.textContent?.includes('https://colick.com/trips/ref/TRP-2026-000013')) as HTMLElement | undefined;
 
     expect(host.textContent).toContain('https://colick.com/trips/ref/TRP-2026-000013');
