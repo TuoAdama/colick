@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class TripResponse {
 
     private Long id;
+    private String reference;
     private Long travelerId;
     private String travelerName;
     private String travelerPhotoUrl;
@@ -65,6 +66,7 @@ public class TripResponse {
                                     Long travelerRatingCount) {
         return TripResponse.builder()
                 .id(trip.getId())
+                .reference(trip.getReference())
                 .travelerId(trip.getTraveler().getId())
                 .travelerName(trip.getTraveler().getFirstName() + " " + trip.getTraveler().getLastName())
                 .travelerPhotoUrl(trip.getTraveler().getPhotoUrl())

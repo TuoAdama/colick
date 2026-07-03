@@ -54,6 +54,8 @@ services:
       - ./front-office/src:/app/src
       - ./front-office/public:/app/public
       # Mount Angular config files
+      - ./front-office/package.json:/app/package.json
+      - ./front-office/package-lock.json:/app/package-lock.json
       - ./front-office/angular.json:/app/angular.json
       - ./front-office/tailwind.config.js:/app/tailwind.config.js
       - ./front-office/postcss.config.js:/app/postcss.config.js

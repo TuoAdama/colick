@@ -30,6 +30,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'trips/ref/:reference',
+    loadComponent: () =>
+      import('./pages/trip-reference/trip-reference-page.component').then(
+        (m) => m.TripReferencePageComponent
+      ),
+  },
+  {
     path: 'traveler-review',
     loadComponent: () =>
       import('./pages/review/review-page.component').then(

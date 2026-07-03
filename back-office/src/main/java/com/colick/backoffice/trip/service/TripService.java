@@ -21,6 +21,9 @@ public interface TripService {
     /** Returns a single trip by ID. */
     TripResponse getTripById(Long id);
 
+    /** Returns a single trip by business reference. */
+    TripResponse getTripByReference(String reference);
+
     /** Updates an existing trip. */
     TripResponse updateTrip(Long id, UpdateTripRequest request, User requester);
 

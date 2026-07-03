@@ -6,6 +6,7 @@ import { AuthService } from '../services/auth.service';
 const PUBLIC_ENDPOINT_PREFIXES = [
   '/api/auth/',
   '/api/locations/',
+  '/api/trips/reference/',
 ];
 
 const PUBLIC_ENDPOINT_PATHS = new Set([

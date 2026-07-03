@@ -81,4 +81,13 @@ class I18nIntegrationTest {
                         .header("Accept-Language", "fr"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void tripReferenceLookup_shouldBeAccessibleWithoutAuthentication() throws Exception {
+        mockMvc.perform(get("/api/trips/reference/TRP-404")
+                        .contextPath("/api")
+                        .servletPath("/trips/reference/TRP-404")
+                        .header("Accept-Language", "en"))
+                .andExpect(status().isNotFound());
+    }
 }

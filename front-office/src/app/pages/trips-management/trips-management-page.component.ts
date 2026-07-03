@@ -4,13 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import * as htmlToImage from 'html-to-image';
 import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
 import { Trip } from '../../models/trip.model';
 import { BookingResponse } from '../../models/booking.model';
 import { ShareCardData } from '../../models/share-card.model';
 import { ShareCardMapperService } from '../../services/share-card-mapper.service';
+import { ShareCardExportService } from '../../services/share-card-export.service';
 import { ShareCardStoryComponent } from '../../components/share-card-story/share-card-story.component';
 import { TripOptionsMenuComponent } from '../../components/dashboard/trip-options-menu/trip-options-menu.component';
 
@@ -27,6 +27,7 @@ export class TripsManagementPageComponent implements OnInit {
   private readonly tripService = inject(TripService);
   private readonly authService = inject(AuthService);
   private readonly shareCardMapperService = inject(ShareCardMapperService);
+  private readonly shareCardExportService = inject(ShareCardExportService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -215,29 +216,32 @@ export class TripsManagementPageComponent implements OnInit {
     const user = this.authService.getUser();
     if (!trip || trip.status !== 'ACTIVE' || !user) return;
 
-    this.shareCardData = this.shareCardMapperService.mapActiveTripToShareCard(trip, user);
-    this.cdr.detectChanges();
     this.generatingShareCardTripId = tripId;
 
     try {
+      const shareCardData = this.shareCardMapperService.mapActiveTripToShareCard(trip, user, {
+        shareOrigin: this.resolveShareOrigin(),
+      });
+      this.shareCardData = {
+        ...shareCardData,
+        qrCodeDataUrl: await this.shareCardExportService.generateQrCodeDataUrl(shareCardData.shareUrl ?? ''),
+      };
+      this.cdr.detectChanges();
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
       const captureElement = this.shareCardCapture?.nativeElement;
       if (!captureElement) throw new Error('Share card capture element missing');
 
-      const pngDataUrl = await htmlToImage.toPng(captureElement, {
-        cacheBust: true,
-        pixelRatio: 2,
-      });
-
-      const downloadLink = document.createElement('a');
-      downloadLink.href = pngDataUrl;
-      downloadLink.download = `colick-carte-partage-${this.shareCardMapperService.buildFileDate(trip.departureTime)}.png`;
-      downloadLink.click();
+      const pngFile = await this.shareCardExportService.captureElementAsPngFile(
+        captureElement,
+        `colick-carte-partage-${this.shareCardMapperService.buildFileDate(trip.departureTime)}.png`
+      );
+      this.shareCardExportService.downloadFile(pngFile);
     } catch {
       // Silent fail for PNG generation
     } finally {
       this.generatingShareCardTripId = null;
+      this.shareCardData = null;
     }
   }
 
@@ -276,5 +280,13 @@ export class TripsManagementPageComponent implements OnInit {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${day} ${month} ${year} • ${hours}:${minutes}`;
+  }
+
+  private resolveShareOrigin(): string | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    return window.location.origin;
   }
 }

@@ -20,6 +20,7 @@ import com.colick.backoffice.trip.repository.TripRepository;
 import com.colick.backoffice.trip.service.BookingValidationService;
 import com.colick.backoffice.trip.service.TravelerRatingSummary;
 import com.colick.backoffice.trip.service.TravelerReviewService;
+import com.colick.backoffice.trip.service.TripReferenceGenerator;
 import com.colick.backoffice.trip.service.TripServiceImpl;
 import com.colick.backoffice.tripalert.service.TripAlertService;
 import com.colick.backoffice.user.entity.User;
@@ -78,6 +79,9 @@ class TripServiceImplTest {
     private TripAlertService tripAlertService;
 
     @Spy
+    private TripReferenceGenerator tripReferenceGenerator = new TripReferenceGenerator();
+
+    @Spy
     private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
 
     @InjectMocks
@@ -118,6 +122,7 @@ class TripServiceImplTest {
 
         sampleTrip = Trip.builder()
                 .id(10L)
+                .reference("TRP-2026-000010")
                 .traveler(traveler)
                 .departureAddress("Paris")
                 .destination("Abidjan")
@@ -127,7 +132,7 @@ class TripServiceImplTest {
                 .pricePerKilo(BigDecimal.valueOf(5))
                 .instantAcceptance(false)
                 .status(Trip.TripStatus.ACTIVE)
-                .createdAt(LocalDateTime.now().minusDays(1))
+                .createdAt(LocalDateTime.of(2026, 6, 1, 8, 0))
                 .build();
 
         lenient().when(bookingValidationService.normalizeRecipientContact(anyString()))
@@ -154,8 +159,43 @@ class TripServiceImplTest {
 
         assertThat(response.getDepartureAddress()).isEqualTo("Paris");
         assertThat(response.getDestination()).isEqualTo("Abidjan");
+        assertThat(response.getReference()).isEqualTo("TRP-2026-000010");
         verify(tripRepository).save(any(Trip.class));
         verify(tripAlertService).notifyMatchingAlerts(sampleTrip);
+    }
+
+    @Test
+    void createTrip_shouldGenerateDistinctReferencesFromTripIds() {
+        Trip firstTrip = Trip.builder()
+                .id(10L)
+                .traveler(traveler)
+                .departureAddress("Paris")
+                .destination("Abidjan")
+                .departureTime(LocalDateTime.of(2026, 6, 20, 10, 0))
+                .arrivalTime(LocalDateTime.of(2026, 6, 21, 10, 0))
+                .maxWeight(BigDecimal.valueOf(20))
+                .pricePerKilo(BigDecimal.valueOf(5))
+                .createdAt(LocalDateTime.of(2026, 6, 1, 8, 0))
+                .build();
+        Trip secondTrip = Trip.builder()
+                .id(11L)
+                .traveler(traveler)
+                .departureAddress("Paris")
+                .destination("Abidjan")
+                .departureTime(LocalDateTime.of(2026, 6, 22, 10, 0))
+                .arrivalTime(LocalDateTime.of(2026, 6, 23, 10, 0))
+                .maxWeight(BigDecimal.valueOf(20))
+                .pricePerKilo(BigDecimal.valueOf(5))
+                .createdAt(LocalDateTime.of(2026, 6, 1, 8, 0))
+                .build();
+        when(tripRepository.save(any(Trip.class)))
+                .thenReturn(firstTrip, secondTrip);
+
+        TripResponse firstResponse = tripService.createTrip(buildCreateTripRequest(), traveler);
+        TripResponse secondResponse = tripService.createTrip(buildCreateTripRequest(), traveler);
+
+        assertThat(firstResponse.getReference()).isEqualTo("TRP-2026-000010");
+        assertThat(secondResponse.getReference()).isEqualTo("TRP-2026-000011");
     }
 
     @Test
@@ -166,6 +206,7 @@ class TripServiceImplTest {
 
         assertThat(trips).hasSize(1);
         assertThat(trips.get(0).getId()).isEqualTo(10L);
+        assertThat(trips.get(0).getReference()).isEqualTo("TRP-2026-000010");
     }
 
     @Test
@@ -175,6 +216,7 @@ class TripServiceImplTest {
         TripResponse response = tripService.getTripById(10L);
 
         assertThat(response.getId()).isEqualTo(10L);
+        assertThat(response.getReference()).isEqualTo("TRP-2026-000010");
     }
 
     @Test
@@ -184,6 +226,49 @@ class TripServiceImplTest {
         assertThatThrownBy(() -> tripService.getTripById(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("99");
+    }
+
+    @Test
+    void getTripByReference_shouldReturnTripWithAvailableWeight_whenFound() {
+        TripBooking acceptedBooking = TripBooking.builder()
+                .id(1L)
+                .trip(sampleTrip)
+                .sender(sender)
+                .weight(BigDecimal.valueOf(3))
+                .status(TripBooking.BookingStatus.ACCEPTED)
+                .build();
+        when(tripRepository.findByReferenceIgnoreCaseAndStatus("trp-2026-000010", Trip.TripStatus.ACTIVE))
+                .thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
+                .thenReturn(List.of(acceptedBooking));
+
+        TripResponse response = tripService.getTripByReference("trp-2026-000010");
+
+        assertThat(response.getId()).isEqualTo(10L);
+        assertThat(response.getReference()).isEqualTo("TRP-2026-000010");
+        assertThat(response.getAvailableWeight()).isEqualByComparingTo(BigDecimal.valueOf(17));
+        verify(tripRepository).findByReferenceIgnoreCaseAndStatus("trp-2026-000010", Trip.TripStatus.ACTIVE);
+    }
+
+    @Test
+    void getTripByReference_shouldThrow_whenReferenceDoesNotExist() {
+        when(tripRepository.findByReferenceIgnoreCaseAndStatus("TRP-404", Trip.TripStatus.ACTIVE))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tripService.getTripByReference("TRP-404"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("TRP-404");
+    }
+
+    @Test
+    void getTripByReference_shouldHideInactiveTrip() {
+        sampleTrip.setStatus(Trip.TripStatus.CANCELLED);
+        when(tripRepository.findByReferenceIgnoreCaseAndStatus("TRP-2026-000010", Trip.TripStatus.ACTIVE))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tripService.getTripByReference("TRP-2026-000010"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("TRP-2026-000010");
     }
 
     @Test
@@ -1144,6 +1229,7 @@ class TripServiceImplTest {
 
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getDepartureAddress()).isEqualTo("Paris");
+        assertThat(results.get(0).getReference()).isEqualTo("TRP-2026-000010");
     }
 
     @Test
@@ -1592,5 +1678,16 @@ class TripServiceImplTest {
         assertThat(results.get(0).getTravelerPhotoUrl()).isEqualTo("/uploads/alice.jpg");
         assertThat(results.get(0).getTravelerRatingAverage()).isEqualTo(4.5);
         assertThat(results.get(0).getTravelerRatingCount()).isEqualTo(2L);
+    }
+
+    private CreateTripRequest buildCreateTripRequest() {
+        CreateTripRequest request = new CreateTripRequest();
+        request.setDepartureAddress("Paris");
+        request.setDestination("Abidjan");
+        request.setDepartureTime(LocalDateTime.of(2026, 6, 20, 10, 0));
+        request.setArrivalTime(LocalDateTime.of(2026, 6, 21, 10, 0));
+        request.setMaxWeight(BigDecimal.valueOf(20));
+        request.setPricePerKilo(BigDecimal.valueOf(5));
+        return request;
     }
 }

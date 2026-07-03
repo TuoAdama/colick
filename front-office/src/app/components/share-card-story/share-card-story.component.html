@@ -1,130 +1,218 @@
-<section class="font-sans relative aspect-square w-full overflow-hidden rounded-[2.2rem] bg-bg-primary" aria-label="Carte de partage Colick">
-  <div class="absolute -right-24 -top-24 h-80 w-[26rem] rotate-[-8deg] rounded-[3rem] bg-secondary/90"></div>
-  <div class="absolute -left-52 top-28 h-64 w-[34rem] rounded-[50%] border-[14px] border-secondary"></div>
-  <div class="absolute -left-56 top-[8.5rem] h-64 w-[36rem] rounded-[50%] border-[10px] border-primary"></div>
-  <div class="absolute -left-56 top-40 h-64 w-[36rem] rounded-[50%] border-[6px] border-secondary"></div>
-  <div class="absolute -left-16 bottom-14 h-64 w-52 rotate-[50deg] rounded-full border-[10px] border-secondary/95"></div>
-  <div class="absolute -left-24 bottom-4 h-64 w-64 rotate-[50deg] rounded-full border-[8px] border-primary"></div>
+<section data-share-card-root class="relative h-[1920px] w-[1080px] overflow-hidden bg-white font-sans text-primary" aria-label="Carte de partage Colick">
+  <div class="absolute inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(33,158,188,0.10),transparent_24%),radial-gradient(circle_at_91%_24%,rgba(33,158,188,0.08),transparent_27%),linear-gradient(180deg,#ffffff_0%,#f9fdfe_50%,#ffffff_100%)]"></div>
 
-  <article class="relative mx-auto mt-6 flex h-[calc(100%-3rem)] w-[93%] flex-col overflow-hidden rounded-[2rem] border border-gray-200 bg-bg-secondary px-10 py-8 shadow-2xl shadow-primary/20">
-    <div class="absolute right-0 top-0 h-64 w-80 bg-gradient-to-l from-secondary/35 to-transparent"></div>
-
-    <header class="relative z-10">
-      <div class="absolute left-[-8.5rem] top-18 h-32 w-96 text-primary">
-        <svg class="h-full w-full" viewBox="0 0 360 140" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M8 88C96 93 171 80 249 49C274 39 304 29 344 24" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
-          <path class="text-secondary" d="M14 105C101 107 174 90 252 58C277 48 306 38 344 33" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
-          <path class="text-secondary" d="M23 121C111 121 183 103 263 68C286 58 313 48 344 43" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <header class="absolute left-0 right-0 top-8 z-10 flex flex-col items-center text-center">
+    <div class="flex items-center gap-4">
+      <div class="relative h-[72px] w-[72px] text-secondary">
+        <svg class="h-full w-full" viewBox="0 0 80 80" fill="none" aria-hidden="true">
+          <path d="M12 22 40 8l28 14-28 14L12 22Z" fill="currentColor" opacity="0.95"/>
+          <path d="M12 30 40 44l28-14v25L40 70 12 55V30Z" fill="currentColor" opacity="0.85"/>
+          <path d="M40 44v26M12 30l28 14 28-14M26 15l28 14M12 22l28 14 28-14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="m52 58 18 8-6-17" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
+      <div class="text-left">
+        <p class="text-[4.2rem] font-extrabold leading-none tracking-normal">
+          <span class="text-secondary">Co</span><span>lick</span>
+        </p>
+        <p class="mt-1 text-[1rem] font-extrabold uppercase tracking-[0.23em] text-secondary">Expédiez en toute confiance</p>
+      </div>
+    </div>
+  </header>
 
-      <div class="mx-auto w-fit text-primary">
-        <svg class="h-36 w-[22rem]" viewBox="0 0 420 170" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M54 130C114 116 169 95 222 67C255 50 290 36 338 30C362 26 383 28 400 35" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
-          <path class="text-secondary" d="M75 141C132 130 186 110 240 81C273 64 307 50 351 44" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-          <path d="M168 72L250 89L384 54L369 44L250 74L184 59L168 72Z" fill="currentColor"/>
-          <path d="M221 106L265 111L336 98L321 87L267 90L221 106Z" fill="currentColor"/>
-          <path d="M230 79L217 60L247 69L253 82L230 79Z" fill="currentColor"/>
-          <path d="M286 88C286 95 292 101 299 101C306 101 312 95 312 88C312 81 306 75 299 75C292 75 286 81 286 88Z" fill="white"/>
-          <path d="M327 75L341 73" stroke="white" stroke-width="5" stroke-linecap="round"/>
-          <circle cx="342" cy="72" r="6" fill="white"/>
+  <section class="absolute left-0 right-0 top-[170px] z-10 text-center">
+    <p class="text-[5.2rem] font-extrabold uppercase leading-[0.96] tracking-normal">Trajet</p>
+    <p class="text-[5.2rem] font-extrabold uppercase leading-[0.96] tracking-normal text-secondary">Disponible</p>
+    <p class="mt-5 text-[1.9rem] font-semibold text-[#374151]">
+      J’ai de la place pour <span class="font-extrabold text-secondary">vos colis</span> !
+    </p>
+  </section>
+
+  <section class="absolute left-0 right-0 top-[432px] z-10 grid grid-cols-[1fr_180px_1fr] items-end gap-5 px-20">
+    <div class="min-w-0">
+      <p class="mb-4 inline-flex rounded-full bg-secondary/10 px-5 py-2 text-[0.95rem] font-extrabold uppercase tracking-[0.08em] text-secondary">De</p>
+      <p class="truncate text-[3.2rem] font-extrabold uppercase leading-none">{{ data?.departureCity || 'Départ' }}</p>
+      <p class="mt-3 truncate text-[1.5rem] font-extrabold uppercase text-secondary">{{ data?.departureCountry || 'Ville de départ' }}</p>
+    </div>
+
+    <div class="relative flex h-28 items-center justify-center">
+      <div class="absolute left-[-150px] right-[-150px] top-1/2 border-t-[3px] border-dashed border-secondary/70"></div>
+      <div class="relative z-10 flex h-24 w-24 items-center justify-center rounded-full bg-secondary text-white shadow-[0_14px_30px_rgba(33,158,188,0.30)]">
+        <svg class="h-12 w-12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21 13 13.5 21 11l-8-2.5L10.5 1 8 8.5 1 11l7 2.5L10.5 21Z" />
         </svg>
       </div>
-    </header>
+    </div>
 
-    <section class="relative z-10 mt-2 text-center">
-      @if (data?.routeLabel) {
-        <h1 class="text-[4.9rem] font-bold leading-none text-primary">{{ data?.routeLabel }}</h1>
-      } @else if (data?.departureCity || data?.destinationCity) {
-        <h1 class="text-[4.9rem] font-bold leading-none text-primary">
-          {{ data?.departureCity || 'Départ' }} → {{ data?.destinationCity || 'Destination' }}
-        </h1>
-      } @else {
-        <h1 class="text-[4.9rem] font-bold leading-none text-primary">Voyage Colick</h1>
-      }
-    </section>
+    <div class="min-w-0 text-right">
+      <p class="mb-4 inline-flex rounded-full bg-secondary/10 px-5 py-2 text-[0.95rem] font-extrabold uppercase tracking-[0.08em] text-secondary">À</p>
+      <p class="truncate text-[3.2rem] font-extrabold uppercase leading-none">{{ data?.destinationCity || 'Destination' }}</p>
+      <p class="mt-3 truncate text-[1.5rem] font-extrabold uppercase text-secondary">{{ data?.destinationCountry || 'Ville d’arrivée' }}</p>
+    </div>
+  </section>
 
-    <section class="relative z-10 mt-7 rounded-[2rem] border border-gray-200 bg-bg-primary px-5 py-5">
-      <div class="grid grid-cols-3 divide-x divide-gray-300">
-        <div class="flex flex-col items-center px-4 text-center">
-          <svg class="h-[3.6rem] w-[3.6rem] text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.7"/>
-            <path d="M9 5.5V9L6.6 11.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            <rect x="12.5" y="11.5" width="9" height="8.5" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
-            <path d="M12.5 14.5H21.5" stroke="currentColor" stroke-width="1.7"/>
-            <path d="M15.5 10V13" stroke="currentColor" stroke-width="1.7"/>
-            <path d="M18.5 10V13" stroke="currentColor" stroke-width="1.7"/>
-          </svg>
-          <p class="mt-3 text-[1.85rem] font-semibold leading-tight text-primary">
-            {{ data?.formattedDate || 'Date à confirmer' }}
-          </p>
-          <p class="text-[1.85rem] leading-tight text-primary">
-            @if (data?.formattedTime) {
-              <span>• {{ data?.formattedTime }}</span>
-            } @else {
-              <span>• --:--</span>
-            }
-          </p>
+  <section class="absolute left-20 right-20 top-[570px] z-0 grid grid-cols-2 gap-20 text-[#7EA0BD]" aria-hidden="true">
+    <svg viewBox="0 0 430 135" class="h-[135px] w-full opacity-75" fill="none">
+      <path d="M2 128H428" stroke="currentColor" stroke-width="2"/>
+      <path d="M198 128V28M182 128h32M190 106h16M193 84h10M196 60h4M181 128l17-100 18 100M168 128l30-62 30 62" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M20 128V92h40v36M34 128V108h12v20M72 128V80h42v48M80 91h26M80 105h26M80 119h26M132 128V96l34-18 34 18v32M150 128v-18h14v18M174 128v-18h14v18M258 128V82h64v46M272 96h8M292 96h8M312 96h8M272 112h8M292 112h8M312 112h8M340 128V101h58v27M354 114h8M374 114h8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M46 70c9-14 30-14 38 0M17 83c4-8 17-8 22 0M322 60c5-8 18-8 23 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+
+    <svg viewBox="0 0 430 135" class="h-[135px] w-full opacity-75" fill="none">
+      <path d="M2 128H428" stroke="currentColor" stroke-width="2"/>
+      <path d="M26 128V86h42v42M38 100h8M54 100h8M38 114h8M54 114h8M88 128V70h54v58M102 84h8M122 84h8M102 102h8M122 102h8M102 120h8M122 120h8M160 128V92h56v36M236 128V64h58v64M250 80h8M272 80h8M250 99h8M272 99h8M250 118h8M272 118h8M316 128V86h62v42M330 100h8M352 100h8M330 116h8M352 116h8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M134 128c38-58 102-58 140 0M166 128c26-36 70-36 96 0" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <path d="M388 128V72M368 93c18-6 28 1 20 35M408 94c-17-7-27 1-20 34M376 75c9-16 22-16 31 0M364 82c16-12 30-9 44 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+  </section>
+
+  <main class="absolute left-20 right-20 top-[710px] z-10">
+    <section class="rounded-[24px] border border-[#E5EEF2] bg-white px-8 py-6 shadow-[0_16px_50px_rgba(2,48,71,0.12)]">
+      <div class="grid grid-cols-2 divide-x divide-[#D9E4EA]">
+        <div class="flex items-center gap-7 pr-8">
+          <div class="flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-full bg-secondary/10 text-primary">
+            <svg class="h-11 w-11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3M5 11h14M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-[1.1rem] font-extrabold uppercase tracking-[0.06em] text-secondary">Départ</p>
+            <p class="mt-2 text-[1.9rem] font-extrabold leading-none">{{ data?.formattedDate || 'Date à confirmer' }}</p>
+            <p class="mt-2 text-[1.3rem] text-[#374151]">{{ data?.formattedTime || '--:--' }}</p>
+          </div>
         </div>
 
-        <div class="flex flex-col items-center px-4 text-center">
-          <svg class="h-[3.6rem] w-[3.6rem] text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect x="4" y="5" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.7"/>
-            <path d="M8 11.5H16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            <path d="M12 8V15.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            <path d="M9 20H15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          </svg>
-          <p class="mt-3 text-[1.95rem] font-semibold leading-tight text-primary">
-            {{ data?.availableWeightLabel || 'N/A kg' }}
-          </p>
-          <p class="text-[1.85rem] leading-tight text-primary">disponibles</p>
-        </div>
-
-        <div class="flex flex-col items-center px-4 text-center">
-          <svg class="h-[3.6rem] w-[3.6rem] text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <ellipse cx="9.5" cy="5.5" rx="5.5" ry="2.2" stroke="currentColor" stroke-width="1.7"/>
-            <path d="M4 5.5V14.5C4 15.9 6.46 17 9.5 17C12.54 17 15 15.9 15 14.5V5.5" stroke="currentColor" stroke-width="1.7"/>
-            <path d="M4 10C4 11.4 6.46 12.5 9.5 12.5C12.54 12.5 15 11.4 15 10" stroke="currentColor" stroke-width="1.7"/>
-            <circle cx="18.5" cy="15.5" r="4.8" stroke="currentColor" stroke-width="1.7"/>
-            <path d="M18.5 13.2V17.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            <path d="M17.1 14.5H19.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          </svg>
-          <p class="mt-3 text-[1.95rem] font-semibold leading-tight text-primary">
-            {{ data?.pricePerKiloLabel || 'N/A€ / kg' }}
-          </p>
+        <div class="flex items-center gap-7 pl-8">
+          <div class="flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-full bg-secondary/10 text-primary">
+            <svg class="h-11 w-11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3M5 11h14M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-[1.1rem] font-extrabold uppercase tracking-[0.06em] text-secondary">Arrivée</p>
+            <p class="mt-2 text-[1.9rem] font-extrabold leading-none">{{ data?.formattedArrivalDate || 'Date à confirmer' }}</p>
+            <p class="mt-2 text-[1.3rem] text-[#374151]">{{ data?.formattedArrivalTime || '--:--' }}</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <footer class="relative z-10 mt-auto flex items-end justify-between gap-6 px-1 pb-1 pt-6">
-      <div class="flex items-center gap-4">
-        <div class="flex h-[6.3rem] w-[6.3rem] items-center justify-center rounded-full border-[5px] border-primary bg-bg-secondary">
-          <svg class="h-12 w-12 text-primary" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <section class="mt-4 grid grid-cols-2 gap-5">
+      <div class="flex items-center gap-7 rounded-[22px] border border-[#E5EEF2] bg-white px-8 py-6 shadow-[0_14px_42px_rgba(2,48,71,0.10)]">
+        <div class="flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-full bg-secondary/10 text-primary">
+          <svg class="h-11 w-11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12l1 13H5L6 7Zm3 0a3 3 0 0 1 6 0M9 11v2m6-2v2" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-[1.05rem] font-extrabold uppercase tracking-[0.06em] text-secondary">Kg disponibles</p>
+          <p class="mt-2 text-[2.65rem] font-extrabold leading-none">{{ data?.availableWeightLabel || 'N/A kg' }}</p>
+          <p class="mt-2 text-[1.1rem] text-[#374151]">Poids transportable</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-7 rounded-[22px] border border-[#E5EEF2] bg-white px-8 py-6 shadow-[0_14px_42px_rgba(2,48,71,0.10)]">
+        <div class="flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-full bg-secondary/10 text-primary">
+          <svg class="h-11 w-11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m20 12-8 8-8-8V4h8l8 8Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 8.5h.01" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-[1.05rem] font-extrabold uppercase tracking-[0.06em] text-secondary">Prix par kg</p>
+          <p class="mt-2 text-[2.65rem] font-extrabold leading-none">{{ data?.pricePerKiloLabel || 'N/A€ / kg' }}</p>
+          <p class="mt-2 text-[1.1rem] text-[#374151]">Par kilogramme</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-4 flex items-center gap-9 rounded-[24px] bg-secondary/[0.08] px-8 py-6">
+      <div class="flex h-[136px] w-[136px] shrink-0 items-center justify-center overflow-hidden rounded-full border-[5px] border-secondary bg-white">
+        @if (data?.travelerPhotoUrl) {
+          <img [src]="data?.travelerPhotoUrl" alt="" class="h-full w-full object-cover" />
+        } @else {
+          <svg class="h-20 w-20 text-primary" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 12.5C14.35 12.5 16.25 10.6 16.25 8.25C16.25 5.9 14.35 4 12 4C9.65 4 7.75 5.9 7.75 8.25C7.75 10.6 9.65 12.5 12 12.5Z"/>
             <path d="M4.5 20.25C4.5 16.8 7.61 14 12 14C16.39 14 19.5 16.8 19.5 20.25V20.5H4.5V20.25Z"/>
           </svg>
-        </div>
-        <div class="text-primary">
-          <p class="text-[2.05rem] leading-none">Voyageur :</p>
-          <p class="mt-1 text-[2.1rem] font-semibold leading-none">{{ data?.travelerName || 'Profil vérifié Colick' }}</p>
+        }
+      </div>
+      <div class="min-w-0">
+        <p class="text-[1.1rem] font-extrabold uppercase tracking-[0.06em] text-secondary">Trajet proposé par</p>
+        <p class="mt-2 truncate text-[2.35rem] font-extrabold uppercase leading-none">{{ data?.travelerName || 'Profil vérifié Colick' }}</p>
+        <p class="mt-4 inline-flex items-center gap-3 text-[1.35rem] font-extrabold text-secondary">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-white">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7" />
+            </svg>
+          </span>
+          Voyageur vérifié
+        </p>
+        @if (data?.travelerRatingAverageLabel || data?.travelerRatingCountLabel) {
+          <p class="mt-3 text-[1.25rem] font-semibold text-[#374151]">
+            <span class="text-warning">★</span>
+            {{ data?.travelerRatingAverageLabel || 'N/A' }}
+            @if (data?.travelerRatingCountLabel) {
+              <span class="mx-4 text-[#9CA3AF]">|</span>{{ data?.travelerRatingCountLabel }}
+            }
+          </p>
+        }
+      </div>
+    </section>
+
+    <section class="mt-5 grid h-[360px] grid-cols-[1.05fr_0.95fr] gap-0 overflow-hidden rounded-[24px] border border-[#DDE8EE] bg-white shadow-[0_18px_52px_rgba(2,48,71,0.12)]">
+      <div class="px-9 py-6">
+        <p class="text-[1.55rem] font-extrabold uppercase leading-tight">Accédez à l’annonce en 1 clic !</p>
+        <ul class="mt-4 space-y-2 text-[1.05rem] font-semibold text-[#374151]">
+          <li class="flex items-center gap-3"><span class="text-secondary">✓</span>Voir tous les détails du trajet</li>
+          <li class="flex items-center gap-3"><span class="text-secondary">✓</span>Réserver votre place</li>
+          <li class="flex items-center gap-3"><span class="text-secondary">✓</span>Paiement sécurisé</li>
+          <li class="flex items-center gap-3"><span class="text-secondary">✓</span>Support Colick disponible</li>
+        </ul>
+        <div class="mt-4 rounded-xl bg-secondary px-8 py-4 text-center text-[1.35rem] font-extrabold uppercase text-white shadow-[0_10px_24px_rgba(33,158,188,0.30)]">
+          Réserver ce trajet →
         </div>
       </div>
 
-      <div class="flex items-end gap-2 text-primary">
-        <svg class="mb-2 h-[5rem] w-[5rem]" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="32" cy="32" r="30" stroke="currentColor" stroke-width="6"/>
-          <path class="text-secondary" d="M13 34C23 24 39 22 50 27" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
-          <path class="text-primary" d="M14 43C25 34 40 32 50 36" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-          <path class="text-secondary" d="M40 16L50 18L47 8" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-          <rect class="text-secondary" x="27" y="25" width="12" height="12" rx="2" fill="currentColor"/>
-        </svg>
-        <div class="text-right leading-none">
-          <p class="text-[3.45rem] font-bold">
-            <span class="text-secondary">Co</span><span>lick</span>
-          </p>
-          <p class="mt-1 text-[1.05rem] text-text-secondary">Voyagez léger, transportez malin.</p>
+      <div class="border-l border-[#DDE8EE] px-8 py-5 text-center">
+        <p class="text-[1.12rem] font-extrabold uppercase tracking-[0.04em] text-secondary">Scanner pour réserver</p>
+        <div class="mx-auto mt-3 flex h-[200px] w-[200px] items-center justify-center rounded-[14px] border-[4px] border-secondary bg-white p-2">
+          @if (data?.qrCodeDataUrl) {
+            <img [src]="data?.qrCodeDataUrl" alt="QR code de réservation" class="h-full w-full object-contain" />
+          } @else {
+            <div class="grid h-full w-full grid-cols-5 gap-2 p-4">
+              @for (cell of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]; track cell) {
+                <span class="block" [class.bg-primary]="cell % 2 === 0 || cell % 7 === 0" [class.bg-white]="cell % 2 !== 0 && cell % 7 !== 0"></span>
+              }
+            </div>
+          }
         </div>
+        <p class="mt-2 text-[1.05rem] font-semibold italic leading-tight text-primary">Scanner avec<br />votre téléphone</p>
       </div>
-    </footer>
-  </article>
+    </section>
+
+    <section class="mt-4">
+      <div class="rounded-[18px] bg-secondary/[0.08] px-8 py-4 text-center">
+        <p class="text-[0.9rem] font-extrabold uppercase tracking-[0.06em] text-secondary">Référence du trajet</p>
+        <p class="mt-1 text-[1.6rem] font-extrabold">{{ data?.tripReference || '#COLICK' }}</p>
+        <p class="mt-3 text-[0.78rem] font-extrabold uppercase tracking-[0.08em] text-secondary">Lien direct</p>
+        <p class="mx-auto mt-1 max-w-[820px] break-all text-[0.95rem] font-extrabold leading-[1.15] text-primary">
+          {{ data?.shareUrlLabel || 'https://colick.com/trips/ref/TRP-YYYY-XXXXXX' }}
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="absolute bottom-0 left-0 right-0 z-10 flex h-[104px] items-center justify-between bg-primary px-24 text-white">
+    <p class="flex items-center gap-4 text-[1.35rem] font-extrabold">
+      <span class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM2 12h20M12 2c3 3 4.5 6.5 4.5 10S15 19 12 22M12 2C9 5 7.5 8.5 7.5 12S9 19 12 22" />
+        </svg>
+      </span>
+      colick.com
+    </p>
+    <p class="text-[1.05rem] font-extrabold uppercase tracking-[0.12em]">Expédiez en toute confiance</p>
+  </footer>
 </section>

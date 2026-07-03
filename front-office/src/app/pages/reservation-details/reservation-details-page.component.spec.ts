@@ -7,6 +7,8 @@ import { Trip } from '../../models/trip.model';
 import { MessagingService } from '../../services/messaging.service';
 import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
+import { ShareCardMapperService } from '../../services/share-card-mapper.service';
+import { ShareCardExportService } from '../../services/share-card-export.service';
 import { ReservationDetailsPageComponent } from './reservation-details-page.component';
 
 describe('ReservationDetailsPageComponent', () => {
@@ -44,6 +46,17 @@ describe('ReservationDetailsPageComponent', () => {
     logout: jasmine.createSpy('logout'),
   };
 
+  const shareCardMapperServiceMock = {
+    mapActiveTripToShareCard: jasmine.createSpy('mapActiveTripToShareCard'),
+    buildFileDate: jasmine.createSpy('buildFileDate'),
+  };
+
+  const shareCardExportServiceMock = {
+    generateQrCodeDataUrl: jasmine.createSpy('generateQrCodeDataUrl'),
+    captureElementAsPngFile: jasmine.createSpy('captureElementAsPngFile'),
+    shareOrDownloadPng: jasmine.createSpy('shareOrDownloadPng'),
+  };
+
   beforeEach(async () => {
     tripParamMap$.next(convertToParamMap({ tripId: '12' }));
     tripServiceMock.getTripById.calls.reset();
@@ -58,6 +71,11 @@ describe('ReservationDetailsPageComponent', () => {
     messagingServiceMock.createConversationDraft.calls.reset();
     authServiceMock.getUser.calls.reset();
     authServiceMock.logout.calls.reset();
+    shareCardMapperServiceMock.mapActiveTripToShareCard.calls.reset();
+    shareCardMapperServiceMock.buildFileDate.calls.reset();
+    shareCardExportServiceMock.generateQrCodeDataUrl.calls.reset();
+    shareCardExportServiceMock.captureElementAsPngFile.calls.reset();
+    shareCardExportServiceMock.shareOrDownloadPng.calls.reset();
 
     tripServiceMock.getTripById.and.returnValue(of(buildTrip()));
     tripServiceMock.getTripBookings.and.returnValue(of([buildBooking()]));
@@ -92,6 +110,27 @@ describe('ReservationDetailsPageComponent', () => {
       unreadCount: 0,
       createdAt: '2025-07-15T09:00:00',
     }));
+    shareCardMapperServiceMock.mapActiveTripToShareCard.and.returnValue({
+      departureCity: 'Paris',
+      destinationCity: 'Abidjan',
+      routeLabel: 'Paris → Abidjan',
+      formattedDate: '14 Juillet 2025',
+      formattedTime: '08:00',
+      formattedArrivalDate: '14 Juillet 2025',
+      formattedArrivalTime: '16:00',
+      travelerName: 'Ada Lovelace',
+      availableWeightLabel: '18 kg',
+      pricePerKiloLabel: '15€ / kg',
+      shareUrl: 'http://localhost:4200/search?from=Paris&to=Abidjan',
+      shareUrlLabel: 'localhost:4200/search',
+      tripReference: '#T000C',
+    });
+    shareCardMapperServiceMock.buildFileDate.and.returnValue('2025-07-14');
+    shareCardExportServiceMock.generateQrCodeDataUrl.and.resolveTo('data:image/png;base64,qr');
+    shareCardExportServiceMock.captureElementAsPngFile.and.resolveTo(
+      new File(['png'], 'colick-annonce-2025-07-14.png', { type: 'image/png' })
+    );
+    shareCardExportServiceMock.shareOrDownloadPng.and.resolveTo('downloaded');
 
     await TestBed.configureTestingModule({
       imports: [ReservationDetailsPageComponent],
@@ -106,6 +145,8 @@ describe('ReservationDetailsPageComponent', () => {
         { provide: TripService, useValue: tripServiceMock },
         { provide: MessagingService, useValue: messagingServiceMock },
         { provide: AuthService, useValue: authServiceMock },
+        { provide: ShareCardMapperService, useValue: shareCardMapperServiceMock },
+        { provide: ShareCardExportService, useValue: shareCardExportServiceMock },
       ],
     }).compileComponents();
 
@@ -207,10 +248,52 @@ describe('ReservationDetailsPageComponent', () => {
     const deleteButton = fixture.nativeElement.querySelector(
       'button[aria-label="Supprimer le trajet"]'
     ) as HTMLButtonElement | null;
+    const shareButton = fixture.nativeElement.querySelector(
+      '[data-testid="share-trip-announcement-button"]'
+    ) as HTMLButtonElement | null;
 
     expect(editLink).not.toBeNull();
     expect(editLink?.getAttribute('href')).toContain('/propose/12');
     expect(deleteButton).not.toBeNull();
+    expect(shareButton).not.toBeNull();
+    expect(shareButton?.textContent).toContain("Partager l'annonce");
+  });
+
+  it('does not render the share announcement button for inactive trips', () => {
+    tripServiceMock.getTripById.and.returnValue(of({ ...buildTrip(), status: 'COMPLETED' }));
+
+    createComponent();
+
+    component.toggleTripSummary();
+    fixture.detectChanges();
+
+    const shareButton = fixture.nativeElement.querySelector(
+      '[data-testid="share-trip-announcement-button"]'
+    ) as HTMLButtonElement | null;
+
+    expect(shareButton).toBeNull();
+  });
+
+  it('generates the share card and uses the native share fallback service', async () => {
+    createComponent();
+
+    await component.shareTripAnnouncement();
+
+    expect(shareCardMapperServiceMock.mapActiveTripToShareCard).toHaveBeenCalledWith(
+      component.trip,
+      authServiceMock.getUser(),
+      jasmine.objectContaining({ availableWeight: 18 })
+    );
+    expect(shareCardExportServiceMock.generateQrCodeDataUrl).toHaveBeenCalledWith(
+      'http://localhost:4200/search?from=Paris&to=Abidjan'
+    );
+    expect(shareCardExportServiceMock.captureElementAsPngFile).toHaveBeenCalled();
+    expect(shareCardExportServiceMock.shareOrDownloadPng).toHaveBeenCalledWith(
+      jasmine.any(File),
+      jasmine.objectContaining({ title: 'Trajet disponible sur Colick' })
+    );
+    expect(component.isGeneratingShareCard).toBeFalse();
+    expect(component.shareCardData).toBeNull();
   });
 
   it('opens the cancel trip modal from the mobile delete button', () => {
@@ -332,11 +415,18 @@ describe('ReservationDetailsPageComponent', () => {
     });
     expect(component.bookings[0].deliveredAt).toBe('2025-07-15T10:00:00');
   });
+
+  it('displays the trip business reference in the trip summary', () => {
+    createComponent();
+
+    expect(fixture.nativeElement.textContent).toContain('TRP-2026-000012');
+  });
 });
 
 function buildTrip(): Trip {
   return {
     id: 12,
+    reference: 'TRP-2026-000012',
     travelerId: 1,
     travelerName: 'Ada Lovelace',
     departureAddress: 'Paris, France',

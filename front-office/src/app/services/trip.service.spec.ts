@@ -122,6 +122,35 @@ describe('TripService', () => {
     });
   });
 
+  it('gets a trip by reference and normalizes traveler photo URLs', () => {
+    service.getTripByReference('TRP-2026-000013').subscribe((trip) => {
+      expect(trip.id).toBe(13);
+      expect(trip.reference).toBe('TRP-2026-000013');
+      expect(trip.travelerPhotoUrl).toBe('/api/uploads/traveler.png');
+      expect(trip.availableWeight).toBe(6);
+    });
+
+    const req = httpMock.expectOne('/api/trips/reference/TRP-2026-000013');
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      id: 13,
+      reference: 'TRP-2026-000013',
+      travelerId: 2,
+      travelerName: 'Alice Martin',
+      travelerPhotoUrl: '/uploads/traveler.png',
+      travelerRatingAverage: 4.8,
+      departureAddress: 'Paris, France',
+      destination: "Abidjan, Côte d'Ivoire",
+      departureTime: '2025-03-02T08:00:00Z',
+      arrivalTime: '2025-03-02T16:00:00Z',
+      maxWeight: 20,
+      pricePerKilo: 15,
+      instantAcceptance: true,
+      status: 'ACTIVE',
+      availableWeight: 6,
+    });
+  });
+
   it('updates a trip proposal', () => {
     service.updateTrip(12, {
       departureAddress: 'Paris, France',

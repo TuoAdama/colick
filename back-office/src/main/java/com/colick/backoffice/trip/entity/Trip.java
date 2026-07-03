@@ -20,8 +20,12 @@ import java.time.LocalDateTime;
 public class Trip {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "trip_id_seq")
+    @SequenceGenerator(name = "trip_id_seq", sequenceName = "trips_id_seq", allocationSize = 1)
     private Long id;
+
+    @Column(unique = true, length = 32)
+    private String reference;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
