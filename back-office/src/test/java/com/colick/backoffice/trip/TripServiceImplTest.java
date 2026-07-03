@@ -160,7 +160,7 @@ class TripServiceImplTest {
         assertThat(response.getDepartureAddress()).isEqualTo("Paris");
         assertThat(response.getDestination()).isEqualTo("Abidjan");
         assertThat(response.getReference()).isEqualTo("TRP-2026-000010");
-        verify(tripRepository, times(2)).save(any(Trip.class));
+        verify(tripRepository).save(any(Trip.class));
         verify(tripAlertService).notifyMatchingAlerts(sampleTrip);
     }
 
@@ -189,7 +189,7 @@ class TripServiceImplTest {
                 .createdAt(LocalDateTime.of(2026, 6, 1, 8, 0))
                 .build();
         when(tripRepository.save(any(Trip.class)))
-                .thenReturn(firstTrip, firstTrip, secondTrip, secondTrip);
+                .thenReturn(firstTrip, secondTrip);
 
         TripResponse firstResponse = tripService.createTrip(buildCreateTripRequest(), traveler);
         TripResponse secondResponse = tripService.createTrip(buildCreateTripRequest(), traveler);
@@ -237,7 +237,8 @@ class TripServiceImplTest {
                 .weight(BigDecimal.valueOf(3))
                 .status(TripBooking.BookingStatus.ACCEPTED)
                 .build();
-        when(tripRepository.findByReferenceIgnoreCase("trp-2026-000010")).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByReferenceIgnoreCaseAndStatus("trp-2026-000010", Trip.TripStatus.ACTIVE))
+                .thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
                 .thenReturn(List.of(acceptedBooking));
 
@@ -246,16 +247,28 @@ class TripServiceImplTest {
         assertThat(response.getId()).isEqualTo(10L);
         assertThat(response.getReference()).isEqualTo("TRP-2026-000010");
         assertThat(response.getAvailableWeight()).isEqualByComparingTo(BigDecimal.valueOf(17));
-        verify(tripRepository).findByReferenceIgnoreCase("trp-2026-000010");
+        verify(tripRepository).findByReferenceIgnoreCaseAndStatus("trp-2026-000010", Trip.TripStatus.ACTIVE);
     }
 
     @Test
     void getTripByReference_shouldThrow_whenReferenceDoesNotExist() {
-        when(tripRepository.findByReferenceIgnoreCase("TRP-404")).thenReturn(Optional.empty());
+        when(tripRepository.findByReferenceIgnoreCaseAndStatus("TRP-404", Trip.TripStatus.ACTIVE))
+                .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> tripService.getTripByReference("TRP-404"))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("TRP-404");
+    }
+
+    @Test
+    void getTripByReference_shouldHideInactiveTrip() {
+        sampleTrip.setStatus(Trip.TripStatus.CANCELLED);
+        when(tripRepository.findByReferenceIgnoreCaseAndStatus("TRP-2026-000010", Trip.TripStatus.ACTIVE))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tripService.getTripByReference("TRP-2026-000010"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("TRP-2026-000010");
     }
 
     @Test

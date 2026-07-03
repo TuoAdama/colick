@@ -82,7 +82,6 @@ public class TripServiceImpl implements TripService {
                 .build();
         Trip savedTrip = tripRepository.save(trip);
         savedTrip.setReference(tripReferenceGenerator.generate(savedTrip));
-        savedTrip = tripRepository.save(savedTrip);
         tripAlertService.notifyMatchingAlerts(savedTrip);
         return toTripResponse(savedTrip, null, Map.of());
     }
@@ -103,7 +102,7 @@ public class TripServiceImpl implements TripService {
     @Override
     @Transactional(readOnly = true)
     public TripResponse getTripByReference(String reference) {
-        Trip trip = tripRepository.findByReferenceIgnoreCase(reference)
+        Trip trip = tripRepository.findByReferenceIgnoreCaseAndStatus(reference, Trip.TripStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         localizedMessages.get("error.trip.referenceNotFound", reference)));
         return toTripResponse(

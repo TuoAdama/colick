@@ -22,6 +22,8 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
     Optional<Trip> findByReferenceIgnoreCase(String reference);
 
+    Optional<Trip> findByReferenceIgnoreCaseAndStatus(String reference, Trip.TripStatus status);
+
     long countByTravelerAndStatus(User traveler, Trip.TripStatus status);
 
     @Query("select t from Trip t where t.reference is null or trim(t.reference) = ''")
