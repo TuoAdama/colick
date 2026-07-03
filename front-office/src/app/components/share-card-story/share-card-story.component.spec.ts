@@ -96,6 +96,7 @@ describe('ShareCardStoryComponent', () => {
 
     expect(host.textContent).toContain('https://colick.com/trips/ref/TRP-2026-000013');
     expect(host.textContent).toContain('TRP-2026-000013');
+    expect(urlElement?.closest('section')?.textContent).toContain('Référence du trajet');
     expect(urlElement?.className).toContain('break-all');
     expect(urlElement?.className).not.toContain('truncate');
   });
