@@ -1,11 +1,11 @@
 spring:
   application:
-    name: colick-back-office
+    name: coliclic-back-office
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:colick}
-    username: ${DB_USERNAME:colick}
-    password: ${DB_PASSWORD:colick}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:coliclic}
+    username: ${DB_USERNAME:coliclic}
+    password: ${DB_PASSWORD:coliclic}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -60,7 +60,7 @@ management:
         include: health,info
 
 jwt:
-  secret: ${JWT_SECRET:colick-super-secret-key-must-be-at-least-32-chars}
+  secret: ${JWT_SECRET:coliclic-super-secret-key-must-be-at-least-32-chars}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
 springdoc:
@@ -82,8 +82,8 @@ app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   mail:
-    from-address: ${MAIL_FROM_ADDRESS:noreply@colick.app}
-    support-email: ${MAIL_SUPPORT_EMAIL:support@colick.app}
+    from-address: ${MAIL_FROM_ADDRESS:noreply@coliclic.app}
+    support-email: ${MAIL_SUPPORT_EMAIL:support@coliclic.app}
   sms:
     enabled: ${SMS_ENABLED:false}
     twilio:

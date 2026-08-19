@@ -22,8 +22,8 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly photoUrlService = inject(PhotoUrlService);
-  private readonly TOKEN_KEY = 'colick_token';
-  private readonly USER_KEY = 'colick_user';
+  private readonly TOKEN_KEY = 'coliclic_token';
+  private readonly USER_KEY = 'coliclic_user';
 
   private currentUserSubject = new BehaviorSubject<UserResponse | null>(this.getStoredUser());
   currentUser$ = this.currentUserSubject.asObservable();

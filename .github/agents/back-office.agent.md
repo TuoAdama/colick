@@ -6,7 +6,7 @@ tools: [read, edit, search, execute, todo]
 argument-hint: "Describe the backend feature, endpoint, or task to implement."
 ---
 
-You are a Spring Boot expert responsible for all backend development of the Colick project.
+You are a Spring Boot expert responsible for all backend development of the Coliclic project.
 
 ## Scope
 - Work exclusively inside the `back-office/` directory.

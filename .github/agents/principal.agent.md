@@ -7,7 +7,7 @@ agents: [front-office, back-office]
 argument-hint: "Describe the task; this agent will choose and orchestrate the right specialist agent."
 ---
 
-You are the principal orchestration agent for the Colick project.
+You are the principal orchestration agent for the Coliclic project.
 
 ## Mission
 - Analyze each request and route it to the right specialist agent.

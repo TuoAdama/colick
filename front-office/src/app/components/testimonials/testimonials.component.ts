@@ -39,7 +39,7 @@ export class TestimonialsComponent {
     },
     {
       content:
-        'Grâce à Colick, je rentabilise mes voyages entre la France et le Sénégal. La plateforme est simple à utiliser et la commission de 7% est raisonnable.',
+        'Grâce à Coliclic, je rentabilise mes voyages entre la France et le Sénégal. La plateforme est simple à utiliser et la commission de 7% est raisonnable.',
       author: 'Amadou D.',
       role: 'Voyageur - Dakar',
       initials: 'AD',
@@ -48,7 +48,7 @@ export class TestimonialsComponent {
     },
     {
       content:
-        "La vérification d'identité m'a rassurée. J'utilise Colick depuis 6 mois et je n'ai jamais eu de problème. Je recommande vivement !",
+        "La vérification d'identité m'a rassurée. J'utilise Coliclic depuis 6 mois et je n'ai jamais eu de problème. Je recommande vivement !",
       author: 'Sophie T.',
       role: 'Expéditrice - Lyon',
       initials: 'ST',

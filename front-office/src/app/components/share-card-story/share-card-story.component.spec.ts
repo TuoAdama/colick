@@ -31,7 +31,7 @@ describe('ShareCardStoryComponent', () => {
       email: 'ada@example.com',
       availableWeightLabel: '12 kg',
       pricePerKiloLabel: '10,00 € / kg',
-      shareUrlLabel: 'colick.test/trips/ref/TRP-2026-000001',
+      shareUrlLabel: 'coliclic.test/trips/ref/TRP-2026-000001',
       qrCodeDataUrl: 'data:image/png;base64,qr',
       tripReference: 'TRP-2026-000001',
     };
@@ -52,9 +52,9 @@ describe('ShareCardStoryComponent', () => {
     expect(text).toContain('Abidjan');
     expect(text).toContain("Côte d'Ivoire");
     expect(text).toContain('Lien direct');
-    expect(text).toContain('colick.test/trips/ref/TRP-2026-000001');
+    expect(text).toContain('coliclic.test/trips/ref/TRP-2026-000001');
     expect(text).toContain('TRP-2026-000001');
-    expect(text).toContain('Colick');
+    expect(text).toContain('Coliclic');
     expect(text).not.toContain('Transaction sécurisée');
     expect(text).not.toContain('Prélèvement de 7%');
   });
@@ -85,16 +85,16 @@ describe('ShareCardStoryComponent', () => {
 
   it('renders the full share URL without truncation styling', () => {
     component.data = {
-      shareUrlLabel: 'https://colick.com/trips/ref/TRP-2026-000013',
+      shareUrlLabel: 'https://coliclic.com/trips/ref/TRP-2026-000013',
       tripReference: 'TRP-2026-000013',
     };
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
     const urlElement = Array.from(host.querySelectorAll('p'))
-      .find((element) => element.textContent?.includes('https://colick.com/trips/ref/TRP-2026-000013')) as HTMLElement | undefined;
+      .find((element) => element.textContent?.includes('https://coliclic.com/trips/ref/TRP-2026-000013')) as HTMLElement | undefined;
 
-    expect(host.textContent).toContain('https://colick.com/trips/ref/TRP-2026-000013');
+    expect(host.textContent).toContain('https://coliclic.com/trips/ref/TRP-2026-000013');
     expect(host.textContent).toContain('TRP-2026-000013');
     expect(urlElement?.closest('section')?.textContent).toContain('Référence du trajet');
     expect(urlElement?.className).toContain('break-all');
@@ -130,7 +130,7 @@ describe('ShareCardStoryComponent', () => {
     expect(text).toContain('--:--');
     expect(text).toContain('N/A kg');
     expect(text).toContain('N/A€ / kg');
-    expect(text).toContain('Profil vérifié Colick');
+    expect(text).toContain('Profil vérifié Coliclic');
     expect(text).not.toContain('ada@example.com');
     expect(text).not.toContain('+33 6 00 00 00 00');
   });

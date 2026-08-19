@@ -28,7 +28,7 @@
         </appender>
 
         <!-- Application package at DEBUG level -->
-        <logger name="com.colick" level="DEBUG"/>
+        <logger name="com.coliclic" level="DEBUG"/>
 
         <!-- Hibernate SQL queries at DEBUG level -->
         <logger name="org.hibernate.SQL" level="DEBUG"/>
@@ -44,7 +44,7 @@
     <!-- Non-dev profiles: console only, INFO level -->
     <springProfile name="!dev &amp; !default">
 
-        <logger name="com.colick" level="INFO"/>
+        <logger name="com.coliclic" level="INFO"/>
 
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>

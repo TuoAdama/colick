@@ -234,7 +234,7 @@ export class TripsManagementPageComponent implements OnInit {
 
       const pngFile = await this.shareCardExportService.captureElementAsPngFile(
         captureElement,
-        `colick-carte-partage-${this.shareCardMapperService.buildFileDate(trip.departureTime)}.png`
+        `coliclic-carte-partage-${this.shareCardMapperService.buildFileDate(trip.departureTime)}.png`
       );
       this.shareCardExportService.downloadFile(pngFile);
     } catch {

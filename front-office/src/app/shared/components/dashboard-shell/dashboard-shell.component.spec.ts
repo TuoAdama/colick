@@ -39,7 +39,7 @@ describe('DashboardShellComponent', () => {
     const text = footer?.textContent ?? '';
 
     expect(footer).not.toBeNull();
-    expect(text).toContain('Colick. Tous droits réservés.');
+    expect(text).toContain('Coliclic. Tous droits réservés.');
     expect(text).toContain('Confidentialité');
     expect(text).toContain('CGU');
     expect(text).toContain('Contact/support');

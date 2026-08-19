@@ -1,10 +1,10 @@
 ---
-description: "Use when creating components, styling UI elements, writing CSS/Tailwind classes, or defining themes. Enforces the Colick brand design system: colors, backgrounds, text palette, and font."
+description: "Use when creating components, styling UI elements, writing CSS/Tailwind classes, or defining themes. Enforces the Coliclic brand design system: colors, backgrounds, text palette, and font."
 applyTo: "front-office/src/**"
 ---
 
 
-# Colick
+# Coliclic
 
 ## Overview
 An editorial precision interface for a community platform where developers discover, share, and download design system files. The aesthetic is quietly confident — bold display typography, generous spacing, and gallery-frame card surfaces. The mood is professional and modern without being sterile. High information density balanced by breathing room. 

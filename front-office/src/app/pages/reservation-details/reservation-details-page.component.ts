@@ -202,14 +202,14 @@ export class ReservationDetailsPageComponent implements OnInit {
 
       const pngFile = await this.shareCardExportService.captureElementAsPngFile(
         captureElement,
-        `colick-annonce-${this.shareCardMapperService.buildFileDate(this.trip.departureTime)}.png`
+        `coliclic-annonce-${this.shareCardMapperService.buildFileDate(this.trip.departureTime)}.png`
       );
 
       await this.shareCardExportService.shareOrDownloadPng(pngFile, {
-        title: 'Trajet disponible sur Colick',
+        title: 'Trajet disponible sur Coliclic',
         text: shareCardData.routeLabel
           ? `Trajet disponible ${shareCardData.routeLabel}`
-          : 'Trajet disponible sur Colick',
+          : 'Trajet disponible sur Coliclic',
       });
     } catch {
       this.actionError = "Impossible de générer l'image de partage pour le moment.";

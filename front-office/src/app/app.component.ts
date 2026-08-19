@@ -5,7 +5,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { filter } from 'rxjs';
 
 /**
- * AppComponent - Root component for the Colick front-office application.
+ * AppComponent - Root component for the Coliclic front-office application.
  * Renders the shared header, router outlet, and footer.
  */
 @Component({
@@ -29,7 +29,7 @@ export class AppComponent {
   /**
    * Application title
    */
-  title = 'Colick - Envoyez vos colis avec des voyageurs de confiance';
+  title = 'Coliclic - Envoyez vos colis avec des voyageurs de confiance';
   showSharedChrome = true;
 
   constructor() {

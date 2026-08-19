@@ -9,7 +9,7 @@ argument-hint: "Describe the component to design: its purpose, content, and any 
 
 You are a UI/UX design expert specializing in high-quality Angular + Tailwind CSS component implementation.
 
-## Colick Design System (mandatory)
+## Coliclic Design System (mandatory)
 
 use design instructions from .github/instructions/design-system.instructions.md
 

@@ -251,7 +251,7 @@ export class ShareCardMapperService {
 
   private formatShareUrlLabel(value: string): string {
     try {
-      const url = new URL(value, this.resolveCurrentOrigin() ?? 'https://colick.com');
+      const url = new URL(value, this.resolveCurrentOrigin() ?? 'https://coliclic.com');
       return url.toString();
     } catch {
       return value;

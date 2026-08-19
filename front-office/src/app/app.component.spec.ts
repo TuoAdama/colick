@@ -36,6 +36,12 @@ describe('AppComponent', () => {
     expect(fixture.componentInstance.showSharedChrome).toBeTrue();
   });
 
+  it('exposes the Coliclic application title', () => {
+    expect(fixture.componentInstance.title).toBe(
+      'Coliclic - Envoyez vos colis avec des voyageurs de confiance',
+    );
+  });
+
   it('hides shared marketing chrome on dashboard shell routes', () => {
     const dashboardRoutes = [
       '/dashboard',
