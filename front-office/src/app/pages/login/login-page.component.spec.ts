@@ -76,7 +76,7 @@ describe('LoginPageComponent', () => {
     expect(component.errorMessage).toBe('Email ou mot de passe incorrect.');
   });
 
-  it('redirects to dashboard profile after Google login when identity document is missing', () => {
+  it('redirects to search after Google login', () => {
     authServiceMock.googleLogin.and.returnValue(of({
       token: 'jwt-token',
       type: 'Bearer',
@@ -93,10 +93,7 @@ describe('LoginPageComponent', () => {
     component.onGoogleCredential('google-id-token');
 
     expect(authServiceMock.googleLogin).toHaveBeenCalledWith('google-id-token');
-    expect(router.navigate).toHaveBeenCalledWith(
-      ['/dashboard'],
-      { queryParams: { tab: 'profile', completeProfile: 'identity' } }
-    );
+    expect(router.navigate).toHaveBeenCalledWith(['/search']);
   });
 
   it('redirects to returnUrl after login when profile is complete', () => {
@@ -111,7 +108,6 @@ describe('LoginPageComponent', () => {
         email: 'ada@example.com',
         role: 'USER',
         hasPassword: true,
-        identityDocument: '/uploads/id.pdf',
       },
     }));
 
@@ -137,7 +133,6 @@ describe('LoginPageComponent', () => {
         email: 'ada@example.com',
         role: 'USER',
         hasPassword: true,
-        identityDocument: '/uploads/id.pdf',
       },
     }));
 

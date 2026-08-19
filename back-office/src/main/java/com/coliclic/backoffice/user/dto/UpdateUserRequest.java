@@ -19,8 +19,6 @@ public class UpdateUserRequest {
 
     private String phone;
 
-    private String identityDocument;
-
     @Size(min = 8)
     private String password;
 }

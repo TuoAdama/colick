@@ -59,7 +59,6 @@ public class UserServiceImpl implements UserService {
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phone(request.getPhone())
-                .identityDocument(request.getIdentityDocument())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .enabled(false)
                 .signupConfirmToken(signupToken)
@@ -101,7 +100,6 @@ public class UserServiceImpl implements UserService {
             user.setEmail(request.getEmail());
         }
         if (request.getPhone() != null) user.setPhone(request.getPhone());
-        if (request.getIdentityDocument() != null) user.setIdentityDocument(request.getIdentityDocument());
         if (request.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
             user.setLocalAuthEnabled(true);

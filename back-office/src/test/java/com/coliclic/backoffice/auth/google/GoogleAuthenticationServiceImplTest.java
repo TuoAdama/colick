@@ -86,7 +86,6 @@ class GoogleAuthenticationServiceImplTest {
         verify(userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue().getAuthProvider()).isEqualTo(User.AuthProvider.GOOGLE);
         assertThat(userCaptor.getValue().getGoogleSubject()).isEqualTo("google-subject");
-        assertThat(userCaptor.getValue().getIdentityDocument()).isEmpty();
         assertThat(userCaptor.getValue().getEnabled()).isTrue();
         assertThat(userCaptor.getValue().getLocalAuthEnabled()).isFalse();
     }
@@ -106,7 +105,6 @@ class GoogleAuthenticationServiceImplTest {
                 .firstName("Ada")
                 .lastName("Lovelace")
                 .email("ada@example.com")
-                .identityDocument("ID-42")
                 .password("hashed-password")
                 .enabled(false)
                 .signupConfirmToken("signup-token")
@@ -145,7 +143,6 @@ class GoogleAuthenticationServiceImplTest {
                 .firstName("Ada")
                 .lastName("Lovelace")
                 .email("ada@example.com")
-                .identityDocument("ID-42")
                 .password("hashed-password")
                 .googleSubject("other-google-subject")
                 .role(User.Role.USER)

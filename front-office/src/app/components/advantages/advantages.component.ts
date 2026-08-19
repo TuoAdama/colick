@@ -43,7 +43,7 @@ export class AdvantagesComponent {
     },
     {
       title: '100% sécurisé',
-      description: "Vérification d'identité obligatoire et paiement sécurisé sur la plateforme.",
+      description: "Activation du compte et paiement sécurisé sur la plateforme.",
       icon: 'secure',
       iconBgColor: 'bg-accent/10',
       iconColor: 'text-accent',

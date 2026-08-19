@@ -16,7 +16,6 @@ describe('SettingsPageComponent', () => {
     email: 'ada@example.com',
     role: 'USER',
     phone: '+33 6 00 00 00 00',
-    identityDocument: 'AA123456',
     hasPassword: true,
   });
 
@@ -46,5 +45,7 @@ describe('SettingsPageComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+    expect(component.infoForm.contains('identityDocument')).toBeFalse();
+    expect(fixture.nativeElement.textContent).not.toContain("Vérification d'identité");
   });
 });

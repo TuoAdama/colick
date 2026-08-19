@@ -41,7 +41,7 @@ export class HeroComponent {
    * Trust badges displayed below the CTA buttons
    */
   trustBadges = [
-    { icon: 'verified', label: 'Identité vérifiée' },
+    { icon: 'verified', label: 'Compte activé' },
     { icon: 'secure', label: 'Paiement sécurisé' },
     { icon: 'certified', label: 'Avis certifiés' },
   ];

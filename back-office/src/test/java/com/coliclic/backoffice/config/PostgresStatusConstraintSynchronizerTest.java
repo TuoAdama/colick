@@ -59,6 +59,7 @@ class PostgresStatusConstraintSynchronizerTest {
                         "CHECK ((trip_id IS NOT NULL AND parcel_request_id IS NULL) " +
                         "OR (trip_id IS NULL AND parcel_request_id IS NOT NULL))"
         );
+        verify(jdbcTemplate).execute("ALTER TABLE users DROP COLUMN IF EXISTS identity_document");
         verify(connection).close();
     }
 

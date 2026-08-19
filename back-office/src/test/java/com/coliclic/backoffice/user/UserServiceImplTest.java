@@ -68,7 +68,6 @@ class UserServiceImplTest {
                 .lastName("Doe")
                 .email("john@example.com")
                 .password("hashed")
-                .identityDocument("ID123")
                 .role(User.Role.USER)
                 .build();
     }
@@ -79,7 +78,6 @@ class UserServiceImplTest {
         request.setFirstName("John");
         request.setLastName("Doe");
         request.setEmail("john@example.com");
-        request.setIdentityDocument("ID123");
         request.setPassword("password123");
 
         when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);

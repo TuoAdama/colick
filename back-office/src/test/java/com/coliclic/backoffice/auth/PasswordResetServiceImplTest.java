@@ -71,7 +71,6 @@ class PasswordResetServiceImplTest {
                 .lastName("Doe")
                 .email("john@example.com")
                 .password("old-hash")
-                .identityDocument("ID123")
                 .build();
     }
 

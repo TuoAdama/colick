@@ -2,7 +2,6 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthResponse, UserResponse } from '../../models/auth.model';
 import { AuthService } from '../../services/auth.service';
 import { GoogleAuthButtonComponent } from '../../components/google-auth-button/google-auth-button.component';
 
@@ -25,7 +24,6 @@ export class RegisterPageComponent {
     lastName: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     phone: [''],
-    identityDocument: ['', [Validators.required]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     confirmPassword: ['', [Validators.required]],
   }, { validators: this.passwordMatchValidator });
@@ -49,7 +47,7 @@ export class RegisterPageComponent {
     const v = this.registerForm.value;
     this.authService.register({
       firstName: v.firstName!, lastName: v.lastName!, email: v.email!,
-      phone: v.phone || undefined, identityDocument: v.identityDocument!, password: v.password!,
+      phone: v.phone || undefined, password: v.password!,
     }).subscribe({
       next: () => {
         this.isLoading = false;
@@ -71,9 +69,9 @@ export class RegisterPageComponent {
     this.successMessage = '';
 
     this.authService.googleLogin(idToken).subscribe({
-      next: (response) => {
+      next: () => {
         this.isGoogleLoading = false;
-        this.navigateAfterAuth(response);
+        this.router.navigate(['/search']);
       },
       error: (err: any) => {
         this.isGoogleLoading = false;
@@ -82,16 +80,4 @@ export class RegisterPageComponent {
     });
   }
 
-  private navigateAfterAuth(response: AuthResponse): void {
-    if (this.requiresIdentityDocument(response.user)) {
-      this.router.navigate(['/dashboard'], { queryParams: { tab: 'profile', completeProfile: 'identity' } });
-      return;
-    }
-
-    this.router.navigate(['/search']);
-  }
-
-  private requiresIdentityDocument(user: UserResponse): boolean {
-    return !user.identityDocument?.trim();
-  }
 }

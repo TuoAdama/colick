@@ -81,7 +81,7 @@ class TravelerReviewRepositoryTest {
 
     @Test
     void findRatingStatsByTravelerIds_shouldOnlyIncludeSubmittedReviews() {
-        User traveler = persistTraveler("shared-traveler@example.com", "TRAVELER-SHARED");
+        User traveler = persistTraveler("shared-traveler@example.com");
 
         PersistedBooking firstBooking = persistAcceptedBooking(traveler, "summary-one@example.com");
         PersistedBooking secondBooking = persistAcceptedBooking(traveler, "summary-two@example.com");
@@ -108,7 +108,7 @@ class TravelerReviewRepositoryTest {
 
     @Test
     void findSubmittedReviewsByTravelerId_shouldReturnSubmittedReviewsNewestFirst() {
-        User traveler = persistTraveler("ordered-traveler@example.com", "TRAVELER-ORDERED");
+        User traveler = persistTraveler("ordered-traveler@example.com");
 
         PersistedBooking firstBooking = persistAcceptedBooking(traveler, "ordered-one@example.com");
         PersistedBooking secondBooking = persistAcceptedBooking(traveler, "ordered-two@example.com");
@@ -141,7 +141,7 @@ class TravelerReviewRepositoryTest {
     }
 
     private PersistedBooking persistAcceptedBooking(String senderEmail) {
-        User traveler = persistTraveler("traveler-" + senderEmail, "TRAVELER-" + senderEmail);
+        User traveler = persistTraveler("traveler-" + senderEmail);
         return persistAcceptedBooking(traveler, senderEmail);
     }
 
@@ -150,7 +150,6 @@ class TravelerReviewRepositoryTest {
                 .firstName("Bob")
                 .lastName("Sender")
                 .email(senderEmail)
-                .identityDocument("SENDER-" + senderEmail)
                 .password("hashed-password")
                 .enabled(true)
                 .role(User.Role.USER)
@@ -179,12 +178,11 @@ class TravelerReviewRepositoryTest {
         return new PersistedBooking(trip, booking);
     }
 
-    private User persistTraveler(String email, String identityDocument) {
+    private User persistTraveler(String email) {
         return userRepository.save(User.builder()
                 .firstName("Alice")
                 .lastName("Traveler")
                 .email(email)
-                .identityDocument(identityDocument)
                 .password("hashed-password")
                 .enabled(true)
                 .role(User.Role.USER)

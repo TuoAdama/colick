@@ -34,9 +34,6 @@ public class User {
     private String phone;
 
     @Column(nullable = false)
-    private String identityDocument;
-
-    @Column(nullable = false)
     private String password;
 
     /** Whether password-based sign-in is enabled for this account. */

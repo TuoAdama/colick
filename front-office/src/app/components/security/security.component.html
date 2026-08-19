@@ -8,10 +8,10 @@
           Votre sécurité, notre priorité
         </span>
         <h2 id="security-title" class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-          Vérification d'identité stricte
+          Des échanges plus sereins
         </h2>
         <p class="text-white/80 text-lg mb-8">
-          Pour garantir la sécurité de tous les utilisateurs et éviter les fausses annonces, nous avons mis en place un processus de vérification d'identité rigoureux.
+          Activation des comptes, paiement sécurisé, avis et support contribuent à créer un cadre de confiance.
         </p>
 
         <!-- Security Features List -->
@@ -44,8 +44,8 @@
               </svg>
             </div>
             <div>
-              <p class="font-bold text-primary text-lg">Compte vérifié</p>
-              <p class="text-success text-sm font-medium">Identité confirmée</p>
+              <p class="font-bold text-primary text-lg">Compte actif</p>
+              <p class="text-success text-sm font-medium">E-mail confirmé</p>
             </div>
           </div>
 
@@ -53,7 +53,7 @@
           <div class="space-y-4">
             <div class="flex items-center justify-between py-3 border-b border-gray-50">
               <span class="text-text-secondary">Nom</span>
-              <span class="font-medium text-primary">{{ verifiedUser.name }}</span>
+              <span class="font-medium text-primary">{{ trustedUser.name }}</span>
             </div>
             <div class="flex items-center justify-between py-3 border-b border-gray-50">
               <span class="text-text-secondary">E-mail</span>
@@ -61,15 +61,15 @@
             </div>
             <div class="flex items-center justify-between py-3 border-b border-gray-50">
               <span class="text-text-secondary">Téléphone</span>
-              <span class="font-medium text-primary">{{ verifiedUser.phone }}</span>
+              <span class="font-medium text-primary">{{ trustedUser.phone }}</span>
             </div>
             <div class="flex items-center justify-between py-3">
-              <span class="text-text-secondary">Pièce d'identité</span>
+              <span class="text-text-secondary">Avis utilisateurs</span>
               <span class="inline-flex items-center gap-1 bg-success/10 text-success font-medium text-sm px-3 py-1 rounded-full">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                 </svg>
-                Vérifiée
+                Consultables
               </span>
             </div>
           </div>

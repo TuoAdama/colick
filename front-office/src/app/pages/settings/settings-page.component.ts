@@ -25,7 +25,6 @@ export class SettingsPageComponent implements OnInit {
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     phone: [''],
-    identityDocument: ['', Validators.required],
   });
   infoSuccess = '';
   infoError = '';
@@ -36,7 +35,6 @@ export class SettingsPageComponent implements OnInit {
   selectedPhotoFile: File | null = null;
   isUploadingPhoto = false;
   photoError = '';
-  selectedIdentityProofFile: File | null = null;
 
   // ── Section 2: Changer l'e-mail ───────────────────────────────────────────
   emailForm = this.fb.group({
@@ -70,17 +68,12 @@ export class SettingsPageComponent implements OnInit {
         firstName: user.firstName,
         lastName: user.lastName,
         phone: user.phone ?? '',
-        identityDocument: user.identityDocument ?? '',
       });
       this.emailForm.patchValue({
         newEmail: user.email,
       });
       this.photoPreview = user.photoUrl ?? null;
     }
-  }
-
-  needsIdentityDocument(): boolean {
-    return !this.authService.getUser()?.identityDocument?.trim();
   }
 
   hasLocalPassword(): boolean {
@@ -110,11 +103,6 @@ export class SettingsPageComponent implements OnInit {
     });
   }
 
-  onIdentityProofSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.selectedIdentityProofFile = input.files?.length ? input.files[0] : null;
-  }
-
   // ── Infos générales ──────────────────────────────────────────────────────
   saveInfo(): void {
     if (this.infoForm.invalid || this.isSavingInfo) return;
@@ -128,7 +116,6 @@ export class SettingsPageComponent implements OnInit {
       firstName: val.firstName ?? undefined,
       lastName: val.lastName ?? undefined,
       phone: val.phone || undefined,
-      identityDocument: val.identityDocument || undefined,
     };
     this.authService.updateProfile(user.id, payload).subscribe({
       next: () => { this.infoSuccess = 'Informations mises à jour.'; this.isSavingInfo = false; },
@@ -205,13 +192,11 @@ export class SettingsPageComponent implements OnInit {
       firstName: user.firstName,
       lastName: user.lastName,
       phone: user.phone ?? '',
-      identityDocument: user.identityDocument ?? '',
     });
     this.emailForm.reset({
       newEmail: user.email,
     });
     this.passwordForm.reset();
-    this.selectedIdentityProofFile = null;
     this.infoSuccess = '';
     this.infoError = '';
     this.emailSuccess = '';
