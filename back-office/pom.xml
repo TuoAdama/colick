@@ -8,11 +8,11 @@
 		<version>3.5.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.colick</groupId>
+	<groupId>com.coliclic</groupId>
 	<artifactId>back-office</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>back-office</name>
-	<description>Colick REST API back-office</description>
+	<description>Coliclic REST API back-office</description>
 	<url/>
 	<licenses>
 		<license/>

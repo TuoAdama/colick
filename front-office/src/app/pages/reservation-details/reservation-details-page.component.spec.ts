@@ -128,7 +128,7 @@ describe('ReservationDetailsPageComponent', () => {
     shareCardMapperServiceMock.buildFileDate.and.returnValue('2025-07-14');
     shareCardExportServiceMock.generateQrCodeDataUrl.and.resolveTo('data:image/png;base64,qr');
     shareCardExportServiceMock.captureElementAsPngFile.and.resolveTo(
-      new File(['png'], 'colick-annonce-2025-07-14.png', { type: 'image/png' })
+      new File(['png'], 'coliclic-annonce-2025-07-14.png', { type: 'image/png' })
     );
     shareCardExportServiceMock.shareOrDownloadPng.and.resolveTo('downloaded');
 
@@ -290,7 +290,7 @@ describe('ReservationDetailsPageComponent', () => {
     expect(shareCardExportServiceMock.captureElementAsPngFile).toHaveBeenCalled();
     expect(shareCardExportServiceMock.shareOrDownloadPng).toHaveBeenCalledWith(
       jasmine.any(File),
-      jasmine.objectContaining({ title: 'Trajet disponible sur Colick' })
+      jasmine.objectContaining({ title: 'Trajet disponible sur Coliclic' })
     );
     expect(component.isGeneratingShareCard).toBeFalse();
     expect(component.shareCardData).toBeNull();

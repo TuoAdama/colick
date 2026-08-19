@@ -98,7 +98,7 @@ describe('TripsManagementPageComponent', () => {
     ]);
     shareCardExportSpy.generateQrCodeDataUrl.and.resolveTo('data:image/png;base64,qr');
     shareCardExportSpy.captureElementAsPngFile.and.resolveTo(
-      new File(['png'], 'colick-carte-partage-2024-03-15.png', { type: 'image/png' })
+      new File(['png'], 'coliclic-carte-partage-2024-03-15.png', { type: 'image/png' })
     );
 
     await TestBed.configureTestingModule({

@@ -66,7 +66,7 @@ describe('AuthService', () => {
       },
     });
 
-    const storedRaw = localStorage.getItem('colick_user');
+    const storedRaw = localStorage.getItem('coliclic_user');
     expect(storedRaw).not.toBeNull();
     const storedUser = JSON.parse(storedRaw!);
     expect(storedUser.photoUrl).toBe('/api/uploads/avatar.png');
@@ -92,7 +92,7 @@ describe('AuthService', () => {
       },
     });
 
-    expect(localStorage.getItem('colick_token')).toBe('jwt-token');
+    expect(localStorage.getItem('coliclic_token')).toBe('jwt-token');
     expect(service.getUser()?.email).toBe('ada@example.com');
     expect(service.getUser()?.hasPassword).toBeFalse();
   });
@@ -108,8 +108,8 @@ describe('AuthService', () => {
   });
 
   it('normalizes relative profile photo URL after upload', () => {
-    localStorage.setItem('colick_token', 'jwt-token');
-    localStorage.setItem('colick_user', JSON.stringify({
+    localStorage.setItem('coliclic_token', 'jwt-token');
+    localStorage.setItem('coliclic_user', JSON.stringify({
       id: 1,
       firstName: 'John',
       lastName: 'Doe',
@@ -137,8 +137,8 @@ describe('AuthService', () => {
   describe('logout()', () => {
     beforeEach(() => {
       // Seed storage and user state before each logout test
-      localStorage.setItem('colick_token', 'jwt-token');
-      localStorage.setItem('colick_user', JSON.stringify({
+      localStorage.setItem('coliclic_token', 'jwt-token');
+      localStorage.setItem('coliclic_user', JSON.stringify({
         id: 1, firstName: 'Ada', lastName: 'Lovelace',
         email: 'ada@example.com', role: 'USER',
       }));
@@ -147,8 +147,8 @@ describe('AuthService', () => {
     it('removes token and user from localStorage', () => {
       service.logout();
 
-      expect(localStorage.getItem('colick_token')).toBeNull();
-      expect(localStorage.getItem('colick_user')).toBeNull();
+      expect(localStorage.getItem('coliclic_token')).toBeNull();
+      expect(localStorage.getItem('coliclic_user')).toBeNull();
     });
 
     it('sets currentUser to null', () => {

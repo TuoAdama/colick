@@ -20,7 +20,7 @@ module.exports = {
         'slide-up': 'slideUp 300ms ease-out',
       },
       colors: {
-        // Colick design system tokens
+        // Coliclic design system tokens
         primary: '#023047',
         'primary-hover': '#4F46E5',
         secondary: '#219ebc',

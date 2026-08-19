@@ -1,4 +1,4 @@
-# Docker Compose configuration for Colick development environment
+# Docker Compose configuration for Coliclic development environment
 
 version: '3.8'
 
@@ -6,7 +6,7 @@ services:
   # PostgreSQL database
   postgres:
     image: postgres:16-alpine
-    container_name: colick-postgres
+    container_name: coliclic-postgres
     ports:
       - "5432:5432"
     env_file:
@@ -18,7 +18,7 @@ services:
   # MailHog — SMTP server for local email testing
   mailhog:
     image: mailhog/mailhog:latest
-    container_name: colick-mailhog
+    container_name: coliclic-mailhog
     ports:
       - "1025:1025"   # SMTP
       - "8025:8025"   # Web UI
@@ -29,7 +29,7 @@ services:
     build:
       context: ./back-office
       dockerfile: Dockerfile
-    container_name: colick-back-office
+    container_name: coliclic-back-office
     ports:
       - "8080:8080"
     env_file:
@@ -46,7 +46,7 @@ services:
     build:
       context: ./front-office
       dockerfile: Dockerfile
-    container_name: colick-front-office
+    container_name: coliclic-front-office
     ports:
       - "4200:4200"
     volumes:
@@ -71,6 +71,6 @@ services:
 
 volumes:
   postgres-data:
-    name: colick-postgres-data
+    name: coliclic-postgres-data
   front-office-node-modules:
-    name: colick-front-office-node-modules
+    name: coliclic-front-office-node-modules

@@ -27,7 +27,7 @@ describe('ShareCardMapperService', () => {
       phone: '+33 6 00 00 00 00',
       photoUrl: '/photos/ada.png',
     }, {
-      shareOrigin: 'https://colick.test',
+      shareOrigin: 'https://coliclic.test',
     });
 
     expect(result.departureCity).toBe('Paris');
@@ -48,8 +48,8 @@ describe('ShareCardMapperService', () => {
     expect(result.travelerPhotoUrl).toBe('/photos/ada.png');
     expect(result.availableWeightLabel).toBe('8,5 kg');
     expect(result.pricePerKiloLabel).toBe('12€ / kg');
-    expect(result.shareUrl).toBe('https://colick.test/trips/ref/TRP-2026-000001');
-    expect(result.shareUrlLabel).toBe('https://colick.test/trips/ref/TRP-2026-000001');
+    expect(result.shareUrl).toBe('https://coliclic.test/trips/ref/TRP-2026-000001');
+    expect(result.shareUrlLabel).toBe('https://coliclic.test/trips/ref/TRP-2026-000001');
     expect(result.tripReference).toBe('TRP-2026-000001');
   });
 
