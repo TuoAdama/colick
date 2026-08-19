@@ -26,6 +26,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @TestPropertySource(properties = "spring.sql.init.mode=never")
 class TravelerReviewRepositoryTest {
 
+    private int tripReferenceSequence;
+
     @Autowired
     private TravelerReviewRepository travelerReviewRepository;
 
@@ -155,6 +157,7 @@ class TravelerReviewRepositoryTest {
                 .build());
 
         Trip trip = tripRepository.save(Trip.builder()
+                .reference("TRP-TEST-%06d".formatted(++tripReferenceSequence))
                 .traveler(traveler)
                 .departureAddress("Paris")
                 .destination("Abidjan")

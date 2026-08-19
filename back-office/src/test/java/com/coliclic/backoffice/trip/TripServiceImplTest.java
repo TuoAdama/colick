@@ -78,8 +78,8 @@ class TripServiceImplTest {
     @Mock
     private TripAlertService tripAlertService;
 
-    @Spy
-    private TripReferenceGenerator tripReferenceGenerator = new TripReferenceGenerator();
+    @Mock
+    private TripReferenceGenerator tripReferenceGenerator;
 
     @Spy
     private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
@@ -141,6 +141,8 @@ class TripServiceImplTest {
                 .thenReturn(Map.of());
         lenient().when(fileStorageService.sanitizePublicUrl(nullable(String.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(tripReferenceGenerator.generateForNewTrip(any(Trip.class)))
+                .thenReturn("TRP-2026-000010");
     }
 
     @Test
@@ -165,9 +167,10 @@ class TripServiceImplTest {
     }
 
     @Test
-    void createTrip_shouldGenerateDistinctReferencesFromTripIds() {
+    void createTrip_shouldReturnDistinctGeneratedReferences() {
         Trip firstTrip = Trip.builder()
                 .id(10L)
+                .reference("TRP-2026-000010")
                 .traveler(traveler)
                 .departureAddress("Paris")
                 .destination("Abidjan")
@@ -179,6 +182,7 @@ class TripServiceImplTest {
                 .build();
         Trip secondTrip = Trip.builder()
                 .id(11L)
+                .reference("TRP-2026-000011")
                 .traveler(traveler)
                 .departureAddress("Paris")
                 .destination("Abidjan")
@@ -190,6 +194,8 @@ class TripServiceImplTest {
                 .build();
         when(tripRepository.save(any(Trip.class)))
                 .thenReturn(firstTrip, secondTrip);
+        when(tripReferenceGenerator.generateForNewTrip(any(Trip.class)))
+                .thenReturn("TRP-2026-000010", "TRP-2026-000011");
 
         TripResponse firstResponse = tripService.createTrip(buildCreateTripRequest(), traveler);
         TripResponse secondResponse = tripService.createTrip(buildCreateTripRequest(), traveler);

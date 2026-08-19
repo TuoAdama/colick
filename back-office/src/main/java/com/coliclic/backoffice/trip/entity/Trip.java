@@ -24,7 +24,7 @@ public class Trip {
     @SequenceGenerator(name = "trip_id_seq", sequenceName = "trips_id_seq", allocationSize = 1)
     private Long id;
 
-    @Column(unique = true, length = 32)
+    @Column(nullable = false, unique = true, length = 32)
     private String reference;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

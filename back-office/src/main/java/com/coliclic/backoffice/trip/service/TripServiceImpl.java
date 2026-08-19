@@ -79,9 +79,10 @@ public class TripServiceImpl implements TripService {
                 .maxWeight(request.getMaxWeight())
                 .pricePerKilo(request.getPricePerKilo())
                 .instantAcceptance(request.isInstantAcceptance())
+                .createdAt(LocalDateTime.now())
                 .build();
+        trip.setReference(tripReferenceGenerator.generateForNewTrip(trip));
         Trip savedTrip = tripRepository.save(trip);
-        savedTrip.setReference(tripReferenceGenerator.generate(savedTrip));
         tripAlertService.notifyMatchingAlerts(savedTrip);
         return toTripResponse(savedTrip, null, Map.of());
     }

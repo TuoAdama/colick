@@ -49,6 +49,9 @@ class PostgresStatusConstraintSynchronizerTest {
                 "ALTER TABLE trip_bookings ADD CONSTRAINT trip_bookings_status_check " +
                         "CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED', 'REMOVED', 'DELIVERED'))"
         );
+        verify(jdbcTemplate).execute("CREATE SEQUENCE IF NOT EXISTS trip_reference_seq START WITH 1");
+        verify(jdbcTemplate).execute(contains("SELECT setval('trip_reference_seq'"));
+        verify(jdbcTemplate).execute("ALTER TABLE trips ALTER COLUMN reference SET NOT NULL");
         verify(jdbcTemplate).execute("ALTER TABLE conversations ALTER COLUMN trip_id DROP NOT NULL");
         verify(jdbcTemplate).execute("ALTER TABLE conversations DROP CONSTRAINT IF EXISTS conversations_exactly_one_context_check");
         verify(jdbcTemplate).execute(

@@ -54,6 +54,16 @@ public class PostgresStatusConstraintSynchronizer implements ApplicationRunner {
                         "SET reference = 'TRP-' || EXTRACT(YEAR FROM COALESCE(created_at, CURRENT_TIMESTAMP))::int || '-' || LPAD(id::text, 6, '0') " +
                         "WHERE reference IS NULL OR BTRIM(reference) = ''"
         );
+        jdbcTemplate.execute("CREATE SEQUENCE IF NOT EXISTS trip_reference_seq START WITH 1");
+        jdbcTemplate.execute(
+                "SELECT setval('trip_reference_seq', " +
+                        "GREATEST(" +
+                        "(SELECT last_value + CASE WHEN is_called THEN 1 ELSE 0 END FROM trip_reference_seq), " +
+                        "COALESCE((SELECT MAX(id) + 1 FROM trips), 1), " +
+                        "COALESCE((SELECT MAX(SUBSTRING(reference FROM '([0-9]+)$')::bigint) + 1 " +
+                        "FROM trips WHERE reference ~ '^TRP-[0-9]{4}-[0-9]+$'), 1)" +
+                        "), false)"
+        );
         jdbcTemplate.execute("CREATE UNIQUE INDEX IF NOT EXISTS trips_reference_unique_idx ON trips(reference)");
         jdbcTemplate.execute("ALTER TABLE trips ALTER COLUMN reference SET NOT NULL");
     }
