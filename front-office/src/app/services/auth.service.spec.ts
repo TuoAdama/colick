@@ -97,6 +97,29 @@ describe('AuthService', () => {
     expect(service.getUser()?.hasPassword).toBeFalse();
   });
 
+  it('removes a legacy identity document from browser storage on startup', () => {
+    localStorage.setItem('coliclic_user', JSON.stringify({
+      id: 1,
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: 'ada@example.com',
+      role: 'USER',
+      identityDocument: 'AA123456',
+    }));
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    });
+    service = TestBed.inject(AuthService);
+    httpMock = TestBed.inject(HttpTestingController);
+    router = TestBed.inject(Router);
+
+    const storedUser = JSON.parse(localStorage.getItem('coliclic_user')!);
+    expect(storedUser.identityDocument).toBeUndefined();
+    expect(service.getUser()?.email).toBe('ada@example.com');
+  });
+
   it('loads Google auth configuration', () => {
     service.getGoogleAuthConfig().subscribe((config) => {
       expect(config).toEqual({ enabled: true, clientId: 'google-client-id' });

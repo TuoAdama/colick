@@ -65,7 +65,7 @@ export class AuthService {
     return this.currentUserSubject.getValue();
   }
 
-  /** Update basic profile info (firstName, lastName, phone, identityDocument). */
+  /** Update basic profile info (firstName, lastName, phone). */
   updateProfile(id: number, data: UpdateProfileRequest): Observable<UserResponse> {
     return this.http.put<UserResponse>(`/api/users/${id}`, data).pipe(
       tap((user) => {
@@ -135,8 +135,10 @@ export class AuthService {
   private getStoredUser(): UserResponse | null {
     const raw = localStorage.getItem(this.USER_KEY);
     if (!raw) return null;
-    const user = JSON.parse(raw) as UserResponse;
-    return this.normalizeUser(user);
+    const user = JSON.parse(raw) as UserResponse & { identityDocument?: unknown };
+    const normalizedUser = this.normalizeUser(user);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(normalizedUser));
+    return normalizedUser;
   }
 
   private persistUser(user: UserResponse): void {
@@ -145,9 +147,10 @@ export class AuthService {
     this.currentUserSubject.next(normalizedUser);
   }
 
-  private normalizeUser(user: UserResponse): UserResponse {
+  private normalizeUser(user: UserResponse & { identityDocument?: unknown }): UserResponse {
+    const { identityDocument: _removedIdentityDocument, ...identityFreeUser } = user;
     return {
-      ...user,
+      ...identityFreeUser,
       hasPassword: user.hasPassword !== false,
       photoUrl: this.photoUrlService.normalizePhotoUrl(user.photoUrl),
     };

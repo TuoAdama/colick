@@ -29,6 +29,7 @@ public class PostgresStatusConstraintSynchronizer implements ApplicationRunner {
         synchronizeTripBookingStatusConstraint();
         synchronizeTripReferenceSchema();
         synchronizeConversationContextSchema();
+        removeLegacyIdentityDocumentColumn();
     }
 
     private void synchronizeTripStatusConstraint() {
@@ -76,5 +77,9 @@ public class PostgresStatusConstraintSynchronizer implements ApplicationRunner {
                         "CHECK ((trip_id IS NOT NULL AND parcel_request_id IS NULL) " +
                         "OR (trip_id IS NULL AND parcel_request_id IS NOT NULL))"
         );
+    }
+
+    private void removeLegacyIdentityDocumentColumn() {
+        jdbcTemplate.execute("ALTER TABLE users DROP COLUMN IF EXISTS identity_document");
     }
 }

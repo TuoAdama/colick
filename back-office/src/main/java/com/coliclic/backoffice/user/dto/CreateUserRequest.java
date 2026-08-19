@@ -24,9 +24,6 @@ public class CreateUserRequest {
     private String phone;
 
     @NotBlank
-    private String identityDocument;
-
-    @NotBlank
     @Size(min = 8)
     private String password;
 }

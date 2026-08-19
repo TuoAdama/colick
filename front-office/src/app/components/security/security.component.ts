@@ -10,8 +10,7 @@ interface SecurityFeature {
 }
 
 /**
- * SecurityComponent - Displays the platform's security features and identity verification.
- * Shows trust signals and verification processes.
+ * SecurityComponent - Displays the platform's security and trust features.
  */
 @Component({
   selector: 'app-security',
@@ -25,12 +24,12 @@ export class SecurityComponent {
    */
   securityFeatures: SecurityFeature[] = [
     {
-      title: "Pièce d'identité obligatoire",
-      description: "Chaque utilisateur doit fournir une pièce d'identité valide lors de l'inscription.",
+      title: 'Compte activé par e-mail',
+      description: "Chaque compte local est activé depuis un lien envoyé à l'adresse d'inscription.",
     },
     {
-      title: 'Vérification manuelle',
-      description: 'Notre équipe vérifie chaque document avant validation du compte.',
+      title: 'Support humain',
+      description: "Notre équipe reste disponible pour accompagner les utilisateurs à chaque étape.",
     },
     {
       title: 'Paiement sécurisé',
@@ -43,12 +42,11 @@ export class SecurityComponent {
   ];
 
   /**
-   * Sample verified user data for the demo card
+   * Sample user data for the demo card
    */
-  verifiedUser = {
+  trustedUser = {
     name: 'Jean Dupont',
     email: 'j.dupont&#64;email.com',
     phone: '+33 6 ** ** ** **',
-    verified: true,
   };
 }

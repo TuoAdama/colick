@@ -74,7 +74,6 @@ class TripCreationPersistenceTest {
                 .firstName("Alice")
                 .lastName("Dupont")
                 .email("alice-trip-reference@example.com")
-                .identityDocument("ID-REFERENCE")
                 .password("hashed-password")
                 .build());
         CreateTripRequest request = new CreateTripRequest();

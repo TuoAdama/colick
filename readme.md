@@ -50,8 +50,6 @@ Le formulaire de contact doit comprendre les champs suivants:
 - Prénom
 - adresse e-mail
 - Numéro de téléphone (optionnel)
-- Pièce d'identité
-	- Élément très important pour la création d'un compte
 - Mot de passe
 
 
@@ -68,7 +66,8 @@ Le formulaire de contact doit comprendre les champs suivants:
 ### Problème 1: 
 	Possibilité de se faire voler des colis par de fausses annonces
 	Solution:
-        - Vérification d'identité stricte
+		- Activation du compte par e-mail
+		- Paiement sécurisé et système d'avis
 			  
 			  
 			  
@@ -85,7 +84,6 @@ Technologies à utiliser:
 	- Mysql pour la base de données
 	- Redis pour le cache
 	- Mailer pour le testing des mails
-
 
 
 

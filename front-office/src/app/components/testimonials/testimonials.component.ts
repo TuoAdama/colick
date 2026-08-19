@@ -48,7 +48,7 @@ export class TestimonialsComponent {
     },
     {
       content:
-        "La vérification d'identité m'a rassurée. J'utilise Coliclic depuis 6 mois et je n'ai jamais eu de problème. Je recommande vivement !",
+        "Les avis et le paiement sécurisé m'ont rassurée. J'utilise Coliclic depuis 6 mois et je n'ai jamais eu de problème. Je recommande vivement !",
       author: 'Sophie T.',
       role: 'Expéditrice - Lyon',
       initials: 'ST',

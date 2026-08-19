@@ -98,7 +98,6 @@ public class GoogleAuthenticationServiceImpl implements GoogleAuthenticationServ
                 .firstName(resolveFirstName(payload))
                 .lastName(resolveLastName(payload))
                 .email(payload.email())
-                .identityDocument("")
                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .localAuthEnabled(false)
                 .enabled(true)

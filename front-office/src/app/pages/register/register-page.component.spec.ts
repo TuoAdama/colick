@@ -22,7 +22,6 @@ describe('RegisterPageComponent', () => {
         lastName: 'Lovelace',
         email: 'ada@example.com',
         role: 'USER',
-        identityDocument: 'ID-42',
         hasPassword: false,
       },
     })),
@@ -53,13 +52,21 @@ describe('RegisterPageComponent', () => {
       lastName: 'Doe',
       email: 'john@example.com',
       phone: '',
-      identityDocument: 'ID123',
       password: 'password123',
       confirmPassword: 'password123',
     });
 
     component.onSubmit();
 
+    expect(authServiceMock.register).toHaveBeenCalledWith({
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      phone: undefined,
+      password: 'password123',
+    });
+    expect(component.registerForm.contains('identityDocument')).toBeFalse();
+    expect(fixture.nativeElement.querySelector('#identityDocument')).toBeNull();
     expect(component.successMessage).toContain("Vérifiez votre e-mail");
     tick(2500);
     expect(navigateSpy).toHaveBeenCalledWith(['/login']);

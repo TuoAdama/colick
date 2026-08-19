@@ -2,7 +2,6 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AuthResponse, UserResponse } from '../../models/auth.model';
 import { AuthService } from '../../services/auth.service';
 import { GoogleAuthButtonComponent } from '../../components/google-auth-button/google-auth-button.component';
 
@@ -38,9 +37,9 @@ export class LoginPageComponent {
 
     const { email, password } = this.loginForm.value;
     this.authService.login(email!, password!).subscribe({
-      next: (response) => {
+      next: () => {
         this.isLoading = false;
-        this.navigateAfterAuth(response);
+        this.navigateAfterAuth();
       },
       error: (err: any) => {
         this.isLoading = false;
@@ -57,9 +56,9 @@ export class LoginPageComponent {
     this.errorMessage = '';
 
     this.authService.googleLogin(idToken).subscribe({
-      next: (response) => {
+      next: () => {
         this.isGoogleLoading = false;
-        this.navigateAfterAuth(response);
+        this.navigateAfterAuth();
       },
       error: (err: any) => {
         this.isGoogleLoading = false;
@@ -68,12 +67,7 @@ export class LoginPageComponent {
     });
   }
 
-  private navigateAfterAuth(response: AuthResponse): void {
-    if (this.requiresIdentityDocument(response.user)) {
-      this.router.navigate(['/dashboard'], { queryParams: { tab: 'profile', completeProfile: 'identity' } });
-      return;
-    }
-
+  private navigateAfterAuth(): void {
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
     if (returnUrl?.startsWith('/') && !returnUrl.startsWith('//')) {
       void this.router.navigateByUrl(returnUrl);
@@ -81,9 +75,5 @@ export class LoginPageComponent {
     }
 
     this.router.navigate(['/search']);
-  }
-
-  private requiresIdentityDocument(user: UserResponse): boolean {
-    return !user.identityDocument?.trim();
   }
 }

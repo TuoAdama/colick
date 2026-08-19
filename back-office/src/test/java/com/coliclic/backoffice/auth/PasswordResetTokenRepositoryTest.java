@@ -29,7 +29,6 @@ class PasswordResetTokenRepositoryTest {
                 .firstName("Jane")
                 .lastName("Doe")
                 .email("jane@example.com")
-                .identityDocument("ID123")
                 .password("hashed")
                 .enabled(true)
                 .role(User.Role.USER)

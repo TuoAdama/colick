@@ -8,7 +8,6 @@ export interface RegisterRequest {
   lastName: string;
   email: string;
   phone?: string;
-  identityDocument: string;
   password: string;
 }
 
@@ -33,7 +32,6 @@ export interface UserResponse {
   lastName: string;
   email: string;
   phone?: string;
-  identityDocument?: string;
   photoUrl?: string;
   role: string;
   hasPassword?: boolean;
@@ -44,7 +42,6 @@ export interface UpdateProfileRequest {
   firstName?: string;
   lastName?: string;
   phone?: string;
-  identityDocument?: string;
 }
 
 export interface ChangeEmailRequest {
