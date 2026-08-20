@@ -26,9 +26,9 @@ spring:
     properties:
       mail:
         smtp:
-          auth: false
+          auth: ${MAIL_SMTP_AUTH:false}
           starttls:
-            enable: false
+            enable: ${MAIL_SMTP_STARTTLS_ENABLE:false}
 
 jwt:
   secret: test-secret-key-must-be-at-least-32-chars-long
