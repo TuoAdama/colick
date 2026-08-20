@@ -1,0 +1,367 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, closed]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environnement cible
+        type: choice
+        options: [preprod, production]
+        required: true
+      source_sha:
+        description: SHA déjà construit et validé en préprod, obligatoire pour une promotion manuelle en production
+        required: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: colick-${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.event.action == 'closed' && 'production' || 'preprod') }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.resolve.outputs.should_run }}
+      environment: ${{ steps.resolve.outputs.environment }}
+      source_sha: ${{ steps.resolve.outputs.source_sha }}
+      compose_file: ${{ steps.resolve.outputs.compose_file }}
+      compose_project: ${{ steps.resolve.outputs.compose_project }}
+      matrix: ${{ steps.resolve.outputs.matrix }}
+      back_image: ${{ steps.resolve.outputs.back_image }}
+      front_image: ${{ steps.resolve.outputs.front_image }}
+      front_health_url: ${{ steps.resolve.outputs.front_health_url }}
+      back_health_url: ${{ steps.resolve.outputs.back_health_url }}
+    steps:
+      - id: resolve
+        name: Resolve release context
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_ACTION: ${{ github.event.action }}
+          PR_MERGED: ${{ github.event.pull_request.merged }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+          DISPATCH_ENVIRONMENT: ${{ inputs.environment }}
+          DISPATCH_SOURCE_SHA: ${{ inputs.source_sha }}
+          CURRENT_SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -Eeuo pipefail
+          should_run=false
+          environment=""
+          source_sha=""
+
+          if [[ "$EVENT_NAME" == "pull_request" && "$HEAD_REF" == "preprod" && "$BASE_REF" == "main" ]]; then
+            if [[ "$PR_ACTION" == "closed" && "$PR_MERGED" == "true" ]]; then
+              should_run=true
+              environment=production
+              source_sha="$PR_SOURCE_SHA"
+            elif [[ "$PR_ACTION" != "closed" ]]; then
+              should_run=true
+              environment=preprod
+              source_sha="$PR_SOURCE_SHA"
+            fi
+          elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            should_run=true
+            environment="$DISPATCH_ENVIRONMENT"
+            if [[ "$environment" == "production" ]]; then
+              if [[ -z "$DISPATCH_SOURCE_SHA" ]]; then
+                echo "source_sha is required for a manual production promotion" >&2
+                exit 1
+              fi
+              source_sha="$DISPATCH_SOURCE_SHA"
+            else
+              source_sha="$CURRENT_SHA"
+            fi
+          fi
+
+          echo "should_run=$should_run" >>"$GITHUB_OUTPUT"
+          if [[ "$should_run" != "true" ]]; then
+            exit 0
+          fi
+
+          repository_lower=${REPOSITORY,,}
+          echo "environment=$environment" >>"$GITHUB_OUTPUT"
+          echo "source_sha=$source_sha" >>"$GITHUB_OUTPUT"
+          echo "compose_file=deploy/compose.$environment.yml" >>"$GITHUB_OUTPUT"
+          echo "compose_project=colick-$environment" >>"$GITHUB_OUTPUT"
+          echo 'matrix={"include":[{"service":"back-office","context":"back-office","dockerfile":"back-office/Dockerfile"},{"service":"front-office","context":"front-office","dockerfile":"front-office/Dockerfile.prod"}]}' >>"$GITHUB_OUTPUT"
+          echo "back_image=ghcr.io/${repository_lower}-back-office" >>"$GITHUB_OUTPUT"
+          echo "front_image=ghcr.io/${repository_lower}-front-office" >>"$GITHUB_OUTPUT"
+
+          if [[ "$environment" == "preprod" ]]; then
+            echo "front_health_url=https://preprod.coliclic.com/" >>"$GITHUB_OUTPUT"
+            echo "back_health_url=https://preprod.coliclic.com/api/actuator/health" >>"$GITHUB_OUTPUT"
+          else
+            echo "front_health_url=https://coliclic.com/" >>"$GITHUB_OUTPUT"
+            echo "back_health_url=https://coliclic.com/api/actuator/health" >>"$GITHUB_OUTPUT"
+          fi
+
+  test:
+    needs: prepare
+    if: needs.prepare.outputs.should_run == 'true' && needs.prepare.outputs.environment == 'preprod'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source SHA
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+      - name: Set up Java 21
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: back-office/pom.xml
+      - name: Run back-office tests
+        working-directory: back-office
+        run: ./mvnw -B test
+      - name: Set up Node.js 20
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: front-office/package-lock.json
+      - name: Install front-office dependencies
+        working-directory: front-office
+        run: npm ci
+      - name: Run front-office tests
+        working-directory: front-office
+        run: npm test -- --watch=false --browsers=ChromeHeadless
+      - name: Build front-office
+        working-directory: front-office
+        run: npm run build
+
+  build:
+    needs: [prepare, test]
+    if: needs.prepare.outputs.should_run == 'true' && needs.prepare.outputs.environment == 'preprod' && needs.test.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      back_office_image_ref: ${{ steps.refs.outputs.back_office_image_ref }}
+      front_office_image_ref: ${{ steps.refs.outputs.front_office_image_ref }}
+    steps:
+      - name: Checkout source SHA
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - id: build_back
+        name: Build and push back-office
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: back-office
+          file: back-office/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ needs.prepare.outputs.back_image }}:${{ needs.prepare.outputs.source_sha }}
+          cache-from: type=gha,scope=back-office
+          cache-to: type=gha,mode=max,scope=back-office
+      - id: build_front
+        name: Build and push front-office
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: front-office
+          file: front-office/Dockerfile.prod
+          platforms: linux/amd64
+          push: true
+          tags: ${{ needs.prepare.outputs.front_image }}:${{ needs.prepare.outputs.source_sha }}
+          cache-from: type=gha,scope=front-office
+          cache-to: type=gha,mode=max,scope=front-office
+      - id: refs
+        name: Export immutable image references
+        env:
+          BACK_IMAGE: ${{ needs.prepare.outputs.back_image }}
+          BACK_DIGEST: ${{ steps.build_back.outputs.digest }}
+          FRONT_IMAGE: ${{ needs.prepare.outputs.front_image }}
+          FRONT_DIGEST: ${{ steps.build_front.outputs.digest }}
+        run: |
+          echo "back_office_image_ref=${BACK_IMAGE}@${BACK_DIGEST}" >>"$GITHUB_OUTPUT"
+          echo "front_office_image_ref=${FRONT_IMAGE}@${FRONT_DIGEST}" >>"$GITHUB_OUTPUT"
+
+  promote:
+    needs: prepare
+    if: needs.prepare.outputs.should_run == 'true' && needs.prepare.outputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      back_office_image_ref: ${{ steps.refs.outputs.back_office_image_ref }}
+      front_office_image_ref: ${{ steps.refs.outputs.front_office_image_ref }}
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx for digest inspection
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - id: refs
+        name: Resolve preprod image digests
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+          BACK_IMAGE: ${{ needs.prepare.outputs.back_image }}
+          FRONT_IMAGE: ${{ needs.prepare.outputs.front_image }}
+        run: |
+          set -Eeuo pipefail
+          back_digest=$(docker buildx imagetools inspect "${BACK_IMAGE}:${SOURCE_SHA}" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          front_digest=$(docker buildx imagetools inspect "${FRONT_IMAGE}:${SOURCE_SHA}" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          [[ "$back_digest" == sha256:* && "$front_digest" == sha256:* ]]
+          echo "back_office_image_ref=${BACK_IMAGE}@${back_digest}" >>"$GITHUB_OUTPUT"
+          echo "front_office_image_ref=${FRONT_IMAGE}@${front_digest}" >>"$GITHUB_OUTPUT"
+      - name: Configure SSH
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY_CONTENT: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS_CONTENT: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          printf '%s\n' "$SSH_PRIVATE_KEY_CONTENT" >"$RUNNER_TEMP/deploy_key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS_CONTENT" >"$RUNNER_TEMP/known_hosts"
+      - name: Verify healthy preprod release evidence
+        shell: bash
+        env:
+          SSH_USER: ${{ vars.SSH_USER }}
+          SSH_PORT: ${{ vars.SSH_PORT || '22' }}
+          DEPLOY_ROOT: ${{ vars.DEPLOY_ROOT || '/opt/apps' }}
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+          BACK_REF: ${{ steps.refs.outputs.back_office_image_ref }}
+          FRONT_REF: ${{ steps.refs.outputs.front_office_image_ref }}
+        run: |
+          set -Eeuo pipefail
+          [[ -n "$SSH_USER" ]] || { echo "GitHub variable SSH_USER is required" >&2; exit 1; }
+          ssh -i "$RUNNER_TEMP/deploy_key" -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" -p "$SSH_PORT" \
+            "$SSH_USER@169.58.128.188" bash -s -- "$DEPLOY_ROOT/colick/preprod/current" "$SOURCE_SHA" "$BACK_REF" "$FRONT_REF" <<'REMOTE'
+          set -Eeuo pipefail
+          current=${1:?}
+          source_sha=${2:?}
+          back_ref=${3:?}
+          front_ref=${4:?}
+          [[ -L "$current" ]]
+          release=$(readlink -f "$current")
+          grep -Fx "SOURCE_SHA=$source_sha" "$release/.release.env" >/dev/null
+          grep -Fx "BACK_OFFICE_IMAGE_REF=$back_ref" "$release/.release.env" >/dev/null
+          grep -Fx "FRONT_OFFICE_IMAGE_REF=$front_ref" "$release/.release.env" >/dev/null
+          project=$(sed -n 's/^COMPOSE_PROJECT_NAME=//p' "$release/.release.env")
+          mapfile -t containers < <(docker compose -p "$project" --env-file "$release/.release.env" -f "$release/compose.yml" ps -q)
+          [[ ${#containers[@]} -eq 3 ]]
+          for container in "${containers[@]}"; do
+            status=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container")
+            [[ "$status" == "healthy" ]]
+          done
+          REMOTE
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors https://preprod.coliclic.com/ >/dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors https://preprod.coliclic.com/api/actuator/health >/dev/null
+
+  deploy:
+    needs: [prepare, test, build, promote]
+    if: >-
+      always() &&
+      needs.prepare.outputs.should_run == 'true' &&
+      ((needs.prepare.outputs.environment == 'preprod' && needs.test.result == 'success' && needs.build.result == 'success') ||
+       (needs.prepare.outputs.environment == 'production' && needs.promote.result == 'success'))
+    runs-on: ubuntu-latest
+    environment: ${{ needs.prepare.outputs.environment }}
+    concurrency:
+      group: colick-deploy-${{ needs.prepare.outputs.environment }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout source SHA for deployment files only
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+          sparse-checkout: |
+            deploy
+      - name: Prepare release files
+        id: release
+        shell: bash
+        env:
+          ENV_FILE_CONTENT: ${{ secrets.ENV_FILE }}
+          ENVIRONMENT: ${{ needs.prepare.outputs.environment }}
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+          COMPOSE_PROJECT: ${{ needs.prepare.outputs.compose_project }}
+          PREPROD_BACK_REF: ${{ needs.build.outputs.back_office_image_ref }}
+          PREPROD_FRONT_REF: ${{ needs.build.outputs.front_office_image_ref }}
+          PRODUCTION_BACK_REF: ${{ needs.promote.outputs.back_office_image_ref }}
+          PRODUCTION_FRONT_REF: ${{ needs.promote.outputs.front_office_image_ref }}
+          DEPLOY_ROOT: ${{ vars.DEPLOY_ROOT || '/opt/apps' }}
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          if [[ "$ENVIRONMENT" == "preprod" ]]; then
+            back_ref="$PREPROD_BACK_REF"
+            front_ref="$PREPROD_FRONT_REF"
+          else
+            back_ref="$PRODUCTION_BACK_REF"
+            front_ref="$PRODUCTION_FRONT_REF"
+          fi
+          [[ "$back_ref" == *@sha256:* && "$front_ref" == *@sha256:* ]]
+          release_dir="$RUNNER_TEMP/release"
+          mkdir -p "$release_dir"
+          cp "deploy/compose.$ENVIRONMENT.yml" "$release_dir/compose.yml"
+          cp deploy/remote-deploy.sh "$release_dir/remote-deploy.sh"
+          chmod 700 "$release_dir/remote-deploy.sh"
+          printf '%s\n' "$ENV_FILE_CONTENT" >"$release_dir/.runtime.env"
+          {
+            echo "SOURCE_SHA=$SOURCE_SHA"
+            echo "COMPOSE_PROJECT_NAME=$COMPOSE_PROJECT"
+            echo "RUNTIME_ENV_FILE=.runtime.env"
+            echo "BACK_OFFICE_IMAGE_REF=$back_ref"
+            echo "FRONT_OFFICE_IMAGE_REF=$front_ref"
+          } >"$release_dir/.release.env"
+          remote_release="$DEPLOY_ROOT/colick/$ENVIRONMENT/releases/$SOURCE_SHA"
+          echo "remote_release=$remote_release" >>"$GITHUB_OUTPUT"
+          echo "current_link=$DEPLOY_ROOT/colick/$ENVIRONMENT/current" >>"$GITHUB_OUTPUT"
+      - name: Configure SSH
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY_CONTENT: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS_CONTENT: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          printf '%s\n' "$SSH_PRIVATE_KEY_CONTENT" >"$RUNNER_TEMP/deploy_key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS_CONTENT" >"$RUNNER_TEMP/known_hosts"
+      # remote-deploy.sh performs docker compose up --wait and automatic rollback.
+      - name: Upload and activate release with health wait and rollback
+        shell: bash
+        env:
+          SSH_USER: ${{ vars.SSH_USER }}
+          SSH_PORT: ${{ vars.SSH_PORT || '22' }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          REMOTE_RELEASE: ${{ steps.release.outputs.remote_release }}
+          CURRENT_LINK: ${{ steps.release.outputs.current_link }}
+          COMPOSE_PROJECT: ${{ needs.prepare.outputs.compose_project }}
+          FRONT_HEALTH_URL: ${{ needs.prepare.outputs.front_health_url }}
+          BACK_HEALTH_URL: ${{ needs.prepare.outputs.back_health_url }}
+        run: |
+          set -Eeuo pipefail
+          [[ -n "$SSH_USER" ]] || { echo "GitHub variable SSH_USER is required" >&2; exit 1; }
+          ssh_args=(-i "$RUNNER_TEMP/deploy_key" -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" -p "$SSH_PORT")
+          ssh "${ssh_args[@]}" "$SSH_USER@169.58.128.188" "mkdir -p '$REMOTE_RELEASE' && chmod 700 '$REMOTE_RELEASE'"
+          scp -i "$RUNNER_TEMP/deploy_key" -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" -P "$SSH_PORT" \
+            "$RUNNER_TEMP/release/compose.yml" \
+            "$RUNNER_TEMP/release/.runtime.env" \
+            "$RUNNER_TEMP/release/.release.env" \
+            "$RUNNER_TEMP/release/remote-deploy.sh" \
+            "$SSH_USER@169.58.128.188:$REMOTE_RELEASE/"
+          printf '%s\n' "$GHCR_TOKEN" | ssh "${ssh_args[@]}" "$SSH_USER@169.58.128.188" \
+            bash "$REMOTE_RELEASE/remote-deploy.sh" \
+            "$REMOTE_RELEASE" "$CURRENT_LINK" "$COMPOSE_PROJECT" "$GHCR_USER" \
+            "$FRONT_HEALTH_URL" "$BACK_HEALTH_URL"

@@ -1,0 +1,81 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ${COMPOSE_PROJECT_NAME}-postgres
+    env_file:
+      - ${RUNTIME_ENV_FILE:-.runtime.env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  back-office:
+    image: ${BACK_OFFICE_IMAGE_REF:?BACK_OFFICE_IMAGE_REF is required}
+    container_name: ${COMPOSE_PROJECT_NAME}-back-office
+    env_file:
+      - ${RUNTIME_ENV_FILE:-.runtime.env}
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/api/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 12
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "dokploy-network"
+      traefik.http.routers.colick-production-back-office.rule: "Host(`coliclic.com`) && PathPrefix(`/api`)"
+      traefik.http.routers.colick-production-back-office.entrypoints: "websecure"
+      traefik.http.routers.colick-production-back-office.tls: "true"
+      traefik.http.routers.colick-production-back-office.tls.certresolver: "letsencrypt"
+      traefik.http.routers.colick-production-back-office.priority: "100"
+      traefik.http.services.colick-production-back-office.loadbalancer.server.port: "8080"
+    restart: unless-stopped
+
+  front-office:
+    image: ${FRONT_OFFICE_IMAGE_REF:?FRONT_OFFICE_IMAGE_REF is required}
+    container_name: ${COMPOSE_PROJECT_NAME}-front-office
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 6
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "dokploy-network"
+      traefik.http.routers.colick-production-front-office.rule: "Host(`coliclic.com`)"
+      traefik.http.routers.colick-production-front-office.entrypoints: "websecure"
+      traefik.http.routers.colick-production-front-office.tls: "true"
+      traefik.http.routers.colick-production-front-office.tls.certresolver: "letsencrypt"
+      traefik.http.services.colick-production-front-office.loadbalancer.server.port: "80"
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+    name: ${COMPOSE_PROJECT_NAME}-postgres-data
+  uploads:
+    name: ${COMPOSE_PROJECT_NAME}-uploads
+
+networks:
+  internal:
+    name: ${COMPOSE_PROJECT_NAME}-internal
+    internal: true
+  dokploy-network:
+    external: true
+    name: dokploy-network
