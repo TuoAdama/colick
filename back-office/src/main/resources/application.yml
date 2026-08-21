@@ -3,9 +3,9 @@ spring:
     name: coliclic-back-office
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:coliclic}
-    username: ${DB_USERNAME:coliclic}
-    password: ${DB_PASSWORD:coliclic}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:${DB_NAME:coliclic}}
+    username: ${POSTGRES_USER:${DB_USERNAME:coliclic}}
+    password: ${POSTGRES_PASSWORD:${DB_PASSWORD:coliclic}}
     driver-class-name: org.postgresql.Driver
 
   jpa:
