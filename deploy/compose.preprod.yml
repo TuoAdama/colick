@@ -20,8 +20,15 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}-back-office
     env_file:
       - ${RUNTIME_ENV_FILE:-.runtime.env}
+    environment:
+      SPRING_PROFILES_ACTIVE: preprod
+      LOG_DIR: ${LOG_DIR:-/app/logs}
+      LOG_MAX_FILE_SIZE: ${LOG_MAX_FILE_SIZE:-20MB}
+      LOG_MAX_HISTORY: ${LOG_MAX_HISTORY:-7}
+      LOG_TOTAL_SIZE_CAP: ${LOG_TOTAL_SIZE_CAP:-200MB}
     volumes:
       - uploads:/app/uploads
+      - back-office-logs:/app/logs
     depends_on:
       postgres:
         condition: service_healthy
@@ -71,6 +78,8 @@ volumes:
     name: ${COMPOSE_PROJECT_NAME}-postgres-data
   uploads:
     name: ${COMPOSE_PROJECT_NAME}-uploads
+  back-office-logs:
+    name: ${COMPOSE_PROJECT_NAME}-back-office-logs
 
 networks:
   internal:

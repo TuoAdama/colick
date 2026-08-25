@@ -315,7 +315,8 @@ jobs:
           mkdir -p "$release_dir"
           cp "deploy/compose.$ENVIRONMENT.yml" "$release_dir/compose.yml"
           cp deploy/remote-deploy.sh "$release_dir/remote-deploy.sh"
-          chmod 700 "$release_dir/remote-deploy.sh"
+          cp deploy/logs.sh "$release_dir/logs.sh"
+          chmod 700 "$release_dir/remote-deploy.sh" "$release_dir/logs.sh"
           printf '%s\n' "$ENV_FILE_CONTENT" >"$release_dir/.runtime.env"
           {
             echo "SOURCE_SHA=$SOURCE_SHA"
@@ -360,6 +361,7 @@ jobs:
             "$RUNNER_TEMP/release/.runtime.env" \
             "$RUNNER_TEMP/release/.release.env" \
             "$RUNNER_TEMP/release/remote-deploy.sh" \
+            "$RUNNER_TEMP/release/logs.sh" \
             "$SSH_USER@169.58.128.188:$REMOTE_RELEASE/"
           printf '%s\n' "$GHCR_TOKEN" | ssh "${ssh_args[@]}" "$SSH_USER@169.58.128.188" \
             bash "$REMOTE_RELEASE/remote-deploy.sh" \
