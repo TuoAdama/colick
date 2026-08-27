@@ -3,6 +3,7 @@ package com.coliclic.backoffice.parcelrequest.service;
 import com.coliclic.backoffice.parcelrequest.dto.CreateParcelRequestRequest;
 import com.coliclic.backoffice.parcelrequest.dto.ParcelRequestResponse;
 import com.coliclic.backoffice.user.entity.User;
+import org.springframework.lang.Nullable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
@@ -12,7 +13,11 @@ public interface ParcelRequestService {
 
     ParcelRequestResponse createRequest(CreateParcelRequestRequest request, User sender);
 
-    List<ParcelRequestResponse> getAvailableRequests(String departure, String destination, LocalDate date, User currentUser);
+    List<ParcelRequestResponse> getAvailableRequests(
+            String departure,
+            String destination,
+            LocalDate date,
+            @Nullable User currentUser);
 
     List<ParcelRequestResponse> getMyRequests(User sender);
 

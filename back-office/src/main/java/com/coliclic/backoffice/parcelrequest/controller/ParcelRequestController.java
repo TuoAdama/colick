@@ -18,7 +18,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/parcel-requests")
-@PreAuthorize("isAuthenticated()")
 public class ParcelRequestController {
 
     private final ParcelRequestService parcelRequestService;
@@ -28,6 +27,7 @@ public class ParcelRequestController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ParcelRequestResponse> createRequest(
             @Valid @RequestBody CreateParcelRequestRequest request,
             @AuthenticationPrincipal User currentUser) {
@@ -45,11 +45,13 @@ public class ParcelRequestController {
     }
 
     @GetMapping("/mine")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ParcelRequestResponse>> getMyRequests(@AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(parcelRequestService.getMyRequests(currentUser));
     }
 
     @PutMapping("/{id}/close")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ParcelRequestResponse> closeRequest(
             @PathVariable Long id,
             @AuthenticationPrincipal User currentUser) {
@@ -57,6 +59,7 @@ public class ParcelRequestController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> cancelRequest(
             @PathVariable Long id,
             @AuthenticationPrincipal User currentUser) {
@@ -65,6 +68,7 @@ public class ParcelRequestController {
     }
 
     @PostMapping("/{id}/photo")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ParcelRequestResponse> uploadPhoto(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file,

@@ -94,6 +94,19 @@ class ParcelRequestServiceImplTest {
     }
 
     @Test
+    void getAvailableRequests_shouldAllowAnonymousSearch() {
+        ParcelRequest first = parcelRequest(10L, sender, "Paris", "Abidjan", LocalDate.of(2026, 7, 1));
+        ParcelRequest second = parcelRequest(11L, traveler, "Paris", "Abidjan", LocalDate.of(2026, 7, 1));
+        when(parcelRequestRepository.findByStatusOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE))
+                .thenReturn(List.of(first, second));
+
+        List<ParcelRequestResponse> responses = service.getAvailableRequests(
+                "par", "abidjan", LocalDate.of(2026, 7, 1), null);
+
+        assertThat(responses).extracting(ParcelRequestResponse::getId).containsExactly(10L, 11L);
+    }
+
+    @Test
     void closeRequest_shouldOnlyAllowOwner() {
         ParcelRequest request = parcelRequest(10L, sender, "Paris", "Abidjan", null);
         when(parcelRequestRepository.findById(10L)).thenReturn(Optional.of(request));
