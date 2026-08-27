@@ -22,6 +22,7 @@ services:
       - ${RUNTIME_ENV_FILE:-.runtime.env}
     environment:
       SPRING_PROFILES_ACTIVE: preprod
+      CORS_ALLOWED_ORIGINS: "https://preprod.coliclic.com"
       LOG_DIR: ${LOG_DIR:-/app/logs}
       LOG_MAX_FILE_SIZE: ${LOG_MAX_FILE_SIZE:-20MB}
       LOG_MAX_HISTORY: ${LOG_MAX_HISTORY:-7}
