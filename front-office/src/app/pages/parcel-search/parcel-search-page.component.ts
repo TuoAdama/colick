@@ -69,11 +69,6 @@ export class ParcelSearchPageComponent implements OnInit, OnDestroy {
           return;
         }
 
-        if (!this.authService.isLoggedIn()) {
-          void this.router.navigate(['/login']);
-          return;
-        }
-
         const searchKey = this.buildSearchKey(from, to, date);
         if (searchKey === this.lastAutoSearchKey) {
           return;
@@ -100,10 +95,6 @@ export class ParcelSearchPageComponent implements OnInit, OnDestroy {
 
     if (this.hasMatchingSearchParams(from, to, date)) {
       this.lastAutoSearchKey = this.buildSearchKey(from, to, date);
-      if (!this.authService.isLoggedIn()) {
-        void this.router.navigate(['/login']);
-        return;
-      }
       this.loadRequests(from, to, date);
       return;
     }
@@ -120,7 +111,9 @@ export class ParcelSearchPageComponent implements OnInit, OnDestroy {
 
   contactSender(request: ParcelRequest): void {
     if (!this.authService.isLoggedIn()) {
-      void this.router.navigate(['/login']);
+      void this.router.navigate(['/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
       return;
     }
     if (this.contactingRequestId !== null) {

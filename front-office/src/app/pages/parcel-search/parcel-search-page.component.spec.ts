@@ -86,14 +86,35 @@ describe('ParcelSearchPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Documents · 2kg');
   });
 
-  it('redirects unauthenticated users to login before loading requests', async () => {
+  it('loads parcel requests for unauthenticated users', async () => {
     authServiceMock.isLoggedIn.and.returnValue(false);
     await router.navigateByUrl('/parcel-search?from=Paris&to=Abidjan');
 
     createComponent();
 
-    expect(router.navigate).toHaveBeenCalledWith(['/login']);
-    expect(parcelRequestServiceMock.getAvailableRequests).not.toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalledWith(['/login']);
+    expect(parcelRequestServiceMock.getAvailableRequests).toHaveBeenCalledWith({
+      departure: 'Paris',
+      destination: 'Abidjan',
+      date: '',
+    });
+    expect(fixture.nativeElement.textContent).toContain('Demande colis');
+  });
+
+  it('submits a parcel request search for unauthenticated users', async () => {
+    authServiceMock.isLoggedIn.and.returnValue(false);
+    await router.navigateByUrl('/parcel-search?from=Paris&to=Abidjan');
+    createComponent();
+    parcelRequestServiceMock.getAvailableRequests.calls.reset();
+
+    component.searchRequests();
+
+    expect(parcelRequestServiceMock.getAvailableRequests).toHaveBeenCalledWith({
+      departure: 'Paris',
+      destination: 'Abidjan',
+      date: '',
+    });
+    expect(router.navigate).not.toHaveBeenCalledWith(['/login']);
   });
 
   it('updates the URL when submitting a new parcel request search', () => {
@@ -125,6 +146,20 @@ describe('ParcelSearchPageComponent', () => {
       recipientId: 7,
     });
     expect(router.navigate).toHaveBeenCalledWith(['/messages'], { queryParams: { conversationId: 99 } });
+  });
+
+  it('redirects unauthenticated users to login with a return URL before contacting', async () => {
+    authServiceMock.isLoggedIn.and.returnValue(false);
+    await router.navigateByUrl('/parcel-search?from=Paris&to=Abidjan');
+    createComponent();
+    messagingServiceMock.createConversationDraft.calls.reset();
+
+    component.contactSender(component.requests[0]);
+
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: '/parcel-search?from=Paris&to=Abidjan' },
+    });
+    expect(messagingServiceMock.createConversationDraft).not.toHaveBeenCalled();
   });
 
   it('shows an empty state after a search without results', async () => {

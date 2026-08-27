@@ -9,6 +9,7 @@ import com.coliclic.backoffice.parcelrequest.entity.ParcelRequest;
 import com.coliclic.backoffice.parcelrequest.repository.ParcelRequestRepository;
 import com.coliclic.backoffice.user.entity.User;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -58,13 +59,14 @@ public class ParcelRequestServiceImpl implements ParcelRequestService {
     public List<ParcelRequestResponse> getAvailableRequests(String departure,
                                                             String destination,
                                                             LocalDate date,
-                                                            User currentUser) {
+                                                            @Nullable User currentUser) {
         String normalizedDeparture = normalizeOptionalSearchValue(departure);
         String normalizedDestination = normalizeOptionalSearchValue(destination);
 
         return parcelRequestRepository.findByStatusOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE)
                 .stream()
-                .filter(request -> !request.getSender().getId().equals(currentUser.getId()))
+                .filter(request -> currentUser == null
+                        || !request.getSender().getId().equals(currentUser.getId()))
                 .filter(request -> matches(request.getNormalizedDeparture(), normalizedDeparture))
                 .filter(request -> matches(request.getNormalizedDestination(), normalizedDestination))
                 .filter(request -> date == null || date.equals(request.getDesiredDate()))
