@@ -47,12 +47,19 @@ describe('DashboardShellComponent', () => {
 
   it('shows the clarified navigation labels in the sidebar and mobile menu', () => {
     fixture.detectChanges();
+    fixture.componentInstance.openMobileMenu();
+    fixture.detectChanges();
 
-    const text = fixture.nativeElement.textContent ?? '';
+    const host = fixture.nativeElement as HTMLElement;
+    const text = host.textContent ?? '';
+    const needsLinks = Array.from(host.querySelectorAll<HTMLAnchorElement>('a[href="/parcel-requests"]'))
+      .filter((link) => link.textContent?.trim() === 'Mes besoins d’envoi');
 
     expect(text).toContain('Trajets publiés');
     expect(text).toContain('Demandes envoyées');
+    expect(needsLinks.length).toBe(2);
     expect(text).not.toContain('Mes trajets');
     expect(text).not.toContain('Mes demandes');
+    expect(text).not.toContain('Demandes de colis');
   });
 });

@@ -61,6 +61,16 @@ describe('ParcelRequestFormPageComponent', () => {
     expect(component.destination?.name).toBe('Abidjan');
   });
 
+  it('uses the needs wording in the form title and submit action', () => {
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const submitButton = host.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+    expect(host.querySelector('h1')?.textContent?.trim()).toBe('Publier un besoin d’envoi');
+    expect(submitButton?.textContent?.trim()).toBe('Publier mon besoin');
+  });
+
   it('creates a parcel request and redirects to my publications', () => {
     fixture.detectChanges();
     component.packageTitle = 'Documents';

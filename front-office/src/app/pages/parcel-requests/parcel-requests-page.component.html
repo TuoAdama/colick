@@ -2,14 +2,14 @@
   <main class="mx-auto max-w-6xl px-4 sm:px-6">
     <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-primary">Demandes de colis</h1>
-        <p class="mt-2 text-sm text-text-secondary">Gérez vos publications et mettez à jour le statut de vos demandes.</p>
+        <h1 class="text-2xl font-bold text-primary">Mes besoins d’envoi</h1>
+        <p class="mt-2 text-sm text-text-secondary">Publiez un besoin d’envoi pour trouver un voyageur qui effectue le même trajet, puis suivez ici l’état de votre recherche.</p>
       </div>
       <a
         routerLink="/parcel-requests/new"
-        class="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-accent px-5 text-sm font-bold text-white transition hover:bg-accent/90"
+        class="inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-accent px-5 text-sm font-bold text-white transition hover:bg-accent/90"
       >
-        Publier une demande
+        Publier un besoin
       </a>
     </div>
 
@@ -26,9 +26,9 @@
         </div>
       } @else if (myRequests.length === 0) {
         <div class="rounded-xl bg-white px-6 py-12 text-center shadow-sm">
-          <p class="text-sm text-text-secondary">Vous n’avez encore publié aucune demande.</p>
+          <p class="text-sm text-text-secondary">Vous n’avez encore créé aucun besoin d’envoi.</p>
           <a routerLink="/parcel-requests/new" class="mt-5 inline-flex min-h-[44px] items-center rounded-lg bg-accent px-5 text-sm font-bold text-white">
-            Publier une demande
+            Créer mon premier besoin
           </a>
         </div>
       } @else {
