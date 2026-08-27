@@ -71,6 +71,8 @@ describe('ParcelRequestsPageComponent', () => {
       'Publier un besoin',
       'Créer mon premier besoin',
     ]);
+    expect(links[0].classList).toContain('shrink-0');
+    expect(links[0].classList).toContain('whitespace-nowrap');
   });
 
   it('shows a loading indicator while publications are loading', () => {
