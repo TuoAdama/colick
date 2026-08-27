@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import { ParcelRequestService } from '../../services/parcel-request.service';
 import { ParcelRequestsPageComponent } from './parcel-requests-page.component';
 
@@ -61,7 +61,25 @@ describe('ParcelRequestsPageComponent', () => {
   it('shows an empty state when the user has no publications', () => {
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Vous n’avez encore publié aucune demande.');
+    const host = fixture.nativeElement as HTMLElement;
+    const links = Array.from(host.querySelectorAll<HTMLAnchorElement>('a[href="/parcel-requests/new"]'));
+
+    expect(host.textContent).toContain('Mes besoins d’envoi');
+    expect(host.textContent).toContain('Publiez un besoin d’envoi pour trouver un voyageur qui effectue le même trajet, puis suivez ici l’état de votre recherche.');
+    expect(host.textContent).toContain('Vous n’avez encore créé aucun besoin d’envoi.');
+    expect(links.map((link) => link.textContent?.trim())).toEqual([
+      'Publier un besoin',
+      'Créer mon premier besoin',
+    ]);
+  });
+
+  it('shows a loading indicator while publications are loading', () => {
+    parcelRequestServiceMock.getMyRequests.and.returnValue(NEVER);
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.animate-spin')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Vous n’avez encore créé aucun besoin d’envoi.');
   });
 
   it('closes one of my active requests', () => {
