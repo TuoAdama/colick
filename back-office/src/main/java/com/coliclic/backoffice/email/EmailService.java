@@ -82,6 +82,25 @@ public class EmailService {
         );
     }
 
+    public void sendNewMessageEmail(String to,
+                                    String recipientFirstName,
+                                    String senderName,
+                                    String conversationContext,
+                                    String conversationUrl) {
+        sendTemplateEmail(
+                to,
+                "email.subject.newMessage",
+                "email/new-message",
+                Map.of(
+                        "firstName", recipientFirstName,
+                        "senderName", senderName,
+                        "conversationContext", conversationContext,
+                        "conversationUrl", conversationUrl,
+                        "supportEmail", supportEmail
+                )
+        );
+    }
+
     public void sendTripBookingCreatedEmail(String to,
                                             String travelerFirstName,
                                             String senderFirstName,
