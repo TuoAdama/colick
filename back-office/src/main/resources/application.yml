@@ -48,12 +48,25 @@ spring:
           starttls:
             enable: ${MAIL_SMTP_STARTTLS_ENABLE:false}
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:1s}
+      timeout: ${REDIS_TIMEOUT:1s}
+      repositories:
+        enabled: false
+
 server:
   port: ${SERVER_PORT:8080}
   servlet:
     context-path: /api
 
 management:
+  health:
+    redis:
+      enabled: false
   endpoints:
     web:
       exposure:
@@ -77,6 +90,9 @@ upload:
 app:
   frontend:
     base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
+  messaging:
+    email-notification:
+      cooldown: ${MESSAGE_EMAIL_NOTIFICATION_COOLDOWN:10m}
   review:
     base-url: ${REVIEW_BASE_URL:${app.frontend.base-url}/traveler-review}
   cors:

@@ -258,8 +258,13 @@ jobs:
           grep -Fx "BACK_OFFICE_IMAGE_REF=$back_ref" "$release/.release.env" >/dev/null
           grep -Fx "FRONT_OFFICE_IMAGE_REF=$front_ref" "$release/.release.env" >/dev/null
           project=$(sed -n 's/^COMPOSE_PROJECT_NAME=//p' "$release/.release.env")
-          mapfile -t containers < <(docker compose -p "$project" --env-file "$release/.release.env" -f "$release/compose.yml" ps -q)
-          [[ ${#containers[@]} -eq 3 ]]
+          required_services=(postgres redis back-office front-office)
+          containers=()
+          for service in "${required_services[@]}"; do
+            mapfile -t service_containers < <(docker compose -p "$project" --env-file "$release/.release.env" -f "$release/compose.yml" ps -q "$service")
+            [[ ${#service_containers[@]} -eq 1 ]] || { echo "Expected one running container for service $service" >&2; exit 1; }
+            containers+=("${service_containers[0]}")
+          done
           for container in "${containers[@]}"; do
             status=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container")
             [[ "$status" == "healthy" ]]

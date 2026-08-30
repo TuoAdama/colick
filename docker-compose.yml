@@ -24,6 +24,19 @@ services:
       - "8025:8025"   # Web UI
     restart: unless-stopped
 
+  # Redis — distributed cooldown for message email notifications
+  redis:
+    image: redis:7-alpine
+    container_name: coliclic-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
   # Back-office Spring Boot API
   back-office:
     build:
@@ -34,11 +47,17 @@ services:
       - "8080:8080"
     env_file:
       - .env.local
+    environment:
+      REDIS_HOST: redis
     volumes:
       - ./back-office/logs:/app/logs
     depends_on:
-      - postgres
-      - mailhog
+      postgres:
+        condition: service_started
+      mailhog:
+        condition: service_started
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   # Front-office Angular application

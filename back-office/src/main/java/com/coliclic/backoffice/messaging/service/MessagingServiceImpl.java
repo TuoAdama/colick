@@ -7,6 +7,7 @@ import com.coliclic.backoffice.i18n.LocalizedMessages;
 import com.coliclic.backoffice.messaging.dto.*;
 import com.coliclic.backoffice.messaging.entity.Conversation;
 import com.coliclic.backoffice.messaging.entity.Message;
+import com.coliclic.backoffice.messaging.notification.MessageEmailNotificationThrottle;
 import com.coliclic.backoffice.messaging.repository.ConversationRepository;
 import com.coliclic.backoffice.messaging.repository.MessageRepository;
 import com.coliclic.backoffice.parcelrequest.entity.ParcelRequest;
@@ -43,6 +44,7 @@ public class MessagingServiceImpl implements MessagingService {
     private final UserRepository userRepository;
     private final LocalizedMessages localizedMessages;
     private final EmailService emailService;
+    private final MessageEmailNotificationThrottle notificationThrottle;
 
     @Value("${app.frontend.base-url:http://localhost:4200}")
     private String frontendBaseUrl;
@@ -53,7 +55,8 @@ public class MessagingServiceImpl implements MessagingService {
                                 ParcelRequestRepository parcelRequestRepository,
                                 UserRepository userRepository,
                                 LocalizedMessages localizedMessages,
-                                EmailService emailService) {
+                                EmailService emailService,
+                                MessageEmailNotificationThrottle notificationThrottle) {
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
         this.tripRepository = tripRepository;
@@ -61,6 +64,7 @@ public class MessagingServiceImpl implements MessagingService {
         this.userRepository = userRepository;
         this.localizedMessages = localizedMessages;
         this.emailService = emailService;
+        this.notificationThrottle = notificationThrottle;
     }
 
     @Override
@@ -118,6 +122,7 @@ public class MessagingServiceImpl implements MessagingService {
                 .findByConversationAndReadFalseAndSenderNot(conversation, currentUser);
         unread.forEach(m -> m.setRead(true));
         messageRepository.saveAll(unread);
+        runAfterCommit(() -> notificationThrottle.release(conversationId, currentUser.getId()));
 
         return messageRepository.findByConversationOrderBySentAtAsc(conversation).stream()
                 .map(MessageResponse::from)
@@ -210,6 +215,7 @@ public class MessagingServiceImpl implements MessagingService {
         ConversationContext context = resolveContext(conversation);
         NewMessageNotification notification = new NewMessageNotification(
                 conversation.getId(),
+                recipient.getId(),
                 recipient.getEmail(),
                 recipient.getFirstName(),
                 sender.getFirstName() + " " + sender.getLastName(),
@@ -217,21 +223,29 @@ public class MessagingServiceImpl implements MessagingService {
                 buildConversationUrl(conversation.getId())
         );
 
+        runAfterCommit(() -> notifyRecipient(notification));
+    }
+
+    private void runAfterCommit(Runnable action) {
         if (TransactionSynchronizationManager.isActualTransactionActive()
                 && TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    notifyRecipient(notification);
+                    action.run();
                 }
             });
             return;
         }
 
-        notifyRecipient(notification);
+        action.run();
     }
 
     private void notifyRecipient(NewMessageNotification notification) {
+        if (!notificationThrottle.tryAcquire(notification.conversationId(), notification.recipientId())) {
+            return;
+        }
+
         try {
             emailService.sendNewMessageEmail(
                     notification.recipientEmail(),
@@ -241,6 +255,7 @@ public class MessagingServiceImpl implements MessagingService {
                     notification.conversationUrl()
             );
         } catch (RuntimeException ex) {
+            notificationThrottle.release(notification.conversationId(), notification.recipientId());
             log.warn("Unable to send new-message notification for conversation {}", notification.conversationId(), ex);
         }
     }
@@ -336,6 +351,7 @@ public class MessagingServiceImpl implements MessagingService {
     }
 
     private record NewMessageNotification(Long conversationId,
+                                          Long recipientId,
                                           String recipientEmail,
                                           String recipientFirstName,
                                           String senderName,
