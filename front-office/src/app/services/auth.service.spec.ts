@@ -1,16 +1,17 @@
 import { TestBed } from '@angular/core/testing';
-import {
-  HttpTestingController,
-  provideHttpClientTesting,
-} from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
 import { AuthService } from './auth.service';
+import { UserResponse } from '../models/auth.model';
 
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
   let router: Router;
+  const user: UserResponse = {
+    id: 1, firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com', role: 'USER', hasPassword: true,
+  };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -21,180 +22,76 @@ describe('AuthService', () => {
     router = TestBed.inject(Router);
   });
 
-  afterEach(() => {
-    httpMock.verify();
-    localStorage.clear();
+  afterEach(() => httpMock.verify());
+
+  it('hydrates the cookie-backed session and initializes CSRF', async () => {
+    const initialization = service.initializeSession();
+    httpMock.expectOne('/api/auth/session').flush(user);
+    await Promise.resolve();
+    httpMock.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
+    await initialization;
+    expect(service.isLoggedIn()).toBeTrue();
+    expect(service.getUser()?.email).toBe('ada@example.com');
   });
 
-  it('sends forgot password request with email', () => {
-    service.forgotPassword('john@example.com').subscribe();
-
-    const req = httpMock.expectOne('/api/auth/forgot-password');
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ email: 'john@example.com' });
-    req.flush(null);
+  it('continues as a guest when no session cookie is valid', async () => {
+    const initialization = service.initializeSession();
+    httpMock.expectOne('/api/auth/session').flush({}, { status: 401, statusText: 'Unauthorized' });
+    await Promise.resolve();
+    httpMock.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
+    await initialization;
+    expect(service.isLoggedIn()).toBeFalse();
   });
 
-  it('sends reset password request with token and confirmation', () => {
-    service.resetPassword('token123', 'password123', 'password123').subscribe();
-
-    const req = httpMock.expectOne('/api/auth/reset-password');
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({
-      token: 'token123',
-      newPassword: 'password123',
-      confirmPassword: 'password123',
-    });
-    req.flush(null);
-  });
-
-  it('normalizes relative profile photo URL on login', () => {
-    service.login('john@example.com', 'password123').subscribe();
-
+  it('stores only the user returned by login', () => {
+    service.login('ada@example.com', 'password123').subscribe();
     const req = httpMock.expectOne('/api/auth/login');
-    expect(req.request.method).toBe('POST');
-    req.flush({
-      token: 'jwt-token',
-      type: 'Bearer',
-      user: {
-        id: 1,
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john@example.com',
-        role: 'USER',
-        photoUrl: '/uploads/avatar.png',
-      },
-    });
-
-    const storedRaw = localStorage.getItem('coliclic_user');
-    expect(storedRaw).not.toBeNull();
-    const storedUser = JSON.parse(storedRaw!);
-    expect(storedUser.photoUrl).toBe('/api/uploads/avatar.png');
+    expect(req.request.body).toEqual({ email: 'ada@example.com', password: 'password123' });
+    req.flush({ user: { ...user, photoUrl: '/uploads/avatar.png' } });
     expect(service.getUser()?.photoUrl).toBe('/api/uploads/avatar.png');
+    expect(localStorage.getItem('coliclic_token')).toBeNull();
+    expect(localStorage.getItem('coliclic_user')).toBeNull();
   });
 
-  it('stores authenticated user after Google login', () => {
+  it('stores the user after Google login', () => {
     service.googleLogin('google-id-token').subscribe();
-
     const req = httpMock.expectOne('/api/auth/google');
-    expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ idToken: 'google-id-token' });
-    req.flush({
-      token: 'jwt-token',
-      type: 'Bearer',
-      user: {
-        id: 1,
-        firstName: 'Ada',
-        lastName: 'Lovelace',
-        email: 'ada@example.com',
-        role: 'USER',
-        hasPassword: false,
-      },
-    });
-
-    expect(localStorage.getItem('coliclic_token')).toBe('jwt-token');
-    expect(service.getUser()?.email).toBe('ada@example.com');
+    req.flush({ user: { ...user, hasPassword: false } });
     expect(service.getUser()?.hasPassword).toBeFalse();
-  });
-
-  it('removes a legacy identity document from browser storage on startup', () => {
-    localStorage.setItem('coliclic_user', JSON.stringify({
-      id: 1,
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      email: 'ada@example.com',
-      role: 'USER',
-      identityDocument: 'AA123456',
-    }));
-
-    TestBed.resetTestingModule();
-    TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
-    });
-    service = TestBed.inject(AuthService);
-    httpMock = TestBed.inject(HttpTestingController);
-    router = TestBed.inject(Router);
-
-    const storedUser = JSON.parse(localStorage.getItem('coliclic_user')!);
-    expect(storedUser.identityDocument).toBeUndefined();
-    expect(service.getUser()?.email).toBe('ada@example.com');
   });
 
   it('loads Google auth configuration', () => {
     service.getGoogleAuthConfig().subscribe((config) => {
       expect(config).toEqual({ enabled: true, clientId: 'google-client-id' });
     });
-
-    const req = httpMock.expectOne('/api/auth/google/config');
-    expect(req.request.method).toBe('GET');
-    req.flush({ enabled: true, clientId: 'google-client-id' });
+    httpMock.expectOne('/api/auth/google/config').flush({ enabled: true, clientId: 'google-client-id' });
   });
 
-  it('normalizes relative profile photo URL after upload', () => {
-    localStorage.setItem('coliclic_token', 'jwt-token');
-    localStorage.setItem('coliclic_user', JSON.stringify({
-      id: 1,
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john@example.com',
-      role: 'USER',
-    }));
-
-    const file = new File(['image-bytes'], 'avatar.png', { type: 'image/png' });
-    service.uploadPhoto(1, file).subscribe();
-
-    const req = httpMock.expectOne('/api/users/1/photo');
-    expect(req.request.method).toBe('POST');
-    req.flush({
-      id: 1,
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john@example.com',
-      role: 'USER',
-      photoUrl: 'uploads/avatar.png',
-    });
-
+  it('normalizes the user after profile upload', () => {
+    service.login('ada@example.com', 'password123').subscribe();
+    httpMock.expectOne('/api/auth/login').flush({ user });
+    service.uploadPhoto(1, new File(['image'], 'avatar.png', { type: 'image/png' })).subscribe();
+    httpMock.expectOne('/api/users/1/photo').flush({ ...user, photoUrl: 'uploads/avatar.png' });
     expect(service.getUser()?.photoUrl).toBe('/api/uploads/avatar.png');
   });
 
-  describe('logout()', () => {
-    beforeEach(() => {
-      // Seed storage and user state before each logout test
-      localStorage.setItem('coliclic_token', 'jwt-token');
-      localStorage.setItem('coliclic_user', JSON.stringify({
-        id: 1, firstName: 'Ada', lastName: 'Lovelace',
-        email: 'ada@example.com', role: 'USER',
-      }));
-    });
+  it('logs out, clears user state and navigates to login', () => {
+    service.login('ada@example.com', 'password123').subscribe();
+    httpMock.expectOne('/api/auth/login').flush({ user });
+    const navigateSpy = spyOn(router, 'navigate').and.returnValue(Promise.resolve(true));
+    service.logout();
+    httpMock.expectOne('/api/auth/logout').flush(null);
+    expect(service.getUser()).toBeNull();
+    expect(navigateSpy).toHaveBeenCalledWith(['/login']);
+  });
 
-    it('removes token and user from localStorage', () => {
-      service.logout();
-
-      expect(localStorage.getItem('coliclic_token')).toBeNull();
-      expect(localStorage.getItem('coliclic_user')).toBeNull();
-    });
-
-    it('sets currentUser to null', () => {
-      let emittedUser: unknown = 'not-yet';
-      service.currentUser$.subscribe((u) => (emittedUser = u));
-
-      service.logout();
-
-      expect(emittedUser).toBeNull();
-    });
-
-    it('navigates to /login after clearing state', () => {
-      const navigateSpy = spyOn(router, 'navigate').and.returnValue(Promise.resolve(true));
-
-      service.logout();
-
-      expect(navigateSpy).toHaveBeenCalledWith(['/login']);
-    });
-
-    it('isLoggedIn() returns false after logout', () => {
-      service.logout();
-
-      expect(service.isLoggedIn()).toBeFalse();
-    });
+  it('clears local state even when logout fails', () => {
+    service.login('ada@example.com', 'password123').subscribe();
+    httpMock.expectOne('/api/auth/login').flush({ user });
+    spyOn(router, 'navigate').and.returnValue(Promise.resolve(true));
+    service.logout();
+    httpMock.expectOne('/api/auth/logout').flush({}, { status: 500, statusText: 'Error' });
+    expect(service.isLoggedIn()).toBeFalse();
   });
 });

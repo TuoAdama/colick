@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -25,6 +26,7 @@ class I18nIntegrationTest {
     @Test
     void forgotPassword_shouldTranslateSuccessMessageInEnglish() throws Exception {
         mockMvc.perform(post("/api/auth/forgot-password")
+                        .with(csrf())
                         .contextPath("/api")
                         .servletPath("/auth/forgot-password")
                         .header("Accept-Language", "en")
@@ -39,6 +41,7 @@ class I18nIntegrationTest {
     @Test
     void forgotPassword_shouldTranslateSuccessMessageInFrench() throws Exception {
         mockMvc.perform(post("/api/auth/forgot-password")
+                        .with(csrf())
                         .contextPath("/api")
                         .servletPath("/auth/forgot-password")
                         .header("Accept-Language", "fr")
@@ -53,6 +56,7 @@ class I18nIntegrationTest {
     @Test
     void loginValidation_shouldTranslateErrorsInFrench() throws Exception {
         mockMvc.perform(post("/api/auth/login")
+                        .with(csrf())
                         .contextPath("/api")
                         .servletPath("/auth/login")
                         .header("Accept-Language", "fr")

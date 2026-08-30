@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { Component, inject, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
+import { CommonModule, Location, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessagingService } from '../../services/messaging.service';
@@ -12,6 +12,7 @@ export class MessagesPageComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
+  private readonly platformId = inject(PLATFORM_ID);
   conversations: ConversationResponse[] = [];
   selectedConversation: ConversationResponse | null = null;
   messages: MessageResponse[] = [];
@@ -32,8 +33,10 @@ export class MessagesPageComponent implements OnInit, OnDestroy {
     if (!this.authService.isLoggedIn()) { this.router.navigate(['/login']); return; }
     const user = this.authService.getUser();
     this.currentUserId = user?.id ?? null;
-    this.updateViewportState();
-    window.addEventListener('resize', this.resizeListener);
+    if (isPlatformBrowser(this.platformId)) {
+      this.updateViewportState();
+      window.addEventListener('resize', this.resizeListener);
+    }
     const conversationIdParam = this.route.snapshot.queryParamMap.get('conversationId');
     if (conversationIdParam) {
       const parsed = Number(conversationIdParam);
@@ -45,7 +48,9 @@ export class MessagesPageComponent implements OnInit, OnDestroy {
   }
   ngOnDestroy(): void {
     this.stopPolling();
-    window.removeEventListener('resize', this.resizeListener);
+    if (isPlatformBrowser(this.platformId)) {
+      window.removeEventListener('resize', this.resizeListener);
+    }
   }
   loadConversations(): void {
     this.isLoadingConversations = true;
@@ -80,12 +85,18 @@ export class MessagesPageComponent implements OnInit, OnDestroy {
       error: () => { this.errorMessage = "Erreur lors de l'envoi."; this.isSending = false; },
     });
   }
-  private startPolling(id: number): void { this.stopPolling(); this.pollInterval = setInterval(() => { this.messagingService.getMessages(id).subscribe({ next: (m) => { this.messages = m; } }); }, 5000); }
+  private startPolling(id: number): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.stopPolling();
+    this.pollInterval = setInterval(() => {
+      this.messagingService.getMessages(id).subscribe({ next: (m) => { this.messages = m; } });
+    }, 5000);
+  }
   private stopPolling(): void { if (this.pollInterval) { clearInterval(this.pollInterval); this.pollInterval = null; } }
   isOwnMessage(m: MessageResponse): boolean { return m.senderId === this.currentUserId; }
   formatTime(d: string): string { return new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
   goToPreviousPage(): void {
-    if (window.history.length > 1) {
+    if (isPlatformBrowser(this.platformId) && window.history.length > 1) {
       this.location.back();
       return;
     }
@@ -94,6 +105,7 @@ export class MessagesPageComponent implements OnInit, OnDestroy {
   goBack(): void { this.selectedConversation = null; this.messages = []; this.stopPolling(); this.loadConversations(); }
 
   private updateViewportState(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
     this.isMobile = window.innerWidth < 768;
   }
 }

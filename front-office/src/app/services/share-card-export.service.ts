@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import * as htmlToImage from 'html-to-image';
 import QRCode from 'qrcode';
 
 export interface ShareCardShareOptions {
@@ -37,6 +36,7 @@ export class ShareCardExportService {
 
     await this.waitForRenderableAssets(captureTarget);
 
+    const htmlToImage = await import('html-to-image');
     const pngDataUrl = await htmlToImage.toPng(captureTarget, {
       cacheBust: true,
       pixelRatio: 1,

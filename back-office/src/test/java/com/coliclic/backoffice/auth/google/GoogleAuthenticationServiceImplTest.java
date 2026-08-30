@@ -1,6 +1,6 @@
 package com.coliclic.backoffice.auth.google;
 
-import com.coliclic.backoffice.auth.dto.AuthResponse;
+import com.coliclic.backoffice.auth.dto.AuthenticationResult;
 import com.coliclic.backoffice.auth.util.JwtUtil;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
 import com.coliclic.backoffice.support.TestLocalizedMessages;
@@ -76,11 +76,11 @@ class GoogleAuthenticationServiceImplTest {
         });
         when(jwtUtil.generateToken(any(User.class))).thenReturn("jwt-token");
 
-        AuthResponse response = googleAuthenticationService.authenticate("google-id-token");
+        AuthenticationResult response = googleAuthenticationService.authenticate("google-id-token");
 
-        assertThat(response.getToken()).isEqualTo("jwt-token");
-        assertThat(response.getUser().getEmail()).isEqualTo("ada@example.com");
-        assertThat(response.getUser().getHasPassword()).isFalse();
+        assertThat(response.token()).isEqualTo("jwt-token");
+        assertThat(response.user().getEmail()).isEqualTo("ada@example.com");
+        assertThat(response.user().getHasPassword()).isFalse();
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
@@ -118,9 +118,9 @@ class GoogleAuthenticationServiceImplTest {
         when(userRepository.save(existingUser)).thenReturn(existingUser);
         when(jwtUtil.generateToken(existingUser)).thenReturn("jwt-token");
 
-        AuthResponse response = googleAuthenticationService.authenticate("google-id-token");
+        AuthenticationResult response = googleAuthenticationService.authenticate("google-id-token");
 
-        assertThat(response.getUser().getHasPassword()).isTrue();
+        assertThat(response.user().getHasPassword()).isTrue();
         assertThat(existingUser.getGoogleSubject()).isEqualTo("google-subject");
         assertThat(existingUser.getEnabled()).isTrue();
         assertThat(existingUser.getSignupConfirmToken()).isNull();

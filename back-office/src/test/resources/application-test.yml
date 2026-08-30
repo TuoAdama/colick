@@ -40,6 +40,9 @@ app:
   cors:
     allowed-origins: http://localhost:4200
   auth:
+    cookie:
+      name: COLICLIC_AUTH
+      secure: false
     password-reset:
       base-url: http://localhost:4200/reset-password
       expiration-minutes: 60

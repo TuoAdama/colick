@@ -107,6 +107,9 @@ app:
       auth-token: ${TWILIO_AUTH_TOKEN:}
       from-number: ${TWILIO_FROM_NUMBER:}
   auth:
+    cookie:
+      name: ${AUTH_COOKIE_NAME:COLICLIC_AUTH}
+      secure: ${AUTH_COOKIE_SECURE:false}
     password-reset:
       base-url: ${PASSWORD_RESET_BASE_URL:http://localhost:4200/reset-password}
       expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:60}

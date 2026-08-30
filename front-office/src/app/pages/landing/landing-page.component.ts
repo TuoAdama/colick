@@ -1,4 +1,5 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, Subscription, of } from 'rxjs';
@@ -42,6 +43,7 @@ export class LandingPageComponent {
   private readonly authService = inject(AuthService);
   private readonly locationService = inject(LocationService);
   private readonly tripService = inject(TripService);
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly departureSearchSubject = new Subject<string>();
   private readonly destinationSearchSubject = new Subject<string>();
   private readonly subscriptions = new Subscription();
@@ -205,7 +207,7 @@ export class LandingPageComponent {
   }
 
   private loadTripsFromApproximatePosition(): void {
-    if (!('geolocation' in navigator)) {
+    if (!isPlatformBrowser(this.platformId) || !('geolocation' in navigator)) {
       this.loadLandingTrips();
       return;
     }

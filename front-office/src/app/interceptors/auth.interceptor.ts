@@ -16,7 +16,7 @@ const PUBLIC_ENDPOINT_PATHS = new Set([
 
 function getRequestPath(url: string): string {
   try {
-    return new URL(url, window.location.origin).pathname;
+    return new URL(url, 'http://localhost').pathname;
   } catch {
     return url;
   }
@@ -32,22 +32,12 @@ function isPublicEndpoint(url: string): boolean {
 
 /**
  * Functional HTTP interceptor that:
- * 1. Attaches the JWT Bearer token to every outgoing request when
- *    the user is authenticated.
- * 2. Intercepts HTTP 401 responses on protected endpoints and calls
- *    AuthService.logout() so the session is cleared and the user is
- *    redirected to /login.
+ * Clears the local user projection when the HTTP-only cookie is rejected by
+ * a protected endpoint. The browser attaches same-origin cookies itself.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const token = authService.getToken();
-
-  // Attach Authorization header when a token is available
-  const cloned = token
-    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-    : req;
-
-  return next(cloned).pipe(
+  return next(req).pipe(
     catchError((error) => {
       if (
         error instanceof HttpErrorResponse &&
@@ -55,7 +45,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         !isPublicEndpoint(req.url)
       ) {
         // Token is expired or revoked — clear the session and redirect
-        authService.logout();
+        authService.clearSessionAndRedirect();
       }
       return throwError(() => error);
     }),
