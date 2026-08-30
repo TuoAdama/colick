@@ -26,6 +26,8 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -411,6 +413,69 @@ class MessagingServiceImplTest {
                 "alice@example.com", "Alice", "Bob Martin", "Paris → Abidjan",
                 "http://localhost:4200/messages?conversationId=100"
         );
+    }
+
+    @Test
+    void sendMessage_shouldNotifyOnlyAfterTransactionCommit() {
+        SendMessageRequest request = new SendMessageRequest();
+        request.setContent("On my way!");
+        Message savedMessage = Message.builder()
+                .id(3L)
+                .conversation(sampleConversation)
+                .sender(bob)
+                .content("On my way!")
+                .sentAt(LocalDateTime.now())
+                .read(false)
+                .build();
+        when(conversationRepository.findById(100L)).thenReturn(Optional.of(sampleConversation));
+        when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            messagingService.sendMessage(100L, request, bob);
+
+            verifyNoInteractions(emailService);
+            TransactionSynchronizationManager.getSynchronizations()
+                    .forEach(TransactionSynchronization::afterCommit);
+
+            verify(emailService).sendNewMessageEmail(
+                    "alice@example.com", "Alice", "Bob Martin", "Paris → Abidjan",
+                    "http://localhost:4200/messages?conversationId=100"
+            );
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+    }
+
+    @Test
+    void sendMessage_shouldNotNotifyWhenTransactionRollsBack() {
+        SendMessageRequest request = new SendMessageRequest();
+        request.setContent("On my way!");
+        Message savedMessage = Message.builder()
+                .id(3L)
+                .conversation(sampleConversation)
+                .sender(bob)
+                .content("On my way!")
+                .sentAt(LocalDateTime.now())
+                .read(false)
+                .build();
+        when(conversationRepository.findById(100L)).thenReturn(Optional.of(sampleConversation));
+        when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            messagingService.sendMessage(100L, request, bob);
+            TransactionSynchronizationManager.getSynchronizations().forEach(synchronization ->
+                    synchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
+
+            verifyNoInteractions(emailService);
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
     }
 
     // ---- Edge cases --------------------------------------------------------

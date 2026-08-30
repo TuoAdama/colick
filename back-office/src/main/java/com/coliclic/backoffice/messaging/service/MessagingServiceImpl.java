@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.Optional;
@@ -90,7 +92,7 @@ public class MessagingServiceImpl implements MessagingService {
                 .content(request.getContent())
                 .build();
         messageRepository.save(message);
-        notifyRecipient(conversation, currentUser, recipient);
+        notifyRecipientAfterCommit(conversation, currentUser, recipient);
 
         return toConversationResponse(conversation, currentUser);
     }
@@ -135,7 +137,7 @@ public class MessagingServiceImpl implements MessagingService {
 
         MessageResponse response = MessageResponse.from(messageRepository.save(message));
         User recipient = getOtherParticipant(conversation, currentUser);
-        notifyRecipient(conversation, currentUser, recipient);
+        notifyRecipientAfterCommit(conversation, currentUser, recipient);
         return response;
     }
 
@@ -204,18 +206,42 @@ public class MessagingServiceImpl implements MessagingService {
                 : conversation.getParticipant1();
     }
 
-    private void notifyRecipient(Conversation conversation, User sender, User recipient) {
+    private void notifyRecipientAfterCommit(Conversation conversation, User sender, User recipient) {
         ConversationContext context = resolveContext(conversation);
+        NewMessageNotification notification = new NewMessageNotification(
+                conversation.getId(),
+                recipient.getEmail(),
+                recipient.getFirstName(),
+                sender.getFirstName() + " " + sender.getLastName(),
+                context.route(),
+                buildConversationUrl(conversation.getId())
+        );
+
+        if (TransactionSynchronizationManager.isActualTransactionActive()
+                && TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    notifyRecipient(notification);
+                }
+            });
+            return;
+        }
+
+        notifyRecipient(notification);
+    }
+
+    private void notifyRecipient(NewMessageNotification notification) {
         try {
             emailService.sendNewMessageEmail(
-                    recipient.getEmail(),
-                    recipient.getFirstName(),
-                    sender.getFirstName() + " " + sender.getLastName(),
-                    context.route(),
-                    buildConversationUrl(conversation.getId())
+                    notification.recipientEmail(),
+                    notification.recipientFirstName(),
+                    notification.senderName(),
+                    notification.route(),
+                    notification.conversationUrl()
             );
         } catch (RuntimeException ex) {
-            log.warn("Unable to send new-message notification for conversation {}", conversation.getId(), ex);
+            log.warn("Unable to send new-message notification for conversation {}", notification.conversationId(), ex);
         }
     }
 
@@ -307,5 +333,13 @@ public class MessagingServiceImpl implements MessagingService {
                     parcelRequest
             );
         }
+    }
+
+    private record NewMessageNotification(Long conversationId,
+                                          String recipientEmail,
+                                          String recipientFirstName,
+                                          String senderName,
+                                          String route,
+                                          String conversationUrl) {
     }
 }
