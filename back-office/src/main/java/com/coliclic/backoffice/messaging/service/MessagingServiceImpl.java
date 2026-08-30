@@ -1,5 +1,6 @@
 package com.coliclic.backoffice.messaging.service;
 
+import com.coliclic.backoffice.email.EmailService;
 import com.coliclic.backoffice.exception.BadRequestException;
 import com.coliclic.backoffice.exception.ResourceNotFoundException;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
@@ -14,9 +15,14 @@ import com.coliclic.backoffice.trip.entity.Trip;
 import com.coliclic.backoffice.trip.repository.TripRepository;
 import com.coliclic.backoffice.user.entity.User;
 import com.coliclic.backoffice.user.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,25 +34,33 @@ import java.util.Optional;
 @Transactional
 public class MessagingServiceImpl implements MessagingService {
 
+    private static final Logger log = LoggerFactory.getLogger(MessagingServiceImpl.class);
+
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final TripRepository tripRepository;
     private final ParcelRequestRepository parcelRequestRepository;
     private final UserRepository userRepository;
     private final LocalizedMessages localizedMessages;
+    private final EmailService emailService;
+
+    @Value("${app.frontend.base-url:http://localhost:4200}")
+    private String frontendBaseUrl;
 
     public MessagingServiceImpl(ConversationRepository conversationRepository,
                                 MessageRepository messageRepository,
                                 TripRepository tripRepository,
                                 ParcelRequestRepository parcelRequestRepository,
                                 UserRepository userRepository,
-                                LocalizedMessages localizedMessages) {
+                                LocalizedMessages localizedMessages,
+                                EmailService emailService) {
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
         this.tripRepository = tripRepository;
         this.parcelRequestRepository = parcelRequestRepository;
         this.userRepository = userRepository;
         this.localizedMessages = localizedMessages;
+        this.emailService = emailService;
     }
 
     @Override
@@ -78,6 +92,7 @@ public class MessagingServiceImpl implements MessagingService {
                 .content(request.getContent())
                 .build();
         messageRepository.save(message);
+        notifyRecipientAfterCommit(conversation, currentUser, recipient);
 
         return toConversationResponse(conversation, currentUser);
     }
@@ -120,7 +135,10 @@ public class MessagingServiceImpl implements MessagingService {
                 .content(request.getContent())
                 .build();
 
-        return MessageResponse.from(messageRepository.save(message));
+        MessageResponse response = MessageResponse.from(messageRepository.save(message));
+        User recipient = getOtherParticipant(conversation, currentUser);
+        notifyRecipientAfterCommit(conversation, currentUser, recipient);
+        return response;
     }
 
     @Override
@@ -182,14 +200,67 @@ public class MessagingServiceImpl implements MessagingService {
         }
     }
 
+    private User getOtherParticipant(Conversation conversation, User currentUser) {
+        return conversation.getParticipant1().getId().equals(currentUser.getId())
+                ? conversation.getParticipant2()
+                : conversation.getParticipant1();
+    }
+
+    private void notifyRecipientAfterCommit(Conversation conversation, User sender, User recipient) {
+        ConversationContext context = resolveContext(conversation);
+        NewMessageNotification notification = new NewMessageNotification(
+                conversation.getId(),
+                recipient.getEmail(),
+                recipient.getFirstName(),
+                sender.getFirstName() + " " + sender.getLastName(),
+                context.route(),
+                buildConversationUrl(conversation.getId())
+        );
+
+        if (TransactionSynchronizationManager.isActualTransactionActive()
+                && TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    notifyRecipient(notification);
+                }
+            });
+            return;
+        }
+
+        notifyRecipient(notification);
+    }
+
+    private void notifyRecipient(NewMessageNotification notification) {
+        try {
+            emailService.sendNewMessageEmail(
+                    notification.recipientEmail(),
+                    notification.recipientFirstName(),
+                    notification.senderName(),
+                    notification.route(),
+                    notification.conversationUrl()
+            );
+        } catch (RuntimeException ex) {
+            log.warn("Unable to send new-message notification for conversation {}", notification.conversationId(), ex);
+        }
+    }
+
+    private String buildConversationUrl(Long conversationId) {
+        String baseUrl = (frontendBaseUrl == null || frontendBaseUrl.isBlank())
+                ? "http://localhost:4200"
+                : frontendBaseUrl.trim();
+        if (baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        }
+        return baseUrl + "/messages?conversationId=" + conversationId;
+    }
+
     /**
      * Builds a {@link ConversationResponse} for the given conversation
      * from the perspective of the current user.
      */
     private ConversationResponse toConversationResponse(Conversation conversation, User currentUser) {
-        User otherParticipant = conversation.getParticipant1().getId().equals(currentUser.getId())
-                ? conversation.getParticipant2()
-                : conversation.getParticipant1();
+        User otherParticipant = getOtherParticipant(conversation, currentUser);
 
         String lastMessageContent = messageRepository
                 .findTopByConversationOrderBySentAtDesc(conversation)
@@ -262,5 +333,13 @@ public class MessagingServiceImpl implements MessagingService {
                     parcelRequest
             );
         }
+    }
+
+    private record NewMessageNotification(Long conversationId,
+                                          String recipientEmail,
+                                          String recipientFirstName,
+                                          String senderName,
+                                          String route,
+                                          String conversationUrl) {
     }
 }

@@ -1,5 +1,6 @@
 package com.coliclic.backoffice.messaging;
 
+import com.coliclic.backoffice.email.EmailService;
 import com.coliclic.backoffice.exception.BadRequestException;
 import com.coliclic.backoffice.exception.ResourceNotFoundException;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
@@ -25,6 +26,8 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -54,6 +57,9 @@ class MessagingServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private EmailService emailService;
 
     @Spy
     private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
@@ -180,6 +186,10 @@ class MessagingServiceImplTest {
 
         verify(conversationRepository).save(any(Conversation.class));
         verify(messageRepository).save(any(Message.class));
+        verify(emailService).sendNewMessageEmail(
+                "bob@example.com", "Bob", "Alice Dupont", "Paris → Abidjan",
+                "http://localhost:4200/messages?conversationId=100"
+        );
     }
 
     @Test
@@ -245,6 +255,33 @@ class MessagingServiceImplTest {
         assertThat(response.getContextType()).isEqualTo("PARCEL_REQUEST");
         assertThat(response.getLastMessage()).isEqualTo("Bonjour, je voyage bientot.");
         verify(messageRepository).save(any(Message.class));
+        verify(emailService).sendNewMessageEmail(
+                "bob@example.com", "Bob", "Alice Dupont", "Paris → Abidjan",
+                "http://localhost:4200/messages?conversationId=200"
+        );
+    }
+
+    @Test
+    void sendMessage_shouldKeepMessageWhenNotificationFails() {
+        SendMessageRequest request = new SendMessageRequest();
+        request.setContent("On my way!");
+        Message savedMessage = Message.builder()
+                .id(3L).conversation(sampleConversation).sender(bob)
+                .content("On my way!").sentAt(LocalDateTime.now()).read(false)
+                .build();
+        when(conversationRepository.findById(100L)).thenReturn(Optional.of(sampleConversation));
+        when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+        doThrow(new IllegalStateException("SMTP unavailable")).when(emailService).sendNewMessageEmail(
+                anyString(), anyString(), anyString(), anyString(), anyString());
+
+        MessageResponse response = messagingService.sendMessage(100L, request, bob);
+
+        assertThat(response.getId()).isEqualTo(3L);
+        verify(messageRepository).save(any(Message.class));
+        verify(emailService).sendNewMessageEmail(
+                "alice@example.com", "Alice", "Bob Martin", "Paris → Abidjan",
+                "http://localhost:4200/messages?conversationId=100"
+        );
     }
 
     @Test
@@ -372,6 +409,73 @@ class MessagingServiceImplTest {
         assertThat(response.isRead()).isFalse();
 
         verify(messageRepository).save(any(Message.class));
+        verify(emailService).sendNewMessageEmail(
+                "alice@example.com", "Alice", "Bob Martin", "Paris → Abidjan",
+                "http://localhost:4200/messages?conversationId=100"
+        );
+    }
+
+    @Test
+    void sendMessage_shouldNotifyOnlyAfterTransactionCommit() {
+        SendMessageRequest request = new SendMessageRequest();
+        request.setContent("On my way!");
+        Message savedMessage = Message.builder()
+                .id(3L)
+                .conversation(sampleConversation)
+                .sender(bob)
+                .content("On my way!")
+                .sentAt(LocalDateTime.now())
+                .read(false)
+                .build();
+        when(conversationRepository.findById(100L)).thenReturn(Optional.of(sampleConversation));
+        when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            messagingService.sendMessage(100L, request, bob);
+
+            verifyNoInteractions(emailService);
+            TransactionSynchronizationManager.getSynchronizations()
+                    .forEach(TransactionSynchronization::afterCommit);
+
+            verify(emailService).sendNewMessageEmail(
+                    "alice@example.com", "Alice", "Bob Martin", "Paris → Abidjan",
+                    "http://localhost:4200/messages?conversationId=100"
+            );
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+    }
+
+    @Test
+    void sendMessage_shouldNotNotifyWhenTransactionRollsBack() {
+        SendMessageRequest request = new SendMessageRequest();
+        request.setContent("On my way!");
+        Message savedMessage = Message.builder()
+                .id(3L)
+                .conversation(sampleConversation)
+                .sender(bob)
+                .content("On my way!")
+                .sentAt(LocalDateTime.now())
+                .read(false)
+                .build();
+        when(conversationRepository.findById(100L)).thenReturn(Optional.of(sampleConversation));
+        when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            messagingService.sendMessage(100L, request, bob);
+            TransactionSynchronizationManager.getSynchronizations().forEach(synchronization ->
+                    synchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
+
+            verifyNoInteractions(emailService);
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
     }
 
     // ---- Edge cases --------------------------------------------------------
@@ -450,6 +554,7 @@ class MessagingServiceImplTest {
         assertThatThrownBy(() -> messagingService.sendMessage(100L, request, stranger))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("not a participant");
+        verifyNoInteractions(emailService);
     }
 
     @Test
