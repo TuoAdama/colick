@@ -65,6 +65,15 @@ class LogsScriptTest {
     }
 
     @Test
+    void supportsRedisServiceLogs() throws Exception {
+        Result result = run("redis", "--lines", "25");
+
+        assertThat(result.exitCode()).isZero();
+        assertThat(arguments()).containsSubsequence(
+                "logs", "--no-color", "--no-log-prefix", "--tail", "25", "redis");
+    }
+
+    @Test
     void archiveFollowReadsThePersistentBackOfficeFile() throws Exception {
         Result result = run("back-office", "--archive", "--follow", "--lines", "25");
 
@@ -75,7 +84,7 @@ class LogsScriptTest {
 
     @Test
     void rejectsUnknownServiceAndLevel() throws Exception {
-        assertThat(run("redis").exitCode()).isEqualTo(2);
+        assertThat(run("unknown-service").exitCode()).isEqualTo(2);
         assertThat(run("--level", "verbose").exitCode()).isEqualTo(2);
     }
 

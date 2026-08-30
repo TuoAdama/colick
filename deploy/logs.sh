@@ -5,7 +5,7 @@ usage() {
   cat <<'USAGE'
 Usage: ./logs.sh [service] [--follow] [--since <duration>] [--lines <count>] [--level <level>] [--archive]
 
-Services: back-office (default), front-office, postgres
+Services: back-office (default), front-office, postgres, redis
 Levels: TRACE, DEBUG, INFO, WARN, ERROR
 
 --archive reads the persistent back-office files and cannot be combined with --since.
@@ -68,7 +68,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$service" in
-  back-office|front-office|postgres) ;;
+  back-office|front-office|postgres|redis) ;;
   *) fail "unknown service: $service" ;;
 esac
 

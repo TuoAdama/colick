@@ -9,6 +9,7 @@ import com.coliclic.backoffice.messaging.entity.Conversation;
 import com.coliclic.backoffice.messaging.entity.Message;
 import com.coliclic.backoffice.messaging.repository.ConversationRepository;
 import com.coliclic.backoffice.messaging.repository.MessageRepository;
+import com.coliclic.backoffice.messaging.notification.MessageEmailNotificationThrottle;
 import com.coliclic.backoffice.parcelrequest.entity.ParcelRequest;
 import com.coliclic.backoffice.parcelrequest.repository.ParcelRequestRepository;
 import com.coliclic.backoffice.messaging.service.MessagingServiceImpl;
@@ -61,6 +62,9 @@ class MessagingServiceImplTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private MessageEmailNotificationThrottle notificationThrottle;
+
     @Spy
     private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
 
@@ -77,6 +81,7 @@ class MessagingServiceImplTest {
     @BeforeEach
     void setUp() {
         LocaleContextHolder.setLocale(Locale.ENGLISH);
+        lenient().when(notificationThrottle.tryAcquire(anyLong(), anyLong())).thenReturn(true);
         alice = User.builder()
                 .id(1L)
                 .firstName("Alice")
@@ -282,6 +287,7 @@ class MessagingServiceImplTest {
                 "alice@example.com", "Alice", "Bob Martin", "Paris → Abidjan",
                 "http://localhost:4200/messages?conversationId=100"
         );
+        verify(notificationThrottle).release(100L, 1L);
     }
 
     @Test
@@ -413,6 +419,48 @@ class MessagingServiceImplTest {
                 "alice@example.com", "Alice", "Bob Martin", "Paris → Abidjan",
                 "http://localhost:4200/messages?conversationId=100"
         );
+    }
+
+    @Test
+    void sendMessage_shouldSuppressEmailDuringExistingNotificationWindow() {
+        SendMessageRequest request = new SendMessageRequest();
+        request.setContent("Another message");
+        Message savedMessage = Message.builder()
+                .id(4L).conversation(sampleConversation).sender(bob)
+                .content("Another message").sentAt(LocalDateTime.now()).read(false)
+                .build();
+        when(conversationRepository.findById(100L)).thenReturn(Optional.of(sampleConversation));
+        when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+        when(notificationThrottle.tryAcquire(100L, 1L)).thenReturn(false);
+
+        messagingService.sendMessage(100L, request, bob);
+
+        verify(notificationThrottle).tryAcquire(100L, 1L);
+        verifyNoInteractions(emailService);
+    }
+
+    @Test
+    void getMessages_shouldReleaseNotificationWindowOnlyAfterCommit() {
+        when(conversationRepository.findById(100L)).thenReturn(Optional.of(sampleConversation));
+        when(messageRepository.findByConversationAndReadFalseAndSenderNot(sampleConversation, alice))
+                .thenReturn(List.of());
+        when(messageRepository.findByConversationOrderBySentAtAsc(sampleConversation))
+                .thenReturn(List.of());
+
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            messagingService.getMessages(100L, alice);
+
+            verify(notificationThrottle, never()).release(100L, 1L);
+            TransactionSynchronizationManager.getSynchronizations()
+                    .forEach(TransactionSynchronization::afterCommit);
+
+            verify(notificationThrottle).release(100L, 1L);
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
     }
 
     @Test

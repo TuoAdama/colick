@@ -26,7 +26,7 @@ Par défaut, la commande affiche les 200 dernières lignes du back-office. Les s
 ./logs.sh back-office --archive --lines 1000
 ```
 
-Les services acceptés sont `back-office`, `front-office` et `postgres`. Les niveaux acceptés sont `TRACE`, `DEBUG`, `INFO`, `WARN` et `ERROR`. L'option `--archive` est réservée au back-office ; elle peut être combinée avec `--follow`, mais pas avec `--since`.
+Les services acceptés sont `back-office`, `front-office`, `postgres` et `redis`. Les niveaux acceptés sont `TRACE`, `DEBUG`, `INFO`, `WARN` et `ERROR`. L'option `--archive` est réservée au back-office ; elle peut être combinée avec `--follow`, mais pas avec `--since`.
 
 ## Rétention et diagnostic
 
