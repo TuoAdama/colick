@@ -41,3 +41,11 @@ En cas de problème :
 3. rechercher les erreurs avec `./logs.sh --level ERROR` ;
 4. utiliser `./logs.sh --archive` si les anciennes lignes ne sont plus disponibles dans les logs Docker ;
 5. lors d'un déploiement échoué, consulter également `deployment.log` dans le répertoire de la release concernée.
+
+## Rétention des releases
+
+Après chaque tentative de déploiement, le serveur conserve au maximum trois releases fonctionnelles par environnement. La release ciblée par le lien `current` est toujours protégée, puis les releases fonctionnelles les plus récentes complètent ce quota.
+
+Une release activée avec succès contient le marqueur `.deployment-success`. Pour rester compatible avec les anciennes releases, un répertoire sans `deployment.log` est également considéré comme fonctionnel. Les tentatives échouées, identifiées par leur `deployment.log`, ne comptent pas dans le quota et sont conservées pour permettre le diagnostic.
+
+La purge intervient uniquement après l'activation ou la fin du rollback. Une erreur de nettoyage est signalée dans les logs du déploiement sans remettre en cause l'état sain de l'application.
