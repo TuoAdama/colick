@@ -59,7 +59,10 @@ prune_successful_releases() {
   local retained_count index previous_index cleanup_failed
   local -a successful_releases
 
-  releases_dir=$(dirname "$release_dir")
+  if ! releases_dir=$(readlink -f "$(dirname "$release_dir")"); then
+    echo "Failed to canonicalize releases directory: $(dirname "$release_dir")" >&2
+    return 1
+  fi
   [[ -d "$releases_dir" ]] || return 0
 
   current_release=""
@@ -68,14 +71,23 @@ prune_successful_releases() {
   fi
 
   successful_releases=()
+  cleanup_failed=false
   while IFS= read -r -d '' candidate; do
+    if ! candidate=$(readlink -f "$candidate"); then
+      echo "Failed to canonicalize release candidate: $candidate" >&2
+      cleanup_failed=true
+      continue
+    fi
     if [[ -f "$candidate/$success_marker" || ! -f "$candidate/deployment.log" ]]; then
       successful_releases+=("$candidate")
     fi
   done < <(find "$releases_dir" -mindepth 1 -maxdepth 1 -type d -print0)
 
   if ((${#successful_releases[@]} == 0)); then
-    return 0
+    if [[ "$cleanup_failed" == false ]]; then
+      return 0
+    fi
+    return 1
   fi
 
   # Sort newest first without relying on GNU-specific stat or find options.
@@ -94,7 +106,6 @@ prune_successful_releases() {
     retained_count=1
   fi
 
-  cleanup_failed=false
   for candidate in "${successful_releases[@]}"; do
     if [[ -n "$current_release" && "$candidate" == "$current_release" ]]; then
       continue

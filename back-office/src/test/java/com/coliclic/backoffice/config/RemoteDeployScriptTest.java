@@ -49,6 +49,7 @@ class RemoteDeployScriptTest {
                 #!/usr/bin/env bash
                 if [[ "${1:-}" == "-f" ]]; then
                   shift
+                  exec /bin/realpath "$@"
                 fi
                 exec /usr/bin/readlink "$@"
                 """);
@@ -193,6 +194,31 @@ class RemoteDeployScriptTest {
     }
 
     @Test
+    void protectsCanonicalCurrentWhenDeployRootUsesSymlinkedAncestor() throws Exception {
+        Path physicalRoot = Files.createDirectory(tempDirectory.resolve("physical-root"));
+        Path aliasedRoot = tempDirectory.resolve("aliased-root");
+        Files.createSymbolicLink(aliasedRoot, physicalRoot);
+        Path environment = aliasedRoot.resolve("colick").resolve("preprod");
+        Files.createDirectories(environment.resolve("releases"));
+        Path currentRelease = release(environment, "current-oldest", true, 1);
+        Path old = release(environment, "old", true, 2);
+        Path recent = release(environment, "recent", true, 3);
+        Path newest = release(environment, "newest", true, 4);
+        Path failedDeployment = release(environment, "pull-failure", true, 5);
+        Path current = currentLink(environment, currentRelease);
+
+        Result result = run(failedDeployment, current, Map.of("FAIL_PULL", "true"));
+
+        assertThat(result.exitCode()).isEqualTo(1);
+        assertThat(Files.exists(currentRelease)).isTrue();
+        assertThat(Files.readSymbolicLink(current)).isEqualTo(currentRelease);
+        assertThat(Files.exists(old)).isFalse();
+        assertThat(Files.exists(recent)).isTrue();
+        assertThat(Files.exists(newest)).isTrue();
+        assertThat(Files.exists(failedDeployment.resolve("deployment.log"))).isTrue();
+    }
+
+    @Test
     void reportsCleanupFailureWithoutFailingHealthyDeployment() throws Exception {
         Path environment = environment("preprod");
         Path removalFailure = release(environment, "removal-failure", true, 1);
@@ -200,13 +226,14 @@ class RemoteDeployScriptTest {
         Path secondKept = release(environment, "second-kept", true, 3);
         Path deployed = release(environment, "deployed", true, 4);
         Path current = currentLink(environment, firstKept);
+        String canonicalRemovalFailure = removalFailure.toRealPath().toString();
 
         Result result = run(deployed, current,
-                Map.of("REMOVE_FAILURE_PATH", removalFailure.toString()));
+                Map.of("REMOVE_FAILURE_PATH", canonicalRemovalFailure));
 
         assertThat(result.exitCode()).isZero();
         assertThat(result.output()).contains(
-                "Failed to remove old successful release: " + removalFailure,
+                "Failed to remove old successful release: " + canonicalRemovalFailure,
                 "Warning: release retention cleanup did not complete");
         assertThat(Files.exists(removalFailure)).isTrue();
         assertThat(Files.readSymbolicLink(current)).isEqualTo(deployed);
