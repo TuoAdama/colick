@@ -18,11 +18,8 @@ describe('authInterceptor', () => {
 
   beforeEach(() => {
     authServiceMock = jasmine.createSpyObj<AuthService>('AuthService', [
-      'getToken',
-      'logout',
+      'clearSessionAndRedirect',
     ]);
-    // Default: user is authenticated
-    authServiceMock.getToken.and.returnValue('jwt-token');
 
     TestBed.configureTestingModule({
       providers: [
@@ -38,19 +35,7 @@ describe('authInterceptor', () => {
 
   afterEach(() => httpMock.verify());
 
-  // ── Token attachment ────────────────────────────────────────────────────
-
-  it('attaches Authorization header when a token is present', () => {
-    http.get('/api/trips').subscribe();
-
-    const req = httpMock.expectOne('/api/trips');
-    expect(req.request.headers.get('Authorization')).toBe('Bearer jwt-token');
-    req.flush([]);
-  });
-
-  it('does not attach Authorization header when no token is present', () => {
-    authServiceMock.getToken.and.returnValue(null);
-
+  it('does not attach an Authorization header', () => {
     http.get('/api/trips').subscribe();
 
     const req = httpMock.expectOne('/api/trips');
@@ -60,13 +45,13 @@ describe('authInterceptor', () => {
 
   // ── 401 handling on protected endpoints ────────────────────────────────
 
-  it('calls authService.logout() when a protected endpoint returns 401', () => {
+  it('clears the session when a protected endpoint returns 401', () => {
     http.get('/api/trips').subscribe({ error: () => {} });
 
     const req = httpMock.expectOne('/api/trips');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
-    expect(authServiceMock.logout).toHaveBeenCalled();
+    expect(authServiceMock.clearSessionAndRedirect).toHaveBeenCalled();
   });
 
   it('propagates the 401 error after calling logout', (done) => {
@@ -89,7 +74,7 @@ describe('authInterceptor', () => {
     const req = httpMock.expectOne('/api/auth/login');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
-    expect(authServiceMock.logout).not.toHaveBeenCalled();
+    expect(authServiceMock.clearSessionAndRedirect).not.toHaveBeenCalled();
   });
 
   it('does NOT call logout when /api/auth/google returns 401', () => {
@@ -98,7 +83,7 @@ describe('authInterceptor', () => {
     const req = httpMock.expectOne('/api/auth/google');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
-    expect(authServiceMock.logout).not.toHaveBeenCalled();
+    expect(authServiceMock.clearSessionAndRedirect).not.toHaveBeenCalled();
   });
 
   it('does NOT call logout when /api/trips/landing-feed returns 401', () => {
@@ -107,7 +92,7 @@ describe('authInterceptor', () => {
     const req = httpMock.expectOne('/api/trips/landing-feed?limit=3');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
-    expect(authServiceMock.logout).not.toHaveBeenCalled();
+    expect(authServiceMock.clearSessionAndRedirect).not.toHaveBeenCalled();
   });
 
   it('does NOT call logout when /api/trips/reference returns 401', () => {
@@ -116,7 +101,7 @@ describe('authInterceptor', () => {
     const req = httpMock.expectOne('/api/trips/reference/TRP-2026-000013');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
-    expect(authServiceMock.logout).not.toHaveBeenCalled();
+    expect(authServiceMock.clearSessionAndRedirect).not.toHaveBeenCalled();
   });
 
   it('does NOT call logout when /api/locations/search returns 401', () => {
@@ -125,7 +110,7 @@ describe('authInterceptor', () => {
     const req = httpMock.expectOne('/api/locations/search?q=Pa');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
-    expect(authServiceMock.logout).not.toHaveBeenCalled();
+    expect(authServiceMock.clearSessionAndRedirect).not.toHaveBeenCalled();
   });
 
   // ── Non-401 errors must not trigger logout ──────────────────────────────
@@ -136,7 +121,7 @@ describe('authInterceptor', () => {
     const req = httpMock.expectOne('/api/trips');
     req.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
 
-    expect(authServiceMock.logout).not.toHaveBeenCalled();
+    expect(authServiceMock.clearSessionAndRedirect).not.toHaveBeenCalled();
   });
 
   it('does NOT call logout for a 500 error on a protected endpoint', () => {
@@ -145,6 +130,6 @@ describe('authInterceptor', () => {
     const req = httpMock.expectOne('/api/trips');
     req.flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
 
-    expect(authServiceMock.logout).not.toHaveBeenCalled();
+    expect(authServiceMock.clearSessionAndRedirect).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,6 @@
 package com.coliclic.backoffice.auth.filter;
 
+import com.coliclic.backoffice.auth.cookie.AuthCookieService;
 import com.coliclic.backoffice.auth.util.JwtUtil;
 import com.coliclic.backoffice.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
@@ -26,10 +27,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final AuthCookieService authCookieService;
 
-    public JwtAuthFilter(JwtUtil jwtUtil, UserRepository userRepository) {
+    public JwtAuthFilter(JwtUtil jwtUtil, UserRepository userRepository, AuthCookieService authCookieService) {
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
+        this.authCookieService = authCookieService;
     }
 
     @Override
@@ -38,14 +41,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        final String token = authCookieService.readToken(request);
+        if (token == null || token.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        final String token = authHeader.substring(7);
 
         if (!jwtUtil.isTokenValid(token)) {
             filterChain.doFilter(request, response);

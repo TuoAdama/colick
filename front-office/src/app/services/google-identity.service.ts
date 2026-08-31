@@ -1,5 +1,5 @@
-import { Injectable, inject } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
 
@@ -9,6 +9,7 @@ export type GoogleButtonText = 'signin_with' | 'signup_with';
 export class GoogleIdentityService {
   private readonly authService = inject(AuthService);
   private readonly document = inject(DOCUMENT);
+  private readonly platformId = inject(PLATFORM_ID);
 
   private scriptLoadingPromise?: Promise<void>;
 
@@ -17,6 +18,9 @@ export class GoogleIdentityService {
     buttonText: GoogleButtonText,
     onCredential: (credential: string) => void
   ): Promise<boolean> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return false;
+    }
     const config = await firstValueFrom(this.authService.getGoogleAuthConfig());
     if (!config.enabled || !config.clientId) {
       hostElement.innerHTML = '';

@@ -12,6 +12,17 @@ ng serve
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
+## Server-side rendering
+
+Production builds include both the browser bundle and the Angular SSR Node server. Run it locally with:
+
+```bash
+npm run build
+SSR_API_BASE_URL=http://localhost:8080/api AUTH_COOKIE_NAME=COLICLIC_AUTH npm run serve:ssr:front-office
+```
+
+The Node server listens on port `4000`, exposes `/health`, and forwards the incoming authentication cookie named by `AUTH_COOKIE_NAME` (default: `COLICLIC_AUTH`) to the internal API while rendering authenticated pages. The production Docker image runs this server directly; Traefik remains the public TLS entry point.
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:

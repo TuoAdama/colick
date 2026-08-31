@@ -1,7 +1,14 @@
-import { Injectable, inject } from '@angular/core';
+import {
+  Injectable,
+  PLATFORM_ID,
+  TransferState,
+  inject,
+  makeStateKey,
+} from '@angular/core';
+import { isPlatformBrowser, isPlatformServer } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, catchError, finalize, firstValueFrom, of, tap } from 'rxjs';
 import {
   AuthResponse,
   ChangeEmailRequest,
@@ -22,11 +29,35 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly photoUrlService = inject(PhotoUrlService);
-  private readonly TOKEN_KEY = 'coliclic_token';
-  private readonly USER_KEY = 'coliclic_user';
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly transferState = inject(TransferState);
+  private readonly sessionStateKey = makeStateKey<UserResponse | null>('coliclic.auth.user');
 
-  private currentUserSubject = new BehaviorSubject<UserResponse | null>(this.getStoredUser());
+  private currentUserSubject = new BehaviorSubject<UserResponse | null>(null);
   currentUser$ = this.currentUserSubject.asObservable();
+
+  async initializeSession(): Promise<void> {
+    if (isPlatformBrowser(this.platformId) && this.transferState.hasKey(this.sessionStateKey)) {
+      const transferredUser = this.transferState.get(this.sessionStateKey, null);
+      this.transferState.remove(this.sessionStateKey);
+      this.currentUserSubject.next(transferredUser ? this.normalizeUser(transferredUser) : null);
+      await this.initializeCsrf();
+      return;
+    }
+
+    const user = await firstValueFrom(
+      this.http.get<UserResponse>('/api/auth/session').pipe(
+        catchError(() => of(null)),
+      ),
+    );
+    const normalizedUser = user ? this.normalizeUser(user) : null;
+    this.currentUserSubject.next(normalizedUser);
+    if (isPlatformServer(this.platformId)) {
+      this.transferState.set(this.sessionStateKey, normalizedUser);
+    } else {
+      await this.initializeCsrf();
+    }
+  }
 
   login(email: string, password: string): Observable<AuthResponse> {
     return this.authenticate('/api/auth/login', { email, password } as LoginRequest);
@@ -44,21 +75,22 @@ export class AuthService {
     return this.http.post<UserResponse>('/api/users', data);
   }
 
-  getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
-  }
-
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    return this.getUser() !== null;
   }
 
   logout(): void {
-    window.google?.accounts.id.disableAutoSelect();
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
+    this.http.post<void>('/api/auth/logout', {}).pipe(
+      finalize(() => this.clearSessionAndRedirect()),
+    ).subscribe({ error: () => undefined });
+  }
+
+  clearSessionAndRedirect(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      window.google?.accounts.id.disableAutoSelect();
+    }
     this.currentUserSubject.next(null);
-    // Redirect to login page after clearing the session
-    this.router.navigate(['/login']);
+    void this.router.navigate(['/login']);
   }
 
   getUser(): UserResponse | null {
@@ -69,7 +101,7 @@ export class AuthService {
   updateProfile(id: number, data: UpdateProfileRequest): Observable<UserResponse> {
     return this.http.put<UserResponse>(`/api/users/${id}`, data).pipe(
       tap((user) => {
-        this.persistUser(user);
+        this.setUser(user);
       })
     );
   }
@@ -80,7 +112,7 @@ export class AuthService {
     form.append('file', file);
     return this.http.post<UserResponse>(`/api/users/${id}/photo`, form).pipe(
       tap((user) => {
-        this.persistUser(user);
+        this.setUser(user);
       })
     );
   }
@@ -95,7 +127,7 @@ export class AuthService {
     return this.http.get<UserResponse>(`/api/users/confirm-email`, { params: { token } }).pipe(
       tap((user) => {
         if (this.isLoggedIn()) {
-          this.persistUser(user);
+          this.setUser(user);
         }
       })
     );
@@ -126,24 +158,19 @@ export class AuthService {
   private authenticate(url: string, body: LoginRequest | GoogleAuthRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(url, body).pipe(
       tap((res) => {
-        localStorage.setItem(this.TOKEN_KEY, res.token);
-        this.persistUser(res.user);
+        this.setUser(res.user);
       })
     );
   }
 
-  private getStoredUser(): UserResponse | null {
-    const raw = localStorage.getItem(this.USER_KEY);
-    if (!raw) return null;
-    const user = JSON.parse(raw) as UserResponse & { identityDocument?: unknown };
-    const normalizedUser = this.normalizeUser(user);
-    localStorage.setItem(this.USER_KEY, JSON.stringify(normalizedUser));
-    return normalizedUser;
+  private async initializeCsrf(): Promise<void> {
+    await firstValueFrom(
+      this.http.get('/api/auth/csrf').pipe(catchError(() => of(null))),
+    );
   }
 
-  private persistUser(user: UserResponse): void {
+  private setUser(user: UserResponse): void {
     const normalizedUser = this.normalizeUser(user);
-    localStorage.setItem(this.USER_KEY, JSON.stringify(normalizedUser));
     this.currentUserSubject.next(normalizedUser);
   }
 

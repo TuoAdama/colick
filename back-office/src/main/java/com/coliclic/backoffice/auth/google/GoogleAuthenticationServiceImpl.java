@@ -1,6 +1,6 @@
 package com.coliclic.backoffice.auth.google;
 
-import com.coliclic.backoffice.auth.dto.AuthResponse;
+import com.coliclic.backoffice.auth.dto.AuthenticationResult;
 import com.coliclic.backoffice.auth.dto.GoogleAuthConfigResponse;
 import com.coliclic.backoffice.auth.util.JwtUtil;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
@@ -41,18 +41,14 @@ public class GoogleAuthenticationServiceImpl implements GoogleAuthenticationServ
     }
 
     @Override
-    public AuthResponse authenticate(String idToken) {
+    public AuthenticationResult authenticate(String idToken) {
         GoogleTokenPayload payload = googleTokenVerifier.verify(idToken);
         User user = userRepository.findByGoogleSubject(payload.subject())
                 .map(existingUser -> synchronizeLinkedUser(existingUser, payload))
                 .orElseGet(() -> resolveByEmailOrCreate(payload));
 
         User savedUser = userRepository.save(user);
-        return AuthResponse.builder()
-                .token(jwtUtil.generateToken(savedUser))
-                .type("Bearer")
-                .user(UserResponse.from(savedUser))
-                .build();
+        return new AuthenticationResult(jwtUtil.generateToken(savedUser), UserResponse.from(savedUser));
     }
 
     @Override

@@ -17,6 +17,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -36,6 +38,8 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
     @Value("${app.cors.allowed-origins:http://localhost:4200}")
     private String corsAllowedOrigins;
+    @Value("${app.auth.cookie.secure:false}")
+    private boolean secureCookies;
 
     public SecurityConfig(JwtAuthFilter jwtAuthFilter,
                           LocalizedMessages localizedMessages,
@@ -46,10 +50,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   CookieCsrfTokenRepository csrfTokenRepository) throws Exception {
+        CsrfTokenRequestAttributeHandler csrfRequestHandler = new CsrfTokenRequestAttributeHandler();
+        csrfRequestHandler.setCsrfRequestAttributeName(null);
+
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf
+                    .csrfTokenRepository(csrfTokenRepository)
+                    .csrfTokenRequestHandler(csrfRequestHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((req, res, e) -> writeError(
@@ -67,7 +77,8 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/google", "/auth/forgot-password", "/auth/reset-password")
                 .permitAll()
-                .requestMatchers(HttpMethod.GET, "/auth/google/config").permitAll()
+                .requestMatchers(HttpMethod.POST, "/auth/logout").permitAll()
+                .requestMatchers(HttpMethod.GET, "/auth/google/config", "/auth/csrf").permitAll()
                 .requestMatchers(HttpMethod.POST, "/users").permitAll()
                 .requestMatchers(HttpMethod.GET, "/users/confirm-email").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
@@ -90,6 +101,16 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CookieCsrfTokenRepository csrfTokenRepository() {
+        CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repository.setCookieCustomizer(cookie -> cookie
+                .path("/")
+                .sameSite("Lax")
+                .secure(secureCookies));
+        return repository;
+    }
+
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         List<String> origins = Arrays.stream(corsAllowedOrigins.split(","))
@@ -99,7 +120,6 @@ public class SecurityConfig {
         config.setAllowedOrigins(origins.isEmpty() ? List.of("http://localhost:4200") : origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

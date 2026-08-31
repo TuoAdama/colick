@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -40,6 +41,7 @@ class ParcelRequestSecurityIntegrationTest {
     @Test
     void creation_shouldRemainProtected() throws Exception {
         mockMvc.perform(post("/api/parcel-requests")
+                        .with(csrf())
                         .contextPath("/api")
                         .servletPath("/parcel-requests")
                         .contentType("application/json")
