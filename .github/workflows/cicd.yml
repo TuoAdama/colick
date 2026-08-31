@@ -323,10 +323,13 @@ jobs:
           cp deploy/logs.sh "$release_dir/logs.sh"
           chmod 700 "$release_dir/remote-deploy.sh" "$release_dir/logs.sh"
           printf '%s\n' "$ENV_FILE_CONTENT" >"$release_dir/.runtime.env"
+          auth_cookie_name=$(sed -n 's/^AUTH_COOKIE_NAME=//p' "$release_dir/.runtime.env" | tail -n 1)
+          auth_cookie_name=${auth_cookie_name:-COLICLIC_AUTH}
           {
             echo "SOURCE_SHA=$SOURCE_SHA"
             echo "COMPOSE_PROJECT_NAME=$COMPOSE_PROJECT"
             echo "RUNTIME_ENV_FILE=.runtime.env"
+            echo "AUTH_COOKIE_NAME=$auth_cookie_name"
             echo "BACK_OFFICE_IMAGE_REF=$back_ref"
             echo "FRONT_OFFICE_IMAGE_REF=$front_ref"
           } >"$release_dir/.release.env"

@@ -26,7 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,7 +50,7 @@ public class AuthController {
     private final GoogleAuthenticationService googleAuthenticationService;
     private final LocalizedMessages localizedMessages;
     private final AuthCookieService authCookieService;
-    private final CookieCsrfTokenRepository csrfTokenRepository;
+    private final CsrfTokenRepository csrfTokenRepository;
 
     public AuthController(UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
@@ -59,7 +59,7 @@ public class AuthController {
                           GoogleAuthenticationService googleAuthenticationService,
                           LocalizedMessages localizedMessages,
                           AuthCookieService authCookieService,
-                          CookieCsrfTokenRepository csrfTokenRepository) {
+                          CsrfTokenRepository csrfTokenRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;

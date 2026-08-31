@@ -74,6 +74,7 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}-front-office
     environment:
       SSR_API_BASE_URL: "http://back-office:8080/api"
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME:-COLICLIC_AUTH}
     depends_on:
       back-office:
         condition: service_healthy

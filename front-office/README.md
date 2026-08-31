@@ -18,10 +18,10 @@ Production builds include both the browser bundle and the Angular SSR Node serve
 
 ```bash
 npm run build
-SSR_API_BASE_URL=http://localhost:8080/api npm run serve:ssr:front-office
+SSR_API_BASE_URL=http://localhost:8080/api AUTH_COOKIE_NAME=COLICLIC_AUTH npm run serve:ssr:front-office
 ```
 
-The Node server listens on port `4000`, exposes `/health`, and forwards the incoming `COLICLIC_AUTH` cookie to the internal API while rendering authenticated pages. The production Docker image runs this server directly; Traefik remains the public TLS entry point.
+The Node server listens on port `4000`, exposes `/health`, and forwards the incoming authentication cookie named by `AUTH_COOKIE_NAME` (default: `COLICLIC_AUTH`) to the internal API while rendering authenticated pages. The production Docker image runs this server directly; Traefik remains the public TLS entry point.
 
 ## Code scaffolding
 

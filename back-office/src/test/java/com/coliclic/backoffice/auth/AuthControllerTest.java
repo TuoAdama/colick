@@ -27,7 +27,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -61,7 +61,7 @@ class AuthControllerTest {
     private AuthCookieService authCookieService;
 
     @Mock
-    private CookieCsrfTokenRepository csrfTokenRepository;
+    private CsrfTokenRepository csrfTokenRepository;
 
     @Spy
     private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
