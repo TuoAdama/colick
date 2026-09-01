@@ -8,8 +8,11 @@ import com.coliclic.backoffice.auth.dto.LoginRequest;
 import com.coliclic.backoffice.auth.dto.ResetPasswordRequest;
 import com.coliclic.backoffice.auth.google.GoogleAuthenticationService;
 import com.coliclic.backoffice.auth.passwordreset.service.PasswordResetService;
+import com.coliclic.backoffice.auth.ratelimit.AuthRateLimiter;
+import com.coliclic.backoffice.auth.ratelimit.RateLimitDecision;
 import com.coliclic.backoffice.auth.util.JwtUtil;
 import com.coliclic.backoffice.exception.UnauthorizedException;
+import com.coliclic.backoffice.exception.TooManyRequestsException;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
 import com.coliclic.backoffice.support.TestLocalizedMessages;
 import com.coliclic.backoffice.user.entity.User;
@@ -25,7 +28,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 
@@ -36,7 +39,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,6 +68,9 @@ class AuthControllerTest {
     @Mock
     private CsrfTokenRepository csrfTokenRepository;
 
+    @Mock
+    private AuthRateLimiter authRateLimiter;
+
     @Spy
     private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
 
@@ -72,10 +80,14 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         LocaleContextHolder.setLocale(Locale.ENGLISH);
+        lenient().when(authRateLimiter.checkLogin(anyString(), anyString()))
+                .thenReturn(RateLimitDecision.allowedDecision());
+        lenient().when(authRateLimiter.checkPasswordReset(anyString(), anyString()))
+                .thenReturn(RateLimitDecision.allowedDecision());
     }
 
     @Test
-    void login_shouldThrowAccessDenied_whenAccountIsNotEnabled() {
+    void login_shouldReturnGenericUnauthorized_whenAccountIsNotEnabled() {
         User user = User.builder()
                 .id(1L)
                 .email("john@example.com")
@@ -87,10 +99,13 @@ class AuthControllerTest {
         request.setPassword("password");
 
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password", "hashed")).thenReturn(true);
 
-        assertThatThrownBy(() -> authController.login(request, new MockHttpServletResponse()))
-                .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("not activated");
+        assertThatThrownBy(() -> authController.login(
+                request, new MockHttpServletRequest(), new MockHttpServletResponse()))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessage("Invalid email or password");
+        verify(passwordEncoder).matches("password", "hashed");
     }
 
     @Test
@@ -108,13 +123,14 @@ class AuthControllerTest {
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
 
-        assertThatThrownBy(() -> authController.login(request, new MockHttpServletResponse()))
+        assertThatThrownBy(() -> authController.login(
+                request, new MockHttpServletRequest(), new MockHttpServletResponse()))
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessageContaining("Invalid email or password");
     }
 
     @Test
-    void login_shouldThrowAccessDenied_whenAccountUsesGoogleOnly() {
+    void login_shouldReturnGenericUnauthorized_whenAccountUsesGoogleOnly() {
         User user = User.builder()
                 .id(1L)
                 .email("john@example.com")
@@ -127,10 +143,45 @@ class AuthControllerTest {
         request.setPassword("password");
 
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password", "hashed")).thenReturn(false);
 
-        assertThatThrownBy(() -> authController.login(request, new MockHttpServletResponse()))
-                .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("Google");
+        assertThatThrownBy(() -> authController.login(
+                request, new MockHttpServletRequest(), new MockHttpServletResponse()))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessage("Invalid email or password");
+        verify(passwordEncoder).matches("password", "hashed");
+    }
+
+    @Test
+    void login_shouldRunDummyPasswordCheckAndReturnGenericUnauthorized_whenEmailIsUnknown() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("unknown@example.com");
+        request.setPassword("password");
+        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authController.login(
+                request, new MockHttpServletRequest(), new MockHttpServletResponse()))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessage("Invalid email or password");
+        verify(passwordEncoder).matches(
+                org.mockito.ArgumentMatchers.eq("password"),
+                org.mockito.ArgumentMatchers.startsWith("$2a$10$"));
+    }
+
+    @Test
+    void login_shouldRejectWithRetryDelay_whenRateLimitIsExceeded() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("john@example.com");
+        request.setPassword("password");
+        when(authRateLimiter.checkLogin("john@example.com", "127.0.0.1"))
+                .thenReturn(RateLimitDecision.rejected(60));
+
+        assertThatThrownBy(() -> authController.login(
+                request, new MockHttpServletRequest(), new MockHttpServletResponse()))
+                .isInstanceOf(TooManyRequestsException.class)
+                .extracting("retryAfterSeconds")
+                .isEqualTo(60L);
+        verifyNoInteractions(userRepository, passwordEncoder);
     }
 
     @Test
@@ -155,7 +206,7 @@ class AuthControllerTest {
                 .httpOnly(true).path("/").build());
         MockHttpServletResponse servletResponse = new MockHttpServletResponse();
 
-        var result = authController.login(request, servletResponse);
+        var result = authController.login(request, new MockHttpServletRequest(), servletResponse);
 
         assertThat(result.getBody()).isNotNull();
         assertThat(result.getBody().getUser().getEmail()).isEqualTo("john@example.com");
@@ -181,14 +232,14 @@ class AuthControllerTest {
         ForgotPasswordRequest request = new ForgotPasswordRequest();
         request.setEmail("john@example.com");
 
-        doNothing().when(passwordResetService).requestPasswordReset(anyString());
+        doNothing().when(passwordResetService).requestPasswordReset(anyString(), org.mockito.ArgumentMatchers.any(Locale.class));
 
-        var response = authController.forgotPassword(request);
+        var response = authController.forgotPassword(request, new MockHttpServletRequest(), Locale.FRENCH);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getMessage()).contains("If an account exists");
-        verify(passwordResetService).requestPasswordReset("john@example.com");
+        verify(passwordResetService).requestPasswordReset("john@example.com", Locale.FRENCH);
     }
 
     @Test

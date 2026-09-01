@@ -8,6 +8,9 @@ import com.coliclic.backoffice.i18n.LocalizedMessages;
 import com.coliclic.backoffice.user.entity.User;
 import com.coliclic.backoffice.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.i18n.LocaleContext;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Locale;
 
 /**
  * Default implementation of password reset flow.
@@ -51,25 +55,32 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     }
 
     @Override
-    public void requestPasswordReset(String email) {
-        userRepository.findByEmail(email).ifPresent(user -> {
-            String rawToken = generateToken();
-            PasswordResetToken token = PasswordResetToken.builder()
-                    .user(user)
-                    .tokenHash(hashToken(rawToken))
-                    .expiresAt(LocalDateTime.now().plusMinutes(expirationMinutes))
-                    .build();
-            passwordResetTokenRepository.save(token);
+    @Async
+    public void requestPasswordReset(String email, Locale locale) {
+        LocaleContext previousLocaleContext = LocaleContextHolder.getLocaleContext();
+        try {
+            LocaleContextHolder.setLocale(locale);
+            userRepository.findByEmail(email).ifPresent(user -> {
+                String rawToken = generateToken();
+                PasswordResetToken token = PasswordResetToken.builder()
+                        .user(user)
+                        .tokenHash(hashToken(rawToken))
+                        .expiresAt(LocalDateTime.now().plusMinutes(expirationMinutes))
+                        .build();
+                passwordResetTokenRepository.save(token);
 
-            emailService.sendPasswordResetEmail(
-                    user.getEmail(),
-                    user.getFirstName(),
-                    buildResetUrl(rawToken),
-                    expirationMinutes
-            );
-        });
+                emailService.sendPasswordResetEmail(
+                        user.getEmail(),
+                        user.getFirstName(),
+                        buildResetUrl(rawToken),
+                        expirationMinutes
+                );
+            });
 
-        passwordResetTokenRepository.deleteAllByExpiresAtBefore(LocalDateTime.now());
+            passwordResetTokenRepository.deleteAllByExpiresAtBefore(LocalDateTime.now());
+        } finally {
+            LocaleContextHolder.setLocaleContext(previousLocaleContext);
+        }
     }
 
     @Override

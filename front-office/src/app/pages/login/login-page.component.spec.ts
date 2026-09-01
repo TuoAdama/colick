@@ -42,7 +42,7 @@ describe('LoginPageComponent', () => {
     spyOn(router, 'navigateByUrl').and.resolveTo(true);
   });
 
-  it('shows backend activation error message', () => {
+  it('shows the generic message instead of exposing the backend account state', () => {
     authServiceMock.login.and.returnValue(
       throwError(() => ({
         error: { message: 'Votre compte n\'est pas encore activé.' },
@@ -58,7 +58,7 @@ describe('LoginPageComponent', () => {
 
     expect(component.loginForm.get('password')?.value).toBe('');
     expect(component.loginForm.get('email')?.value).toBe('john@example.com');
-    expect(component.errorMessage).toContain('pas encore activé');
+    expect(component.errorMessage).toBe('Adresse e-mail ou mot de passe invalide.');
   });
 
   it('clears password and uses fallback message when backend message is missing', () => {
@@ -73,7 +73,22 @@ describe('LoginPageComponent', () => {
 
     expect(component.loginForm.get('password')?.value).toBe('');
     expect(component.loginForm.get('email')?.value).toBe('john@example.com');
-    expect(component.errorMessage).toBe('Email ou mot de passe incorrect.');
+    expect(component.errorMessage).toBe('Adresse e-mail ou mot de passe invalide.');
+  });
+
+  it('shows a dedicated message when login is rate limited', () => {
+    authServiceMock.login.and.returnValue(throwError(() => ({ status: 429 })));
+    component.loginForm.setValue({ email: 'john@example.com', password: 'password123' });
+
+    component.onSubmit();
+
+    expect(component.errorMessage).toContain('Trop de tentatives');
+  });
+
+  it('always shows password setup help for Google-created accounts', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Compte créé avec Google');
   });
 
   it('redirects to search after Google login', () => {

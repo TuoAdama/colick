@@ -29,8 +29,12 @@
             <p class="mt-1 text-xs text-error">Le mot de passe est requis</p>
           }
           <div class="mt-2 text-right">
-            <a routerLink="/forgot-password" class="text-sm text-secondary font-medium hover:underline">Mot de passe oublié ?</a>
+            <a routerLink="/forgot-password" [state]="{ email: loginForm.get('email')?.value }"
+              class="text-sm text-secondary font-medium hover:underline">Mot de passe oublié ?</a>
           </div>
+          <p class="mt-2 text-xs text-text-muted">
+            Compte créé avec Google ? Vous pouvez définir votre premier mot de passe avec le lien ci-dessus.
+          </p>
         </div>
 
         <button type="submit" [disabled]="loginForm.invalid || isLoading"
