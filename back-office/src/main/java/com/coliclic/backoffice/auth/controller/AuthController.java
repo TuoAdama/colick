@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Locale;
 
 /**
  * REST controller for authentication endpoints.
@@ -152,9 +153,10 @@ public class AuthController {
      */
     @PostMapping("/forgot-password")
     public ResponseEntity<GenericMessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request,
-                                                                 HttpServletRequest servletRequest) {
+                                                                 HttpServletRequest servletRequest,
+                                                                 Locale locale) {
         enforceRateLimit(authRateLimiter.checkPasswordReset(request.getEmail(), servletRequest.getRemoteAddr()));
-        passwordResetService.requestPasswordReset(request.getEmail());
+        passwordResetService.requestPasswordReset(request.getEmail(), locale);
         return ResponseEntity.accepted().body(
                 new GenericMessageResponse(
                         localizedMessages.get("api.auth.forgotPassword.accepted")

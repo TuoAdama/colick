@@ -32,6 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -80,8 +81,12 @@ class PasswordResetServiceImplTest {
     @Test
     void requestPasswordReset_shouldCreateTokenAndSendEmail_whenEmailExists() {
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(user));
+        doAnswer(invocation -> {
+            assertThat(LocaleContextHolder.getLocale()).isEqualTo(Locale.FRENCH);
+            return null;
+        }).when(emailService).sendPasswordResetEmail(anyString(), anyString(), anyString(), anyLong());
 
-        passwordResetService.requestPasswordReset("john@example.com");
+        passwordResetService.requestPasswordReset("john@example.com", Locale.FRENCH);
 
         ArgumentCaptor<PasswordResetToken> tokenCaptor = ArgumentCaptor.forClass(PasswordResetToken.class);
         verify(passwordResetTokenRepository).save(tokenCaptor.capture());
@@ -98,6 +103,7 @@ class PasswordResetServiceImplTest {
                 resetUrlCaptor.capture(),
                 eq(45L)
         );
+        assertThat(LocaleContextHolder.getLocale()).isEqualTo(Locale.ENGLISH);
         assertThat(resetUrlCaptor.getValue()).startsWith("https://app.coliclic.com/reset-password?token=");
         verify(passwordResetTokenRepository).deleteAllByExpiresAtBefore(any(LocalDateTime.class));
     }
@@ -106,7 +112,7 @@ class PasswordResetServiceImplTest {
     void requestPasswordReset_shouldNotCreateTokenAndShouldStillReturnSilently_whenEmailDoesNotExist() {
         when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
 
-        passwordResetService.requestPasswordReset("unknown@example.com");
+        passwordResetService.requestPasswordReset("unknown@example.com", Locale.FRENCH);
 
         verify(passwordResetTokenRepository, never()).save(any(PasswordResetToken.class));
         verify(emailService, never()).sendPasswordResetEmail(anyString(), anyString(), anyString(), anyLong());

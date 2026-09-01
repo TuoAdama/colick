@@ -232,14 +232,14 @@ class AuthControllerTest {
         ForgotPasswordRequest request = new ForgotPasswordRequest();
         request.setEmail("john@example.com");
 
-        doNothing().when(passwordResetService).requestPasswordReset(anyString());
+        doNothing().when(passwordResetService).requestPasswordReset(anyString(), org.mockito.ArgumentMatchers.any(Locale.class));
 
-        var response = authController.forgotPassword(request, new MockHttpServletRequest());
+        var response = authController.forgotPassword(request, new MockHttpServletRequest(), Locale.FRENCH);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getMessage()).contains("If an account exists");
-        verify(passwordResetService).requestPasswordReset("john@example.com");
+        verify(passwordResetService).requestPasswordReset("john@example.com", Locale.FRENCH);
     }
 
     @Test

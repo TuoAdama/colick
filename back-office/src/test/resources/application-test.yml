@@ -46,3 +46,10 @@ app:
     password-reset:
       base-url: http://localhost:4200/reset-password
       expiration-minutes: 60
+    rate-limit:
+      login:
+        email-limit: 1000000
+        ip-limit: 1000000
+      password-reset:
+        email-limit: 1000000
+        ip-limit: 1000000
