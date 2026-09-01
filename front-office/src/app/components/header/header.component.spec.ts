@@ -87,6 +87,16 @@ describe('HeaderComponent', () => {
     expect(text).not.toContain('Mes demandes');
   });
 
+  it('displays the Coliclic logo and accessible home label', () => {
+    fixture.detectChanges();
+
+    const logo = fixture.nativeElement.querySelector('a[routerLink="/"]') as HTMLAnchorElement | null;
+
+    expect(logo).not.toBeNull();
+    expect(logo?.textContent?.trim()).toBe('Coliclic.');
+    expect(logo?.getAttribute('aria-label')).toBe('Coliclic - Accueil');
+  });
+
   it('marks search navigation as active on the search route', async () => {
     await router.navigateByUrl('/search');
     fixture.detectChanges();
