@@ -11,7 +11,10 @@ import com.coliclic.backoffice.auth.dto.LoginRequest;
 import com.coliclic.backoffice.auth.dto.ResetPasswordRequest;
 import com.coliclic.backoffice.auth.google.GoogleAuthenticationService;
 import com.coliclic.backoffice.auth.passwordreset.service.PasswordResetService;
+import com.coliclic.backoffice.auth.ratelimit.AuthRateLimiter;
+import com.coliclic.backoffice.auth.ratelimit.RateLimitDecision;
 import com.coliclic.backoffice.auth.util.JwtUtil;
+import com.coliclic.backoffice.exception.TooManyRequestsException;
 import com.coliclic.backoffice.exception.UnauthorizedException;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
 import com.coliclic.backoffice.user.dto.UserResponse;
@@ -23,7 +26,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
@@ -35,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * REST controller for authentication endpoints.
@@ -42,6 +45,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
+    private static final String DUMMY_PASSWORD_HASH =
+            "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -51,6 +57,7 @@ public class AuthController {
     private final LocalizedMessages localizedMessages;
     private final AuthCookieService authCookieService;
     private final CsrfTokenRepository csrfTokenRepository;
+    private final AuthRateLimiter authRateLimiter;
 
     public AuthController(UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
@@ -59,7 +66,8 @@ public class AuthController {
                           GoogleAuthenticationService googleAuthenticationService,
                           LocalizedMessages localizedMessages,
                           AuthCookieService authCookieService,
-                          CsrfTokenRepository csrfTokenRepository) {
+                          CsrfTokenRepository csrfTokenRepository,
+                          AuthRateLimiter authRateLimiter) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -68,24 +76,28 @@ public class AuthController {
         this.localizedMessages = localizedMessages;
         this.authCookieService = authCookieService;
         this.csrfTokenRepository = csrfTokenRepository;
+        this.authRateLimiter = authRateLimiter;
     }
 
     /** Authenticates a user and stores the JWT in an HTTP-only cookie. */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
+                                              HttpServletRequest servletRequest,
                                               HttpServletResponse response) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UnauthorizedException(localizedMessages.get("error.auth.invalidCredentials")));
+        enforceRateLimit(authRateLimiter.checkLogin(request.getEmail(), servletRequest.getRemoteAddr()));
 
-        if (Boolean.FALSE.equals(user.getEnabled())) {
-            throw new AccessDeniedException(localizedMessages.get("error.auth.accountNotActivated"));
-        }
+        Optional<User> candidate = userRepository.findByEmail(request.getEmail());
+        String passwordHash = candidate.map(User::getPassword)
+                .filter(value -> !value.isBlank())
+                .orElse(DUMMY_PASSWORD_HASH);
+        boolean passwordMatches = passwordEncoder.matches(request.getPassword(), passwordHash);
+        User user = candidate.orElse(null);
+        boolean loginAllowed = user != null
+                && !Boolean.FALSE.equals(user.getEnabled())
+                && !Boolean.FALSE.equals(user.getLocalAuthEnabled())
+                && passwordMatches;
 
-        if (Boolean.FALSE.equals(user.getLocalAuthEnabled())) {
-            throw new AccessDeniedException(localizedMessages.get("error.auth.googleLoginRequired"));
-        }
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!loginAllowed) {
             throw new UnauthorizedException(localizedMessages.get("error.auth.invalidCredentials"));
         }
 
@@ -139,7 +151,9 @@ public class AuthController {
      * Initiates a forgot password request and always returns a generic response.
      */
     @PostMapping("/forgot-password")
-    public ResponseEntity<GenericMessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+    public ResponseEntity<GenericMessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request,
+                                                                 HttpServletRequest servletRequest) {
+        enforceRateLimit(authRateLimiter.checkPasswordReset(request.getEmail(), servletRequest.getRemoteAddr()));
         passwordResetService.requestPasswordReset(request.getEmail());
         return ResponseEntity.accepted().body(
                 new GenericMessageResponse(
@@ -155,5 +169,14 @@ public class AuthController {
     public ResponseEntity<GenericMessageResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok(new GenericMessageResponse(localizedMessages.get("api.auth.resetPassword.success")));
+    }
+
+    private void enforceRateLimit(RateLimitDecision decision) {
+        if (!decision.allowed()) {
+            throw new TooManyRequestsException(
+                    localizedMessages.get("error.auth.tooManyAttempts"),
+                    decision.retryAfterSeconds()
+            );
+        }
     }
 }

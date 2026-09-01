@@ -71,6 +71,9 @@ class PasswordResetServiceImplTest {
                 .lastName("Doe")
                 .email("john@example.com")
                 .password("old-hash")
+                .localAuthEnabled(false)
+                .authProvider(User.AuthProvider.GOOGLE)
+                .googleSubject("google-subject")
                 .build();
     }
 
@@ -174,6 +177,8 @@ class PasswordResetServiceImplTest {
 
         assertThat(user.getPassword()).isEqualTo("new-hash");
         assertThat(user.getLocalAuthEnabled()).isTrue();
+        assertThat(user.getGoogleSubject()).isEqualTo("google-subject");
+        assertThat(user.getAuthProvider()).isEqualTo(User.AuthProvider.GOOGLE);
         verify(userRepository).save(user);
         assertThat(token.getUsedAt()).isNotNull();
         assertThat(secondActiveToken.getUsedAt()).isNotNull();

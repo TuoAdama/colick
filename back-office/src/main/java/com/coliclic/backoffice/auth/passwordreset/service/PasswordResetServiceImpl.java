@@ -8,6 +8,7 @@ import com.coliclic.backoffice.i18n.LocalizedMessages;
 import com.coliclic.backoffice.user.entity.User;
 import com.coliclic.backoffice.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,6 +52,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     }
 
     @Override
+    @Async
     public void requestPasswordReset(String email) {
         userRepository.findByEmail(email).ifPresent(user -> {
             String rawToken = generateToken();

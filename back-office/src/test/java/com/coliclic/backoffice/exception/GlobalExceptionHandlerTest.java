@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -69,5 +70,17 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertEquals(404, response.getBody().getStatus());
         assertTrue(response.getBody().getMessage().contains("/uploads/missing.png"));
+    }
+
+    @Test
+    void handleTooManyRequests_shouldReturn429AndRetryAfter() {
+        TooManyRequestsException ex = new TooManyRequestsException("Too many attempts", 42);
+
+        ResponseEntity<ApiError> response = handler.handleTooManyRequests(ex);
+
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
+        assertEquals("42", response.getHeaders().getFirst(HttpHeaders.RETRY_AFTER));
+        assertNotNull(response.getBody());
+        assertEquals("Too many attempts", response.getBody().getMessage());
     }
 }
