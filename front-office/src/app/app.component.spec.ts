@@ -40,6 +40,9 @@ describe('AppComponent', () => {
     expect(fixture.componentInstance.title).toBe(
       'Coliclic - Envoyez vos colis avec des voyageurs de confiance',
     );
+    expect(document.title).toBe(
+      'Coliclic - Envoyez vos colis avec des voyageurs de confiance',
+    );
   });
 
   it('hides shared marketing chrome on dashboard shell routes', () => {
