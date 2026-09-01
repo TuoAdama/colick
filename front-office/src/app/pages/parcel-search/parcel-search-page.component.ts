@@ -1,9 +1,9 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { CommonModule, ViewportScroller } from '@angular/common';
+import { Component, Injector, OnDestroy, OnInit, afterNextRender, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, Scroll } from '@angular/router';
 import { Subject, Subscription, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
 import { Location } from '../../models/location.model';
 import { ParcelRequest } from '../../models/parcel-request.model';
 import { AuthService } from '../../services/auth.service';
@@ -26,6 +26,8 @@ export class ParcelSearchPageComponent implements OnInit, OnDestroy {
   private readonly parcelRequestService = inject(ParcelRequestService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly viewportScroller = inject(ViewportScroller);
+  private readonly injector = inject(Injector);
   private readonly departureSearchSubject = new Subject<string>();
   private readonly destinationSearchSubject = new Subject<string>();
   private readonly subscriptions = new Subscription();
@@ -47,9 +49,17 @@ export class ParcelSearchPageComponent implements OnInit, OnDestroy {
   requests: ParcelRequest[] = [];
 
   private lastAutoSearchKey = '';
+  private pendingRestoredScrollPosition: [number, number] | null = null;
 
   ngOnInit(): void {
     this.setupAutocomplete();
+    this.subscriptions.add(
+      this.router.events.pipe(
+        filter((event): event is Scroll => event instanceof Scroll),
+      ).subscribe((event) => {
+        this.pendingRestoredScrollPosition = event.position;
+      }),
+    );
     this.subscriptions.add(
       this.route.queryParamMap.subscribe((params) => {
         const from = params.get('from')?.trim() ?? '';
@@ -271,12 +281,25 @@ export class ParcelSearchPageComponent implements OnInit, OnDestroy {
       next: (requests) => {
         this.requests = requests;
         this.isLoading = false;
+        this.restorePendingScrollAfterRender();
       },
       error: () => {
         this.errorMessage = 'Impossible de charger les demandes de colis.';
         this.isLoading = false;
       },
     });
+  }
+
+  private restorePendingScrollAfterRender(): void {
+    const position = this.pendingRestoredScrollPosition;
+    if (!position) {
+      return;
+    }
+
+    this.pendingRestoredScrollPosition = null;
+    afterNextRender({
+      write: () => this.viewportScroller.scrollToPosition(position),
+    }, { injector: this.injector });
   }
 
   private createLocationFromQuery(name: string): Location {
