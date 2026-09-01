@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
@@ -17,6 +18,7 @@ import { filter } from 'rxjs';
 })
 export class AppComponent {
   private readonly router = inject(Router);
+  private readonly documentTitle = inject(Title);
   private readonly reservationShellRoutePattern = /^\/trips\/\d+\/reservations(?:\/[^?#]*)?(?:[?#].*)?$/;
   private readonly dashboardShellRoutePatterns = [
     /^\/dashboard(?:[?#].*)?$/,
@@ -33,6 +35,7 @@ export class AppComponent {
   showSharedChrome = true;
 
   constructor() {
+    this.documentTitle.setTitle(this.title);
     this.updateSharedChrome(this.router.url);
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
