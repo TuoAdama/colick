@@ -1,6 +1,8 @@
+import { ViewportScroller } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { NavigationEnd, provideRouter, Router, Scroll } from '@angular/router';
+import { of, Subject, throwError } from 'rxjs';
+import { ParcelRequest } from '../../models/parcel-request.model';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
 import { MessagingService } from '../../services/messaging.service';
@@ -11,6 +13,7 @@ describe('ParcelSearchPageComponent', () => {
   let fixture: ComponentFixture<ParcelSearchPageComponent>;
   let component: ParcelSearchPageComponent;
   let router: Router;
+  let viewportScroller: jasmine.SpyObj<ViewportScroller>;
 
   const parcelRequest = {
     id: 12,
@@ -42,6 +45,14 @@ describe('ParcelSearchPageComponent', () => {
   };
 
   beforeEach(async () => {
+    viewportScroller = jasmine.createSpyObj<ViewportScroller>('ViewportScroller', [
+      'setHistoryScrollRestoration',
+      'getScrollPosition',
+      'scrollToPosition',
+      'scrollToAnchor',
+      'setOffset',
+    ]);
+
     await TestBed.configureTestingModule({
       imports: [ParcelSearchPageComponent],
       providers: [
@@ -50,6 +61,7 @@ describe('ParcelSearchPageComponent', () => {
         { provide: LocationService, useValue: locationServiceMock },
         { provide: MessagingService, useValue: messagingServiceMock },
         { provide: ParcelRequestService, useValue: parcelRequestServiceMock },
+        { provide: ViewportScroller, useValue: viewportScroller },
       ],
     }).compileComponents();
 
@@ -160,6 +172,31 @@ describe('ParcelSearchPageComponent', () => {
       queryParams: { returnUrl: '/parcel-search?from=Paris&to=Abidjan' },
     });
     expect(messagingServiceMock.createConversationDraft).not.toHaveBeenCalled();
+  });
+
+  it('restores the saved scroll position after asynchronous results render', async () => {
+    const requestsSubject = new Subject<ParcelRequest[]>();
+    parcelRequestServiceMock.getAvailableRequests.and.returnValue(requestsSubject);
+    await router.navigateByUrl('/parcel-search?from=Paris&to=Abidjan');
+    createComponent();
+
+    (router.events as Subject<unknown>).next(
+      new Scroll(new NavigationEnd(2, '/login', '/parcel-search?from=Paris&to=Abidjan'), [0, 640], null),
+    );
+
+    expect(fixture.nativeElement.querySelectorAll('article').length).toBe(3);
+    expect(viewportScroller.scrollToPosition).not.toHaveBeenCalled();
+
+    requestsSubject.next(Array.from({ length: 12 }, (_, index) => ({
+      ...parcelRequest,
+      id: index + 1,
+    })));
+    requestsSubject.complete();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelectorAll('article').length).toBe(12);
+    expect(viewportScroller.scrollToPosition).toHaveBeenCalledOnceWith([0, 640]);
   });
 
   it('shows an empty state after a search without results', async () => {
