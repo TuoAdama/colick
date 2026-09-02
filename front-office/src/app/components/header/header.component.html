@@ -39,6 +39,14 @@
 
     <!-- Right actions -->
     <div class="hidden sm:flex items-center gap-3">
+      <a
+        routerLink="/propose"
+        class="text-primary font-semibold hover:text-secondary transition-colors duration-200 text-sm"
+        aria-label="Publier un trajet"
+      >
+        Publier un trajet
+      </a>
+
       @if (authService.currentUser$ | async) {
         <a
           [routerLink]="['/dashboard']"
@@ -195,6 +203,17 @@
             (click)="closeMenus()"
           >
             Comment ca marche
+          </a>
+        </li>
+
+        <li>
+          <a
+            routerLink="/propose"
+            class="block text-primary font-medium py-3 px-2 rounded-lg hover:bg-background-primary transition-colors duration-200 text-sm"
+            (click)="closeMenus()"
+            aria-label="Publier un trajet"
+          >
+            Publier un trajet
           </a>
         </li>
 
