@@ -95,6 +95,9 @@ describe('HeaderComponent', () => {
 
     expect(publishLink).toBeDefined();
     expect(publishLink?.getAttribute('href')).toBe('/propose');
+    expect(publishLink?.className).toContain('text-primary');
+    expect(publishLink?.className).toContain('font-semibold');
+    expect(publishLink?.className).not.toContain('bg-secondary');
 
     currentUser$.next(AUTHENTICATED_USER);
     fixture.detectChanges();
