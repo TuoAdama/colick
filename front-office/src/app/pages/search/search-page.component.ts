@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -27,6 +27,20 @@ import { UserResponse } from '../../models/auth.model';
   templateUrl: './search-page.component.html',
 })
 export class SearchPageComponent implements OnInit, OnDestroy {
+  private readonly document = inject(DOCUMENT);
+  @ViewChild('filterPanel') filterPanel?: ElementRef<HTMLElement>;
+  isMobileSearchEditing = false;
+  draftSort: TripSearchSort = 'price_asc';
+  draftMinPrice: number | null = null;
+  draftMaxPrice: number | null = null;
+  private filterOpener: HTMLElement | null = null;
+  private previousOverflow = '';
+  private focusTimer?: ReturnType<typeof setTimeout>;
+
+  get activeFilterCount(): number {
+    return Number(this.minPrice !== null) + Number(this.maxPrice !== null);
+  }
+
   private readonly tripService = inject(TripService);
   private readonly tripAlertService = inject(TripAlertService);
   private readonly authService = inject(AuthService);
@@ -160,6 +174,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
+    this.closeMobileFilters();
   }
 
   searchTrips(): void {
@@ -167,6 +182,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.isMobileSearchEditing = false;
     const from = this.departure.name;
     const to = this.destination.name;
     const criteria = this.buildCriteria(
@@ -197,7 +213,71 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   }
 
   toggleMobileFilters(): void {
-    this.areMobileFiltersOpen = !this.areMobileFiltersOpen;
+    if (this.areMobileFiltersOpen) {
+      this.closeMobileFilters();
+      return;
+    }
+    this.draftSort = this.sort;
+    this.draftMinPrice = this.minPrice;
+    this.draftMaxPrice = this.maxPrice;
+    this.filterOpener = this.document.activeElement as HTMLElement | null;
+    this.previousOverflow = this.document.body.style.overflow;
+    this.document.body.style.overflow = 'hidden';
+    this.areMobileFiltersOpen = true;
+    this.focusTimer = setTimeout(() => this.filterPanel?.nativeElement.querySelector<HTMLElement>('button')?.focus());
+  }
+
+  closeMobileFilters(): void {
+    clearTimeout(this.focusTimer);
+    if (!this.areMobileFiltersOpen) return;
+    this.areMobileFiltersOpen = false;
+    this.document.body.style.overflow = this.previousOverflow;
+    this.filterOpener?.focus();
+  }
+
+  applyMobileFilters(): void {
+    this.sort = this.draftSort;
+    this.minPrice = this.draftMinPrice;
+    this.maxPrice = this.draftMaxPrice;
+    this.closeMobileFilters();
+    this.onFilterChange();
+  }
+
+  removePriceFilter(bound: 'minPrice' | 'maxPrice'): void {
+    this[bound] = null;
+    this.onFilterChange();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onFilterKeydown(event: KeyboardEvent): void {
+    if (!this.areMobileFiltersOpen) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeMobileFilters();
+    }
+    if (event.key !== 'Tab') return;
+    const controls = this.filterPanel?.nativeElement.querySelectorAll<HTMLElement>('button, input, select');
+    if (!controls?.length) return;
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (event.shiftKey && this.document.activeElement === first) {
+      event.preventDefault(); last.focus();
+    } else if (!event.shiftKey && this.document.activeElement === last) {
+      event.preventDefault(); first.focus();
+    }
+  }
+
+  @HostListener('window:resize')
+  onViewportResize(): void {
+    if ((this.document.defaultView?.innerWidth ?? 0) >= 768) this.closeMobileFilters();
+  }
+
+  formatPrice(price: number): string {
+    return price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  arrivesAnotherDay(trip: Trip): boolean {
+    return new Date(trip.departureTime).toDateString() !== new Date(trip.arrivalTime).toDateString();
   }
 
   private searchTripsByCriteria(criteria: TripSearchCriteria): void {
