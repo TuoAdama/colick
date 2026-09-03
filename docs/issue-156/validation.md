@@ -22,3 +22,12 @@ Les captures utilisent trois trajets fictifs injectés via interception HTTP dan
 Depuis `front-office`, lancer `npm test -- --watch=false --browsers=ChromeHeadless` (définir `CHROME_BIN` si nécessaire), puis `npm run build`.
 
 Pour le contrôle visuel, ouvrir `/search?from=Paris&to=Lyon&minPrice=5&maxPrice=20` avec des trajets disponibles, régler les quatre tailles indiquées, puis vérifier la modification de recherche, l’application et l’annulation des filtres, les bornes supprimables et les états de réservation.
+
+## Correction après review — dates calendaires
+
+Le filtre HTML `date` est désormais interprété en date locale plutôt qu’en instant UTC. Les horodatages des trajets conservent leur conversion locale habituelle.
+
+- 363 tests réussis, suite lancée avec `TZ=America/Los_Angeles`.
+- Build de production réussi.
+- Vérification Chromium avec `timezoneId: America/Los_Angeles` : la recherche `date=2026-09-04` affiche bien « 4 sept. 2026 » dans le résumé mobile.
+- Tests de non-régression pour le résumé, le changement d’année, le 29 février et les horodatages UTC.

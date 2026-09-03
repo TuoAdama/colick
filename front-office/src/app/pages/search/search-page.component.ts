@@ -418,7 +418,11 @@ export class SearchPageComponent implements OnInit, OnDestroy {
    * Format a date string for display
    */
   formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
+    // HTML date inputs represent calendar days, not UTC instants.
+    const calendarDate = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+    const date = calendarDate
+      ? new Date(Number(calendarDate[1]), Number(calendarDate[2]) - 1, Number(calendarDate[3]))
+      : new Date(dateStr);
     return date.toLocaleDateString('fr-FR', {
       day: 'numeric',
       month: 'short',

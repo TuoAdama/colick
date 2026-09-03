@@ -453,6 +453,7 @@ describe('SearchPageComponent', () => {
     fixture.detectChanges();
     const summary = fixture.nativeElement.querySelector('[data-testid=mobile-search-summary]');
     expect(summary.textContent).toContain('Paris');
+    expect(summary.textContent).toContain('4 sept. 2026');
     summary.click();
     fixture.detectChanges();
     expect(component.isMobileSearchEditing).toBeTrue();
@@ -530,6 +531,20 @@ describe('SearchPageComponent', () => {
     authServiceMock.getUser.and.returnValue({ id: 14 });
     fixture.detectChanges();
     expect(card.textContent).toContain('Votre trajet');
+  });
+
+  it('preserves calendar dates across month, year and leap-day boundaries', () => {
+    expect(component.formatDate('2026-09-04')).toBe('4 sept. 2026');
+    expect(component.formatDate('2026-01-01')).toBe('1 janv. 2026');
+    expect(component.formatDate('2028-02-29')).toBe('29 févr. 2028');
+  });
+
+  it('continues formatting trip timestamps in the local time zone', () => {
+    const timestamp = '2026-09-04T00:30:00Z';
+    const expected = new Date(timestamp).toLocaleDateString('fr-FR', {
+      day: 'numeric', month: 'short', year: 'numeric',
+    });
+    expect(component.formatDate(timestamp)).toBe(expected);
   });
 
 });
