@@ -211,7 +211,7 @@ describe('SearchPageComponent', () => {
     expect(host.querySelector('[data-testid="mobile-filters-panel"]')).toBeNull();
   });
 
-  it('uses shared filter values and triggers search from mobile filter controls', () => {
+  it('applies mobile draft filters together only on confirmation', () => {
     component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
     component.destination = { id: 2, name: 'Abidjan', country: "Cote d'Ivoire", isoCode: 'CI', type: 'CITY' };
     component.areMobileFiltersOpen = true;
@@ -226,16 +226,21 @@ describe('SearchPageComponent', () => {
     ratingSort.click();
     fixture.detectChanges();
 
-    expect(component.sort).toBe('rating_desc');
-    expect(searchSpy).toHaveBeenCalledTimes(1);
+    expect(component.draftSort).toBe('rating_desc');
+    expect(component.sort).toBe('price_asc');
+    expect(searchSpy).not.toHaveBeenCalled();
 
     minPrice.value = '8';
     minPrice.dispatchEvent(new Event('input'));
     minPrice.dispatchEvent(new Event('change'));
     fixture.detectChanges();
 
+    expect(component.draftMinPrice).toBe(8);
+    expect(component.minPrice).toBeNull();
+    host.querySelector<HTMLButtonElement>('[data-testid=apply-mobile-filters]')!.click();
     expect(component.minPrice).toBe(8);
-    expect(searchSpy).toHaveBeenCalledTimes(2);
+    expect(component.sort).toBe('rating_desc');
+    expect(searchSpy).toHaveBeenCalledTimes(1);
   });
 
   it('returns true for own trip and false for other trip', () => {
@@ -443,4 +448,103 @@ describe('SearchPageComponent', () => {
 
     expect(fallback?.textContent?.trim()).toBe('AM');
   });
+  it('shows a compact summary for a complete route and lets the user edit it', () => {
+    setQueryParams({ from: 'Paris', to: 'Lyon', date: '2026-09-04' });
+    fixture.detectChanges();
+    const summary = fixture.nativeElement.querySelector('[data-testid=mobile-search-summary]');
+    expect(summary.textContent).toContain('Paris');
+    expect(summary.textContent).toContain('4 sept. 2026');
+    summary.click();
+    fixture.detectChanges();
+    expect(component.isMobileSearchEditing).toBeTrue();
+    component.searchTrips();
+    expect(component.isMobileSearchEditing).toBeFalse();
+  });
+
+  it('discards draft edits on Escape and restores body scrolling', () => {
+    component.minPrice = 0;
+    component.maxPrice = 20;
+    const overflow = document.body.style.overflow;
+    component.toggleMobileFilters();
+    component.draftMinPrice = 10;
+    expect(document.body.style.overflow).toBe('hidden');
+    component.onFilterKeydown(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(component.minPrice).toBe(0);
+    expect(component.activeFilterCount).toBe(2);
+    expect(document.body.style.overflow).toBe(overflow);
+    component.toggleMobileFilters();
+    expect(component.draftMinPrice).toBe(0);
+    component.closeMobileFilters();
+  });
+
+  it('opens the same panel from the floating button and removes applied bounds', () => {
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('[data-testid=mobile-filters-floating]').click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role=dialog]')).not.toBeNull();
+    component.closeMobileFilters();
+    component.maxPrice = 20;
+    const change = spyOn(component, 'onFilterChange');
+    component.removePriceFilter('maxPrice');
+    expect(component.activeFilterCount).toBe(0);
+    expect(change).toHaveBeenCalledTimes(1);
+  });
+
+  it('formats prices and identifies arrivals on another day', () => {
+    expect(component.formatPrice(18)).toBe('18,00');
+    expect(component.arrivesAnotherDay({ departureTime: '2026-09-04T08:00:00', arrivalTime: '2026-09-05T08:00:00' } as Trip)).toBeTrue();
+    expect(component.arrivesAnotherDay({ departureTime: '2026-09-04T08:00:00', arrivalTime: '2026-09-04T13:00:00' } as Trip)).toBeFalse();
+  });
+
+  it('keeps the initial form visible until the first search is submitted', () => {
+    component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
+    component.destination = { id: 2, name: 'Lyon', country: 'France', isoCode: 'FR', type: 'CITY' };
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid=mobile-search-summary]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-label="Formulaire de recherche"]').classList.contains('hidden')).toBeFalse();
+  });
+
+  it('renders mobile trip details and preserves booking states', () => {
+    const trip = {
+      id: 1, travelerId: 14, travelerName: 'Un nom de voyageur particulièrement long',
+      departureAddress: 'Paris', destination: 'Lyon',
+      departureTime: '2026-09-04T23:00:00', arrivalTime: '2026-09-05T08:00:00',
+      pricePerKilo: 18, maxWeight: 20, availableWeight: 10, instantAcceptance: true, status: 'ACTIVE',
+    } as Trip;
+    tripServiceMock.searchTrips.and.returnValue(of([trip]));
+    setQueryParams({ from: 'Paris', to: 'Lyon' });
+    fixture.detectChanges();
+    const card = fixture.nativeElement.querySelector('[data-testid=mobile-trip-card]') as HTMLElement;
+    expect(card.textContent).toContain('18,00 €/kg');
+    expect(card.textContent).toContain('Confirmation instantanée');
+    expect(card.textContent).toContain(component.formatDate(trip.arrivalTime));
+    expect(card.textContent).toContain('Nouveau');
+    const reserve = spyOn(component, 'openBookingModal');
+    card.querySelector('button')!.click();
+    expect(reserve).toHaveBeenCalledWith(trip);
+    trip.instantAcceptance = false;
+    component.myBookings = [{ tripId: 1, status: 'PENDING' } as any];
+    fixture.detectChanges();
+    expect(card.textContent).not.toContain('Confirmation instantanée');
+    expect(card.textContent).toContain('Demande envoyée');
+    expect(card.querySelector('button')).toBeNull();
+    authServiceMock.getUser.and.returnValue({ id: 14 });
+    fixture.detectChanges();
+    expect(card.textContent).toContain('Votre trajet');
+  });
+
+  it('preserves calendar dates across month, year and leap-day boundaries', () => {
+    expect(component.formatDate('2026-09-04')).toBe('4 sept. 2026');
+    expect(component.formatDate('2026-01-01')).toBe('1 janv. 2026');
+    expect(component.formatDate('2028-02-29')).toBe('29 févr. 2028');
+  });
+
+  it('continues formatting trip timestamps in the local time zone', () => {
+    const timestamp = '2026-09-04T00:30:00Z';
+    const expected = new Date(timestamp).toLocaleDateString('fr-FR', {
+      day: 'numeric', month: 'short', year: 'numeric',
+    });
+    expect(component.formatDate(timestamp)).toBe(expected);
+  });
+
 });
