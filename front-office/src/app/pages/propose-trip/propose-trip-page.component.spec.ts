@@ -184,6 +184,43 @@ describe('ProposeTripPageComponent', () => {
     expect(host.textContent).toContain('Destination *');
   });
 
+  it('keeps the mobile form card and date fields within the viewport', () => {
+    setRouteId();
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const formCard = host.querySelector('[data-testid="propose-trip-form-card"]') as HTMLElement;
+    const dateInputs = Array.from(host.querySelectorAll<HTMLInputElement>('input[type="datetime-local"]'));
+
+    expect(formCard.className).toContain('-mx-4');
+    expect(formCard.className).toContain('sm:mx-0');
+    expect(dateInputs).toHaveSize(2);
+    dateInputs.forEach((input) => {
+      expect(input.className).toContain('block');
+      expect(input.className).toContain('min-w-0');
+      expect(input.className).toContain('max-w-full');
+      expect(input.className).toContain('appearance-none');
+      expect(input.className).toContain('bg-bg-secondary');
+    });
+  });
+
+  it('renders the publish button without an icon and keeps the loading spinner', () => {
+    setRouteId();
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const submitButton = host.querySelector('button[type="submit"]') as HTMLButtonElement;
+    expect(submitButton.querySelector('svg')).toBeNull();
+    expect(submitButton.textContent).toContain('Publier le voyage');
+
+    component.isLoading = true;
+    fixture.detectChanges();
+
+    const loadingButton = host.querySelector('button[type="submit"]') as HTMLButtonElement;
+    expect(loadingButton.querySelector('svg.animate-spin')).not.toBeNull();
+    expect(loadingButton.textContent).toContain('Publication en cours');
+  });
+
   it('blocks editing when the loaded trip is not active', () => {
     tripServiceMock.getTripById.and.returnValue(of({
       id: 15,
