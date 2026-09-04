@@ -31,4 +31,11 @@ describe('app routes', () => {
     expect(howItWorksRoute).toBeDefined();
     expect(howItWorksRoute?.loadComponent).toBeDefined();
   });
+
+  it('defines a lazy-loaded public contact route', () => {
+    const contactRoute = routes.find((currentRoute) => currentRoute.path === 'contact');
+
+    expect(contactRoute).toBeDefined();
+    expect(contactRoute?.loadComponent).toBeDefined();
+  });
 });

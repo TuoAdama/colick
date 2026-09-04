@@ -80,6 +80,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/auth/google/config", "/auth/csrf").permitAll()
                 .requestMatchers(HttpMethod.POST, "/users").permitAll()
+                .requestMatchers(HttpMethod.POST, "/contact").permitAll()
                 .requestMatchers(HttpMethod.GET, "/users/confirm-email").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/locations/**").permitAll()

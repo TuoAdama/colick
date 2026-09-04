@@ -21,4 +21,11 @@ describe('FooterComponent', () => {
 
     expect(howItWorksLink?.getAttribute('href')).toBe('/comment-ca-marche');
   });
+
+  it('links the contact entry to the public contact page', () => {
+    const links = Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[];
+    const contactLink = links.find((link) => link.textContent?.trim() === 'Nous contacter');
+
+    expect(contactLink?.getAttribute('href')).toBe('/contact');
+  });
 });

@@ -54,6 +54,7 @@ export class FooterComponent {
         { label: 'A propos de nous', href: '#' },
         { label: 'Comment ca marche', routerLink: '/comment-ca-marche' },
         { label: 'Nos tarifs', href: '#' },
+        { label: 'Nous contacter', routerLink: '/contact' },
       ],
     },
   ];

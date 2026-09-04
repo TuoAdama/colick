@@ -50,6 +50,22 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    /** Sends a public contact request to the support inbox without persisting its content. */
+    public void sendContactMessage(String senderEmail, String subject, String body) {
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+            helper.setTo(supportEmail);
+            helper.setFrom(fromAddress);
+            helper.setReplyTo(senderEmail);
+            helper.setSubject("[Contact] " + subject);
+            helper.setText("Email : " + senderEmail + "\n\nSujet : " + subject + "\n\nMessage :\n" + body, false);
+            mailSender.send(message);
+        } catch (MessagingException ex) {
+            throw new IllegalStateException(localizedMessages.get("error.email.sendFailed"), ex);
+        }
+    }
+
     public void sendSignupActivationEmail(String to, String firstName, String confirmUrl) {
         sendTemplateEmail(
                 to,

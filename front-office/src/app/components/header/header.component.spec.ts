@@ -66,6 +66,7 @@ describe('HeaderComponent', () => {
           { path: 'parcel-search', component: TestRouteComponent },
           { path: 'propose', component: TestRouteComponent },
           { path: 'comment-ca-marche', component: TestRouteComponent },
+          { path: 'contact', component: TestRouteComponent },
         ]),
         { provide: AuthService, useValue: authServiceMock },
         { provide: MessagingService, useValue: messagingServiceMock },
@@ -289,6 +290,19 @@ describe('HeaderComponent', () => {
     expect(component.isMobileMenuOpen).toBeTrue();
 
     component.toggleMobileMenu();
+    expect(component.isMobileMenuOpen).toBeFalse();
+  });
+
+  it('links the mobile menu to the public contact page and closes it on navigation', () => {
+    fixture.detectChanges();
+    component.toggleMobileMenu();
+    fixture.detectChanges();
+
+    const link = Array.from(fixture.nativeElement.querySelectorAll('#mobile-menu a') as NodeListOf<HTMLAnchorElement>)
+      .find((element) => element.textContent?.trim() === 'Nous contacter') as HTMLAnchorElement | undefined;
+
+    expect(link?.getAttribute('href')).toBe('/contact');
+    link?.click();
     expect(component.isMobileMenuOpen).toBeFalse();
   });
 });

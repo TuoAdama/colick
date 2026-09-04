@@ -1,0 +1,43 @@
+<section class="min-h-screen bg-background-primary pb-16 pt-28 sm:pb-20 sm:pt-32">
+  <div class="mx-auto max-w-2xl px-4 sm:px-6">
+    <div class="text-center">
+      <span class="inline-flex rounded-full bg-accent/10 px-4 py-1.5 text-sm font-semibold text-accent">Une question ?</span>
+      <h1 class="mt-5 font-display text-4xl font-bold tracking-tight text-primary sm:text-5xl">Nous contacter</h1>
+      <p class="mt-5 text-base leading-7 text-text-secondary sm:text-lg">Notre équipe est à votre écoute. Envoyez-nous votre message, nous vous répondrons dès que possible.</p>
+    </div>
+
+    <div class="mt-10 rounded-2xl border border-border bg-white p-6 shadow-sm sm:p-8">
+      @if (successMessage) {
+        <div class="mb-6 rounded-xl border border-success/30 bg-success/10 p-4 text-sm text-success" role="status">{{ successMessage }}</div>
+      }
+      @if (errorMessage) {
+        <div class="mb-6 rounded-xl border border-error/30 bg-error/10 p-4 text-sm text-error" role="alert">{{ errorMessage }}</div>
+      }
+
+      <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="space-y-5" novalidate>
+        <div>
+          <label for="contact-email" class="mb-1.5 block text-sm font-medium text-text-secondary">Email</label>
+          <input id="contact-email" type="email" autocomplete="email" formControlName="email" placeholder="votre@email.com" class="w-full rounded-xl border border-gray-200 bg-background-secondary px-4 py-3 text-text-primary placeholder-text-muted transition focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/50" />
+          @if (contactForm.controls.email.touched && contactForm.controls.email.hasError('required')) { <p class="mt-1 text-xs text-error">L’email est requis.</p> }
+          @if (contactForm.controls.email.touched && contactForm.controls.email.hasError('email')) { <p class="mt-1 text-xs text-error">Le format de l’email est invalide.</p> }
+          @if (contactForm.controls.email.touched && contactForm.controls.email.hasError('maxlength')) { <p class="mt-1 text-xs text-error">L’email est trop long.</p> }
+        </div>
+        <div>
+          <label for="contact-subject" class="mb-1.5 block text-sm font-medium text-text-secondary">Sujet</label>
+          <input id="contact-subject" type="text" formControlName="subject" maxlength="150" class="w-full rounded-xl border border-gray-200 bg-background-secondary px-4 py-3 text-text-primary transition focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/50" />
+          @if (contactForm.controls.subject.touched && contactForm.controls.subject.hasError('required')) { <p class="mt-1 text-xs text-error">Le sujet est requis.</p> }
+          @if (contactForm.controls.subject.touched && contactForm.controls.subject.hasError('maxlength')) { <p class="mt-1 text-xs text-error">Le sujet ne peut pas dépasser 150 caractères.</p> }
+        </div>
+        <div>
+          <label for="contact-message" class="mb-1.5 block text-sm font-medium text-text-secondary">Message</label>
+          <textarea id="contact-message" rows="7" formControlName="message" maxlength="5000" class="w-full resize-y rounded-xl border border-gray-200 bg-background-secondary px-4 py-3 text-text-primary transition focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/50"></textarea>
+          @if (contactForm.controls.message.touched && contactForm.controls.message.hasError('required')) { <p class="mt-1 text-xs text-error">Le message est requis.</p> }
+          @if (contactForm.controls.message.touched && contactForm.controls.message.hasError('maxlength')) { <p class="mt-1 text-xs text-error">Le message ne peut pas dépasser 5 000 caractères.</p> }
+        </div>
+        <button type="submit" [disabled]="contactForm.invalid || isLoading" class="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50">
+          {{ isLoading ? 'Envoi en cours…' : 'Envoyer le message' }}
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
