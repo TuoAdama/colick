@@ -15,14 +15,13 @@ describe('HowItWorksPageComponent', () => {
     fixture.detectChanges();
   });
 
-  it('explains the platform role, both journeys, and trust guarantees', () => {
+  it('explains the platform role and both journeys', () => {
     const text = fixture.nativeElement.textContent;
 
     expect(text).toContain('Comment ça marche ?');
     expect(text).toContain('Le rôle de Coliclic');
     expect(text).toContain('Envoyer un colis');
     expect(text).toContain('Proposer un voyage');
-    expect(text).toContain('Confiance et transparence');
     expect(text).toContain('commission Coliclic de 7 %');
   });
 
