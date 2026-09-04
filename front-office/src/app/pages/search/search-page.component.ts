@@ -381,7 +381,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
    */
   openBookingModal(trip: Trip): void {
     if (!this.authService.isLoggedIn()) {
-      this.router.navigate(['/login']);
+      void this.router.navigate(['/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
       return;
     }
     if (this.isOwnTrip(trip)) {
@@ -442,7 +444,12 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   }
 
   contactTraveler(trip: Trip): void {
-    if (!this.authService.isLoggedIn()) { this.router.navigate(['/login']); return; }
+    if (!this.authService.isLoggedIn()) {
+      void this.router.navigate(['/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
     if (this.isOwnTrip(trip)) {
       return;
     }
