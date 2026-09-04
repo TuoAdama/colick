@@ -263,6 +263,23 @@ describe('SearchPageComponent', () => {
     expect(component.selectedTrip).toBeNull();
   });
 
+  it('redirects anonymous users to login with the complete search URL when booking a trip', () => {
+    spyOnProperty(router, 'url', 'get').and.returnValue(
+      '/search?from=Paris&to=Abidjan&date=2026-06-14&sort=rating_desc&minPrice=8&maxPrice=15',
+    );
+    const trip = { id: 10, travelerId: 3 } as Trip;
+
+    component.openBookingModal(trip);
+
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], {
+      queryParams: {
+        returnUrl: '/search?from=Paris&to=Abidjan&date=2026-06-14&sort=rating_desc&minPrice=8&maxPrice=15',
+      },
+    });
+    expect(component.isBookingModalOpen).toBeFalse();
+    expect(component.selectedTrip).toBeNull();
+  });
+
   it('does not start conversation for own trip', () => {
     authServiceMock.isLoggedIn.and.returnValue(true);
     authServiceMock.getUser.and.returnValue({ id: 3 });
@@ -275,6 +292,22 @@ describe('SearchPageComponent', () => {
 
     component.contactTraveler(ownTrip);
 
+    expect(messagingServiceMock.createConversationDraft).not.toHaveBeenCalled();
+  });
+
+  it('redirects anonymous users to login with the complete search URL when contacting a traveler', () => {
+    spyOnProperty(router, 'url', 'get').and.returnValue(
+      '/search?from=Paris&to=Abidjan&date=2026-06-14&sort=rating_desc&minPrice=8&maxPrice=15',
+    );
+    const trip = { id: 10, travelerId: 3 } as Trip;
+
+    component.contactTraveler(trip);
+
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], {
+      queryParams: {
+        returnUrl: '/search?from=Paris&to=Abidjan&date=2026-06-14&sort=rating_desc&minPrice=8&maxPrice=15',
+      },
+    });
     expect(messagingServiceMock.createConversationDraft).not.toHaveBeenCalled();
   });
 
