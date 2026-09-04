@@ -82,6 +82,8 @@ describe('HeaderComponent', () => {
 
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Connexion');
+    expect(text).toContain('Publier un trajet');
+    expect(text).not.toContain("S'inscrire");
     expect(text).not.toContain('Recherche');
     expect(text).not.toContain('Mes réservations');
     expect(text).not.toContain('Mes demandes');
@@ -95,9 +97,10 @@ describe('HeaderComponent', () => {
 
     expect(publishLink).toBeDefined();
     expect(publishLink?.getAttribute('href')).toBe('/propose');
-    expect(publishLink?.className).toContain('text-primary');
-    expect(publishLink?.className).toContain('font-semibold');
-    expect(publishLink?.className).not.toContain('bg-secondary');
+    expect(publishLinks.filter((link) => link.textContent?.trim() === 'Publier un trajet')).toHaveSize(1);
+    expect(publishLink?.className).toContain('bg-accent');
+    expect(publishLink?.className).toContain('font-bold');
+    expect(fixture.nativeElement.textContent).not.toContain("S'inscrire");
 
     currentUser$.next(AUTHENTICATED_USER);
     fixture.detectChanges();
@@ -106,6 +109,7 @@ describe('HeaderComponent', () => {
     publishLink = publishLinks.find((link) => link.textContent?.trim() === 'Publier un trajet');
     expect(publishLink).toBeDefined();
     expect(publishLink?.getAttribute('href')).toBe('/propose');
+    expect(publishLinks.filter((link) => link.textContent?.trim() === 'Publier un trajet')).toHaveSize(1);
   });
 
   it('exposes the publish-trip CTA in the mobile menu', () => {
@@ -119,6 +123,8 @@ describe('HeaderComponent', () => {
 
     expect(publishLink).toBeDefined();
     expect(publishLink?.getAttribute('href')).toBe('/propose');
+    expect(mobileMenu?.textContent).not.toContain("S'inscrire");
+    expect(mobileMenu?.querySelectorAll('a')).toHaveSize(3);
   });
 
   it('displays the Coliclic logo and accessible home label', () => {
