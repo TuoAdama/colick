@@ -56,20 +56,6 @@ export class FooterComponent {
         { label: 'Nos tarifs', href: '#' },
       ],
     },
-    {
-      title: 'SUPPORT',
-      links: [
-        { label: "Centre d'aide", href: '#' },
-        { label: 'Confidentialite', href: '#' },
-        { label: 'Charte confiance', href: '#' },
-      ],
-    },
-    {
-      title: 'ON RECRUTE !',
-      links: [
-        { label: 'Voir les offres', href: '#' },
-      ],
-    },
   ];
 
   /**
