@@ -28,6 +28,16 @@ describe('ContactPageComponent', () => {
     expect(component.contactForm.controls.message.touched).toBeTrue();
   });
 
+  it('rejects whitespace-only subject and message locally', () => {
+    component.contactForm.setValue({ email: 'ada@example.com', subject: '   ', message: '  ' });
+
+    component.onSubmit();
+
+    expect(contactServiceMock.send).not.toHaveBeenCalled();
+    expect(component.contactForm.controls.subject.hasError('required')).toBeTrue();
+    expect(component.contactForm.controls.message.hasError('required')).toBeTrue();
+  });
+
   it('submits a valid form, clears it, and displays confirmation', () => {
     component.contactForm.setValue({ email: 'ada@example.com', subject: 'Question', message: 'Bonjour' });
 

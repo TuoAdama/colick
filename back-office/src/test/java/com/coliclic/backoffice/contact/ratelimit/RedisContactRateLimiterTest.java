@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.time.Duration;
 import java.util.List;
@@ -30,5 +31,20 @@ class RedisContactRateLimiterTest {
         @SuppressWarnings("unchecked") ArgumentCaptor<List<String>> captor = ArgumentCaptor.forClass(List.class);
         verify(redisTemplate).execute(any(RedisScript.class), captor.capture(), eq("3"), eq("10"), eq("900000"));
         assertThat(captor.getValue()).allSatisfy(key -> assertThat(key).matches("contact:rate-limit:(email|ip):[0-9a-f]{64}"));
+    }
+
+    @Test
+    void retryAfterScript_usesOnlyCountersThatExceededTheirLimit() {
+        StringRedisTemplate redisTemplate = mock(StringRedisTemplate.class);
+        RedisContactRateLimiter limiter = new RedisContactRateLimiter(redisTemplate, 3, 10, Duration.ofMinutes(15));
+        when(redisTemplate.execute(any(RedisScript.class), anyList(), any(), any(), any())).thenReturn(1_000L);
+
+        limiter.check("ada@example.com", "203.0.113.7");
+
+        ArgumentCaptor<RedisScript> scriptCaptor = ArgumentCaptor.forClass(RedisScript.class);
+        verify(redisTemplate).execute(scriptCaptor.capture(), anyList(), any(), any(), any());
+        String script = ((DefaultRedisScript<?>) scriptCaptor.getValue()).getScriptAsString();
+        assertThat(script).contains("if emailExceeded then", "if addressExceeded then");
+        assertThat(script).doesNotContain("math.max(redis.call('PTTL', KEYS[1]), redis.call('PTTL', KEYS[2])");
     }
 }

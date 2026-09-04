@@ -25,8 +25,13 @@ public class RedisContactRateLimiter implements ContactRateLimiter {
             if emailCount == 1 then redis.call('PEXPIRE', KEYS[1], ARGV[3]) end
             local addressCount = redis.call('INCR', KEYS[2])
             if addressCount == 1 then redis.call('PEXPIRE', KEYS[2], ARGV[3]) end
-            if emailCount <= tonumber(ARGV[1]) and addressCount <= tonumber(ARGV[2]) then return 0 end
-            return math.max(redis.call('PTTL', KEYS[1]), redis.call('PTTL', KEYS[2]), 1000)
+            local emailExceeded = emailCount > tonumber(ARGV[1])
+            local addressExceeded = addressCount > tonumber(ARGV[2])
+            if not emailExceeded and not addressExceeded then return 0 end
+            local retryAfter = 1000
+            if emailExceeded then retryAfter = math.max(retryAfter, redis.call('PTTL', KEYS[1])) end
+            if addressExceeded then retryAfter = math.max(retryAfter, redis.call('PTTL', KEYS[2])) end
+            return retryAfter
             """, Long.class);
 
     private final StringRedisTemplate redisTemplate;

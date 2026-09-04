@@ -1,7 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ContactService } from '../../services/contact.service';
+
+function requiredTrimmed(control: AbstractControl<string>): ValidationErrors | null {
+  return control.value.trim() ? null : { required: true };
+}
 
 @Component({
   selector: 'app-contact-page',
@@ -14,9 +18,9 @@ export class ContactPageComponent {
   private readonly contactService = inject(ContactService);
 
   readonly contactForm = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
-    subject: ['', [Validators.required, Validators.maxLength(150)]],
-    message: ['', [Validators.required, Validators.maxLength(5000)]],
+    email: ['', [requiredTrimmed, Validators.email, Validators.maxLength(254)]],
+    subject: ['', [requiredTrimmed, Validators.maxLength(150)]],
+    message: ['', [requiredTrimmed, Validators.maxLength(5000)]],
   });
 
   isLoading = false;
