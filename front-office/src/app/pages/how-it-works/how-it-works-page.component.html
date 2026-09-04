@@ -1,0 +1,86 @@
+<section class="bg-background-primary pb-16 pt-28 sm:pb-20 sm:pt-32">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl text-center">
+      <span class="inline-flex rounded-full bg-accent/10 px-4 py-1.5 text-sm font-semibold text-accent">
+        La plateforme Coliclic
+      </span>
+      <h1 class="mt-5 font-display text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+        Comment ça marche ?
+      </h1>
+      <p class="mt-5 text-base leading-7 text-text-secondary sm:text-lg sm:leading-8">
+        Coliclic met en relation des personnes qui souhaitent envoyer un colis avec des voyageurs qui disposent de place sur leur trajet.
+        Ensemble, vous simplifiez vos envois tout en valorisant les déplacements déjà prévus.
+      </p>
+    </div>
+
+    <section class="mt-16 rounded-3xl bg-primary px-6 py-10 text-white sm:px-10 lg:mt-20 lg:px-14 lg:py-14" aria-labelledby="role-title">
+      <div class="max-w-3xl">
+        <p class="text-sm font-bold uppercase tracking-[0.2em] text-accent">Le rôle de Coliclic</p>
+        <h2 id="role-title" class="mt-4 font-display text-3xl font-bold sm:text-4xl">Une mise en relation utile, simple et humaine.</h2>
+        <p class="mt-5 leading-7 text-white/80">
+          La plateforme permet aux expéditeurs de trouver un trajet adapté à leur colis et aux voyageurs de rentabiliser une capacité de transport inutilisée. Coliclic centralise la recherche, les demandes, les réservations et les avis pour que chacun puisse organiser son envoi avec davantage de sérénité.
+        </p>
+      </div>
+    </section>
+
+    <section class="mt-16 lg:mt-20" aria-labelledby="sender-title">
+      <div class="max-w-2xl">
+        <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+          <span class="material-symbols-outlined" aria-hidden="true">package_2</span>
+        </span>
+        <h2 id="sender-title" class="mt-5 font-display text-3xl font-bold text-primary">Envoyer un colis</h2>
+        <p class="mt-3 leading-7 text-text-secondary">Trouvez le voyageur qui correspond à votre besoin et organisez votre envoi en quelques étapes.</p>
+      </div>
+
+      <ol class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        @for (step of senderSteps; track step.title; let index = $index) {
+          <li class="rounded-2xl border border-border bg-white p-6 shadow-sm">
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">{{ index + 1 }}</span>
+            <span class="material-symbols-outlined mt-6 block text-3xl text-accent" aria-hidden="true">{{ step.icon }}</span>
+            <h3 class="mt-4 text-lg font-bold text-primary">{{ step.title }}</h3>
+            <p class="mt-2 text-sm leading-6 text-text-secondary">{{ step.description }}</p>
+          </li>
+        }
+      </ol>
+
+      <a routerLink="/search" class="mt-8 inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-primary">
+        Trouver un voyageur
+      </a>
+    </section>
+
+    <section class="mt-20 border-t border-border pt-16 lg:mt-24 lg:pt-20" aria-labelledby="traveler-title">
+      <div class="max-w-2xl">
+        <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
+          <span class="material-symbols-outlined" aria-hidden="true">flight_takeoff</span>
+        </span>
+        <h2 id="traveler-title" class="mt-5 font-display text-3xl font-bold text-primary">Proposer un voyage</h2>
+        <p class="mt-3 leading-7 text-text-secondary">Transformez l’espace disponible pendant votre trajet en un service utile pour la communauté.</p>
+      </div>
+
+      <ol class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        @for (step of travelerSteps; track step.title; let index = $index) {
+          <li class="rounded-2xl border border-border bg-white p-6 shadow-sm">
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-sm font-bold text-white">{{ index + 1 }}</span>
+            <span class="material-symbols-outlined mt-6 block text-3xl text-secondary" aria-hidden="true">{{ step.icon }}</span>
+            <h3 class="mt-4 text-lg font-bold text-primary">{{ step.title }}</h3>
+            <p class="mt-2 text-sm leading-6 text-text-secondary">{{ step.description }}</p>
+          </li>
+        }
+      </ol>
+
+      <a routerLink="/propose" class="mt-8 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-bold text-white transition hover:bg-secondary">
+        Publier un trajet
+      </a>
+    </section>
+
+    <section class="mt-20 rounded-3xl border border-border bg-white px-6 py-10 sm:px-10 lg:mt-24 lg:px-14" aria-labelledby="trust-title">
+      <div class="max-w-3xl">
+        <p class="text-sm font-bold uppercase tracking-[0.2em] text-secondary">Confiance et transparence</p>
+        <h2 id="trust-title" class="mt-4 font-display text-3xl font-bold text-primary">Des repères pour chaque échange.</h2>
+        <p class="mt-4 leading-7 text-text-secondary">
+          L’activation des comptes par e-mail, le paiement sécurisé et le système d’avis contribuent à renforcer la confiance entre expéditeurs et voyageurs. Une commission de 7 % est prélevée sur chaque transaction pour le fonctionnement de la plateforme.
+        </p>
+      </div>
+    </section>
+  </div>
+</section>

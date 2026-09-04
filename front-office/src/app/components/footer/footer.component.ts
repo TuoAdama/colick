@@ -7,7 +7,8 @@ import { RouterLink } from '@angular/router';
  */
 interface FooterLink {
   label: string;
-  href: string;
+  href?: string;
+  routerLink?: string;
 }
 
 /**
@@ -51,7 +52,7 @@ export class FooterComponent {
       title: 'PLATEFORME',
       links: [
         { label: 'A propos de nous', href: '#' },
-        { label: 'Comment ca marche', href: '#securite' },
+        { label: 'Comment ca marche', routerLink: '/comment-ca-marche' },
         { label: 'Nos tarifs', href: '#' },
       ],
     },

@@ -49,9 +49,15 @@
           <ul class="mt-6 space-y-4 text-sm text-text-secondary" role="list">
             @for (link of section.links; track link.label) {
               <li>
-                <a [href]="link.href" class="transition hover:text-secondary">
-                  {{ link.label }}
-                </a>
+                @if (link.routerLink) {
+                  <a [routerLink]="link.routerLink" class="transition hover:text-secondary">
+                    {{ link.label }}
+                  </a>
+                } @else {
+                  <a [href]="link.href" class="transition hover:text-secondary">
+                    {{ link.label }}
+                  </a>
+                }
               </li>
             }
           </ul>
