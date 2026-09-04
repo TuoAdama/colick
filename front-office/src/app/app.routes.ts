@@ -37,6 +37,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'contact',
+    loadComponent: () =>
+      import('./pages/contact/contact-page.component').then(
+        (m) => m.ContactPageComponent
+      ),
+  },
+  {
     path: 'trips/ref/:reference',
     loadComponent: () =>
       import('./pages/trip-reference/trip-reference-page.component').then(

@@ -101,6 +101,11 @@ app:
   mail:
     from-address: ${MAIL_FROM_ADDRESS:noreply@coliclic.app}
     support-email: ${MAIL_SUPPORT_EMAIL:support@coliclic.app}
+  contact:
+    rate-limit:
+      email-limit: ${CONTACT_RATE_LIMIT_EMAIL:3}
+      ip-limit: ${CONTACT_RATE_LIMIT_IP:10}
+      window: ${CONTACT_RATE_LIMIT_WINDOW:15m}
   sms:
     enabled: ${SMS_ENABLED:false}
     twilio:
