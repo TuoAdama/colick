@@ -24,4 +24,11 @@ describe('app routes', () => {
     expect(notFoundRoute?.loadComponent).toBeDefined();
     expect(wildcardRoute).toEqual(jasmine.objectContaining({ redirectTo: '/404' }));
   });
+
+  it('defines a lazy-loaded public how-it-works route', () => {
+    const howItWorksRoute = routes.find((currentRoute) => currentRoute.path === 'comment-ca-marche');
+
+    expect(howItWorksRoute).toBeDefined();
+    expect(howItWorksRoute?.loadComponent).toBeDefined();
+  });
 });

@@ -30,6 +30,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'comment-ca-marche',
+    loadComponent: () =>
+      import('./pages/how-it-works/how-it-works-page.component').then(
+        (m) => m.HowItWorksPageComponent
+      ),
+  },
+  {
     path: 'trips/ref/:reference',
     loadComponent: () =>
       import('./pages/trip-reference/trip-reference-page.component').then(

@@ -65,6 +65,7 @@ describe('HeaderComponent', () => {
           { path: 'search', component: TestRouteComponent },
           { path: 'parcel-search', component: TestRouteComponent },
           { path: 'propose', component: TestRouteComponent },
+          { path: 'comment-ca-marche', component: TestRouteComponent },
         ]),
         { provide: AuthService, useValue: authServiceMock },
         { provide: MessagingService, useValue: messagingServiceMock },
@@ -135,6 +136,15 @@ describe('HeaderComponent', () => {
     expect(logo).not.toBeNull();
     expect(logo?.textContent?.trim()).toBe('Coliclic.');
     expect(logo?.getAttribute('aria-label')).toBe('Coliclic - Accueil');
+  });
+
+  it('links the how-it-works navigation to its dedicated page', () => {
+    fixture.detectChanges();
+
+    const links = Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[];
+    const howItWorksLink = links.find((link) => link.textContent?.trim() === 'Comment ca marche');
+
+    expect(howItWorksLink?.getAttribute('href')).toBe('/comment-ca-marche');
   });
 
   it('marks search navigation as active on the search route', async () => {
