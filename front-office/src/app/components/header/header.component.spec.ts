@@ -126,7 +126,12 @@ describe('HeaderComponent', () => {
     expect(publishLink).toBeDefined();
     expect(publishLink?.getAttribute('href')).toBe('/propose');
     expect(mobileMenu?.textContent).not.toContain("S'inscrire");
-    expect(mobileMenu?.querySelectorAll('a')).toHaveSize(3);
+    expect(Array.from(mobileMenu?.querySelectorAll('a') ?? []).map((link) => link.textContent?.trim())).toEqual([
+      'Comment ca marche',
+      'Nous contacter',
+      'Connexion',
+      'Publier un trajet',
+    ]);
   });
 
   it('displays the Coliclic logo and accessible home label', () => {
