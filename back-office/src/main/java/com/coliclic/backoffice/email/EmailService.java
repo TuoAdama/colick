@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.thymeleaf.context.Context;
-import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.thymeleaf.spring6.ISpringTemplateEngine;
 
 import java.util.Locale;
 import java.util.Map;
@@ -24,13 +24,13 @@ import java.time.LocalDateTime;
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private final SpringTemplateEngine templateEngine;
+    private final ISpringTemplateEngine templateEngine;
     private final LocalizedMessages localizedMessages;
     private final String fromAddress;
     private final String supportEmail;
 
     public EmailService(JavaMailSender mailSender,
-                        SpringTemplateEngine templateEngine,
+                        ISpringTemplateEngine templateEngine,
                         LocalizedMessages localizedMessages,
                         @Value("${app.mail.from-address:noreply@coliclic.app}") String fromAddress,
                         @Value("${app.mail.support-email:support@coliclic.app}") String supportEmail) {
@@ -121,7 +121,8 @@ public class EmailService {
                                             String travelerFirstName,
                                             String senderFirstName,
                                             String departureAddress,
-                                            String destination) {
+                                            String destination,
+                                            String reservationUrl) {
         sendTemplateEmail(
                 to,
                 "email.subject.tripBookingCreated",
@@ -131,6 +132,7 @@ public class EmailService {
                         "senderFirstName", senderFirstName,
                         "departureAddress", departureAddress,
                         "destination", destination,
+                        "reservationUrl", reservationUrl,
                         "supportEmail", supportEmail
                 )
         );

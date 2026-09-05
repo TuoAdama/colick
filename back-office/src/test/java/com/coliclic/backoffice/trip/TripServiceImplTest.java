@@ -32,6 +32,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
@@ -143,6 +144,7 @@ class TripServiceImplTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
         lenient().when(tripReferenceGenerator.generateForNewTrip(any(Trip.class)))
                 .thenReturn("TRP-2026-000010");
+        ReflectionTestUtils.setField(tripService, "frontendBaseUrl", "https://app.coliclic.com/");
     }
 
     @Test
@@ -727,7 +729,7 @@ class TripServiceImplTest {
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
-        doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
+        doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
 
         TripBookingResponse response = tripService.createBooking(10L, request, sender);
 
@@ -741,7 +743,8 @@ class TripServiceImplTest {
                 eq(traveler.getFirstName()),
                 eq(sender.getFirstName()),
                 eq(sampleTrip.getDepartureAddress()),
-                eq(sampleTrip.getDestination())
+                eq(sampleTrip.getDestination()),
+                eq("https://app.coliclic.com/trips/10/reservations/1")
         );
     }
 
@@ -765,7 +768,7 @@ class TripServiceImplTest {
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
-        doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
+        doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
         doNothing().when(bookingValidationService).sendValidationCode(any());
 
         TripBookingResponse response = tripService.createBooking(10L, request, sender);
@@ -805,7 +808,7 @@ class TripServiceImplTest {
                 "+22501000000",
                 TripBooking.ValidationDeliveryChannel.SMS
         );
-        doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
+        doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
 
         TripBookingResponse response = tripService.createBooking(10L, request, sender);
 
@@ -835,7 +838,7 @@ class TripServiceImplTest {
                 .hasMessage("You already have an active booking request for this trip");
 
         verify(bookingRepository, never()).save(any(TripBooking.class));
-        verify(emailService, never()).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
+        verify(emailService, never()).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -863,7 +866,7 @@ class TripServiceImplTest {
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
-        doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
+        doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
 
         TripBookingResponse response = tripService.createBooking(10L, request, sender);
 
@@ -886,7 +889,7 @@ class TripServiceImplTest {
                                 .hasMessage("You cannot create a booking request for your own trip");
 
                 verify(bookingRepository, never()).save(any(TripBooking.class));
-                verify(emailService, never()).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString());
+                verify(emailService, never()).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
         }
 
     @Test

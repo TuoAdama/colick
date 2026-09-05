@@ -17,6 +17,9 @@
                     <td style="padding:28px 24px;">
                         <p style="margin:0 0 12px 0;font-size:16px;" th:text="#{email.common.greeting(${firstName})}">Hello User,</p>
                         <p style="margin:0 0 20px 0;line-height:1.6;" th:text="#{email.tripBookingCreated.intro(${senderFirstName}, ${departureAddress}, ${destination})}">A new booking request has arrived.</p>
+                        <p style="margin:0 0 20px 0;text-align:center;">
+                            <a th:href="${reservationUrl}" href="#" style="display:inline-block;background:#219ebc;color:#ffffff;text-decoration:none;border-radius:10px;padding:12px 20px;font-weight:700;" th:text="#{email.tripBookingCreated.cta}">View booking request</a>
+                        </p>
                         <p style="margin:0;line-height:1.6;color:#6B7280;" th:text="#{email.tripBookingCreated.note}">Sign in to Coliclic to review the request.</p>
                     </td>
                 </tr>

@@ -19,6 +19,7 @@ import com.coliclic.backoffice.trip.repository.TripRepository;
 import com.coliclic.backoffice.tripalert.service.TripAlertService;
 import com.coliclic.backoffice.user.entity.User;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +46,9 @@ public class TripServiceImpl implements TripService {
     private final FileStorageService fileStorageService;
     private final TripAlertService tripAlertService;
     private final TripReferenceGenerator tripReferenceGenerator;
+
+    @Value("${app.frontend.base-url:http://localhost:4200}")
+    private String frontendBaseUrl;
 
     public TripServiceImpl(TripRepository tripRepository,
                            TripBookingRepository bookingRepository,
@@ -267,10 +271,16 @@ public class TripServiceImpl implements TripService {
             trip.getTraveler().getFirstName(),
             sender.getFirstName(),
             trip.getDepartureAddress(),
-            trip.getDestination()
+            trip.getDestination(),
+            reservationUrl(trip.getId(), saved.getId())
         );
 
         return toTripBookingResponse(saved);
+    }
+
+    private String reservationUrl(Long tripId, Long bookingId) {
+        String baseUrl = frontendBaseUrl == null ? "http://localhost:4200" : frontendBaseUrl;
+        return baseUrl.replaceAll("/+$", "") + "/trips/" + tripId + "/reservations/" + bookingId;
     }
 
     @Override
