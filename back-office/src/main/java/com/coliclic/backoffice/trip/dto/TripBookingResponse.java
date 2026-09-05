@@ -3,6 +3,8 @@ package com.coliclic.backoffice.trip.dto;
 import com.coliclic.backoffice.trip.entity.TripBooking;
 import lombok.Builder;
 import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,6 +14,8 @@ import java.time.LocalDateTime;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class TripBookingResponse {
 
     private Long id;

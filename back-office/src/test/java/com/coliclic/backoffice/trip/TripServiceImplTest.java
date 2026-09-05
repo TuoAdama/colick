@@ -1686,6 +1686,29 @@ class TripServiceImplTest {
         assertThat(results.get(0).getTravelerRatingCount()).isEqualTo(2L);
     }
 
+    @Test
+    void getMyBookings_shouldIncludeDestinationAndTravelerForTheSentBookingCard() {
+        TripBooking booking = TripBooking.builder()
+                .id(12L)
+                .trip(sampleTrip)
+                .sender(sender)
+                .title("Documents")
+                .weight(BigDecimal.ONE)
+                .recipientContact("+22507000000")
+                .status(TripBooking.BookingStatus.ACCEPTED)
+                .createdAt(LocalDateTime.of(2026, 8, 19, 21, 58))
+                .build();
+        when(bookingRepository.findBySender(sender)).thenReturn(List.of(booking));
+
+        List<SentTripBookingResponse> results = tripService.getMyBookings(sender);
+
+        assertThat(results).singleElement().satisfies(result -> {
+            assertThat(result.getTripDestination()).isEqualTo("Abidjan");
+            assertThat(result.getTravelerId()).isEqualTo(traveler.getId());
+            assertThat(result.getTripId()).isEqualTo(sampleTrip.getId());
+        });
+    }
+
     private CreateTripRequest buildCreateTripRequest() {
         CreateTripRequest request = new CreateTripRequest();
         request.setDepartureAddress("Paris");

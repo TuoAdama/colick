@@ -43,10 +43,10 @@
           </a>
         </div>
       } @else {
-        <div class="space-y-4">
+        <div class="flex flex-col items-center gap-4">
           @for (booking of myBookings; track booking.id) {
             <article
-              class="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary/40 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2"
+              class="w-full max-w-[29rem] cursor-pointer rounded-[1.5rem] border border-border bg-surface p-4 shadow-sm transition hover:border-secondary/40 hover:shadow-card focus:outline-none focus:ring-2 focus:ring-secondary/30 sm:p-7"
               tabindex="0"
               role="link"
               [attr.aria-label]="'Voir le détail de la demande ' + booking.title"
@@ -54,72 +54,41 @@
               (keydown.enter)="navigateToSentBookingDetail(booking)"
               (keydown.space)="navigateToSentBookingDetail(booking); $event.preventDefault()"
             >
-              <div class="h-1.5 bg-gradient-to-r from-accent via-secondary to-primary"></div>
-
-              <div class="p-5 sm:p-6">
-                <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-                  <div class="flex min-w-0 items-start gap-4">
-                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-sm" aria-hidden="true">
-                      <span class="material-symbols-outlined text-[26px]">inventory_2</span>
-                    </div>
-                    <div class="min-w-0">
-                      <div class="flex flex-wrap items-center gap-2.5">
-                        <h3 class="truncate text-lg font-bold text-text-primary">{{ booking.title }}</h3>
-                        <span [class]="'inline-flex rounded-full px-3 py-1 text-xs font-semibold ' + statusClass(booking.status)">
-                          {{ statusLabel(booking.status) }}
-                        </span>
-                      </div>
-                      <p class="mt-1 text-sm text-text-secondary">Demande #{{ booking.id }}</p>
-                    </div>
+              <div class="flex items-start justify-between gap-3 border-b border-border pb-5">
+                <div class="flex min-w-0 items-center gap-3">
+                  <div class="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white" aria-hidden="true">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="6.5" y="2.75" width="11" height="18.5" rx="2" /><path stroke-linecap="round" d="M10 18h4" /></svg>
+                    @if (booking.status === 'ACCEPTED') { <span class="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-success text-[10px]">✓</span> }
                   </div>
-
-                  <span class="hidden shrink-0 items-center gap-1 text-sm font-medium text-secondary transition-transform group-hover:translate-x-0.5 sm:inline-flex">
-                    Voir le détail
-                    <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
-                  </span>
+                  <div class="min-w-0"><h3 class="text-lg font-bold leading-tight text-text-primary">{{ booking.title }}</h3><p class="mt-1 text-xs text-text-secondary">ID Référence: TRK-{{ booking.tripId | number:'2.0-0' }}-{{ booking.id | number:'2.0-0' }}</p></div>
                 </div>
+                <span [class]="'shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ' + statusClass(booking.status)"><span class="h-1.5 w-1.5 rounded-full bg-current"></span>{{ statusLabel(booking.status) }}</span>
+              </div>
 
-                <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <div class="rounded-xl bg-surface px-4 py-3">
-                    <p class="text-xs font-medium uppercase tracking-wide text-text-secondary">Poids</p>
-                    <p class="mt-1 text-sm font-semibold text-text-primary">{{ booking.weight }} kg</p>
-                  </div>
-                  <div class="rounded-xl bg-surface px-4 py-3">
-                    <p class="text-xs font-medium uppercase tracking-wide text-text-secondary">Destinataire</p>
-                    <p class="mt-1 truncate text-sm font-semibold text-text-primary" [title]="booking.recipientContact">{{ booking.recipientContact }}</p>
-                  </div>
-                  <div class="rounded-xl bg-surface px-4 py-3">
-                    <p class="text-xs font-medium uppercase tracking-wide text-text-secondary">Trajet</p>
-                    <p class="mt-1 text-sm font-semibold text-text-primary">#{{ booking.tripId }}</p>
-                  </div>
-                  @if (createdAtLabel(booking.createdAt); as createdAtText) {
-                    <div class="rounded-xl bg-surface px-4 py-3">
-                      <p class="text-xs font-medium uppercase tracking-wide text-text-secondary">Envoyée le</p>
-                      <p class="mt-1 truncate text-sm font-semibold text-text-primary" [title]="createdAtText">{{ createdAtText }}</p>
-                    </div>
-                  }
-                </div>
+              <div class="mt-5 rounded-2xl border border-border/60 bg-background-primary px-4 py-3">
+                <div class="flex items-center gap-3"><span class="flex h-8 w-8 items-center justify-center rounded-xl bg-surface text-success" aria-hidden="true"><svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg></span><div class="min-w-0"><p class="text-[11px] font-medium uppercase tracking-wide text-slate-400">Destination & trajet</p><p class="truncate text-sm font-semibold text-text-primary">{{ booking.tripDestination }} <span class="font-normal text-slate-400">• Trajet #{{ booking.tripId }}</span></p></div></div>
+              </div>
 
-                @if (booking.description) {
-                  <div class="mt-5 rounded-xl border border-border/70 bg-background-primary/60 px-4 py-3">
-                    <p class="text-xs font-medium uppercase tracking-wide text-text-secondary">Description</p>
-                    <p class="mt-1 text-sm leading-6 text-text-secondary">{{ booking.description }}</p>
-                  </div>
+              <div class="mt-4 grid grid-cols-2 gap-3">
+                <div class="rounded-2xl border border-border p-3"><p class="text-xs text-slate-400">▧&nbsp; Poids</p><p class="mt-1 text-sm font-semibold text-text-primary">{{ booking.weight | number:'1.0-2' }} kg</p></div>
+                <div class="rounded-2xl border border-border p-3"><p class="text-xs text-slate-400">▣&nbsp; Envoyée le</p><p class="mt-1 text-xs font-semibold text-text-primary">{{ createdAtLabel(booking.createdAt) || '—' }}</p></div>
+              </div>
+
+              <div class="mt-4 flex items-center gap-3 rounded-2xl border border-border p-3"><span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500" aria-hidden="true">♙</span><div class="min-w-0 flex-1"><p class="text-[11px] font-medium uppercase tracking-wide text-slate-400">Destinataire</p><p class="truncate text-sm font-semibold text-text-primary" [title]="booking.recipientContact">{{ booking.recipientContact }}</p></div><button type="button" class="rounded-lg p-2 text-slate-400 hover:bg-slate-50 hover:text-secondary" [attr.aria-label]="'Copier le contact de ' + booking.title" (click)="copyRecipientContact(booking, $event)"><svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></svg></button>@if (phoneHref(booking.recipientContact); as href) { <a [href]="href" class="rounded-lg bg-success/10 p-2 text-success hover:bg-success/20" [attr.aria-label]="'Appeler le destinataire de ' + booking.title" (click)="$event.stopPropagation()"><svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5.5A2.5 2.5 0 0 1 5.5 3h2a1 1 0 0 1 1 .8l.8 3.4a1 1 0 0 1-.27.93l-1.5 1.5a15.5 15.5 0 0 0 6.84 6.84l1.5-1.5a1 1 0 0 1 .93-.27l3.4.8a1 1 0 0 1 .8 1v2A2.5 2.5 0 0 1 18.5 21h-1C9.49 21 3 14.51 3 6.5v-1Z"/></svg></a> }
+              </div>
+              <p class="sr-only" aria-live="polite">{{ copiedBookingId === booking.id ? 'Contact copié.' : '' }}</p>
+
+              <div class="mt-5 grid grid-cols-2 gap-3">
+                @if (canCancelBooking(booking)) {
+                  <button type="button" class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-error/40 px-3 text-sm font-medium text-error transition hover:bg-error/5 disabled:opacity-50" [disabled]="cancellingBookingId === booking.id" (click)="cancelBooking(booking, $event)">
+                    {{ cancellingBookingId === booking.id ? 'Annulation...' : "Annuler l'envoi" }}
+                  </button>
+                } @else {
+                  <span></span>
                 }
-
-                <div class="mt-5 flex items-center justify-between gap-4 border-t border-border/70 pt-4">
-                  <p class="text-xs text-text-secondary">Cliquez pour consulter les détails</p>
-                  @if (canCancelBooking(booking)) {
-                    <button
-                      type="button"
-                      class="inline-flex min-w-32 items-center justify-center rounded-lg border border-error px-4 py-2 text-sm font-semibold text-error transition hover:bg-error hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                      [disabled]="cancellingBookingId === booking.id"
-                      (click)="cancelBooking(booking, $event)"
-                    >
-                      {{ cancellingBookingId === booking.id ? 'Annulation...' : 'Annuler la demande' }}
-                    </button>
-                  }
-                </div>
+                <button type="button" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-3 text-sm font-medium text-white transition hover:bg-primary disabled:opacity-50" [disabled]="messagingBookingId === booking.id" (click)="messageTraveler(booking, $event)">
+                  {{ messagingBookingId === booking.id ? 'Ouverture...' : 'Message' }} <span aria-hidden="true">›</span>
+                </button>
               </div>
             </article>
           }
