@@ -45,7 +45,15 @@
       } @else {
         <div class="space-y-4">
           @for (booking of myBookings; track booking.id) {
-            <article class="rounded-2xl border border-border bg-surface p-5">
+            <article
+              class="cursor-pointer rounded-2xl border border-border bg-surface p-5 transition-shadow hover:shadow-sm"
+              tabindex="0"
+              role="link"
+              [attr.aria-label]="'Voir le détail de la demande ' + booking.title"
+              (click)="navigateToSentBookingDetail(booking)"
+              (keydown.enter)="navigateToSentBookingDetail(booking)"
+              (keydown.space)="navigateToSentBookingDetail(booking); $event.preventDefault()"
+            >
               <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-3">
@@ -75,7 +83,7 @@
                       type="button"
                       class="inline-flex min-w-32 items-center justify-center rounded-lg border border-error px-4 py-2 text-sm font-semibold text-error transition hover:bg-error/5 disabled:cursor-not-allowed disabled:opacity-50"
                       [disabled]="cancellingBookingId === booking.id"
-                      (click)="cancelBooking(booking)"
+                      (click)="cancelBooking(booking, $event)"
                     >
                       {{ cancellingBookingId === booking.id ? 'Annulation...' : 'Annuler' }}
                     </button>

@@ -101,6 +101,33 @@ describe('SentBookingsPageComponent', () => {
     expect(buttons[0].textContent).toContain('Annuler');
   });
 
+  it('navigates to the sent booking detail when clicking a card', () => {
+    const cards = fixture.nativeElement.querySelectorAll('article');
+
+    cards[0].click();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/sent-bookings', 50, 10]);
+  });
+
+  it('navigates to the sent booking detail with Enter and Space', () => {
+    const card = fixture.nativeElement.querySelector('article') as HTMLElement;
+
+    card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    card.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+
+    expect(router.navigate).toHaveBeenCalledTimes(2);
+    expect(router.navigate).toHaveBeenCalledWith(['/sent-bookings', 50, 10]);
+  });
+
+  it('does not navigate when clicking the cancel button', () => {
+    spyOn(window, 'confirm').and.returnValue(false);
+    const cancelButton = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+
+    cancelButton.click();
+
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
   it('cancels a booking and updates it locally', () => {
     spyOn(window, 'confirm').and.returnValue(true);
 
