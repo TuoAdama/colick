@@ -51,7 +51,9 @@ export class SentBookingsPageComponent implements OnInit {
     return booking.status === 'PENDING' || booking.status === 'ACCEPTED';
   }
 
-  cancelBooking(booking: BookingResponse): void {
+  cancelBooking(booking: BookingResponse, event?: Event): void {
+    event?.stopPropagation();
+
     if (!this.canCancelBooking(booking) || this.cancellingBookingId !== null) {
       return;
     }
@@ -75,6 +77,10 @@ export class SentBookingsPageComponent implements OnInit {
         this.cancellingBookingId = null;
       },
     });
+  }
+
+  navigateToSentBookingDetail(booking: BookingResponse): void {
+    void this.router.navigate(['/sent-bookings', booking.tripId, booking.id]);
   }
 
   statusLabel(status: BookingResponse['status']): string {
