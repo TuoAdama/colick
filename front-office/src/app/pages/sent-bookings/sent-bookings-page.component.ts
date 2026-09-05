@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { BookingResponse } from '../../models/booking.model';
+import { BookingResponse, SentBookingResponse } from '../../models/booking.model';
+import { MessagingService } from '../../services/messaging.service';
 import { TripService } from '../../services/trip.service';
 
 @Component({
@@ -14,12 +15,15 @@ import { TripService } from '../../services/trip.service';
 export class SentBookingsPageComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly tripService = inject(TripService);
+  private readonly messagingService = inject(MessagingService);
   private readonly router = inject(Router);
 
-  myBookings: BookingResponse[] = [];
+  myBookings: SentBookingResponse[] = [];
   isLoadingBookings = false;
   actionError = '';
   cancellingBookingId: number | null = null;
+  messagingBookingId: number | null = null;
+  copiedBookingId: number | null = null;
 
   ngOnInit(): void {
     if (!this.authService.isLoggedIn()) {
@@ -51,7 +55,7 @@ export class SentBookingsPageComponent implements OnInit {
     return booking.status === 'PENDING' || booking.status === 'ACCEPTED';
   }
 
-  cancelBooking(booking: BookingResponse, event?: Event): void {
+  cancelBooking(booking: SentBookingResponse, event?: Event): void {
     event?.stopPropagation();
 
     if (!this.canCancelBooking(booking) || this.cancellingBookingId !== null) {
@@ -68,7 +72,7 @@ export class SentBookingsPageComponent implements OnInit {
       next: (updatedBooking) => {
         const bookingIndex = this.myBookings.findIndex((currentBooking) => currentBooking.id === updatedBooking.id);
         if (bookingIndex >= 0) {
-          this.myBookings[bookingIndex] = updatedBooking;
+          this.myBookings[bookingIndex] = { ...this.myBookings[bookingIndex], ...updatedBooking };
         }
         this.cancellingBookingId = null;
       },
@@ -79,7 +83,51 @@ export class SentBookingsPageComponent implements OnInit {
     });
   }
 
-  navigateToSentBookingDetail(booking: BookingResponse): void {
+  messageTraveler(booking: SentBookingResponse, event?: Event): void {
+    event?.stopPropagation();
+    if (this.messagingBookingId !== null) {
+      return;
+    }
+
+    this.actionError = '';
+    this.messagingBookingId = booking.id;
+    this.messagingService.createConversationDraft({
+      tripId: booking.tripId,
+      recipientId: booking.travelerId,
+    }).subscribe({
+      next: (conversation) => {
+        this.messagingBookingId = null;
+        void this.router.navigate(['/messages'], { queryParams: { conversationId: conversation.id } });
+      },
+      error: () => {
+        this.actionError = 'Impossible de démarrer la conversation avec le voyageur.';
+        this.messagingBookingId = null;
+      },
+    });
+  }
+
+  copyRecipientContact(booking: SentBookingResponse, event?: Event): void {
+    event?.stopPropagation();
+    if (!navigator.clipboard) {
+      this.actionError = 'La copie du contact est indisponible sur cet appareil.';
+      return;
+    }
+
+    void navigator.clipboard.writeText(booking.recipientContact).then(
+      () => this.copiedBookingId = booking.id,
+      () => this.actionError = 'Impossible de copier le contact pour le moment.',
+    );
+  }
+
+  phoneHref(contact: string): string | null {
+    if (!/^\+?[0-9().\s-]{6,}$/.test(contact.trim())) {
+      return null;
+    }
+
+    return `tel:${contact.replace(/[^0-9+]/g, '')}`;
+  }
+
+  navigateToSentBookingDetail(booking: SentBookingResponse): void {
     void this.router.navigate(['/sent-bookings', booking.tripId, booking.id]);
   }
 

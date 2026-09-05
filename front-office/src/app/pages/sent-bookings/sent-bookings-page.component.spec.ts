@@ -3,6 +3,7 @@ import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
+import { MessagingService } from '../../services/messaging.service';
 import { SentBookingsPageComponent } from './sent-bookings-page.component';
 
 describe('SentBookingsPageComponent', () => {
@@ -14,6 +15,8 @@ describe('SentBookingsPageComponent', () => {
     {
       id: 10,
       tripId: 50,
+      tripDestination: 'Abidjan',
+      travelerId: 9,
       senderId: 1,
       senderName: 'Ada Lovelace',
       title: 'Documents',
@@ -26,6 +29,8 @@ describe('SentBookingsPageComponent', () => {
     {
       id: 11,
       tripId: 51,
+      tripDestination: 'Dakar',
+      travelerId: 10,
       senderId: 1,
       senderName: 'Ada Lovelace',
       title: 'Vetements',
@@ -39,14 +44,20 @@ describe('SentBookingsPageComponent', () => {
 
   let authServiceMock: jasmine.SpyObj<AuthService>;
   let tripServiceMock: jasmine.SpyObj<TripService>;
+  let messagingServiceMock: jasmine.SpyObj<MessagingService>;
 
   beforeEach(async () => {
     authServiceMock = jasmine.createSpyObj('AuthService', ['isLoggedIn']);
     authServiceMock.isLoggedIn.and.returnValue(true);
 
     tripServiceMock = jasmine.createSpyObj('TripService', ['getMyBookings', 'cancelBooking']);
+    messagingServiceMock = jasmine.createSpyObj('MessagingService', ['createConversationDraft']);
     tripServiceMock.getMyBookings.and.returnValue(of(bookingFixtures));
     tripServiceMock.cancelBooking.and.returnValue(of({ ...bookingFixtures[0], status: 'CANCELLED' as const }));
+    messagingServiceMock.createConversationDraft.and.returnValue(of({
+      id: 99, tripId: 50, tripRoute: 'Paris → Abidjan', otherParticipantId: 9,
+      otherParticipantName: 'Voyageur', lastMessage: null, unreadCount: 0, createdAt: '2026-08-19T21:58:00',
+    }));
 
     await TestBed.configureTestingModule({
       imports: [SentBookingsPageComponent],
@@ -54,6 +65,7 @@ describe('SentBookingsPageComponent', () => {
         provideRouter([]),
         { provide: AuthService, useValue: authServiceMock },
         { provide: TripService, useValue: tripServiceMock },
+        { provide: MessagingService, useValue: messagingServiceMock },
       ],
     }).compileComponents();
 
@@ -93,12 +105,21 @@ describe('SentBookingsPageComponent', () => {
 
   it('renders status labels and only exposes cancel for cancellable bookings', () => {
     const text = fixture.nativeElement.textContent ?? '';
-    const buttons = fixture.nativeElement.querySelectorAll('button');
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    const cancelButtons = buttons.filter((button) => button.textContent?.includes('Annuler'));
 
     expect(text).toContain('En attente');
     expect(text).toContain('Refusee');
-    expect(buttons.length).toBe(1);
-    expect(buttons[0].textContent).toContain('Annuler');
+    expect(cancelButtons.length).toBe(1);
+  });
+
+  it('renders the compact booking card with trip and recipient details', () => {
+    const card = fixture.nativeElement.querySelector('article') as HTMLElement;
+
+    expect(card.textContent).toContain('Destination & trajet');
+    expect(card.textContent).toContain('Abidjan');
+    expect(card.textContent).toContain('Trajet #50');
+    expect(card.classList).toContain('max-w-[29rem]');
   });
 
   it('navigates to the sent booking detail when clicking a card', () => {
@@ -121,10 +142,36 @@ describe('SentBookingsPageComponent', () => {
 
   it('does not navigate when clicking the cancel button', () => {
     spyOn(window, 'confirm').and.returnValue(false);
-    const cancelButton = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    const cancelButton = (Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[])
+      .find((button) => button.textContent?.includes('Annuler')) as HTMLButtonElement;
 
     cancelButton.click();
 
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('starts a conversation with the booking traveler without opening the detail', () => {
+    component.messageTraveler(component.myBookings[0]);
+
+    expect(messagingServiceMock.createConversationDraft).toHaveBeenCalledWith({ tripId: 50, recipientId: 9 });
+    expect(router.navigate).toHaveBeenCalledWith(['/messages'], { queryParams: { conversationId: 99 } });
+  });
+
+  it('exposes a phone link only for a phone recipient', () => {
+    expect(component.phoneHref('alice@example.com')).toBeNull();
+    expect(component.phoneHref('+33 6 00 00 00 00')).toBe('tel:+33600000000');
+    expect(fixture.nativeElement.querySelectorAll('a[href^="tel:"]').length).toBe(1);
+  });
+
+  it('copies the recipient contact without navigating', async () => {
+    const writeText = jasmine.createSpy('writeText').and.resolveTo();
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+
+    component.copyRecipientContact(component.myBookings[0]);
+    await Promise.resolve();
+
+    expect(writeText).toHaveBeenCalledWith('alice@example.com');
+    expect(component.copiedBookingId).toBe(10);
     expect(router.navigate).not.toHaveBeenCalled();
   });
 

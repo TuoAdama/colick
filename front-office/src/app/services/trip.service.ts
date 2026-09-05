@@ -5,6 +5,7 @@ import { Trip, CreateTripDto, UpdateTripDto } from '../models/trip.model';
 import {
   CreateBookingRequest,
   BookingResponse,
+  SentBookingResponse,
   BookingSenderProfileResponse,
   ConfirmBookingDeliveryRequest,
 } from '../models/booking.model';
@@ -125,8 +126,8 @@ export class TripService {
   }
 
   /** Get booking requests sent by the current user. */
-  getMyBookings(): Observable<BookingResponse[]> {
-    return this.http.get<BookingResponse[]>(`${this.baseUrl}/bookings/mine`).pipe(
+  getMyBookings(): Observable<SentBookingResponse[]> {
+    return this.http.get<SentBookingResponse[]>(`${this.baseUrl}/bookings/mine`).pipe(
       map((bookings) => bookings.map((booking) => this.normalizeBooking(booking)))
     );
   }
@@ -216,13 +217,13 @@ export class TripService {
     };
   }
 
-  private normalizeBooking(booking: BookingResponse): BookingResponse {
+  private normalizeBooking<T extends BookingResponse>(booking: T): T {
     return {
       ...booking,
       senderPhotoUrl: this.photoUrlService.normalizePhotoUrl(booking.senderPhotoUrl),
       senderRatingCount: booking.senderRatingCount ?? 0,
       packagePhotoUrl: this.photoUrlService.normalizePhotoUrl(booking.packagePhotoUrl),
-    };
+    } as T;
   }
 
   private normalizeBookingSenderProfile(profile: BookingSenderProfileResponse): BookingSenderProfileResponse {
