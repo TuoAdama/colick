@@ -1,0 +1,80 @@
+<!-- Security Section -->
+<section id="securite" class="py-20 lg:py-28 bg-primary" aria-labelledby="security-title">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <!-- Left Content -->
+      <div>
+        <span class="inline-block bg-white/10 text-white text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
+          Votre sécurité, notre priorité
+        </span>
+        <h2 id="security-title" class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+          Des échanges plus sereins
+        </h2>
+        <p class="text-white/80 text-lg mb-8">
+          Activation des comptes, paiement sécurisé, avis et support contribuent à créer un cadre de confiance.
+        </p>
+
+        <!-- Security Features List -->
+        <ul class="space-y-4">
+          @for (feature of securityFeatures; track feature.title) {
+            <li class="flex items-start gap-4">
+              <div class="w-8 h-8 bg-success rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-white font-semibold mb-1">{{ feature.title }}</h4>
+                <p class="text-white/70">{{ feature.description }}</p>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <!-- Right Content - Verified Account Card -->
+      <div class="relative">
+        <div class="absolute inset-0 bg-secondary/20 rounded-3xl blur-3xl"></div>
+        <div class="relative bg-white rounded-3xl p-8 shadow-2xl">
+          <!-- Card Header -->
+          <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
+            <div class="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center">
+              <svg class="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-bold text-primary text-lg">Compte actif</p>
+              <p class="text-success text-sm font-medium">E-mail confirmé</p>
+            </div>
+          </div>
+
+          <!-- User Info -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between py-3 border-b border-gray-50">
+              <span class="text-text-secondary">Nom</span>
+              <span class="font-medium text-primary">{{ trustedUser.name }}</span>
+            </div>
+            <div class="flex items-center justify-between py-3 border-b border-gray-50">
+              <span class="text-text-secondary">E-mail</span>
+              <span class="font-medium text-primary">j.dupont&#64;email.com</span>
+            </div>
+            <div class="flex items-center justify-between py-3 border-b border-gray-50">
+              <span class="text-text-secondary">Téléphone</span>
+              <span class="font-medium text-primary">{{ trustedUser.phone }}</span>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <span class="text-text-secondary">Avis utilisateurs</span>
+              <span class="inline-flex items-center gap-1 bg-success/10 text-success font-medium text-sm px-3 py-1 rounded-full">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Consultables
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

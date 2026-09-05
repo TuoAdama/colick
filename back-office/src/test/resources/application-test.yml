@@ -1,0 +1,55 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:coliclic-test;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+  sql:
+    init:
+      mode: never
+
+  security:
+    user:
+      name: test
+      password: test
+
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS_ENABLE:false}
+
+jwt:
+  secret: test-secret-key-must-be-at-least-32-chars-long
+  expiration-ms: 86400000
+
+app:
+  frontend:
+    base-url: http://localhost:4200
+  cors:
+    allowed-origins: http://localhost:4200
+  auth:
+    cookie:
+      name: COLICLIC_AUTH
+      secure: false
+    password-reset:
+      base-url: http://localhost:4200/reset-password
+      expiration-minutes: 60
+    rate-limit:
+      login:
+        email-limit: 1000000
+        ip-limit: 1000000
+      password-reset:
+        email-limit: 1000000
+        ip-limit: 1000000

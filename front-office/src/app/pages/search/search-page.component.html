@@ -1,0 +1,433 @@
+<div class="min-h-screen bg-[#FAFAFA] text-text-primary" aria-labelledby="search-title">
+  <main class="mx-auto w-full max-w-[1280px] px-4 pb-28 pt-20 md:px-16 md:py-14">
+    @if (isFormValid && hasSearched && !isMobileSearchEditing) {
+      <button type="button" class="mb-4 flex w-full items-center gap-3 rounded-2xl border border-border bg-white p-3 text-left md:hidden" (click)="isMobileSearchEditing = true" aria-label="Modifier la recherche" data-testid="mobile-search-summary">
+        <span class="rounded-xl bg-accent/10 p-2 text-accent" aria-hidden="true">⌕</span>
+        <span class="min-w-0 flex-1"><span class="block break-words text-sm font-bold text-primary">{{ departure?.name }} <span class="text-accent">→</span> {{ destination?.name }}</span><span class="text-xs text-text-secondary">{{ selectedDate ? formatDate(selectedDate) : 'Toutes les dates' }}</span></span>
+        <span class="rounded-lg border border-border px-2 py-1 text-primary" aria-hidden="true">✎</span>
+      </button>
+    }
+    <section class="mb-4 md:mb-10 md:block" [class.hidden]="isFormValid && hasSearched && !isMobileSearchEditing" aria-label="Formulaire de recherche">
+      <h1 id="search-title" class="sr-only md:not-sr-only md:my-8 text-center text-3xl font-extrabold leading-tight text-primary md:text-left md:text-4xl">
+        Trouvez le trajet idéal pour votre colis.
+      </h1>
+
+      <div class="flex flex-col items-stretch gap-2 rounded-xl border border-[#E8E8EC] bg-white p-2 shadow-sm md:grid md:grid-cols-2 lg:flex lg:flex-row lg:items-center">
+        <div class="w-full flex-1">
+          <app-autocomplete
+            label="DÉPART"
+            placeholder="Ville de départ"
+            [initialQuery]="departureQuery"
+            variant="search"
+            icon="M12 21s7-4.438 7-11a7 7 0 10-14 0c0 6.562 7 11 7 11zM12 13a3 3 0 100-6 3 3 0 000 6z"
+            (selected)="onDepartureSelected($event)"
+            (cleared)="departure = null"
+          ></app-autocomplete>
+        </div>
+
+        <div class="hidden items-center justify-center px-2 text-text-muted lg:flex" aria-hidden="true">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </div>
+
+        <div class="w-full flex-1">
+          <app-autocomplete
+            label="DESTINATION"
+            placeholder="Où allez-vous ?"
+            [initialQuery]="destinationQuery"
+            variant="search"
+            icon="M3 11l18-8-8 18-2-8-8-2z"
+            (selected)="onDestinationSelected($event)"
+            (cleared)="destination = null"
+          ></app-autocomplete>
+        </div>
+
+        <label class="flex min-h-[76px] w-full flex-1 items-center gap-3 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-3 transition focus-within:ring-2 focus-within:ring-primary/20">
+          <svg class="h-6 w-6 shrink-0 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span class="flex min-w-0 flex-1 flex-col">
+            <span class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">DATE</span>
+            <input
+              type="date"
+              [(ngModel)]="selectedDate"
+              class="w-full border-none bg-transparent p-0 text-[15px] text-primary outline-none focus:ring-0"
+              aria-label="Date de départ minimum"
+            />
+          </span>
+        </label>
+
+        <button
+          type="button"
+          class="flex min-h-[64px] w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-accent px-8 py-4 text-sm font-bold text-white transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+          [disabled]="!isFormValid || isLoading"
+          (click)="searchTrips()"
+        >
+          @if (isLoading) {
+            <svg class="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          } @else {
+            <span>Rechercher</span>
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 110-14 7 7 0 010 14z" />
+            </svg>
+          }
+        </button>
+      </div>
+    </section>
+
+    <div class="flex flex-col gap-3 md:gap-8 lg:flex-row">
+      <div class="flex gap-2 overflow-x-auto pb-2 md:hidden" aria-label="Filtres actifs">
+        <button type="button" class="shrink-0 rounded-full bg-primary px-3 py-2 text-xs font-bold text-white" (click)="toggleMobileFilters()" [attr.aria-expanded]="areMobileFiltersOpen" aria-controls="mobile-search-filters" data-testid="mobile-filters-toggle">☷ Tous les filtres <span class="ml-1 rounded-full bg-accent px-1.5">{{ activeFilterCount }}</span></button>
+        @if (minPrice !== null) { <button type="button" class="shrink-0 rounded-full bg-white px-3 py-2 text-xs" (click)="removePriceFilter('minPrice')" aria-label="Supprimer le prix minimum">Prix ≥ {{ minPrice }} € ×</button> }
+        @if (maxPrice !== null) { <button type="button" class="shrink-0 rounded-full bg-white px-3 py-2 text-xs" (click)="removePriceFilter('maxPrice')" aria-label="Supprimer le prix maximum">Prix ≤ {{ maxPrice }} € ×</button> }
+      </div>
+
+      <aside class="hidden w-full flex-col gap-6 md:grid md:grid-cols-2 lg:flex lg:w-1/4" aria-label="Filtres de recherche">
+        <section class="rounded-xl border border-[#E8E8EC] bg-white p-6">
+          <h2 class="mb-4 text-2xl font-bold text-primary">Trier par</h2>
+          <div class="flex flex-col gap-3">
+            @for (option of sortOptions; track option.value) {
+              <label class="flex cursor-pointer items-center gap-3 text-[15px] text-text-secondary">
+                <input
+                  type="radio"
+                  name="sort"
+                  class="h-5 w-5 border-outline text-primary focus:ring-primary"
+                  [value]="option.value"
+                  [(ngModel)]="sort"
+                  (change)="onFilterChange()"
+                />
+                <span>{{ option.label }}</span>
+              </label>
+            }
+          </div>
+        </section>
+
+        <section class="rounded-xl border border-[#E8E8EC] bg-white p-6">
+          <h2 class="mb-4 text-2xl font-bold text-primary">Prix par kg</h2>
+          <div class="flex items-center gap-4">
+            <input
+              type="number"
+              min="0"
+              placeholder="Min"
+              [(ngModel)]="minPrice"
+              (change)="onFilterChange()"
+              class="w-1/2 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-primary/20"
+              aria-label="Prix minimum par kilo"
+            />
+            <span class="text-text-secondary">-</span>
+            <input
+              type="number"
+              min="0"
+              placeholder="Max"
+              [(ngModel)]="maxPrice"
+              (change)="onFilterChange()"
+              class="w-1/2 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-primary/20"
+              aria-label="Prix maximum par kilo"
+            />
+          </div>
+        </section>
+      </aside>
+
+      <section class="flex w-full flex-col gap-4 lg:w-3/4" aria-live="polite" aria-label="Résultats de recherche">
+        @if (hasSearched && !isLoading && !errorMessage) {
+          <div class="mb-2 flex items-center justify-between gap-2">
+            <p class="text-xs md:text-[15px] leading-relaxed text-text-secondary">
+              {{ trips.length }} trajet{{ trips.length > 1 ? 's' : '' }} trouvé{{ trips.length > 1 ? 's' : '' }}
+              @if (resultRouteLabel()) {
+                <span class="hidden md:inline"> pour <strong class="text-primary">{{ resultRouteLabel() }}</strong></span>
+              }
+            </p>
+            <label class="flex shrink-0 items-center gap-1 text-[11px] text-text-secondary md:hidden">Trier par :
+              <select aria-label="Trier les résultats" class="max-w-[125px] bg-transparent font-bold text-primary" [(ngModel)]="sort" (change)="onFilterChange()">
+                @for (option of sortOptions; track option.value) { <option [value]="option.value">{{ option.label }}</option> }
+              </select>
+            </label>
+          </div>
+        }
+
+        @if (isLoading) {
+          <div class="flex flex-col items-center justify-center rounded-xl border border-[#E8E8EC] bg-white py-16" role="status">
+            <svg class="mb-4 h-10 w-10 animate-spin text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <p class="text-lg font-semibold text-primary">Recherche en cours...</p>
+          </div>
+        }
+
+        @if (errorMessage && !isLoading) {
+          <div class="rounded-xl border border-error/20 bg-white p-8 text-center" role="alert">
+            <h2 class="mb-2 text-xl font-bold text-error">Erreur de recherche</h2>
+            <p class="mb-6 text-text-secondary">{{ errorMessage }}</p>
+            <button type="button" class="rounded-lg bg-error px-6 py-3 text-sm font-bold text-white" (click)="searchTrips()">
+              Réessayer
+            </button>
+          </div>
+        }
+
+        @if (hasSearched && !isLoading && !errorMessage && trips.length === 0) {
+          <div
+            class="flex min-h-[320px] items-center justify-center rounded-[28px] border border-[#E8E8EC] bg-white px-6 py-8 text-center shadow-[0_14px_40px_rgba(2,48,71,0.08)] sm:min-h-[380px] sm:px-8 sm:py-10 lg:min-h-[420px]"
+          >
+            <div class="mx-auto flex w-full max-w-[700px] flex-col items-center justify-center">
+              <h2 class="text-2xl font-extrabold leading-tight text-primary sm:text-3xl">
+                Aucun trajet trouvé
+              </h2>
+              <p class="mt-5 max-w-[560px] text-sm leading-6 text-text-secondary sm:mt-6 sm:text-base sm:leading-7">
+                <strong class="font-extrabold">Créez une alerte</strong>
+                pour être informé dès qu'un trajet correspondant sera disponible, ou
+                <strong class="font-extrabold">publiez votre besoin</strong>
+                pour permettre à un voyageur de vous contacter.
+              </p>
+
+              <div class="mt-8 flex w-full flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center">
+                <a
+                  routerLink="/parcel-requests/new"
+                  [queryParams]="parcelRequestQueryParams()"
+                  aria-label="Publier ma demande"
+                  class="inline-flex min-h-[56px] w-full items-center justify-center gap-3 rounded-lg border border-[#E0E4E8] bg-white px-5 py-3 text-sm font-extrabold text-primary transition hover:border-primary/30 hover:bg-[#F8FAFB] sm:w-auto sm:min-w-[260px] sm:text-base"
+                >
+                  <svg class="h-6 w-6 shrink-0" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                    <path d="M23.5 5.5L10.8 18.2" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M23.5 5.5L15.6 23.1L10.8 18.2L5.9 13.4L23.5 5.5Z" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M10.8 18.2L5.5 22.8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <span>Publier ma demande</span>
+                </a>
+
+                <button
+                  type="button"
+                  aria-label="M'alerter dès qu'un trajet arrive"
+                  class="inline-flex min-h-[56px] w-full items-center justify-center gap-3 rounded-lg bg-accent px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(251,133,0,0.28)] transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[320px] sm:text-base"
+                  [disabled]="isCreatingAlert"
+                  (click)="createAlertForCurrentSearch()"
+                >
+                  @if (isCreatingAlert) {
+                    <svg class="h-6 w-6 shrink-0 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    <span>Creation...</span>
+                  } @else {
+                    <svg class="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M18 8.5A6 6 0 0 0 6 8.5c0 7-3 7-3 9h18c0-2-3-2-3-9Z" fill="currentColor" />
+                      <path d="M14.2 20a2.4 2.4 0 0 1-4.4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    <span>M'alerter dès qu'un trajet arrive</span>
+                  }
+                </button>
+              </div>
+
+              @if (alertSuccessMessage) {
+                <p class="mt-4 rounded-lg bg-success/10 px-4 py-3 text-sm font-semibold text-success" role="status">
+                  {{ alertSuccessMessage }}
+                </p>
+              }
+              @if (alertErrorMessage) {
+                <p class="mt-4 rounded-lg bg-error/10 px-4 py-3 text-sm font-semibold text-error" role="alert">
+                  {{ alertErrorMessage }}
+                </p>
+              }
+            </div>
+          </div>
+        }
+
+        @if (hasSearched && !isLoading && !errorMessage && trips.length > 0) {
+          @for (trip of trips; track trip.id) {
+            <article class="rounded-2xl bg-white p-4 shadow-sm md:hidden" [attr.aria-label]="'Trajet de ' + trip.departureAddress + ' vers ' + trip.destination" data-testid="mobile-trip-card">
+              <div class="flex items-start justify-between gap-2 border-b border-border/60 pb-4">
+                <div class="flex min-w-0 items-center gap-2">
+                  <app-user-avatar [name]="trip.travelerName" [photoUrl]="trip.travelerPhotoUrl" sizeClasses="w-9 h-9 shrink-0" textClasses="text-xs" />
+                  <div class="min-w-0"><p class="break-words text-xs font-bold text-primary">{{ trip.travelerName }}</p><p class="text-[10px] text-text-secondary"><span class="text-accent">★ {{ hasTravelerRating(trip) ? formatTravelerRatingAverage(trip) : 'Nouveau' }}</span>@if (hasTravelerRating(trip)) { · {{ trip.travelerRatingCount }} avis }</p></div>
+                </div>
+                <div class="shrink-0 text-right"><p class="text-base font-extrabold text-primary">{{ formatPrice(trip.pricePerKilo) }} €/kg</p>@if (trip.instantAcceptance) { <p class="mt-1 text-[9px] text-primary">Confirmation instantanée</p> }</div>
+              </div>
+              <p class="mt-3 text-[10px] text-text-secondary">{{ formatDate(trip.departureTime) }}</p>
+              <div class="relative my-3 flex flex-col gap-5 before:absolute before:bottom-2 before:left-[4px] before:top-2 before:w-px before:bg-border">
+                <div class="relative flex items-start gap-3"><span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full border-2 border-primary bg-white" aria-hidden="true"></span><time class="text-xs font-bold text-primary" [attr.datetime]="trip.departureTime">{{ formatTime(trip.departureTime) }}</time><p class="ml-auto min-w-0 break-words text-right text-[11px] text-text-secondary">{{ trip.departureAddress }}</p></div>
+                <div class="relative flex items-start gap-3"><span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-accent" aria-hidden="true"></span><div class="shrink-0"><time class="text-xs font-bold text-primary" [attr.datetime]="trip.arrivalTime">{{ formatTime(trip.arrivalTime) }}</time>@if (arrivesAnotherDay(trip)) { <p class="text-[10px] text-text-secondary">{{ formatDate(trip.arrivalTime) }}</p> }</div><p class="ml-auto min-w-0 break-words text-right text-[11px] text-text-secondary">{{ trip.destination }}</p></div>
+              </div>
+              <div class="flex items-center justify-between gap-2 border-t border-border/60 pt-3">
+                <span class="rounded-lg bg-slate-50 px-2 py-1 text-[10px] text-text-secondary">{{ trip.availableWeight }} kg libres</span>
+                @if (isOwnTrip(trip)) { <span class="text-xs font-bold text-primary">Votre trajet</span> }
+                @else if (hasActiveBookingForTrip(trip.id)) { <span class="text-xs font-bold text-primary">Demande envoyée</span> }
+                @else { <button type="button" class="min-h-10 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white" (click)="openBookingModal(trip)" [attr.aria-label]="'Réserver le trajet vers ' + trip.destination">Réserver</button> }
+              </div>
+            </article>
+            <article
+              class="hidden md:flex flex-col gap-6 rounded-xl border border-[#E8E8EC] bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-lg md:flex-row"
+              [attr.aria-label]="'Trajet de ' + trip.departureAddress + ' vers ' + trip.destination"
+            >
+              <div class="flex flex-1 flex-col justify-between">
+                <div class="mb-4 flex items-start justify-between gap-4">
+                  <div class="flex min-w-0 flex-col gap-4">
+                    <div class="relative flex items-start gap-4">
+                      <div class="absolute bottom-2 left-1 top-2 flex flex-col items-center">
+                        <span class="z-10 h-2 w-2 rounded-full border-2 border-text-secondary bg-white"></span>
+                        <span class="-my-1 h-full w-px bg-[#E8E8EC]"></span>
+                        <span class="z-10 h-2 w-2 rounded-full bg-primary"></span>
+                      </div>
+
+                      <div class="flex flex-col gap-6 pl-8">
+                        <div>
+                          <p class="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">DÉPART</p>
+                          <p class="break-words text-2xl font-bold text-primary">{{ trip.departureAddress }}</p>
+                        </div>
+                        <div>
+                          <p class="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">ARRIVÉE</p>
+                          <p class="break-words text-2xl font-bold text-primary">{{ trip.destination }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="shrink-0 text-right">
+                    <p class="text-3xl font-extrabold leading-none text-primary">
+                      {{ formatPrice(trip.pricePerKilo) }} €<span class="text-sm font-normal text-text-secondary">/kg</span>
+                    </p>
+                    @if (trip.instantAcceptance) { <p class="mt-2 text-xs text-primary">Confirmation instantanée</p> }
+                  </div>
+                </div>
+
+                <div class="mb-4 inline-flex self-start items-center gap-2 rounded-lg bg-[#FAFAFA] px-4 py-2">
+                  <svg class="h-4 w-4 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span class="text-sm font-bold text-primary">{{ formatDate(trip.departureTime) }} · {{ formatTime(trip.departureTime) }} → {{ formatDate(trip.arrivalTime) }} · {{ formatTime(trip.arrivalTime) }}</span>
+                </div>
+
+                <div class="my-2 h-px w-full bg-[#E8E8EC]"></div>
+
+                <div class="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div class="flex items-center gap-3">
+                    <app-user-avatar
+                      [name]="trip.travelerName"
+                      [photoUrl]="trip.travelerPhotoUrl"
+                      sizeClasses="w-10 h-10"
+                      textClasses="text-xs"
+                    ></app-user-avatar>
+                    <div class="flex flex-col">
+                      <span class="text-sm font-bold text-primary">{{ trip.travelerName }}</span>
+                      <div class="flex items-center gap-1">
+                        <svg class="h-4 w-4 text-warning" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                          <path d="M9.049.927c.3-.921 1.603-.921 1.902 0l1.286 3.954a1 1 0 00.95.69h4.158c.969 0 1.371 1.24.588 1.81l-3.364 2.445a1 1 0 00-.364 1.118l1.285 3.955c.3.92-.755 1.688-1.54 1.118l-3.364-2.445a1 1 0 00-1.176 0l-3.364 2.445c-.784.57-1.838-.197-1.539-1.118l1.285-3.955a1 1 0 00-.364-1.118L.98 7.38c-.783-.57-.38-1.81.588-1.81h4.159a1 1 0 00.95-.69L9.05.927z" />
+                        </svg>
+                        <span class="text-xs text-text-secondary">
+                          {{ hasTravelerRating(trip) ? formatTravelerRatingAverage(trip) : 'Nouveau' }}
+                          @if (hasTravelerRating(trip)) {
+                            <span> · {{ trip.travelerRatingCount }} avis</span>
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4 sm:justify-end">
+                    <span class="text-right text-xs text-text-secondary">{{ trip.availableWeight }}kg libres</span>
+                    @if (!isOwnTrip(trip)) {
+                      @if (hasActiveBookingForTrip(trip.id)) {
+                        <span class="rounded-lg bg-primary/10 px-5 py-2 text-sm font-bold text-primary">Demande envoyée</span>
+                      } @else {
+                        <button
+                          type="button"
+                          class="rounded-lg bg-primary px-6 py-2 text-sm font-bold text-white shadow-sm transition hover:-translate-y-px hover:bg-primary/90"
+                          (click)="openBookingModal(trip)"
+                          [attr.aria-label]="'Choisir le trajet vers ' + trip.destination"
+                        >
+                          Choisir
+                        </button>
+                      }
+                    } @else {
+                      <span class="rounded-lg bg-primary/10 px-5 py-2 text-sm font-bold text-primary">Votre trajet</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </article>
+          }
+        }
+
+        @if (!hasSearched && !isLoading) {
+          <div class="rounded-xl border border-[#E8E8EC] bg-white p-10 text-center">
+            <h2 class="mb-2 text-2xl font-bold text-primary">Lancez votre recherche.</h2>
+            <p class="text-text-secondary">Sélectionnez un départ et une destination pour découvrir les trajets disponibles.</p>
+          </div>
+        }
+      </section>
+    </div>
+  </main>
+
+  @if (bookingSuccessMessage) {
+    <div class="fixed bottom-6 right-6 z-50 rounded-xl bg-success px-6 py-3 text-white shadow-lg">
+      {{ bookingSuccessMessage }}
+    </div>
+  }
+
+  <button type="button" class="fixed bottom-5 right-4 z-30 min-h-11 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white shadow-lg md:hidden" (click)="toggleMobileFilters()" [attr.aria-expanded]="areMobileFiltersOpen" aria-controls="mobile-search-filters" data-testid="mobile-filters-floating">☷ Filtres <span class="ml-2 rounded-full bg-accent px-1.5">{{ activeFilterCount }}</span></button>
+  @if (areMobileFiltersOpen) {
+    <div class="fixed inset-0 z-50 flex items-end bg-black/40" (click)="closeMobileFilters()">
+      <section #filterPanel id="mobile-search-filters" role="dialog" aria-modal="true" aria-labelledby="filters-title" class="max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-8" (click)="$event.stopPropagation()" data-testid="mobile-filters-panel">
+        <div class="mb-4 flex items-center justify-between"><h2 id="filters-title" class="text-xl font-bold text-primary">Tous les filtres</h2><button type="button" class="min-h-11 min-w-11 rounded-full bg-slate-50" aria-label="Fermer les filtres" (click)="closeMobileFilters()">×</button></div>
+            <section class="rounded-xl border border-[#E8E8EC] bg-white p-5">
+              <h2 class="mb-4 text-xl font-bold text-primary">Trier par</h2>
+              <div class="flex flex-col gap-3">
+                @for (option of sortOptions; track option.value) {
+                  <label class="flex cursor-pointer items-center gap-3 text-[15px] text-text-secondary">
+                    <input
+                      type="radio"
+                      name="mobile-sort"
+                      class="h-5 w-5 border-outline text-primary focus:ring-primary"
+                      [value]="option.value"
+                      [(ngModel)]="draftSort"
+
+                      [attr.data-testid]="'mobile-sort-' + option.value"
+                    />
+                    <span>{{ option.label }}</span>
+                  </label>
+                }
+              </div>
+            </section>
+
+            <section class="rounded-xl border border-[#E8E8EC] bg-white p-5">
+              <h2 class="mb-4 text-xl font-bold text-primary">Prix par kg</h2>
+              <div class="flex items-center gap-4">
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Min"
+                  [(ngModel)]="draftMinPrice"
+
+                  class="w-1/2 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-primary/20"
+                  aria-label="Prix minimum par kilo"
+                  data-testid="mobile-min-price"
+                />
+                <span class="text-text-secondary">-</span>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Max"
+                  [(ngModel)]="draftMaxPrice"
+
+                  class="w-1/2 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-primary/20"
+                  aria-label="Prix maximum par kilo"
+                  data-testid="mobile-max-price"
+                />
+              </div>
+            </section>
+
+        <button type="button" class="mt-4 min-h-11 w-full rounded-xl bg-accent py-3 font-bold text-white" (click)="applyMobileFilters()" data-testid="apply-mobile-filters">Appliquer</button>
+      </section>
+    </div>
+  }
+
+  <app-booking-modal
+    [trip]="selectedTrip"
+    [isOpen]="isBookingModalOpen"
+    (closed)="closeBookingModal()"
+    (bookingCreated)="onBookingCreated($event)"
+  />
+</div>

@@ -1,0 +1,114 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ${COMPOSE_PROJECT_NAME}-postgres
+    env_file:
+      - ${RUNTIME_ENV_FILE:-.runtime.env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: ${COMPOSE_PROJECT_NAME}-redis
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  back-office:
+    image: ${BACK_OFFICE_IMAGE_REF:?BACK_OFFICE_IMAGE_REF is required}
+    container_name: ${COMPOSE_PROJECT_NAME}-back-office
+    env_file:
+      - ${RUNTIME_ENV_FILE:-.runtime.env}
+    environment:
+      SPRING_PROFILES_ACTIVE: preprod
+      CORS_ALLOWED_ORIGINS: "https://preprod.coliclic.com"
+      AUTH_COOKIE_SECURE: "true"
+      REDIS_HOST: redis
+      LOG_DIR: ${LOG_DIR:-/app/logs}
+      LOG_MAX_FILE_SIZE: ${LOG_MAX_FILE_SIZE:-20MB}
+      LOG_MAX_HISTORY: ${LOG_MAX_HISTORY:-7}
+      LOG_TOTAL_SIZE_CAP: ${LOG_TOTAL_SIZE_CAP:-200MB}
+    volumes:
+      - uploads:/app/uploads
+      - back-office-logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - internal
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/api/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 12
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "dokploy-network"
+      traefik.http.routers.colick-preprod-back-office.rule: "Host(`preprod.coliclic.com`) && PathPrefix(`/api`)"
+      traefik.http.routers.colick-preprod-back-office.entrypoints: "websecure"
+      traefik.http.routers.colick-preprod-back-office.tls: "true"
+      traefik.http.routers.colick-preprod-back-office.tls.certresolver: "letsencrypt"
+      traefik.http.routers.colick-preprod-back-office.priority: "100"
+      traefik.http.services.colick-preprod-back-office.loadbalancer.server.port: "8080"
+    restart: unless-stopped
+
+  front-office:
+    image: ${FRONT_OFFICE_IMAGE_REF:?FRONT_OFFICE_IMAGE_REF is required}
+    container_name: ${COMPOSE_PROJECT_NAME}-front-office
+    environment:
+      SSR_API_BASE_URL: "http://back-office:8080/api"
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME:-COLICLIC_AUTH}
+    depends_on:
+      back-office:
+        condition: service_healthy
+    networks:
+      - internal
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:4000/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 6
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "dokploy-network"
+      traefik.http.routers.colick-preprod-front-office.rule: "Host(`preprod.coliclic.com`)"
+      traefik.http.routers.colick-preprod-front-office.entrypoints: "websecure"
+      traefik.http.routers.colick-preprod-front-office.tls: "true"
+      traefik.http.routers.colick-preprod-front-office.tls.certresolver: "letsencrypt"
+      traefik.http.services.colick-preprod-front-office.loadbalancer.server.port: "4000"
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+    name: ${COMPOSE_PROJECT_NAME}-postgres-data
+  uploads:
+    name: ${COMPOSE_PROJECT_NAME}-uploads
+  back-office-logs:
+    name: ${COMPOSE_PROJECT_NAME}-back-office-logs
+
+networks:
+  internal:
+    name: ${COMPOSE_PROJECT_NAME}-internal
+    internal: true
+  dokploy-network:
+    external: true
+    name: dokploy-network

@@ -1,0 +1,95 @@
+# Docker Compose configuration for Coliclic development environment
+
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:16-alpine
+    container_name: coliclic-postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env.local
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # MailHog — SMTP server for local email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: coliclic-mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    restart: unless-stopped
+
+  # Redis — distributed cooldown for message email notifications
+  redis:
+    image: redis:7-alpine
+    container_name: coliclic-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # Back-office Spring Boot API
+  back-office:
+    build:
+      context: ./back-office
+      dockerfile: Dockerfile
+    container_name: coliclic-back-office
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.local
+    environment:
+      REDIS_HOST: redis
+    volumes:
+      - ./back-office/logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_started
+      mailhog:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Front-office Angular application
+  front-office:
+    build:
+      context: ./front-office
+      dockerfile: Dockerfile
+    container_name: coliclic-front-office
+    ports:
+      - "4200:4200"
+    volumes:
+      # Mount source code for hot reload
+      - ./front-office/src:/app/src
+      - ./front-office/public:/app/public
+      # Mount Angular config files
+      - ./front-office/package.json:/app/package.json
+      - ./front-office/package-lock.json:/app/package-lock.json
+      - ./front-office/angular.json:/app/angular.json
+      - ./front-office/tailwind.config.js:/app/tailwind.config.js
+      - ./front-office/postcss.config.js:/app/postcss.config.js
+      - ./front-office/tsconfig.json:/app/tsconfig.json
+      - ./front-office/tsconfig.app.json:/app/tsconfig.app.json
+      - ./front-office/proxy.conf.json:/app/proxy.conf.json
+      # Use named volume for node_modules to improve performance
+      - front-office-node-modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+    name: coliclic-postgres-data
+  front-office-node-modules:
+    name: coliclic-front-office-node-modules
