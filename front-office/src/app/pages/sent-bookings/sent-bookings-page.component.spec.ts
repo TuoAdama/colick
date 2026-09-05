@@ -101,6 +101,14 @@ describe('SentBookingsPageComponent', () => {
     expect(buttons[0].textContent).toContain('Annuler');
   });
 
+  it('renders the redesigned booking card hierarchy', () => {
+    const card = fixture.nativeElement.querySelector('article') as HTMLElement;
+
+    expect(card.querySelector('.bg-gradient-to-r')).toBeTruthy();
+    expect(card.textContent).toContain('Demande #10');
+    expect(card.textContent).toContain('Voir le détail');
+  });
+
   it('navigates to the sent booking detail when clicking a card', () => {
     const cards = fixture.nativeElement.querySelectorAll('article');
 
