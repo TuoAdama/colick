@@ -83,7 +83,17 @@ Technologies à utiliser:
 	- Spring boot avec Java
 	- Mysql pour la base de données
 	- Redis pour le cache
-	- Mailer pour le testing des mails
+- Mailer pour le testing des mails
 
+## Vérifications des pull requests
+
+Chaque pull request déclenche le workflow GitHub Actions `CI`, qui vérifie le
+back-office, les tests front-office et le build front-office. Pour empêcher la
+fusion d'une PR tant que la CI n'est pas verte, ajouter les checks suivants aux
+règles de protection des branches GitHub :
+
+- `backend-tests`
+- `frontend-tests`
+- `frontend-build`
 
 

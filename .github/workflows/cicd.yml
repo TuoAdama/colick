@@ -122,7 +122,7 @@ jobs:
           cache-dependency-path: back-office/pom.xml
       - name: Run back-office tests
         working-directory: back-office
-        run: ./mvnw -B test
+        run: ./mvnw -B verify
       - name: Set up Node.js 20
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
