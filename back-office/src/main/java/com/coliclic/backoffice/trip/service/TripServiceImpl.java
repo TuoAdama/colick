@@ -621,8 +621,24 @@ public class TripServiceImpl implements TripService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TripBookingResponse> getMyBookings(User user) {
-        return toTripBookingResponses(bookingRepository.findBySender(user));
+    public List<SentTripBookingResponse> getMyBookings(User user) {
+        List<TripBooking> bookings = bookingRepository.findBySender(user);
+        Map<Long, TravelerRatingSummary> senderRatingSummaries = travelerReviewService.getTravelerRatingSummaries(
+                bookings.stream()
+                        .map(booking -> booking.getSender().getId())
+                        .collect(Collectors.toSet())
+        );
+
+        return bookings.stream()
+                .map(booking -> {
+                    TravelerRatingSummary summary = senderRatingSummaries.get(booking.getSender().getId());
+                    return SentTripBookingResponse.from(
+                            booking,
+                            summary != null ? summary.averageRating() : null,
+                            summary != null ? summary.reviewCount() : 0L
+                    );
+                })
+                .toList();
     }
 
     /**

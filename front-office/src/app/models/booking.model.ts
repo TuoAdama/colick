@@ -48,3 +48,10 @@ export interface BookingResponse {
   validationCodeActive: boolean;
   createdAt?: string;
 }
+
+/** Booking data enriched exclusively for the current sender's booking list. */
+export interface SentBookingResponse extends BookingResponse {
+  tripDepartureAddress: string;
+  tripDestination: string;
+  travelerId: number;
+}

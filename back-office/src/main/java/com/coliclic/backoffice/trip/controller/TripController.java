@@ -220,7 +220,7 @@ public class TripController {
     /** Get booking requests sent by the current user. */
     @GetMapping("/bookings/mine")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<TripBookingResponse>> getMyBookings(
+    public ResponseEntity<List<SentTripBookingResponse>> getMyBookings(
             @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(tripService.getMyBookings(currentUser));
     }

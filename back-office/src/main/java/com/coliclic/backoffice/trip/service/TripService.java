@@ -103,5 +103,5 @@ public interface TripService {
     List<TripResponse> getMyTrips(User user);
 
     /** Returns all booking requests sent by the given user. */
-    List<TripBookingResponse> getMyBookings(User user);
+    List<SentTripBookingResponse> getMyBookings(User user);
 }
