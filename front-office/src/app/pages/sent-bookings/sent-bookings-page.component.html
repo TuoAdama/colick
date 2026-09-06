@@ -43,10 +43,10 @@
           </a>
         </div>
       } @else {
-        <div class="flex flex-col items-center gap-4">
+        <div class="flex flex-col items-center gap-4 lg:flex-row lg:flex-wrap lg:items-start">
           @for (booking of myBookings; track booking.id) {
             <article
-              class="w-full max-w-none cursor-pointer rounded-[1.5rem] border border-border bg-surface p-4 shadow-sm transition hover:border-secondary/40 hover:shadow-card focus:outline-none focus:ring-2 focus:ring-secondary/30 sm:max-w-[29rem] sm:p-7"
+              class="w-full max-w-none cursor-pointer rounded-[1.5rem] border border-border bg-surface p-4 shadow-sm transition hover:border-secondary/40 hover:shadow-card focus:outline-none focus:ring-2 focus:ring-secondary/30 sm:max-w-[29rem] sm:p-7 lg:w-[calc(50%-0.5rem)] lg:max-w-none"
               tabindex="0"
               role="link"
               [attr.aria-label]="'Voir le détail de la demande ' + booking.title"
@@ -60,7 +60,7 @@
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="6.5" y="2.75" width="11" height="18.5" rx="2" /><path stroke-linecap="round" d="M10 18h4" /></svg>
                     @if (booking.status === 'ACCEPTED') { <span class="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-success text-[10px]">✓</span> }
                   </div>
-                  <div class="min-w-0"><h3 class="text-lg font-bold leading-tight text-text-primary">{{ booking.title }}</h3><p class="mt-1 text-xs text-text-secondary">ID Référence: TRK-{{ booking.tripId | number:'2.0-0' }}-{{ booking.id | number:'2.0-0' }}</p></div>
+                  <div class="min-w-0"><h3 class="text-base font-bold leading-tight text-text-primary sm:text-lg">{{ booking.title }}</h3><p class="mt-1 text-xs text-text-secondary">ID Référence: TRK-{{ booking.tripId | number:'2.0-0' }}-{{ booking.id | number:'2.0-0' }}</p></div>
                 </div>
                 <span [class]="'shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ' + statusClass(booking.status)"><span class="h-1.5 w-1.5 rounded-full bg-current"></span>{{ statusLabel(booking.status) }}</span>
               </div>
@@ -80,13 +80,13 @@
 
               <div class="mt-5 grid grid-cols-2 gap-3">
                 @if (canCancelBooking(booking)) {
-                  <button type="button" class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-error/40 px-3 text-sm font-medium text-error transition hover:bg-error/5 disabled:opacity-50" [disabled]="cancellingBookingId === booking.id" (click)="cancelBooking(booking, $event)">
+                  <button type="button" class="inline-flex min-h-10 items-center justify-center rounded-xl border border-error/40 px-3 text-xs font-medium text-error transition hover:bg-error/5 disabled:opacity-50 sm:text-sm" [disabled]="cancellingBookingId === booking.id" (click)="cancelBooking(booking, $event)">
                     {{ cancellingBookingId === booking.id ? 'Annulation...' : "Annuler l'envoi" }}
                   </button>
                 } @else {
                   <span></span>
                 }
-                <button type="button" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-3 text-sm font-medium text-white transition hover:bg-primary disabled:opacity-50" [disabled]="messagingBookingId === booking.id" (click)="messageTraveler(booking, $event)">
+                <button type="button" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 text-xs font-medium text-white transition hover:bg-primary disabled:opacity-50 sm:text-sm" [disabled]="messagingBookingId === booking.id" (click)="messageTraveler(booking, $event)">
                   {{ messagingBookingId === booking.id ? 'Ouverture...' : 'Message' }} <span aria-hidden="true">›</span>
                 </button>
               </div>
