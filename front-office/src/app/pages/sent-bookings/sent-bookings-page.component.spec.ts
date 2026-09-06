@@ -124,6 +124,8 @@ describe('SentBookingsPageComponent', () => {
     expect(card.textContent).toContain('Paris → Abidjan');
     expect(card.textContent).toContain('Abidjan');
     expect(card.textContent).not.toContain('Trajet #50');
+    expect(card.textContent).not.toContain('▧');
+    expect(card.textContent).not.toContain('▣');
     expect(card.classList).toContain('max-w-none');
     expect(card.classList).toContain('sm:max-w-[29rem]');
     expect(card.classList).toContain('lg:w-[calc(50%-0.5rem)]');
