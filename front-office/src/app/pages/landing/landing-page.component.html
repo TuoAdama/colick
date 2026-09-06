@@ -302,7 +302,15 @@
     } @else if (trips.length > 0) {
       <div class="mt-10 grid gap-6 lg:grid-cols-3">
       @for (trip of trips; track trip.id) {
-        <article class="rounded-2xl border border-border bg-white p-7 transition hover:-translate-y-1 hover:shadow-card">
+        <article class="relative rounded-2xl border border-border bg-white p-7 transition hover:-translate-y-1 hover:shadow-card">
+          @if (trip.reference) {
+            <a
+              [routerLink]="['/trips/ref', trip.reference]"
+              [attr.aria-label]="'Voir le trajet de ' + trip.departure + ' vers ' + trip.arrival"
+              class="absolute inset-0 z-10 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              data-testid="landing-trip-card-link"
+            ></a>
+          }
           <div class="flex items-start justify-between gap-4">
             <span class="rounded-full bg-background-primary px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-text-muted">
               {{ trip.tag }}
