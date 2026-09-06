@@ -54,15 +54,15 @@
               (keydown.enter)="navigateToSentBookingDetail(booking)"
               (keydown.space)="navigateToSentBookingDetail(booking); $event.preventDefault()"
             >
-              <div class="flex items-start justify-between gap-3 border-b border-border pb-5">
-                <div class="flex min-w-0 items-center gap-3">
+              <div class="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-start sm:justify-between">
+                <div class="flex w-full min-w-0 items-center gap-3 sm:w-auto sm:flex-1">
                   <div class="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white" aria-hidden="true">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="6.5" y="2.75" width="11" height="18.5" rx="2" /><path stroke-linecap="round" d="M10 18h4" /></svg>
                     @if (booking.status === 'ACCEPTED') { <span class="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-success text-[10px]">✓</span> }
                   </div>
                   <div class="min-w-0"><h3 class="text-base font-bold leading-tight text-text-primary sm:text-lg">{{ booking.title }}</h3><p class="mt-1 text-xs text-text-secondary">ID Référence: TRK-{{ booking.tripId | number:'2.0-0' }}-{{ booking.id | number:'2.0-0' }}</p></div>
                 </div>
-                <span [class]="'shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ' + statusClass(booking.status)"><span class="h-1.5 w-1.5 rounded-full bg-current"></span>{{ statusLabel(booking.status) }}</span>
+                <span [class]="'ml-[3.75rem] inline-flex self-start items-center gap-1 rounded-full px-3 py-1 text-xs font-medium sm:ml-0 sm:shrink-0 ' + statusClass(booking.status)"><span class="h-1.5 w-1.5 rounded-full bg-current"></span>{{ statusLabel(booking.status) }}</span>
               </div>
 
               <div class="mt-5 rounded-2xl border border-border/60 bg-background-primary px-4 py-3">

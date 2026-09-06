@@ -124,6 +124,8 @@ describe('SentBookingsPageComponent', () => {
     expect(card.classList).toContain('max-w-none');
     expect(card.classList).toContain('sm:max-w-[29rem]');
     expect(card.classList).toContain('lg:w-[calc(50%-0.5rem)]');
+    expect(card.querySelector('.sm\\:flex-row')).toBeTruthy();
+    expect(card.querySelector('.ml-\\[3\\.75rem\\]')).toBeTruthy();
   });
 
   it('navigates to the sent booking detail when clicking a card', () => {
