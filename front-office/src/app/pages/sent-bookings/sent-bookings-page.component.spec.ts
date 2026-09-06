@@ -4,6 +4,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
 import { MessagingService } from '../../services/messaging.service';
+import { Trip } from '../../models/trip.model';
 import { SentBookingsPageComponent } from './sent-bookings-page.component';
 
 describe('SentBookingsPageComponent', () => {
@@ -50,10 +51,11 @@ describe('SentBookingsPageComponent', () => {
     authServiceMock = jasmine.createSpyObj('AuthService', ['isLoggedIn']);
     authServiceMock.isLoggedIn.and.returnValue(true);
 
-    tripServiceMock = jasmine.createSpyObj('TripService', ['getMyBookings', 'cancelBooking']);
+    tripServiceMock = jasmine.createSpyObj('TripService', ['getMyBookings', 'getTripById', 'cancelBooking']);
     messagingServiceMock = jasmine.createSpyObj('MessagingService', ['createConversationDraft']);
     tripServiceMock.getMyBookings.and.returnValue(of(bookingFixtures));
     tripServiceMock.cancelBooking.and.returnValue(of({ ...bookingFixtures[0], status: 'CANCELLED' as const }));
+    tripServiceMock.getTripById.and.returnValue(of({ travelerId: 9 } as Trip));
     messagingServiceMock.createConversationDraft.and.returnValue(of({
       id: 99, tripId: 50, tripRoute: 'Paris → Abidjan', otherParticipantId: 9,
       otherParticipantName: 'Voyageur', lastMessage: null, unreadCount: 0, createdAt: '2026-08-19T21:58:00',
@@ -157,6 +159,15 @@ describe('SentBookingsPageComponent', () => {
 
     expect(messagingServiceMock.createConversationDraft).toHaveBeenCalledWith({ tripId: 50, recipientId: 9 });
     expect(router.navigate).toHaveBeenCalledWith(['/messages'], { queryParams: { conversationId: 99 } });
+  });
+
+  it('loads the trip before messaging when a legacy booking response has no traveler id', () => {
+    const legacyBooking = { ...component.myBookings[0], travelerId: undefined } as unknown as typeof component.myBookings[number];
+
+    component.messageTraveler(legacyBooking);
+
+    expect(tripServiceMock.getTripById).toHaveBeenCalledWith(50);
+    expect(messagingServiceMock.createConversationDraft).toHaveBeenCalledWith({ tripId: 50, recipientId: 9 });
   });
 
   it('exposes a phone link only for a phone recipient', () => {

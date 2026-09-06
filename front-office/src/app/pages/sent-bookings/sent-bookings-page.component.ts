@@ -91,9 +91,24 @@ export class SentBookingsPageComponent implements OnInit {
 
     this.actionError = '';
     this.messagingBookingId = booking.id;
+    if (Number.isInteger(booking.travelerId) && booking.travelerId > 0) {
+      this.createConversation(booking, booking.travelerId);
+      return;
+    }
+
+    this.tripService.getTripById(booking.tripId).subscribe({
+      next: (trip) => this.createConversation(booking, trip.travelerId),
+      error: () => {
+        this.actionError = 'Impossible de démarrer la conversation avec le voyageur.';
+        this.messagingBookingId = null;
+      },
+    });
+  }
+
+  private createConversation(booking: SentBookingResponse, travelerId: number): void {
     this.messagingService.createConversationDraft({
       tripId: booking.tripId,
-      recipientId: booking.travelerId,
+      recipientId: travelerId,
     }).subscribe({
       next: (conversation) => {
         this.messagingBookingId = null;
