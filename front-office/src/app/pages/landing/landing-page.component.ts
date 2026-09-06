@@ -15,6 +15,7 @@ type LandingMode = 'send' | 'transport';
 
 interface LandingTripCard {
   id: number;
+  reference?: string;
   tag: string;
   price: string;
   departure: string;
@@ -263,6 +264,7 @@ export class LandingPageComponent {
     const avatarTones = ['bg-primary', 'bg-accent', 'bg-secondary'];
     return {
       id: trip.id,
+      reference: trip.reference,
       tag: trip.instantAcceptance ? 'Flash' : 'Disponible',
       price: this.formatPrice(trip.pricePerKilo),
       departure: trip.departureAddress,

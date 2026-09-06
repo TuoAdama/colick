@@ -102,4 +102,44 @@ describe('LandingPageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Demande colis');
     expect(fixture.nativeElement.textContent).not.toContain('Aucune demande trouvee.');
   });
+
+  it('links a landing trip card to its public reference page', () => {
+    fixture.detectChanges();
+    component.trips = [buildLandingTripCard({ reference: 'TRP-2026-000013' })];
+    component.isTripsLoading = false;
+    fixture.detectChanges();
+
+    const link = fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]') as HTMLElement | null;
+    expect(link).not.toBeNull();
+    expect(link?.getAttribute('href')).toBe('/trips/ref/TRP-2026-000013');
+    expect(link?.getAttribute('aria-label')).toBe('Voir le trajet de Paris, France vers Abidjan, Côte d\'Ivoire');
+  });
+
+  it('keeps a landing trip card visible without a link when its reference is missing', () => {
+    fixture.detectChanges();
+    component.trips = [buildLandingTripCard()];
+    component.isTripsLoading = false;
+    fixture.detectChanges();
+
+    const card = fixture.nativeElement.querySelector('article');
+    expect(card?.textContent).toContain('Paris, France');
+    expect(fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]')).toBeNull();
+  });
 });
+
+function buildLandingTripCard(overrides: { reference?: string } = {}) {
+  return {
+    id: 13,
+    tag: 'Flash',
+    price: '12€',
+    departure: 'Paris, France',
+    arrival: "Abidjan, Côte d'Ivoire",
+    date: '14 juil. 2026',
+    traveler: 'Alice Martin',
+    rating: '4.8',
+    capacity: '8kg libres',
+    avatar: 'AM',
+    avatarTone: 'bg-primary',
+    ...overrides,
+  };
+}
