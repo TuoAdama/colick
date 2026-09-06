@@ -1703,6 +1703,7 @@ class TripServiceImplTest {
         List<SentTripBookingResponse> results = tripService.getMyBookings(sender);
 
         assertThat(results).singleElement().satisfies(result -> {
+            assertThat(result.getTripDepartureAddress()).isEqualTo("Paris");
             assertThat(result.getTripDestination()).isEqualTo("Abidjan");
             assertThat(result.getTravelerId()).isEqualTo(traveler.getId());
             assertThat(result.getTripId()).isEqualTo(sampleTrip.getId());

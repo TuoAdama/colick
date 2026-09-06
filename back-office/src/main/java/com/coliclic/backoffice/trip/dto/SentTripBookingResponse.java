@@ -13,6 +13,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class SentTripBookingResponse extends TripBookingResponse {
 
+    private String tripDepartureAddress;
     private String tripDestination;
     private Long travelerId;
 
@@ -43,6 +44,7 @@ public class SentTripBookingResponse extends TripBookingResponse {
         response.setDeliveredAt(base.getDeliveredAt());
         response.setCreatedAt(base.getCreatedAt());
         response.setValidationCodeActive(base.isValidationCodeActive());
+        response.setTripDepartureAddress(booking.getTrip().getDepartureAddress());
         response.setTripDestination(booking.getTrip().getDestination());
         response.setTravelerId(booking.getTrip().getTraveler().getId());
         return response;
