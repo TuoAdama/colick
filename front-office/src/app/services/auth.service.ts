@@ -34,9 +34,15 @@ export class AuthService {
   private readonly sessionStateKey = makeStateKey<UserResponse | null>('coliclic.auth.user');
 
   private currentUserSubject = new BehaviorSubject<UserResponse | null>(null);
+  private sessionInitialization?: Promise<void>;
   currentUser$ = this.currentUserSubject.asObservable();
 
-  async initializeSession(): Promise<void> {
+  initializeSession(): Promise<void> {
+    this.sessionInitialization ??= this.loadSession();
+    return this.sessionInitialization;
+  }
+
+  private async loadSession(): Promise<void> {
     if (isPlatformBrowser(this.platformId) && this.transferState.hasKey(this.sessionStateKey)) {
       const transferredUser = this.transferState.get(this.sessionStateKey, null);
       this.transferState.remove(this.sessionStateKey);
