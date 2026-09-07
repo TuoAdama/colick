@@ -45,6 +45,15 @@ describe('DashboardShellComponent', () => {
     expect(text).toContain('Contact/support');
   });
 
+  it('uses the Coliclic brand in the dashboard navigation', () => {
+    fixture.detectChanges();
+
+    const logo = fixture.nativeElement.querySelector('a[routerLink="/"]') as HTMLAnchorElement | null;
+
+    expect(logo?.textContent?.trim()).toBe('Coliclic');
+    expect(logo?.textContent).not.toContain('Colick');
+  });
+
   it('shows the clarified navigation labels in the sidebar and mobile menu', () => {
     fixture.detectChanges();
     fixture.componentInstance.openMobileMenu();
