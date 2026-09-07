@@ -28,4 +28,11 @@ describe('FooterComponent', () => {
 
     expect(contactLink?.getAttribute('href')).toBe('/contact');
   });
+
+  it('uses the Coliclic brand in the footer', () => {
+    const footer = fixture.nativeElement as HTMLElement;
+
+    expect(footer.textContent).toContain('Coliclic.');
+    expect(footer.textContent).not.toContain('Colick');
+  });
 });
