@@ -49,6 +49,9 @@ services:
       - .env.local
     environment:
       REDIS_HOST: redis
+      # HTTP localhost cannot persist Secure cookies; production compose files
+      # override this setting to true behind HTTPS.
+      AUTH_COOKIE_SECURE: "false"
     volumes:
       - ./back-office/logs:/app/logs
     depends_on:
