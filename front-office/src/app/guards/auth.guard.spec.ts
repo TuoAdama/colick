@@ -43,7 +43,7 @@ describe('authGuard', () => {
     authServiceMock.isLoggedIn.and.returnValue(false);
     authServiceMock.getUser.and.returnValue(null);
 
-    const result = TestBed.runInInjectionContext(() =>
+    const result = await TestBed.runInInjectionContext(() =>
       authGuard({} as never, { url: '/messages?conversationId=100' } as never)
     );
 
