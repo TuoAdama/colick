@@ -45,6 +45,17 @@ describe('DashboardShellComponent', () => {
     expect(text).toContain('Contact/support');
   });
 
+  it('keeps the dashboard content flexible and the footer anchored after it', () => {
+    fixture.detectChanges();
+
+    const content = fixture.nativeElement.querySelector('.dashboard-content') as HTMLElement | null;
+    const footer = fixture.nativeElement.querySelector('footer[role="contentinfo"]') as HTMLElement | null;
+
+    expect(content?.classList.contains('flex-1')).toBeTrue();
+    expect(content?.classList.contains('min-h-0')).toBeTrue();
+    expect(footer?.classList.contains('shrink-0')).toBeTrue();
+  });
+
   it('renders the Coliclic dashboard logo', () => {
     fixture.detectChanges();
 
