@@ -83,6 +83,21 @@ describe('TripReferencePageComponent', () => {
     expect(host.textContent).toContain('Contacter le voyageur');
   });
 
+  it('uses smaller typography on mobile while preserving the desktop sizes', () => {
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('h1')?.className).toContain('text-2xl');
+    expect(host.querySelector('h1')?.className).toContain('sm:text-4xl');
+
+    const dateValues = host.querySelectorAll('.rounded-xl.border p:nth-child(2)');
+    expect(dateValues[0].className).toContain('text-lg');
+    expect(dateValues[0].className).toContain('sm:text-xl');
+
+    const prices = host.querySelectorAll('aside .rounded-xl p:nth-child(2)');
+    expect(prices[0].className).toContain('text-3xl');
+    expect(prices[0].className).toContain('sm:text-4xl');
+  });
+
   it('redirects anonymous users to login with returnUrl when booking is requested', () => {
     component.openBookingModal();
 

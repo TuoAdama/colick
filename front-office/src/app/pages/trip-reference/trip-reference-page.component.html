@@ -40,19 +40,19 @@
               </span>
             </div>
 
-            <h1 class="mt-6 text-3xl font-extrabold leading-tight text-primary sm:text-4xl">
+            <h1 class="mt-6 text-2xl font-extrabold leading-tight text-primary sm:text-4xl">
               {{ trip.departureAddress }} → {{ trip.destination }}
             </h1>
 
             <div class="mt-8 grid gap-4 sm:grid-cols-2">
               <div class="rounded-xl border border-[#E8E8EC] bg-[#FAFAFA] p-5">
                 <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-text-secondary">Départ</p>
-                <p class="mt-2 text-xl font-bold text-text-primary">{{ formatDate(trip.departureTime) }}</p>
+                <p class="mt-2 text-lg font-bold text-text-primary sm:text-xl">{{ formatDate(trip.departureTime) }}</p>
                 <p class="mt-1 text-sm text-text-secondary">{{ formatTime(trip.departureTime) }}</p>
               </div>
               <div class="rounded-xl border border-[#E8E8EC] bg-[#FAFAFA] p-5">
                 <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-text-secondary">Arrivée</p>
-                <p class="mt-2 text-xl font-bold text-text-primary">{{ formatDate(trip.arrivalTime) }}</p>
+                <p class="mt-2 text-lg font-bold text-text-primary sm:text-xl">{{ formatDate(trip.arrivalTime) }}</p>
                 <p class="mt-1 text-sm text-text-secondary">{{ formatTime(trip.arrivalTime) }}</p>
               </div>
             </div>
@@ -66,7 +66,7 @@
               ></app-user-avatar>
               <div>
                 <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-secondary">Trajet proposé par</p>
-                <p class="text-lg font-extrabold text-primary">{{ trip.travelerName }}</p>
+                <p class="text-base font-extrabold text-primary sm:text-lg">{{ trip.travelerName }}</p>
                 <p class="mt-1 text-sm text-text-secondary">
                   @if (hasTravelerRating()) {
                     {{ formatTravelerRatingAverage() }} / 5 · {{ trip.travelerRatingCount }} avis
@@ -82,11 +82,11 @@
             <div class="grid gap-4">
               <div class="rounded-xl bg-white p-5 shadow-sm">
                 <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-text-secondary">Prix par kg</p>
-                <p class="mt-2 text-4xl font-extrabold text-primary">{{ trip.pricePerKilo }}€</p>
+                <p class="mt-2 text-3xl font-extrabold text-primary sm:text-4xl">{{ trip.pricePerKilo }}€</p>
               </div>
               <div class="rounded-xl bg-white p-5 shadow-sm">
                 <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-text-secondary">Poids disponible</p>
-                <p class="mt-2 text-4xl font-extrabold text-primary">{{ trip.availableWeight }} kg</p>
+                <p class="mt-2 text-3xl font-extrabold text-primary sm:text-4xl">{{ trip.availableWeight }} kg</p>
               </div>
             </div>
 
