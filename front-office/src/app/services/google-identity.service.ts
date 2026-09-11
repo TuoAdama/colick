@@ -43,11 +43,12 @@ export class GoogleIdentityService {
         }
       },
     });
+    const availableWidth = hostElement.clientWidth || 360;
     googleAccounts.renderButton(hostElement, {
       theme: 'outline',
       size: 'large',
       shape: 'pill',
-      width: 360,
+      width: Math.min(360, availableWidth),
       text: buttonText,
       logo_alignment: 'left',
     });
