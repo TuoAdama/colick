@@ -36,6 +36,11 @@ describe('GoogleAuthButtonComponent', () => {
     expect(googleIdentityServiceMock.renderButton).toHaveBeenCalled();
     expect(component.isVisible).toBeTrue();
     expect(fixture.nativeElement.textContent).toContain('ou');
+
+    const host = fixture.nativeElement.querySelector('.flex.justify-center > div') as HTMLElement;
+    const buttonWrapper = host.parentElement as HTMLElement;
+    expect(buttonWrapper.className).toContain('justify-center');
+    expect(host.className).toContain('max-w-[360px]');
   });
 
   it('stays hidden when Google auth is disabled in configuration', async () => {

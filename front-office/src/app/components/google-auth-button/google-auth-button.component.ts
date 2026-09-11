@@ -17,7 +17,7 @@ import { GoogleButtonText, GoogleIdentityService } from '../../services/google-i
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="space-y-4" [class.hidden]="!isVisible && !errorMessage">
+    <div class="mt-4 space-y-4" [class.hidden]="!isVisible && !errorMessage">
       <div class="flex items-center gap-4">
         <div class="h-px flex-1 bg-gray-200"></div>
         <span class="text-xs font-medium uppercase tracking-[0.2em] text-text-muted">ou</span>
@@ -31,7 +31,7 @@ import { GoogleButtonText, GoogleIdentityService } from '../../services/google-i
       }
 
       <div class="flex justify-center" [class.hidden]="!!errorMessage">
-        <div #buttonHost class="w-full flex justify-center"></div>
+        <div #buttonHost class="w-full max-w-[360px]"></div>
       </div>
     </div>
   `,
