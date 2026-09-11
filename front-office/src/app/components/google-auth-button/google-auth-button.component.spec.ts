@@ -41,7 +41,6 @@ describe('GoogleAuthButtonComponent', () => {
     const buttonWrapper = host.parentElement as HTMLElement;
     expect(buttonWrapper.className).toContain('justify-center');
     expect(host.className).toContain('max-w-[360px]');
-    expect(host.className).toContain('overflow-hidden');
   });
 
   it('stays hidden when Google auth is disabled in configuration', async () => {

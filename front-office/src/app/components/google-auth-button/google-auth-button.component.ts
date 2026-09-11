@@ -31,7 +31,7 @@ import { GoogleButtonText, GoogleIdentityService } from '../../services/google-i
       }
 
       <div class="flex justify-center" [class.hidden]="!!errorMessage">
-        <div #buttonHost class="w-full max-w-[360px] overflow-hidden"></div>
+        <div #buttonHost class="w-full max-w-[360px]"></div>
       </div>
     </div>
   `,
