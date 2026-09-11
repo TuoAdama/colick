@@ -78,4 +78,17 @@ describe('RegisterPageComponent', () => {
     expect(authServiceMock.googleLogin).toHaveBeenCalledWith('google-id-token');
     expect(navigateSpy).toHaveBeenCalledWith(['/search']);
   });
+
+  it('uses the full available width for the registration card and separates Google auth', () => {
+    fixture.detectChanges();
+
+    const pageContainer = fixture.nativeElement.querySelector('section > div') as HTMLElement;
+    const card = fixture.nativeElement.querySelector('section > div > div') as HTMLElement;
+    const googleAuth = fixture.nativeElement.querySelector('app-google-auth-button > div') as HTMLElement;
+
+    expect(pageContainer.className).toContain('w-full');
+    expect(pageContainer.className).not.toContain('max-w-lg');
+    expect(card.className).toContain('w-full');
+    expect(googleAuth.className).toContain('mt-4');
+  });
 });
