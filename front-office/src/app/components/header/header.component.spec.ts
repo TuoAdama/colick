@@ -134,6 +134,24 @@ describe('HeaderComponent', () => {
     ]);
   });
 
+  it('keeps the mobile menu available through the tablet breakpoint', () => {
+    fixture.detectChanges();
+
+    const menuButton = fixture.nativeElement.querySelector('button[aria-label="Menu mobile"]') as HTMLButtonElement | null;
+
+    expect(menuButton?.className).toContain('lg:hidden');
+    expect(menuButton?.getAttribute('aria-controls')).toBe('mobile-menu');
+    expect(menuButton?.getAttribute('aria-expanded')).toBe('false');
+
+    component.toggleMobileMenu();
+    fixture.detectChanges();
+
+    const mobileMenu = fixture.nativeElement.querySelector('#mobile-menu') as HTMLElement | null;
+    expect(menuButton?.getAttribute('aria-expanded')).toBe('true');
+    expect(mobileMenu?.className).toContain('lg:hidden');
+    expect(mobileMenu?.getAttribute('role')).toBe('navigation');
+  });
+
   it('displays the Coliclic logo and accessible home label', () => {
     fixture.detectChanges();
 

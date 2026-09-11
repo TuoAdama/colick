@@ -85,16 +85,18 @@ describe('TripReferencePageComponent', () => {
 
   it('uses smaller typography on mobile while preserving the desktop sizes', () => {
     const host = fixture.nativeElement as HTMLElement;
+    const content = host.querySelector('main > div');
 
-    expect(host.querySelector('h1')?.className).toContain('text-2xl');
+    expect(content?.className).toContain('pt-24');
+    expect(host.querySelector('h1')?.className).toContain('text-xl');
     expect(host.querySelector('h1')?.className).toContain('sm:text-4xl');
 
     const dateValues = host.querySelectorAll('.rounded-xl.border p:nth-child(2)');
-    expect(dateValues[0].className).toContain('text-lg');
+    expect(dateValues[0].className).toContain('text-base');
     expect(dateValues[0].className).toContain('sm:text-xl');
 
     const prices = host.querySelectorAll('aside .rounded-xl p:nth-child(2)');
-    expect(prices[0].className).toContain('text-3xl');
+    expect(prices[0].className).toContain('text-2xl');
     expect(prices[0].className).toContain('sm:text-4xl');
   });
 
