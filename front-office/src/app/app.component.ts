@@ -20,6 +20,7 @@ export class AppComponent {
   private readonly router = inject(Router);
   private readonly documentTitle = inject(Title);
   private readonly reservationShellRoutePattern = /^\/trips\/\d+\/reservations(?:\/[^?#]*)?(?:[?#].*)?$/;
+  private readonly publicTripReferenceRoutePattern = /^\/trips\/ref\/[^/?#]+(?:[?#].*)?$/;
   private readonly dashboardShellRoutePatterns = [
     /^\/dashboard(?:[?#].*)?$/,
     /^\/trips(?:\/[^?#]*)?(?:[?#].*)?$/,
@@ -48,7 +49,8 @@ export class AppComponent {
 
   private updateSharedChrome(url: string): void {
     this.showSharedChrome =
-      !this.reservationShellRoutePattern.test(url) &&
-      !this.dashboardShellRoutePatterns.some((pattern) => pattern.test(url));
+      this.publicTripReferenceRoutePattern.test(url) ||
+      (!this.reservationShellRoutePattern.test(url) &&
+        !this.dashboardShellRoutePatterns.some((pattern) => pattern.test(url)));
   }
 }
