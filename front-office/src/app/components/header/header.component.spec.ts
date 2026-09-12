@@ -97,11 +97,11 @@ describe('HeaderComponent', () => {
     expect(text).not.toContain('Mes demandes');
   });
 
-  it('does not present a transient session failure as a logout', () => {
+  it('keeps the login action available after a transient session failure', () => {
     sessionStatus$.next('unavailable');
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).not.toContain('Connexion');
+    expect(fixture.nativeElement.textContent).toContain('Connexion');
   });
 
   it('exposes the publish-trip CTA to guests and authenticated users', () => {

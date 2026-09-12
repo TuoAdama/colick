@@ -73,15 +73,25 @@ describe('AuthService', () => {
     expect(await firstValueFrom(service.sessionStatus$)).toBe('authenticated');
   });
 
-  it('marks a transient session failure as unavailable instead of anonymous', async () => {
-    const initialization = service.initializeSession();
+  it('marks a transient session failure as unavailable and retries later', async () => {
+    const firstInitialization = service.initializeSession();
     httpMock.expectOne('/api/auth/session').flush({}, { status: 503, statusText: 'Unavailable' });
     await new Promise((resolve) => setTimeout(resolve));
     httpMock.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
-    await initialization;
+    await firstInitialization;
 
     expect(service.isLoggedIn()).toBeFalse();
     expect(await firstValueFrom(service.sessionStatus$)).toBe('unavailable');
+
+    const retryInitialization = service.initializeSession();
+    expect(retryInitialization).not.toBe(firstInitialization);
+    httpMock.expectOne('/api/auth/session').flush(user);
+    await new Promise((resolve) => setTimeout(resolve));
+    httpMock.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
+    await retryInitialization;
+
+    expect(service.getUser()?.email).toBe('ada@example.com');
+    expect(await firstValueFrom(service.sessionStatus$)).toBe('authenticated');
   });
 
   it('shares an in-progress session initialization', async () => {

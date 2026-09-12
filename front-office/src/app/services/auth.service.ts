@@ -40,7 +40,25 @@ export class AuthService {
   sessionStatus$ = this.sessionStatusSubject.asObservable();
 
   initializeSession(): Promise<void> {
-    this.sessionInitialization ??= this.loadSession();
+    if (!this.sessionInitialization) {
+      const initialization = this.loadSession();
+      this.sessionInitialization = initialization;
+      void initialization.then(
+        () => {
+          if (
+            this.sessionStatusSubject.getValue() === 'unavailable'
+            && this.sessionInitialization === initialization
+          ) {
+            this.sessionInitialization = undefined;
+          }
+        },
+        () => {
+          if (this.sessionInitialization === initialization) {
+            this.sessionInitialization = undefined;
+          }
+        },
+      );
+    }
     return this.sessionInitialization;
   }
 
@@ -109,6 +127,10 @@ export class AuthService {
 
   getUser(): UserResponse | null {
     return this.currentUserSubject.getValue();
+  }
+
+  getSessionStatus(): AuthSessionStatus {
+    return this.sessionStatusSubject.getValue();
   }
 
   /** Update basic profile info (firstName, lastName, phone). */
