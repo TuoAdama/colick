@@ -9,9 +9,11 @@ describe('authGuard', () => {
 
   beforeEach(() => {
     authServiceMock = jasmine.createSpyObj<AuthService>('AuthService', [
+      'initializeSession',
       'isLoggedIn',
       'getUser',
     ]);
+    authServiceMock.initializeSession.and.returnValue(Promise.resolve());
 
     TestBed.configureTestingModule({
       providers: [provideRouter([]), { provide: AuthService, useValue: authServiceMock }],
@@ -20,7 +22,7 @@ describe('authGuard', () => {
     router = TestBed.inject(Router);
   });
 
-  it('allows authenticated users to access protected routes', () => {
+  it('allows authenticated users to access protected routes after the session is initialized', async () => {
     authServiceMock.isLoggedIn.and.returnValue(true);
     authServiceMock.getUser.and.returnValue({
       id: 1,
@@ -30,18 +32,18 @@ describe('authGuard', () => {
       role: 'USER',
     });
 
-    const result = TestBed.runInInjectionContext(() =>
+    const result = await TestBed.runInInjectionContext(() =>
       authGuard({} as never, { url: '/messages?conversationId=100' } as never)
     );
 
     expect(result).toBeTrue();
   });
 
-  it('preserves the protected URL when redirecting anonymous users to login', () => {
+  it('preserves the protected URL when redirecting anonymous users to login', async () => {
     authServiceMock.isLoggedIn.and.returnValue(false);
     authServiceMock.getUser.and.returnValue(null);
 
-    const result = TestBed.runInInjectionContext(() =>
+    const result = await TestBed.runInInjectionContext(() =>
       authGuard({} as never, { url: '/messages?conversationId=100' } as never)
     );
 

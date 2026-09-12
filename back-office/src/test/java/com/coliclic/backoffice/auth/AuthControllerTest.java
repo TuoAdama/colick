@@ -47,6 +47,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
 
+    private static final long THIRTY_DAYS_IN_SECONDS = 2_592_000L;
+
     @Mock
     private UserRepository userRepository;
 
@@ -203,14 +205,15 @@ class AuthControllerTest {
         when(passwordEncoder.matches("password", "hashed")).thenReturn(true);
         when(jwtUtil.generateToken(user)).thenReturn("jwt-token");
         when(authCookieService.create("jwt-token")).thenReturn(ResponseCookie.from("COLICLIC_AUTH", "jwt-token")
-                .httpOnly(true).path("/").build());
+                .httpOnly(true).path("/").maxAge(THIRTY_DAYS_IN_SECONDS).build());
         MockHttpServletResponse servletResponse = new MockHttpServletResponse();
 
         var result = authController.login(request, new MockHttpServletRequest(), servletResponse);
 
         assertThat(result.getBody()).isNotNull();
         assertThat(result.getBody().getUser().getEmail()).isEqualTo("john@example.com");
-        assertThat(servletResponse.getHeader("Set-Cookie")).contains("COLICLIC_AUTH=jwt-token", "HttpOnly");
+        assertThat(servletResponse.getHeader("Set-Cookie"))
+                .contains("COLICLIC_AUTH=jwt-token", "HttpOnly", "Max-Age=" + THIRTY_DAYS_IN_SECONDS);
     }
 
     @Test

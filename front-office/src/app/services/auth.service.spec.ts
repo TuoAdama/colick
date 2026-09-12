@@ -43,6 +43,17 @@ describe('AuthService', () => {
     expect(service.isLoggedIn()).toBeFalse();
   });
 
+  it('shares an in-progress session initialization', async () => {
+    const firstInitialization = service.initializeSession();
+    const secondInitialization = service.initializeSession();
+
+    expect(secondInitialization).toBe(firstInitialization);
+    httpMock.expectOne('/api/auth/session').flush(user);
+    await Promise.resolve();
+    httpMock.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
+    await firstInitialization;
+  });
+
   it('stores only the user returned by login', () => {
     service.login('ada@example.com', 'password123').subscribe();
     const req = httpMock.expectOne('/api/auth/login');
