@@ -34,6 +34,10 @@ describe('AppComponent', () => {
     routerEvents.next(new NavigationEnd(1, '/search', '/search'));
 
     expect(fixture.componentInstance.showSharedChrome).toBeTrue();
+
+    routerEvents.next(new NavigationEnd(1, '/trips/ref/TRP-2026-000004', '/trips/ref/TRP-2026-000004'));
+
+    expect(fixture.componentInstance.showSharedChrome).toBeTrue();
   });
 
   it('exposes the Coliclic application title', () => {
