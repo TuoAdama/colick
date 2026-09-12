@@ -41,6 +41,9 @@ describe('GoogleAuthButtonComponent', () => {
     const buttonWrapper = host.parentElement as HTMLElement;
     expect(buttonWrapper.className).toContain('justify-center');
     expect(host.className).toContain('max-w-[360px]');
+    expect(buttonWrapper.className).toContain('min-w-0');
+    expect(buttonWrapper.className).toContain('overflow-hidden');
+    expect(fixture.nativeElement.querySelector('.mt-4.space-y-4').classList.contains('hidden')).toBeFalse();
   });
 
   it('stays hidden when Google auth is disabled in configuration', async () => {
@@ -50,6 +53,7 @@ describe('GoogleAuthButtonComponent', () => {
 
     expect(component.isVisible).toBeFalse();
     expect(component.errorMessage).toBe('');
+    expect(fixture.nativeElement.querySelector('.mt-4.space-y-4').classList.contains('hidden')).toBeTrue();
   });
 
   it('shows an error message when button rendering fails', async () => {

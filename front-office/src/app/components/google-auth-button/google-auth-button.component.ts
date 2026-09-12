@@ -17,7 +17,7 @@ import { GoogleButtonText, GoogleIdentityService } from '../../services/google-i
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="mt-4 space-y-4" [class.hidden]="!isVisible && !errorMessage">
+    <div class="mt-4 space-y-4" [class.hidden]="isResolved && !isVisible && !errorMessage">
       <div class="flex items-center gap-4">
         <div class="h-px flex-1 bg-gray-200"></div>
         <span class="text-xs font-medium uppercase tracking-[0.2em] text-text-muted">ou</span>
@@ -30,8 +30,8 @@ import { GoogleButtonText, GoogleIdentityService } from '../../services/google-i
         </div>
       }
 
-      <div class="flex justify-center" [class.hidden]="!!errorMessage">
-        <div #buttonHost class="w-full max-w-[360px]"></div>
+      <div class="flex min-w-0 justify-center overflow-hidden" [class.hidden]="!!errorMessage">
+        <div #buttonHost class="w-full min-w-0 max-w-[360px] overflow-hidden"></div>
       </div>
     </div>
   `,
@@ -47,6 +47,7 @@ export class GoogleAuthButtonComponent implements AfterViewInit {
   @Output() credentialReceived = new EventEmitter<string>();
 
   isVisible = false;
+  isResolved = false;
   errorMessage = '';
 
   async ngAfterViewInit(): Promise<void> {
@@ -65,6 +66,7 @@ export class GoogleAuthButtonComponent implements AfterViewInit {
         ? error.message
         : 'Google est temporairement indisponible.';
     } finally {
+      this.isResolved = true;
       this.changeDetectorRef.detectChanges();
     }
   }
