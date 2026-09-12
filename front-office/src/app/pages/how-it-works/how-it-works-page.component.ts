@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { CommercialContentService } from '../../services/commercial-content.service';
 
 interface JourneyStep {
   title: string;
@@ -17,6 +18,8 @@ interface JourneyStep {
   templateUrl: './how-it-works-page.component.html',
 })
 export class HowItWorksPageComponent {
+  private readonly commercialContent = inject(CommercialContentService);
+
   readonly senderSteps: JourneyStep[] = [
     {
       title: 'Recherchez un trajet',
@@ -40,26 +43,28 @@ export class HowItWorksPageComponent {
     },
   ];
 
-  readonly travelerSteps: JourneyStep[] = [
-    {
-      title: 'Publiez votre trajet',
-      description: 'Renseignez vos villes de départ et d’arrivée, le poids que vous pouvez transporter et votre tarif au kilo.',
-      icon: 'edit_note',
-    },
-    {
-      title: 'Recevez les demandes',
-      description: 'Les expéditeurs intéressés vous contactent depuis la plateforme ; vous êtes aussi informé par e-mail.',
-      icon: 'notifications',
-    },
-    {
-      title: 'Choisissez vos envois',
-      description: 'Acceptez ou refusez les demandes selon vos critères et suivez les personnes retenues.',
-      icon: 'task_alt',
-    },
-    {
-      title: 'Transportez et recevez votre paiement',
-      description: 'Après la livraison, le paiement est versé selon la réservation, avec une commission Coliclic de 7 %.',
-      icon: 'payments',
-    },
-  ];
+  get travelerSteps(): JourneyStep[] {
+    return [
+      {
+        title: 'Publiez votre trajet',
+        description: 'Renseignez vos villes de départ et d’arrivée, le poids que vous pouvez transporter et votre tarif au kilo.',
+        icon: 'edit_note',
+      },
+      {
+        title: 'Recevez les demandes',
+        description: 'Les expéditeurs intéressés vous contactent depuis la plateforme ; vous êtes aussi informé par e-mail.',
+        icon: 'notifications',
+      },
+      {
+        title: 'Choisissez vos envois',
+        description: 'Acceptez ou refusez les demandes selon vos critères et suivez les personnes retenues.',
+        icon: 'task_alt',
+      },
+      {
+        title: this.commercialContent.content().travelerFinalStepTitle,
+        description: this.commercialContent.content().travelerFinalStepDescription,
+        icon: 'payments',
+      },
+    ];
+  }
 }

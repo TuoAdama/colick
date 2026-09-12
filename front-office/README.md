@@ -23,6 +23,12 @@ SSR_API_BASE_URL=http://localhost:8080/api AUTH_COOKIE_NAME=COLICLIC_AUTH npm ru
 
 The Node server listens on port `4000`, exposes `/health`, and forwards the incoming authentication cookie named by `AUTH_COOKIE_NAME` (default: `COLICLIC_AUTH`) to the internal API while rendering authenticated pages. The production Docker image runs this server directly; Traefik remains the public TLS entry point.
 
+## Commercial mode
+
+The front-office loads `/api/public/app-config` before rendering and reuses that response during browser hydration. Commercial copy and platform fee behavior therefore follow the back-office `APP_COMMERCIAL_MODE` setting without rebuilding this application. If the endpoint is unavailable, the UI fails closed to the free profile.
+
+See [`../docs/commercial-modes.md`](../docs/commercial-modes.md) for the supported modes and deployment procedure.
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:

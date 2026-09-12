@@ -122,6 +122,11 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Juillet');
     expect(fixture.nativeElement.textContent).toContain('4,8');
     expect(fixture.nativeElement.textContent).toContain('(24 avis)');
+    expect(fixture.nativeElement.textContent).toContain('Montant convenu');
+    expect(fixture.nativeElement.textContent).toContain('Frais Coliclic');
+    expect(fixture.nativeElement.textContent).toContain('Montant pour le voyageur');
+    expect(component.platformCommission()).toBe(0);
+    expect(component.netAmount()).toBe(30);
   });
 
   it('provides a link to the sender profile page', () => {
