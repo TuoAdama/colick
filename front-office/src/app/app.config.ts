@@ -6,6 +6,7 @@ import { authInterceptor } from './interceptors/auth.interceptor';
 import { serverApiInterceptor } from './interceptors/server-api.interceptor';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { AuthService } from './services/auth.service';
+import { AppConfigService } from './services/app-config.service';
 
 export const appRouterScrolling = withInMemoryScrolling({
   scrollPositionRestoration: 'enabled',
@@ -21,6 +22,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, appRouterScrolling),
     provideHttpClient(withInterceptors([serverApiInterceptor, authInterceptor])),
     provideClientHydration(withEventReplay()),
+    provideAppInitializer(() => inject(AppConfigService).initialize()),
     provideAppInitializer(() => inject(AuthService).initializeSession()),
   ],
 };

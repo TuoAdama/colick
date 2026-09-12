@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CommercialContentService } from '../../services/commercial-content.service';
 
 /**
  * CtaComponent - Final call-to-action section encouraging user registration.
@@ -12,8 +13,5 @@ import { CommonModule } from '@angular/common';
   templateUrl: './cta.component.html',
 })
 export class CtaComponent {
-  /**
-   * Commission rate displayed in the section
-   */
-  commissionRate = '7%';
+  readonly commercialContent = inject(CommercialContentService);
 }

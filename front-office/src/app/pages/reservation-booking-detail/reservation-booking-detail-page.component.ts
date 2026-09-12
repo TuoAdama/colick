@@ -8,6 +8,8 @@ import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
 import { MessagingService } from '../../services/messaging.service';
 import { TripService } from '../../services/trip.service';
+import { AppConfigService } from '../../services/app-config.service';
+import { CommercialContentService } from '../../services/commercial-content.service';
 
 @Component({
   selector: 'app-reservation-booking-detail-page',
@@ -20,6 +22,8 @@ export class ReservationBookingDetailPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly tripService = inject(TripService);
   private readonly messagingService = inject(MessagingService);
+  readonly appConfig = inject(AppConfigService);
+  readonly commercialContent = inject(CommercialContentService);
 
   trip: Trip | null = null;
   booking: BookingResponse | null = null;
@@ -160,7 +164,7 @@ export class ReservationBookingDetailPageComponent implements OnInit {
   }
 
   platformCommission(): number {
-    return this.grossAmount() * 0.07;
+    return this.grossAmount() * this.appConfig.config().platformFeeRate;
   }
 
   netAmount(): number {

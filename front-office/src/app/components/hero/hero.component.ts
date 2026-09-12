@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { AutocompleteComponent } from '../../shared/components/autocomplete/autocomplete.component';
 import { Location } from '../../models/location.model';
+import { CommercialContentService } from '../../services/commercial-content.service';
 
 /**
  * HeroComponent - Main hero section with title, description, CTAs, and search preview card.
@@ -16,6 +17,7 @@ import { Location } from '../../models/location.model';
 })
 export class HeroComponent {
   private readonly router = inject(Router);
+  private readonly commercialContent = inject(CommercialContentService);
 
   departure: Location | null = null;
   destination: Location | null = null;
@@ -40,11 +42,13 @@ export class HeroComponent {
   /**
    * Trust badges displayed below the CTA buttons
    */
-  trustBadges = [
-    { icon: 'verified', label: 'Compte activé' },
-    { icon: 'secure', label: 'Paiement sécurisé' },
-    { icon: 'certified', label: 'Avis certifiés' },
-  ];
+  get trustBadges() {
+    return [
+      { icon: 'verified', label: 'Compte activé' },
+      { icon: 'secure', label: this.commercialContent.content().heroTrustLabel },
+      { icon: 'certified', label: 'Avis certifiés' },
+    ];
+  }
 
   /**
    * Sample available travelers shown in the search preview

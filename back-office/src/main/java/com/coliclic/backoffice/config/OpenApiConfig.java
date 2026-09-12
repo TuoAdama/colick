@@ -1,5 +1,6 @@
 package com.coliclic.backoffice.config;
 
+import com.coliclic.backoffice.commercial.CommercialProperties;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -16,13 +17,19 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
 
     private static final String SECURITY_SCHEME_NAME = "bearerAuth";
+    private final CommercialProperties commercialProperties;
+
+    public OpenApiConfig(CommercialProperties commercialProperties) {
+        this.commercialProperties = commercialProperties;
+    }
 
     @Bean
     public OpenAPI coliclicOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
                         .title("Coliclic API")
-                        .description("REST API for the Coliclic parcel transport platform")
+                        .description("REST API for the Coliclic parcel transport platform. Active commercial mode: "
+                                + commercialProperties.getMode())
                         .version("1.0.0"))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
                 .components(new Components()
