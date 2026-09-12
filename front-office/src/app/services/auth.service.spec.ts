@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
+import { makeStateKey, TransferState } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
 import { UserResponse } from '../models/auth.model';
 
@@ -9,6 +11,7 @@ describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
   let router: Router;
+  let transferState: TransferState;
   const user: UserResponse = {
     id: 1, firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com', role: 'USER', hasPassword: true,
   };
@@ -20,6 +23,7 @@ describe('AuthService', () => {
     service = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);
     router = TestBed.inject(Router);
+    transferState = TestBed.inject(TransferState);
   });
 
   afterEach(() => httpMock.verify());
@@ -27,7 +31,7 @@ describe('AuthService', () => {
   it('hydrates the cookie-backed session and initializes CSRF', async () => {
     const initialization = service.initializeSession();
     httpMock.expectOne('/api/auth/session').flush(user);
-    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve));
     httpMock.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
     await initialization;
     expect(service.isLoggedIn()).toBeTrue();
@@ -37,10 +41,57 @@ describe('AuthService', () => {
   it('continues as a guest when no session cookie is valid', async () => {
     const initialization = service.initializeSession();
     httpMock.expectOne('/api/auth/session').flush({}, { status: 401, statusText: 'Unauthorized' });
-    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve));
     httpMock.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
     await initialization;
     expect(service.isLoggedIn()).toBeFalse();
+    expect(await firstValueFrom(service.sessionStatus$)).toBe('anonymous');
+  });
+
+  it('uses an authenticated user transferred by SSR without reloading the session', async () => {
+    transferState.set(makeStateKey<UserResponse | null>('coliclic.auth.user'), user);
+
+    const initialization = service.initializeSession();
+    httpMock.expectNone('/api/auth/session');
+    httpMock.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
+    await initialization;
+
+    expect(service.getUser()?.email).toBe('ada@example.com');
+    expect(await firstValueFrom(service.sessionStatus$)).toBe('authenticated');
+  });
+
+  it('revalidates a null SSR projection in the browser', async () => {
+    transferState.set(makeStateKey<UserResponse | null>('coliclic.auth.user'), null);
+
+    const initialization = service.initializeSession();
+    httpMock.expectOne('/api/auth/session').flush(user);
+    await new Promise((resolve) => setTimeout(resolve));
+    httpMock.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
+    await initialization;
+
+    expect(service.getUser()?.email).toBe('ada@example.com');
+    expect(await firstValueFrom(service.sessionStatus$)).toBe('authenticated');
+  });
+
+  it('marks a transient session failure as unavailable and retries later', async () => {
+    const firstInitialization = service.initializeSession();
+    httpMock.expectOne('/api/auth/session').flush({}, { status: 503, statusText: 'Unavailable' });
+    await new Promise((resolve) => setTimeout(resolve));
+    httpMock.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
+    await firstInitialization;
+
+    expect(service.isLoggedIn()).toBeFalse();
+    expect(await firstValueFrom(service.sessionStatus$)).toBe('unavailable');
+
+    const retryInitialization = service.initializeSession();
+    expect(retryInitialization).not.toBe(firstInitialization);
+    httpMock.expectOne('/api/auth/session').flush(user);
+    await new Promise((resolve) => setTimeout(resolve));
+    httpMock.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
+    await retryInitialization;
+
+    expect(service.getUser()?.email).toBe('ada@example.com');
+    expect(await firstValueFrom(service.sessionStatus$)).toBe('authenticated');
   });
 
   it('shares an in-progress session initialization', async () => {
@@ -49,7 +100,7 @@ describe('AuthService', () => {
 
     expect(secondInitialization).toBe(firstInitialization);
     httpMock.expectOne('/api/auth/session').flush(user);
-    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve));
     httpMock.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
     await firstInitialization;
   });

@@ -12,8 +12,10 @@ describe('authGuard', () => {
       'initializeSession',
       'isLoggedIn',
       'getUser',
+      'getSessionStatus',
     ]);
     authServiceMock.initializeSession.and.returnValue(Promise.resolve());
+    authServiceMock.getSessionStatus.and.returnValue('anonymous');
 
     TestBed.configureTestingModule({
       providers: [provideRouter([]), { provide: AuthService, useValue: authServiceMock }],
@@ -51,5 +53,18 @@ describe('authGuard', () => {
     expect(router.serializeUrl(result as UrlTree)).toBe(
       '/login?returnUrl=%2Fmessages%3FconversationId%3D100'
     );
+  });
+
+  it('cancels navigation without redirecting when the session endpoint is unavailable', async () => {
+    authServiceMock.isLoggedIn.and.returnValue(false);
+    authServiceMock.getSessionStatus.and.returnValue('unavailable');
+    const createUrlTreeSpy = spyOn(router, 'createUrlTree').and.callThrough();
+
+    const result = await TestBed.runInInjectionContext(() =>
+      authGuard({} as never, { url: '/dashboard' } as never)
+    );
+
+    expect(result).toBeFalse();
+    expect(createUrlTreeSpy).not.toHaveBeenCalled();
   });
 });

@@ -6,7 +6,7 @@ import {
   makeStateKey,
 } from '@angular/core';
 import { isPlatformBrowser, isPlatformServer } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, catchError, finalize, firstValueFrom, of, tap } from 'rxjs';
 import {
@@ -34,11 +34,31 @@ export class AuthService {
   private readonly sessionStateKey = makeStateKey<UserResponse | null>('coliclic.auth.user');
 
   private currentUserSubject = new BehaviorSubject<UserResponse | null>(null);
+  private sessionStatusSubject = new BehaviorSubject<AuthSessionStatus>('initializing');
   private sessionInitialization?: Promise<void>;
   currentUser$ = this.currentUserSubject.asObservable();
+  sessionStatus$ = this.sessionStatusSubject.asObservable();
 
   initializeSession(): Promise<void> {
-    this.sessionInitialization ??= this.loadSession();
+    if (!this.sessionInitialization) {
+      const initialization = this.loadSession();
+      this.sessionInitialization = initialization;
+      void initialization.then(
+        () => {
+          if (
+            this.sessionStatusSubject.getValue() === 'unavailable'
+            && this.sessionInitialization === initialization
+          ) {
+            this.sessionInitialization = undefined;
+          }
+        },
+        () => {
+          if (this.sessionInitialization === initialization) {
+            this.sessionInitialization = undefined;
+          }
+        },
+      );
+    }
     return this.sessionInitialization;
   }
 
@@ -46,21 +66,26 @@ export class AuthService {
     if (isPlatformBrowser(this.platformId) && this.transferState.hasKey(this.sessionStateKey)) {
       const transferredUser = this.transferState.get(this.sessionStateKey, null);
       this.transferState.remove(this.sessionStateKey);
-      this.currentUserSubject.next(transferredUser ? this.normalizeUser(transferredUser) : null);
-      await this.initializeCsrf();
-      return;
+      if (transferredUser) {
+        this.setUser(transferredUser);
+        await this.initializeCsrf();
+        return;
+      }
     }
 
-    const user = await firstValueFrom(
-      this.http.get<UserResponse>('/api/auth/session').pipe(
-        catchError(() => of(null)),
-      ),
-    );
-    const normalizedUser = user ? this.normalizeUser(user) : null;
-    this.currentUserSubject.next(normalizedUser);
-    if (isPlatformServer(this.platformId)) {
-      this.transferState.set(this.sessionStateKey, normalizedUser);
+    const session = await this.fetchSession();
+    if (session !== undefined) {
+      const normalizedUser = session ? this.normalizeUser(session) : null;
+      this.currentUserSubject.next(normalizedUser);
+      this.sessionStatusSubject.next(normalizedUser ? 'authenticated' : 'anonymous');
+      if (isPlatformServer(this.platformId)) {
+        this.transferState.set(this.sessionStateKey, normalizedUser);
+      }
     } else {
+      this.sessionStatusSubject.next('unavailable');
+    }
+
+    if (isPlatformBrowser(this.platformId)) {
       await this.initializeCsrf();
     }
   }
@@ -96,11 +121,16 @@ export class AuthService {
       window.google?.accounts.id.disableAutoSelect();
     }
     this.currentUserSubject.next(null);
+    this.sessionStatusSubject.next('anonymous');
     void this.router.navigate(['/login']);
   }
 
   getUser(): UserResponse | null {
     return this.currentUserSubject.getValue();
+  }
+
+  getSessionStatus(): AuthSessionStatus {
+    return this.sessionStatusSubject.getValue();
   }
 
   /** Update basic profile info (firstName, lastName, phone). */
@@ -175,9 +205,21 @@ export class AuthService {
     );
   }
 
+  private async fetchSession(): Promise<UserResponse | null | undefined> {
+    try {
+      return await firstValueFrom(this.http.get<UserResponse>('/api/auth/session'));
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.status === 401) {
+        return null;
+      }
+      return undefined;
+    }
+  }
+
   private setUser(user: UserResponse): void {
     const normalizedUser = this.normalizeUser(user);
     this.currentUserSubject.next(normalizedUser);
+    this.sessionStatusSubject.next('authenticated');
   }
 
   private normalizeUser(user: UserResponse & { identityDocument?: unknown }): UserResponse {
@@ -189,3 +231,5 @@ export class AuthService {
     };
   }
 }
+
+export type AuthSessionStatus = 'initializing' | 'authenticated' | 'anonymous' | 'unavailable';
