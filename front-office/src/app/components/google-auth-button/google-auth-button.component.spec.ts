@@ -41,6 +41,30 @@ describe('GoogleAuthButtonComponent', () => {
     const buttonWrapper = host.parentElement as HTMLElement;
     expect(buttonWrapper.className).toContain('justify-center');
     expect(host.className).toContain('max-w-[360px]');
+    expect(buttonWrapper.className).toContain('min-w-0');
+    expect(buttonWrapper.className).toContain('overflow-hidden');
+    expect(fixture.nativeElement.querySelector('.mt-4.space-y-4').classList.contains('hidden')).toBeFalse();
+    expect(fixture.nativeElement.querySelector('.mt-4.space-y-4').classList.contains('invisible')).toBeFalse();
+  });
+
+  it('keeps the unresolved widget visually hidden while preserving its layout', async () => {
+    let resolveRender!: (visible: boolean) => void;
+    googleIdentityServiceMock.renderButton.and.returnValue(new Promise<boolean>((resolve) => {
+      resolveRender = resolve;
+    }));
+
+    fixture = TestBed.createComponent(GoogleAuthButtonComponent);
+    fixture.detectChanges();
+
+    const section = fixture.nativeElement.querySelector('.mt-4.space-y-4') as HTMLElement;
+    expect(section.classList.contains('invisible')).toBeTrue();
+    expect(section.classList.contains('hidden')).toBeFalse();
+
+    resolveRender(true);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(section.classList.contains('invisible')).toBeFalse();
   });
 
   it('stays hidden when Google auth is disabled in configuration', async () => {
@@ -50,6 +74,7 @@ describe('GoogleAuthButtonComponent', () => {
 
     expect(component.isVisible).toBeFalse();
     expect(component.errorMessage).toBe('');
+    expect(fixture.nativeElement.querySelector('.mt-4.space-y-4').classList.contains('hidden')).toBeTrue();
   });
 
   it('shows an error message when button rendering fails', async () => {
