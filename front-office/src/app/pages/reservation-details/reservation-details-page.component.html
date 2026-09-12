@@ -1,0 +1,340 @@
+<main class="pb-32">
+  <div class="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8">
+    @if (isLoading && !trip) {
+      <section class="rounded-2xl border border-border bg-background-secondary px-5 py-16 text-center shadow-card" role="status" aria-live="polite">
+        <div class="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-border border-t-primary"></div>
+        <p class="mt-4 text-sm font-medium text-text-secondary">Chargement des demandes...</p>
+      </section>
+    } @else if (loadError && !trip) {
+      <section class="rounded-2xl border border-error/20 bg-background-secondary px-5 py-12 text-center shadow-card" role="alert">
+        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-error/10 text-error">
+          <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.2 16c-.77 1.33.19 3 1.73 3Z" />
+          </svg>
+        </div>
+        <h1 class="mt-4 text-xl font-bold text-text-primary">Impossible d'afficher cette réservation</h1>
+        <p class="mt-2 text-sm text-text-secondary">{{ loadError }}</p>
+      </section>
+    } @else if (trip) {
+      <section class="mb-6">
+        <div class="overflow-hidden rounded-2xl border border-border bg-background-secondary shadow-card">
+          <button
+            type="button"
+            class="flex w-full items-center justify-between p-4 text-left sm:p-5"
+            [attr.aria-expanded]="tripSummaryExpanded"
+            (click)="toggleTripSummary()"
+          >
+            <div class="flex items-center gap-4">
+              <div class="rounded-2xl bg-primary/10 p-3 text-primary">
+                <span class="material-symbols-outlined block text-[20px] leading-none" aria-hidden="true">directions_transit</span>
+              </div>
+              <div>
+                <h1 class="text-base font-bold text-text-primary">
+                  {{ trip.departureAddress }} → {{ trip.destination }}
+                </h1>
+                <p class="text-sm text-text-secondary">
+                  {{ trip.departureTime | date:'dd/MM • HH:mm' }}
+                  @if (trip.reference) {
+                    <span class="mx-1 text-text-muted">•</span>
+                    <span class="font-semibold text-primary">{{ trip.reference }}</span>
+                  }
+                </p>
+              </div>
+            </div>
+
+            <svg
+              class="h-5 w-5 shrink-0 text-text-primary transition-transform duration-200"
+              [class.rotate-180]="tripSummaryExpanded"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7" />
+            </svg>
+          </button>
+
+          @if (tripSummaryExpanded) {
+            <div class="space-y-4 border-t border-border px-4 pb-4 pt-0 sm:px-5 sm:pb-5">
+              <div class="mt-2">
+                <div class="mb-2 flex items-center justify-between text-sm text-text-secondary">
+                  <span>Capacité</span>
+                  <span class="font-bold text-text-primary">{{ usedWeight() | number:'1.0-2' }} / {{ trip.maxWeight | number:'1.0-2' }} kg</span>
+                </div>
+                <div class="h-2 w-full rounded-full bg-border">
+                  <div class="h-2 rounded-full bg-primary" [style.width.%]="usedWeightPercentage()"></div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="rounded-2xl bg-background-primary p-3 text-center">
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.05em] text-text-muted">Poids disponible</p>
+                  <p class="mt-1 font-bold text-primary">{{ remainingWeight() | number:'1.0-2' }} kg</p>
+                </div>
+                <div class="rounded-2xl bg-background-primary p-3 text-center">
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.05em] text-text-muted">Demandes</p>
+                  <p class="mt-1 font-bold text-text-primary">{{ bookings.length }} total</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 md:hidden">
+                <a
+                  [routerLink]="['/propose', trip.id]"
+                  class="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/30 bg-background-secondary px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/5"
+                  aria-label="Modifier le trajet"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10.5-10.5a2.121 2.121 0 10-3-3L5 17v3z" />
+                  </svg>
+                  Modifier
+                </a>
+
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-2 rounded-xl border border-error/30 bg-background-secondary px-4 py-2.5 text-sm font-semibold text-error transition hover:bg-error/5"
+                  [disabled]="isCompletingTrip || isCancellingTrip"
+                  (click)="openCancelTripModal()"
+                  aria-label="Supprimer le trajet"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12m-10 0V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m-8 0v12a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V7m-6 0h6" />
+                  </svg>
+                  Supprimer
+                </button>
+              </div>
+
+              @if (trip.status === 'ACTIVE') {
+                <button
+                  type="button"
+                  class="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-wait disabled:opacity-70 md:hidden"
+                  [disabled]="isGeneratingShareCard"
+                  (click)="shareTripAnnouncement()"
+                  aria-label="Partager l'annonce"
+                  data-testid="share-trip-announcement-button"
+                >
+                  @if (isGeneratingShareCard) {
+                    <span class="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true"></span>
+                    Génération...
+                  } @else {
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8.59 13.51 15.42 17.49M15.41 6.51 8.59 10.49M7 14a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm10 6a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm0-12a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
+                    </svg>
+                    Partager l'annonce
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="mb-6">
+        <div class="mb-4">
+          <h2 class="text-[1.625rem] font-bold leading-[1.15] tracking-[-0.02em] text-text-primary sm:text-[2rem] sm:leading-tight">Demandes en cours</h2>
+        </div>
+
+        <div class="w-full max-w-md rounded-2xl bg-background-primary p-1">
+          <div class="grid grid-cols-2 gap-1">
+            @for (tab of primaryStatusTabs; track tab.value) {
+              <button
+                type="button"
+                class="rounded-xl px-3 py-2.5 text-[13px] font-bold transition sm:px-4 sm:py-3 sm:text-sm"
+                [class]="selectedTab === tab.value
+                  ? 'bg-background-secondary text-primary shadow-sm'
+                  : 'text-text-secondary hover:text-primary'"
+                (click)="selectTab(tab.value)"
+              >
+                {{ tab.label }} ({{ bookingCountForStatus(tab.value) }})
+              </button>
+            }
+          </div>
+        </div>
+
+      </section>
+
+      @if (actionError) {
+        <div class="mb-6 rounded-2xl border border-error/20 bg-error/10 px-4 py-3 text-sm text-error" role="alert">
+          {{ actionError }}
+        </div>
+      }
+
+      @if (isLoading) {
+        <section class="rounded-2xl border border-border bg-background-secondary px-5 py-16 text-center shadow-card" role="status" aria-live="polite">
+          <div class="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-border border-t-primary"></div>
+          <p class="mt-4 text-sm font-medium text-text-secondary">Chargement des demandes...</p>
+        </section>
+      } @else if (!filteredBookings().length) {
+        <section class="rounded-2xl border border-border bg-background-secondary px-5 py-16 text-center shadow-card">
+          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6m16 0-2.59 0a1 1 0 0 0-.7.29l-1.42 1.42a1 1 0 0 1-.7.29h-3.18a1 1 0 0 1-.7-.29l-1.42-1.42a1 1 0 0 0-.7-.29H4" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 13v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" />
+            </svg>
+          </div>
+          <h3 class="mt-4 text-lg font-bold text-text-primary">Aucune réservation dans cet onglet</h3>
+          <p class="mt-2 text-sm text-text-secondary">Changez de filtre pour voir les autres demandes de ce trajet.</p>
+        </section>
+      } @else {
+        <section>
+          <div class="grid grid-cols-1 gap-4 xl:auto-rows-fr xl:grid-cols-2 xl:gap-6">
+            @for (booking of paginatedBookings(); track booking.id) {
+              <app-booking-request-card
+                [booking]="booking"
+                [tripStatus]="trip.status"
+                [isProcessing]="isBookingProcessing(booking.id)"
+                [tripId]="trip.id"
+                [pricePerKilo]="trip.pricePerKilo"
+                (accept)="acceptBooking($event)"
+                (reject)="rejectBooking($event)"
+                (remove)="openRemoveBookingModal($event)"
+                (message)="messageSender($event)"
+                (confirmDelivery)="confirmBookingDelivery($event)"
+              />
+            }
+          </div>
+
+          <div class="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <p class="text-[13px] text-text-secondary sm:text-sm">
+              {{ currentRangeEnd() }} sur {{ filteredBookings().length }} demandes
+            </p>
+
+            @if (totalPages() > 1) {
+              <nav class="flex items-center gap-2" aria-label="Pagination des réservations">
+                <button
+                  type="button"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background-secondary text-text-secondary transition hover:bg-background-primary hover:text-primary disabled:opacity-50"
+                  [disabled]="currentPage === 1"
+                  (click)="goToPage(currentPage - 1)"
+                >
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m15 19-7-7 7-7" />
+                  </svg>
+                </button>
+
+                @for (page of pageNumbers(); track page) {
+                  <button
+                    type="button"
+                    class="inline-flex h-10 min-w-10 items-center justify-center rounded-xl border text-[13px] font-bold transition sm:text-sm"
+                    [class]="page === currentPage
+                      ? 'border-secondary bg-secondary text-white'
+                      : 'border-border bg-background-secondary text-text-secondary hover:bg-background-primary hover:text-primary'"
+                    (click)="goToPage(page)"
+                  >
+                    {{ page }}
+                  </button>
+                }
+
+                <button
+                  type="button"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background-secondary text-text-secondary transition hover:bg-background-primary hover:text-primary disabled:opacity-50"
+                  [disabled]="currentPage === totalPages()"
+                  (click)="goToPage(currentPage + 1)"
+                >
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7" />
+                  </svg>
+                </button>
+              </nav>
+            }
+          </div>
+        </section>
+      }
+    }
+  </div>
+</main>
+
+@if (trip?.status === 'ACTIVE') {
+  <div class="fixed bottom-0 right-0 z-40 hidden border-t border-border bg-background-secondary/90 p-4 backdrop-blur-md md:flex md:w-[calc(100%-256px)] md:justify-end">
+    <div class="mr-4 flex gap-4">
+      <button
+        type="button"
+        class="inline-flex items-center justify-center gap-2 rounded-xl border border-error/30 px-6 py-3 text-sm font-bold text-error transition hover:bg-error/5"
+        [disabled]="isCompletingTrip || isCancellingTrip"
+        (click)="openCancelTripModal()"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+        {{ isCancellingTrip ? 'Annulation...' : 'Annuler le voyage' }}
+      </button>
+
+      <button
+        type="button"
+        class="inline-flex items-center justify-center gap-2 rounded-xl bg-secondary px-6 py-3 text-sm font-bold text-white transition hover:opacity-90"
+        [disabled]="isCompletingTrip || isCancellingTrip"
+        (click)="markTripCompleted()"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7" />
+        </svg>
+        {{ isCompletingTrip ? 'Ouverture...' : 'Terminer le voyage' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background-secondary/90 p-2 backdrop-blur-md md:hidden">
+    <div class="flex gap-2">
+      <button
+        type="button"
+        class="flex-1 rounded-full border border-error/30 px-4 py-2.5 text-sm font-bold text-error"
+        [disabled]="isCompletingTrip || isCancellingTrip"
+        (click)="openCancelTripModal()"
+      >
+        Annuler
+      </button>
+      <button
+        type="button"
+        class="flex-1 rounded-full bg-secondary px-4 py-2.5 text-sm font-bold text-white"
+        [disabled]="isCompletingTrip || isCancellingTrip"
+        (click)="markTripCompleted()"
+      >
+        Terminer
+      </button>
+    </div>
+  </div>
+}
+
+<app-confirm-modal
+  [isOpen]="isCancelTripModalOpen"
+  title="Annuler ce trajet ?"
+  message="Cette action annulera le trajet et notifiera tous les expéditeurs concernés."
+  confirmLabel="Annuler le trajet"
+  variant="danger"
+  [isLoading]="isCancellingTrip"
+  (confirmed)="confirmCancelTrip()"
+  (cancelled)="closeCancelTripModal()"
+/>
+
+<app-confirm-modal
+  [isOpen]="isRemoveBookingModalOpen"
+  title="Retirer cette réservation ?"
+  message="Cette action retirera définitivement l'expéditeur de ce trajet."
+  confirmLabel="Retirer"
+  variant="danger"
+  [isLoading]="isPendingRemoveBookingProcessing()"
+  (confirmed)="confirmRemoveBooking()"
+  (cancelled)="closeRemoveBookingModal()"
+/>
+
+<app-confirm-modal
+  [isOpen]="isCompleteTripModalOpen"
+  title="Terminer le voyage ?"
+  message="Vous allez passer à l'étape de validation des codes de livraison. Cette action est irréversible."
+  confirmLabel="Confirmer"
+  variant="primary"
+  [isLoading]="isCompletingTrip"
+  [errorMessage]="completeTripError"
+  (confirmed)="confirmCompleteTrip()"
+  (cancelled)="closeCompleteTripModal()"
+/>
+
+@if (shareCardData) {
+  <div
+    class="pointer-events-none fixed left-0 top-0 -z-10 h-[1920px] w-[1080px] overflow-hidden"
+    aria-hidden="true"
+    #shareCardCapture
+  >
+    <app-share-card-story [data]="shareCardData" />
+  </div>
+}

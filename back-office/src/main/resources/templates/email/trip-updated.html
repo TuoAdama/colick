@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="#{email.subject.tripUpdated}">Trip updated - Coliclic</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:Poppins,Arial,sans-serif;color:#111827;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:24px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;">
+                <tr>
+                    <td style="background:#023047;padding:20px 24px;color:#ffffff;font-size:20px;font-weight:700;" th:text="#{email.common.brand}">Coliclic</td>
+                </tr>
+                <tr>
+                    <td style="padding:28px 24px;">
+                        <p style="margin:0 0 12px 0;font-size:16px;" th:text="#{email.common.greeting(${firstName})}">Hello User,</p>
+                        <p style="margin:0 0 20px 0;line-height:1.6;" th:text="#{email.tripUpdated.intro(${departureAddress}, ${destination})}">Your booked trip has been updated.</p>
+                        <p style="margin:0;line-height:1.6;color:#6B7280;" th:text="#{email.tripUpdated.note}">Please review the updated details in your account.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#F9FAFB;padding:16px 24px;font-size:12px;color:#6B7280;">
+                        <span th:text="#{email.common.help}">Need help?</span>
+                        <span style="color:#219ebc;" th:text="${supportEmail}">support@coliclic.app</span>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,70 @@
+import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router, UrlTree } from '@angular/router';
+import { authGuard } from './auth.guard';
+import { AuthService } from '../services/auth.service';
+
+describe('authGuard', () => {
+  let authServiceMock: jasmine.SpyObj<AuthService>;
+  let router: Router;
+
+  beforeEach(() => {
+    authServiceMock = jasmine.createSpyObj<AuthService>('AuthService', [
+      'initializeSession',
+      'isLoggedIn',
+      'getUser',
+      'getSessionStatus',
+    ]);
+    authServiceMock.initializeSession.and.returnValue(Promise.resolve());
+    authServiceMock.getSessionStatus.and.returnValue('anonymous');
+
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: AuthService, useValue: authServiceMock }],
+    });
+
+    router = TestBed.inject(Router);
+  });
+
+  it('allows authenticated users to access protected routes after the session is initialized', async () => {
+    authServiceMock.isLoggedIn.and.returnValue(true);
+    authServiceMock.getUser.and.returnValue({
+      id: 1,
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: 'ada@example.com',
+      role: 'USER',
+    });
+
+    const result = await TestBed.runInInjectionContext(() =>
+      authGuard({} as never, { url: '/messages?conversationId=100' } as never)
+    );
+
+    expect(result).toBeTrue();
+  });
+
+  it('preserves the protected URL when redirecting anonymous users to login', async () => {
+    authServiceMock.isLoggedIn.and.returnValue(false);
+    authServiceMock.getUser.and.returnValue(null);
+
+    const result = await TestBed.runInInjectionContext(() =>
+      authGuard({} as never, { url: '/messages?conversationId=100' } as never)
+    );
+
+    expect(result instanceof UrlTree).toBeTrue();
+    expect(router.serializeUrl(result as UrlTree)).toBe(
+      '/login?returnUrl=%2Fmessages%3FconversationId%3D100'
+    );
+  });
+
+  it('cancels navigation without redirecting when the session endpoint is unavailable', async () => {
+    authServiceMock.isLoggedIn.and.returnValue(false);
+    authServiceMock.getSessionStatus.and.returnValue('unavailable');
+    const createUrlTreeSpy = spyOn(router, 'createUrlTree').and.callThrough();
+
+    const result = await TestBed.runInInjectionContext(() =>
+      authGuard({} as never, { url: '/dashboard' } as never)
+    );
+
+    expect(result).toBeFalse();
+    expect(createUrlTreeSpy).not.toHaveBeenCalled();
+  });
+});
