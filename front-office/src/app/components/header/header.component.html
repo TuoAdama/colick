@@ -147,7 +147,7 @@
             </div>
           }
         </div>
-      } @else {
+      } @else if ((authService.sessionStatus$ | async) === 'anonymous') {
         <a
           routerLink="/login"
           class="text-primary font-semibold hover:text-secondary transition-colors duration-200 text-sm"
@@ -255,7 +255,7 @@
               Déconnexion
             </button>
           </li>
-        } @else {
+        } @else if ((authService.sessionStatus$ | async) === 'anonymous') {
           <li>
             <a
               routerLink="/login"
