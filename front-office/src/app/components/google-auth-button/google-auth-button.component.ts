@@ -17,7 +17,11 @@ import { GoogleButtonText, GoogleIdentityService } from '../../services/google-i
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="mt-4 space-y-4" [class.hidden]="isResolved && !isVisible && !errorMessage">
+    <div
+      class="mt-4 space-y-4"
+      [class.hidden]="isResolved && !isVisible && !errorMessage"
+      [class.invisible]="!isResolved"
+    >
       <div class="flex items-center gap-4">
         <div class="h-px flex-1 bg-gray-200"></div>
         <span class="text-xs font-medium uppercase tracking-[0.2em] text-text-muted">ou</span>
