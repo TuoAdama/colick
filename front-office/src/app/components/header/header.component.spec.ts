@@ -170,9 +170,12 @@ describe('HeaderComponent', () => {
     fixture.detectChanges();
 
     const logo = fixture.nativeElement.querySelector('a[routerLink="/"]') as HTMLAnchorElement | null;
+    const accentPart = logo?.querySelector('.text-accent') as HTMLElement | null;
 
     expect(logo).not.toBeNull();
-    expect(logo?.textContent?.trim()).toBe('Coliclic.');
+    expect(logo?.textContent?.trim()).toBe('Coliclic');
+    expect(accentPart?.textContent).toBe('Co');
+    expect(accentPart?.classList.contains('text-accent')).toBeTrue();
     expect(logo?.getAttribute('aria-label')).toBe('Coliclic - Accueil');
   });
 
