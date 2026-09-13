@@ -100,4 +100,22 @@ describe('DashboardShellComponent', () => {
     expect(text).not.toContain('Mes demandes');
     expect(text).not.toContain('Demandes de colis');
   });
+
+  it('uses the route icon for published trips in both navigation menus', () => {
+    fixture.componentInstance.openMobileMenu();
+    fixture.detectChanges();
+
+    const icons = fixture.nativeElement.querySelectorAll('[data-testid="published-trips-icon"]') as NodeListOf<SVGElement>;
+
+    expect(icons.length).toBe(2);
+    icons.forEach((icon) => {
+      expect(icon.getAttribute('aria-hidden')).toBe('true');
+      expect(icon.classList.contains('h-5')).toBeTrue();
+      expect(icon.classList.contains('w-5')).toBeTrue();
+      expect(icon.querySelector('circle[cx="5"][cy="19"]')).not.toBeNull();
+      expect(icon.querySelector('circle[cx="19"][cy="5"]')).not.toBeNull();
+      expect(icon.querySelector('path[d="M5 19c0-5.5 2.5-9 7-9h2c3 0 5-2 5-5"]')).not.toBeNull();
+      expect(icon.querySelector('path[d="M3 7h18M6 3h12M6 21h12M4 10l2 8m14-8-2 8"]')).toBeNull();
+    });
+  });
 });

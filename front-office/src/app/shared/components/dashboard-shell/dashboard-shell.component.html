@@ -69,8 +69,10 @@
         [routerLinkActiveOptions]="{ exact: false }"
         class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
       >
-        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M6 3h12M6 21h12M4 10l2 8m14-8-2 8" />
+        <svg data-testid="published-trips-icon" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 19c0-5.5 2.5-9 7-9h2c3 0 5-2 5-5" />
+          <circle cx="5" cy="19" r="2" />
+          <circle cx="19" cy="5" r="2" />
         </svg>
         Trajets publiés
       </a>
@@ -242,8 +244,10 @@
           class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text-secondary transition hover:bg-background-primary hover:text-primary"
           (click)="closeMobileMenu()"
         >
-          <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M6 3h12M6 21h12M4 10l2 8m14-8-2 8" />
+          <svg data-testid="published-trips-icon" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 19c0-5.5 2.5-9 7-9h2c3 0 5-2 5-5" />
+            <circle cx="5" cy="19" r="2" />
+            <circle cx="19" cy="5" r="2" />
           </svg>
           Trajets publiés
         </a>
