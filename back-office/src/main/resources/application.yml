@@ -89,6 +89,8 @@ upload:
   dir: ${UPLOAD_DIR:./uploads}
 
 app:
+  commercial:
+    mode: ${APP_COMMERCIAL_MODE:FREE}
   frontend:
     base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
   messaging:

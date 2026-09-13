@@ -190,17 +190,21 @@
 
             <div class="space-y-4 px-5 py-5 sm:px-6">
               <div class="flex items-center justify-between gap-4">
-                <span class="text-sm text-text-secondary">Prix total payé</span>
+                <span class="text-sm text-text-secondary">{{ bookingGrossLabel() }}</span>
                 <span class="text-base font-semibold text-text-primary">{{ grossAmount() | number:'1.0-2' }} €</span>
               </div>
 
               <div class="flex items-center justify-between gap-4">
-                <span class="text-sm text-text-secondary">Commission Coliclic (7%)</span>
-                <span class="text-sm font-semibold text-error">-{{ platformCommission() | number:'1.0-2' }} €</span>
+                <span class="text-sm text-text-secondary">{{ bookingFeeLabel() }}</span>
+                @if (hasPlatformFee()) {
+                  <span class="text-sm font-semibold text-error">-{{ platformCommission() | number:'1.0-2' }} €</span>
+                } @else {
+                  <span class="text-sm font-semibold text-success">0 €</span>
+                }
               </div>
 
               <div class="flex items-center justify-between gap-4 rounded-xl bg-background-primary px-4 py-4">
-                <span class="whitespace-nowrap text-xs font-semibold text-text-primary sm:text-sm">Votre gain net</span>
+                <span class="whitespace-nowrap text-xs font-semibold text-text-primary sm:text-sm">{{ bookingNetLabel() }}</span>
                 <span class="whitespace-nowrap text-lg font-bold text-primary sm:text-xl">{{ netAmount() | number:'1.0-2' }} €</span>
               </div>
             </div>

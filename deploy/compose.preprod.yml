@@ -34,6 +34,7 @@ services:
       - ${RUNTIME_ENV_FILE:-.runtime.env}
     environment:
       SPRING_PROFILES_ACTIVE: preprod
+      APP_COMMERCIAL_MODE: ${APP_COMMERCIAL_MODE:-FREE}
       CORS_ALLOWED_ORIGINS: "https://preprod.coliclic.com"
       AUTH_COOKIE_SECURE: "true"
       REDIS_HOST: redis

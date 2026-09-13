@@ -1,5 +1,6 @@
 package com.coliclic.backoffice.trip.service;
 
+import com.coliclic.backoffice.commercial.CommercialProperties;
 import com.coliclic.backoffice.email.EmailService;
 import com.coliclic.backoffice.exception.BadRequestException;
 import com.coliclic.backoffice.exception.ConflictException;
@@ -46,6 +47,7 @@ public class TripServiceImpl implements TripService {
     private final FileStorageService fileStorageService;
     private final TripAlertService tripAlertService;
     private final TripReferenceGenerator tripReferenceGenerator;
+    private final CommercialProperties commercialProperties;
 
     @Value("${app.frontend.base-url:http://localhost:4200}")
     private String frontendBaseUrl;
@@ -59,7 +61,8 @@ public class TripServiceImpl implements TripService {
                             LocalizedMessages localizedMessages,
                             FileStorageService fileStorageService,
                             TripAlertService tripAlertService,
-                            TripReferenceGenerator tripReferenceGenerator) {
+                            TripReferenceGenerator tripReferenceGenerator,
+                            CommercialProperties commercialProperties) {
         this.tripRepository = tripRepository;
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
@@ -70,6 +73,7 @@ public class TripServiceImpl implements TripService {
         this.fileStorageService = fileStorageService;
         this.tripAlertService = tripAlertService;
         this.tripReferenceGenerator = tripReferenceGenerator;
+        this.commercialProperties = commercialProperties;
     }
 
     @Override
@@ -258,6 +262,8 @@ public class TripServiceImpl implements TripService {
                 .packagePhotoUrl(request.getPackagePhotoUrl())
                 .recipientContact(bookingValidationService.normalizeRecipientContact(request.getRecipientContact()))
                 .status(initialStatus)
+                .commercialMode(commercialProperties.getMode())
+                .platformFeeRate(commercialProperties.getMode().getPlatformFeeRate())
                 .build();
 
         TripBooking saved = bookingRepository.save(booking);

@@ -32,7 +32,7 @@ Donc voici les fonctionnalités à intégrer:
 	- Poids (optionnel)
 	- Description détaillée
 	- La photo du colis (optionelle)
-- L'utilisateur peux décider de payer pour réserver sa la place
+- L'utilisateur peut réserver sa place. Le règlement dépend du mode commercial actif de la plateforme.
 		Il existera deux types de réservation:
 			- Instantanées: La demande passe automatiquement à accepter
 			- Demande d'approbation: La demande doit être acceptée par le voyageur
@@ -42,7 +42,11 @@ Donc voici les fonctionnalités à intégrer:
 
 
 ## Transaction
-- Un prélèvement de 7% sera effectué sur chaque transaction
+- Le mode commercial est contrôlé par `APP_COMMERCIAL_MODE` :
+  - `FREE` (mode par défaut) : Coliclic ne prélève aucuns frais et ne gère pas le paiement ; le règlement est organisé directement entre les utilisateurs.
+  - `COMMISSION` : Coliclic présente un paiement géré par la plateforme et applique une commission de 7 %.
+- Dans les deux modes, le tarif au kilo reste fixé par le voyageur.
+- Voir `docs/commercial-modes.md` pour la configuration et la procédure de bascule.
 
 ## Formulaire de création de compte:
 Le formulaire de contact doit comprendre les champs suivants:
@@ -67,7 +71,7 @@ Le formulaire de contact doit comprendre les champs suivants:
 	Possibilité de se faire voler des colis par de fausses annonces
 	Solution:
 		- Activation du compte par e-mail
-		- Paiement sécurisé et système d'avis
+		- Activation des comptes et système d'avis
 			  
 			  
 			  
@@ -95,5 +99,4 @@ règles de protection des branches GitHub :
 - `backend-tests`
 - `frontend-tests`
 - `frontend-build`
-
-
+- `commercial-config-check`

@@ -22,7 +22,7 @@ describe('HowItWorksPageComponent', () => {
     expect(text).toContain('Le rôle de Coliclic');
     expect(text).toContain('Envoyer un colis');
     expect(text).toContain('Proposer un voyage');
-    expect(text).toContain('commission Coliclic de 7 %');
+    expect(text).toContain('sans commission Coliclic');
   });
 
   it('offers calls to action for senders and travelers', () => {

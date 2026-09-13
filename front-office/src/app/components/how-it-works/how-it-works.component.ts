@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CommercialContentService } from '../../services/commercial-content.service';
 
 /**
  * Step interface representing a single step in the how-it-works flow
@@ -22,6 +23,8 @@ interface Step {
   templateUrl: './how-it-works.component.html',
 })
 export class HowItWorksComponent {
+  private readonly commercialContent = inject(CommercialContentService);
+
   /**
    * Steps for package senders
    */
@@ -55,7 +58,8 @@ export class HowItWorksComponent {
   /**
    * Steps for travelers offering their services
    */
-  travelerSteps: Step[] = [
+  get travelerSteps(): Step[] {
+    return [
     {
       number: 1,
       title: 'Publiez',
@@ -76,9 +80,10 @@ export class HowItWorksComponent {
     },
     {
       number: 4,
-      title: 'Gagnez',
-      description: 'Recevez votre paiement après livraison (commission 7%).',
+      title: this.commercialContent.content().travelerFinalStepTitle,
+      description: this.commercialContent.content().travelerFinalStepDescription,
       icon: 'earn',
     },
-  ];
+    ];
+  }
 }

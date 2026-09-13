@@ -47,6 +47,8 @@ export interface BookingResponse {
   deliveredAt?: string;
   validationCodeActive: boolean;
   createdAt?: string;
+  commercialMode?: 'FREE' | 'COMMISSION';
+  platformFeeRate?: number;
 }
 
 /** Booking data enriched exclusively for the current sender's booking list. */

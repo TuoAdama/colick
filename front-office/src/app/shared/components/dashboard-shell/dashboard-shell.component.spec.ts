@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { DashboardShellComponent } from './dashboard-shell.component';
 
@@ -54,6 +54,24 @@ describe('DashboardShellComponent', () => {
     expect(content?.classList.contains('flex-1')).toBeTrue();
     expect(content?.classList.contains('min-h-0')).toBeTrue();
     expect(footer?.classList.contains('shrink-0')).toBeTrue();
+  });
+
+  it('hides the footer on the reservations list route only', () => {
+    const router = TestBed.inject(Router);
+    spyOnProperty(router, 'url', 'get').and.returnValue('/trips/12/reservations');
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('footer[role="contentinfo"]')).toBeNull();
+  });
+
+  it('keeps the footer on reservation sub-pages', () => {
+    const router = TestBed.inject(Router);
+    spyOnProperty(router, 'url', 'get').and.returnValue('/trips/12/reservations/7/profile');
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('footer[role="contentinfo"]')).not.toBeNull();
   });
 
   it('renders the Coliclic dashboard logo', () => {

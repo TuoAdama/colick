@@ -1,5 +1,6 @@
 package com.coliclic.backoffice.trip;
 
+import com.coliclic.backoffice.commercial.CommercialProperties;
 import com.coliclic.backoffice.email.EmailService;
 import com.coliclic.backoffice.file.FileStorageService;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
@@ -30,7 +31,7 @@ import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import({TripServiceImpl.class, TripReferenceGenerator.class})
+@Import({TripServiceImpl.class, TripReferenceGenerator.class, CommercialProperties.class})
 @Sql(statements = "CREATE SEQUENCE IF NOT EXISTS trip_reference_seq START WITH 1")
 @TestPropertySource(properties = "spring.sql.init.mode=never")
 class TripCreationPersistenceTest {
