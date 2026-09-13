@@ -1,5 +1,6 @@
 package com.coliclic.backoffice.trip.dto;
 
+import com.coliclic.backoffice.commercial.CommercialMode;
 import com.coliclic.backoffice.trip.entity.TripBooking;
 import lombok.Builder;
 import lombok.Data;
@@ -39,6 +40,8 @@ public class TripBookingResponse {
     private LocalDateTime deliveredAt;
     private LocalDateTime createdAt;
     private boolean validationCodeActive;
+    private CommercialMode commercialMode;
+    private BigDecimal platformFeeRate;
 
     /**
      * Maps a {@link TripBooking} entity to a {@link TripBookingResponse} DTO.
@@ -46,6 +49,16 @@ public class TripBookingResponse {
     public static TripBookingResponse from(TripBooking booking,
                                            Double senderRatingAverage,
                                            Long senderRatingCount) {
+        CommercialMode commercialMode = booking.getCommercialMode();
+        if (commercialMode == null) {
+            commercialMode = booking.getPlatformFeeRate() != null && booking.getPlatformFeeRate().signum() == 0
+                    ? CommercialMode.FREE
+                    : CommercialMode.COMMISSION;
+        }
+        BigDecimal platformFeeRate = booking.getPlatformFeeRate() != null
+                ? booking.getPlatformFeeRate()
+                : commercialMode.getPlatformFeeRate();
+
         return TripBookingResponse.builder()
                 .id(booking.getId())
                 .tripId(booking.getTrip().getId())
@@ -68,6 +81,8 @@ public class TripBookingResponse {
                 .deliveredAt(booking.getDeliveredAt())
                 .createdAt(booking.getCreatedAt())
                 .validationCodeActive(booking.hasActiveValidationCode())
+                .commercialMode(commercialMode)
+                .platformFeeRate(platformFeeRate)
                 .build();
     }
 }

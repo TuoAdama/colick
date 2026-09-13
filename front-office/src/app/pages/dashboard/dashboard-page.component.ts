@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
 import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
+import { CommercialContentService } from '../../services/commercial-content.service';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -17,6 +18,7 @@ export class DashboardPageComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly tripService = inject(TripService);
   private readonly router = inject(Router);
+  readonly commercialContent = inject(CommercialContentService);
 
   currentUser$ = this.authService.currentUser$;
 

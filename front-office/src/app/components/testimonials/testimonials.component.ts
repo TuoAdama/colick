@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CommercialContentService } from '../../services/commercial-content.service';
 
 /**
  * Testimonial interface representing a user review
@@ -24,38 +25,40 @@ interface Testimonial {
   templateUrl: './testimonials.component.html',
 })
 export class TestimonialsComponent {
+  private readonly commercialContent = inject(CommercialContentService);
+
   /**
    * List of testimonials from users
    */
-  testimonials: Testimonial[] = [
-    {
-      content:
-        "J'ai envoyé un colis à ma famille à Abidjan pour 3 fois moins cher qu'avec un transporteur classique. Le voyageur était très professionnel et le colis est arrivé en parfait état.",
-      author: 'Marie K.',
-      role: 'Expéditrice - Paris',
-      initials: 'MK',
-      bgColor: 'bg-primary',
-      rating: 5,
-    },
-    {
-      content:
-        'Grâce à Coliclic, je rentabilise mes voyages entre la France et le Sénégal. La plateforme est simple à utiliser et la commission de 7% est raisonnable.',
-      author: 'Amadou D.',
-      role: 'Voyageur - Dakar',
-      initials: 'AD',
-      bgColor: 'bg-secondary',
-      rating: 5,
-    },
-    {
-      content:
-        "Les avis et le paiement sécurisé m'ont rassurée. J'utilise Coliclic depuis 6 mois et je n'ai jamais eu de problème. Je recommande vivement !",
-      author: 'Sophie T.',
-      role: 'Expéditrice - Lyon',
-      initials: 'ST',
-      bgColor: 'bg-accent',
-      rating: 5,
-    },
-  ];
+  get testimonials(): Testimonial[] {
+    return [
+      {
+        content:
+          "J'ai envoyé un colis à ma famille à Abidjan pour 3 fois moins cher qu'avec un transporteur classique. Le voyageur était très professionnel et le colis est arrivé en parfait état.",
+        author: 'Marie K.',
+        role: 'Expéditrice - Paris',
+        initials: 'MK',
+        bgColor: 'bg-primary',
+        rating: 5,
+      },
+      {
+        content: this.commercialContent.content().travelerTestimonial,
+        author: 'Amadou D.',
+        role: 'Voyageur - Dakar',
+        initials: 'AD',
+        bgColor: 'bg-secondary',
+        rating: 5,
+      },
+      {
+        content: this.commercialContent.content().senderTestimonial,
+        author: 'Sophie T.',
+        role: 'Expéditrice - Lyon',
+        initials: 'ST',
+        bgColor: 'bg-accent',
+        rating: 5,
+      },
+    ];
+  }
 
   /**
    * Helper to generate an array for star rating

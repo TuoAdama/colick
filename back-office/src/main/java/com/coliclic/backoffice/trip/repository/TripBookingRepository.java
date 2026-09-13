@@ -4,6 +4,7 @@ import com.coliclic.backoffice.trip.entity.Trip;
 import com.coliclic.backoffice.trip.entity.TripBooking;
 import com.coliclic.backoffice.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -28,4 +29,8 @@ public interface TripBookingRepository extends JpaRepository<TripBooking, Long> 
     List<TripBooking> findBySender(User sender);
 
     long countBySender(User sender);
+
+    @Query("SELECT booking FROM TripBooking booking "
+            + "WHERE booking.commercialMode IS NULL OR booking.platformFeeRate IS NULL")
+    List<TripBooking> findBookingsMissingCommercialTerms();
 }

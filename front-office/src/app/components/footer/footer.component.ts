@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { CommercialContentService } from '../../services/commercial-content.service';
 
 /**
  * FooterLink interface representing a navigation link
@@ -39,6 +40,7 @@ interface SocialLink {
   templateUrl: './footer.component.html',
 })
 export class FooterComponent {
+  private readonly commercialContent = inject(CommercialContentService);
   /**
    * Current year for copyright notice
    */
@@ -47,17 +49,19 @@ export class FooterComponent {
   /**
    * Footer navigation sections
    */
-  footerSections: FooterSection[] = [
-    {
-      title: 'PLATEFORME',
-      links: [
-        { label: 'A propos de nous', href: '#' },
-        { label: 'Comment ca marche', routerLink: '/comment-ca-marche' },
-        { label: 'Nos tarifs', href: '#' },
-        { label: 'Nous contacter', routerLink: '/contact' },
-      ],
-    },
-  ];
+  get footerSections(): FooterSection[] {
+    return [
+      {
+        title: 'PLATEFORME',
+        links: [
+          { label: 'A propos de nous', href: '#' },
+          { label: 'Comment ca marche', routerLink: '/comment-ca-marche' },
+          { label: this.commercialContent.content().footerCommercialLink, href: '#' },
+          { label: 'Nous contacter', routerLink: '/contact' },
+        ],
+      },
+    ];
+  }
 
   /**
    * Social media links

@@ -1,5 +1,6 @@
 package com.coliclic.backoffice.trip.entity;
 
+import com.coliclic.backoffice.commercial.CommercialMode;
 import com.coliclic.backoffice.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -77,6 +78,15 @@ public class TripBooking {
 
     @Column
     private LocalDateTime deliveredAt;
+
+    /** Commercial mode captured when the booking was created. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "commercial_mode")
+    private CommercialMode commercialMode;
+
+    /** Platform fee rate captured when the booking was created. */
+    @Column(name = "platform_fee_rate", precision = 5, scale = 4)
+    private BigDecimal platformFeeRate;
 
     /** Timestamp when the booking was created. */
     @Column(updatable = false)

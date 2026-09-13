@@ -122,6 +122,11 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Juillet');
     expect(fixture.nativeElement.textContent).toContain('4,8');
     expect(fixture.nativeElement.textContent).toContain('(24 avis)');
+    expect(fixture.nativeElement.textContent).toContain('Montant convenu');
+    expect(fixture.nativeElement.textContent).toContain('Frais Coliclic');
+    expect(fixture.nativeElement.textContent).toContain('Montant pour le voyageur');
+    expect(component.platformCommission()).toBe(0);
+    expect(component.netAmount()).toBe(30);
   });
 
   it('provides a link to the sender profile page', () => {
@@ -132,6 +137,21 @@ describe('ReservationBookingDetailPageComponent', () => {
 
     expect(profileLink).toBeDefined();
     expect(profileLink?.getAttribute('href')).toContain('/trips/12/reservations/7/profile');
+  });
+
+  it('uses the booking fee snapshot after the global mode changes', () => {
+    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking({
+      commercialMode: 'COMMISSION',
+      platformFeeRate: 0.07,
+    })));
+
+    createComponent();
+
+    expect(component.platformCommission()).toBeCloseTo(2.1, 5);
+    expect(component.netAmount()).toBeCloseTo(27.9, 5);
+    expect(component.bookingFeeLabel()).toContain('7');
+    expect(component.bookingGrossLabel()).toBe('Prix total payé');
+    expect(component.bookingNetLabel()).toBe('Votre gain net');
   });
 
   it('displays zero reviews when the sender has no reviews', () => {

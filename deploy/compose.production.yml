@@ -33,6 +33,7 @@ services:
     env_file:
       - ${RUNTIME_ENV_FILE:-.runtime.env}
     environment:
+      APP_COMMERCIAL_MODE: ${APP_COMMERCIAL_MODE:-FREE}
       CORS_ALLOWED_ORIGINS: "https://coliclic.com"
       AUTH_COOKIE_SECURE: "true"
       REDIS_HOST: redis

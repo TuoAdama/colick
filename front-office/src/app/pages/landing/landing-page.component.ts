@@ -9,6 +9,7 @@ import { Trip } from '../../models/trip.model';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
 import { TripService } from '../../services/trip.service';
+import { CommercialContentService } from '../../services/commercial-content.service';
 
 type AutocompleteField = 'departure' | 'destination';
 type LandingMode = 'send' | 'transport';
@@ -44,6 +45,7 @@ export class LandingPageComponent {
   private readonly authService = inject(AuthService);
   private readonly locationService = inject(LocationService);
   private readonly tripService = inject(TripService);
+  private readonly commercialContent = inject(CommercialContentService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly departureSearchSubject = new Subject<string>();
   private readonly destinationSearchSubject = new Subject<string>();
@@ -328,25 +330,27 @@ export class LandingPageComponent {
     },
   ];
 
-  readonly trustCards = [
-    {
-      icon: 'verified_user',
-      title: 'Profils verifies',
-      description: 'Chaque membre est authentifie pour creer un cadre fiable.',
-      tone: 'text-accent bg-accent/10',
-    },
-    {
-      icon: 'payments',
-      title: 'Zero stress',
-      description: 'Le paiement reste securise jusqu a confirmation de livraison.',
-      tone: 'text-accent bg-accent/10',
-    },
-    {
-      icon: 'forum',
-      title: 'Support humain',
-      description: 'Notre equipe reste disponible pour vous aider a chaque etape.',
-      tone: 'text-primary bg-gray-200',
-    },
-  ];
+  get trustCards() {
+    return [
+      {
+        icon: 'verified_user',
+        title: 'Profils verifies',
+        description: 'Chaque membre est authentifie pour creer un cadre fiable.',
+        tone: 'text-accent bg-accent/10',
+      },
+      {
+        icon: 'payments',
+        title: this.commercialContent.content().landingTrustTitle,
+        description: this.commercialContent.content().landingTrustDescription,
+        tone: 'text-accent bg-accent/10',
+      },
+      {
+        icon: 'forum',
+        title: 'Support humain',
+        description: 'Notre equipe reste disponible pour vous aider a chaque etape.',
+        tone: 'text-primary bg-gray-200',
+      },
+    ];
+  }
 
 }

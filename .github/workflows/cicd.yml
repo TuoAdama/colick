@@ -325,11 +325,18 @@ jobs:
           printf '%s\n' "$ENV_FILE_CONTENT" >"$release_dir/.runtime.env"
           auth_cookie_name=$(sed -n 's/^AUTH_COOKIE_NAME=//p' "$release_dir/.runtime.env" | tail -n 1)
           auth_cookie_name=${auth_cookie_name:-COLICLIC_AUTH}
+          commercial_mode=$(sed -n 's/^APP_COMMERCIAL_MODE=//p' "$release_dir/.runtime.env" | tail -n 1)
+          commercial_mode=${commercial_mode:-FREE}
+          [[ "$commercial_mode" == "FREE" || "$commercial_mode" == "COMMISSION" ]] || {
+            echo "APP_COMMERCIAL_MODE must be FREE or COMMISSION" >&2
+            exit 1
+          }
           {
             echo "SOURCE_SHA=$SOURCE_SHA"
             echo "COMPOSE_PROJECT_NAME=$COMPOSE_PROJECT"
             echo "RUNTIME_ENV_FILE=.runtime.env"
             echo "AUTH_COOKIE_NAME=$auth_cookie_name"
+            echo "APP_COMMERCIAL_MODE=$commercial_mode"
             echo "BACK_OFFICE_IMAGE_REF=$back_ref"
             echo "FRONT_OFFICE_IMAGE_REF=$front_ref"
           } >"$release_dir/.release.env"
