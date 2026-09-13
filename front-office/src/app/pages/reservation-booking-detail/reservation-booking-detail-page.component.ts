@@ -8,8 +8,7 @@ import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
 import { MessagingService } from '../../services/messaging.service';
 import { TripService } from '../../services/trip.service';
-import { AppConfigService } from '../../services/app-config.service';
-import { CommercialContentService } from '../../services/commercial-content.service';
+import { COMMERCIAL_CONTENT, CommercialContent } from '../../services/commercial-content.service';
 
 @Component({
   selector: 'app-reservation-booking-detail-page',
@@ -22,8 +21,6 @@ export class ReservationBookingDetailPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly tripService = inject(TripService);
   private readonly messagingService = inject(MessagingService);
-  readonly appConfig = inject(AppConfigService);
-  readonly commercialContent = inject(CommercialContentService);
 
   trip: Trip | null = null;
   booking: BookingResponse | null = null;
@@ -164,7 +161,40 @@ export class ReservationBookingDetailPageComponent implements OnInit {
   }
 
   platformCommission(): number {
-    return this.grossAmount() * this.appConfig.config().platformFeeRate;
+    return this.grossAmount() * (this.booking?.platformFeeRate ?? 0);
+  }
+
+  hasPlatformFee(): boolean {
+    return (this.booking?.platformFeeRate ?? 0) > 0;
+  }
+
+  bookingFeeLabel(): string {
+    const rate = this.booking?.platformFeeRate ?? 0;
+    if (rate <= 0) {
+      return this.bookingCommercialContent().bookingFeeLabel;
+    }
+
+    const percentage = new Intl.NumberFormat('fr-FR', {
+      style: 'percent',
+      maximumFractionDigits: 2,
+    }).format(rate);
+    return `Commission Coliclic (${percentage})`;
+  }
+
+  bookingGrossLabel(): string {
+    return this.bookingCommercialContent().bookingGrossLabel;
+  }
+
+  bookingNetLabel(): string {
+    return this.bookingCommercialContent().bookingNetLabel;
+  }
+
+  private bookingCommercialContent(): CommercialContent {
+    return COMMERCIAL_CONTENT[
+      this.booking?.commercialMode === 'COMMISSION' || this.hasPlatformFee()
+        ? 'commission'
+        : 'free'
+    ];
   }
 
   netAmount(): number {

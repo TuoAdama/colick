@@ -26,7 +26,9 @@ Pour basculer vers le mode avec commission :
 3. vérifier `/api/public/app-config` et `/api/swagger-ui.html` ;
 4. ouvrir une page publique et une réservation pour contrôler les textes et les montants.
 
-Le retour au mode gratuit suit la même procédure avec `APP_COMMERCIAL_MODE=FREE`. Aucune migration de base de données n'est nécessaire.
+Le retour au mode gratuit suit la même procédure avec `APP_COMMERCIAL_MODE=FREE`. Aucune migration manuelle n'est nécessaire.
+
+Chaque nouvelle réservation conserve un instantané du mode et du taux applicables lors de sa création. Changer le mode global ne modifie donc pas ses frais historiques. Au premier démarrage de cette version, les réservations antérieures sont automatiquement associées au profil historique `COMMISSION` à 7 %.
 
 ## Comportement en cas d'erreur
 

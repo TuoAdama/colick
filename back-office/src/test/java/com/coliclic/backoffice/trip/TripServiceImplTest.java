@@ -1,5 +1,7 @@
 package com.coliclic.backoffice.trip;
 
+import com.coliclic.backoffice.commercial.CommercialMode;
+import com.coliclic.backoffice.commercial.CommercialProperties;
 import com.coliclic.backoffice.email.EmailService;
 import com.coliclic.backoffice.exception.BadRequestException;
 import com.coliclic.backoffice.exception.ConflictException;
@@ -28,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -81,6 +84,9 @@ class TripServiceImplTest {
 
     @Mock
     private TripReferenceGenerator tripReferenceGenerator;
+
+    @Spy
+    private CommercialProperties commercialProperties = new CommercialProperties();
 
     @Spy
     private LocalizedMessages localizedMessages = TestLocalizedMessages.create();
@@ -733,9 +739,14 @@ class TripServiceImplTest {
 
         TripBookingResponse response = tripService.createBooking(10L, request, sender);
 
+        ArgumentCaptor<TripBooking> bookingCaptor = ArgumentCaptor.forClass(TripBooking.class);
+        verify(bookingRepository).save(bookingCaptor.capture());
+
         assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.PENDING);
         assertThat(response.getTitle()).isEqualTo("Electronics");
         assertThat(response.getRecipientContact()).isEqualTo("+225 07 00 00 00");
+        assertThat(bookingCaptor.getValue().getCommercialMode()).isEqualTo(CommercialMode.FREE);
+        assertThat(bookingCaptor.getValue().getPlatformFeeRate()).isZero();
         verify(bookingValidationService).normalizeRecipientContact("+225 07 00 00 00");
         verify(bookingValidationService, never()).sendValidationCode(any());
         verify(emailService).sendTripBookingCreatedEmail(

@@ -139,6 +139,21 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(profileLink?.getAttribute('href')).toContain('/trips/12/reservations/7/profile');
   });
 
+  it('uses the booking fee snapshot after the global mode changes', () => {
+    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking({
+      commercialMode: 'COMMISSION',
+      platformFeeRate: 0.07,
+    })));
+
+    createComponent();
+
+    expect(component.platformCommission()).toBeCloseTo(2.1, 5);
+    expect(component.netAmount()).toBeCloseTo(27.9, 5);
+    expect(component.bookingFeeLabel()).toContain('7');
+    expect(component.bookingGrossLabel()).toBe('Prix total payé');
+    expect(component.bookingNetLabel()).toBe('Votre gain net');
+  });
+
   it('redirects to 404 when the targeted booking cannot be found', () => {
     tripServiceMock.getTripBookingById.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 404 }))
