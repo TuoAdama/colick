@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -10,6 +10,7 @@ import { AuthService } from '../../../services/auth.service';
 })
 export class DashboardShellComponent {
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   currentYear = new Date().getFullYear();
   isMobileMenuOpen = false;
@@ -77,5 +78,9 @@ export class DashboardShellComponent {
 
   closeMobileMenu(): void {
     this.isMobileMenuOpen = false;
+  }
+
+  shouldShowFooter(): boolean {
+    return !/^\/trips\/\d+\/reservations(?:[?#].*)?$/.test(this.router.url);
   }
 }
