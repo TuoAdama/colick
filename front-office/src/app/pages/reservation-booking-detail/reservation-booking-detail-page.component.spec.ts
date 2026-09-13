@@ -154,6 +154,18 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(component.bookingNetLabel()).toBe('Votre gain net');
   });
 
+  it('displays zero reviews when the sender has no reviews', () => {
+    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking({
+      senderRatingAverage: null,
+      senderRatingCount: 0,
+    })));
+
+    createComponent();
+
+    expect(fixture.nativeElement.textContent).toContain('(0)');
+    expect(fixture.nativeElement.textContent).not.toContain('Aucun avis pour le moment');
+  });
+
   it('redirects to 404 when the targeted booking cannot be found', () => {
     tripServiceMock.getTripBookingById.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 404 }))

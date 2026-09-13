@@ -30,6 +30,7 @@ describe('HeaderComponent', () => {
 
   // Drive auth state via currentUser$ so the template reacts reactively
   const currentUser$ = new BehaviorSubject<UserResponse | null>(null);
+  const sessionStatus$ = new BehaviorSubject<'authenticated' | 'anonymous' | 'unavailable'>('anonymous');
 
   const authServiceMock = {
     /**
@@ -37,8 +38,12 @@ describe('HeaderComponent', () => {
      * the BehaviorSubject so both code paths are consistent.
      */
     isLoggedIn: jasmine.createSpy('isLoggedIn').and.callFake(() => currentUser$.getValue() !== null),
-    logout: jasmine.createSpy('logout').and.callFake(() => currentUser$.next(null)),
+    logout: jasmine.createSpy('logout').and.callFake(() => {
+      currentUser$.next(null);
+      sessionStatus$.next('anonymous');
+    }),
     currentUser$,
+    sessionStatus$,
     getUser: jasmine.createSpy('getUser').and.callFake(() => currentUser$.getValue()),
   };
 
@@ -56,6 +61,7 @@ describe('HeaderComponent', () => {
     messagingServiceMock.refreshUnreadCount.calls.reset();
     messagingServiceMock.resetUnreadCount.calls.reset();
     currentUser$.next(null);
+    sessionStatus$.next('anonymous');
 
     await TestBed.configureTestingModule({
       imports: [HeaderComponent],
@@ -91,6 +97,13 @@ describe('HeaderComponent', () => {
     expect(text).not.toContain('Mes demandes');
   });
 
+  it('keeps the login action available after a transient session failure', () => {
+    sessionStatus$.next('unavailable');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Connexion');
+  });
+
   it('exposes the publish-trip CTA to guests and authenticated users', () => {
     fixture.detectChanges();
 
@@ -105,6 +118,7 @@ describe('HeaderComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain("S'inscrire");
 
     currentUser$.next(AUTHENTICATED_USER);
+    sessionStatus$.next('authenticated');
     fixture.detectChanges();
 
     publishLinks = Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[];
