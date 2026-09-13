@@ -314,6 +314,27 @@ describe('TripService', () => {
     });
   });
 
+  it('gets a single booking sent by the current user', () => {
+    service.getMyTripBookingById(12, 34).subscribe((booking) => {
+      expect(booking.id).toBe(34);
+      expect(booking.senderPhotoUrl).toBe('/api/uploads/sender.png');
+    });
+
+    const req = httpMock.expectOne('/api/trips/12/bookings/mine/34');
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      id: 34,
+      tripId: 12,
+      senderId: 2,
+      senderName: 'Alice Martin',
+      senderPhotoUrl: '/uploads/sender.png',
+      title: 'Valise',
+      weight: 2,
+      status: 'PENDING',
+      validationCodeActive: false,
+    });
+  });
+
   it('gets sender profile data for a booking', () => {
     service.getBookingSenderProfile(12, 34).subscribe((profile) => {
       expect(profile.completedTripCount).toBe(5);

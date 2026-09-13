@@ -181,7 +181,7 @@ export class SentBookingDetailPageComponent implements OnInit {
 
     forkJoin({
       trip: this.tripService.getTripById(tripId),
-      booking: this.tripService.getTripBookingById(tripId, bookingId),
+      booking: this.tripService.getMyTripBookingById(tripId, bookingId),
     }).subscribe({
       next: ({ trip, booking }) => {
         this.trip = trip;

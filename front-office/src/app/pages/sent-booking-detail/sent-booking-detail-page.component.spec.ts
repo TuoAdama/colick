@@ -17,7 +17,7 @@ describe('SentBookingDetailPageComponent', () => {
 
   const tripServiceMock = {
     getTripById: jasmine.createSpy('getTripById'),
-    getTripBookingById: jasmine.createSpy('getTripBookingById'),
+    getMyTripBookingById: jasmine.createSpy('getMyTripBookingById'),
     cancelBooking: jasmine.createSpy('cancelBooking'),
   };
 
@@ -28,12 +28,12 @@ describe('SentBookingDetailPageComponent', () => {
   beforeEach(async () => {
     paramMap$.next(convertToParamMap({ tripId: '12', bookingId: '7' }));
     tripServiceMock.getTripById.calls.reset();
-    tripServiceMock.getTripBookingById.calls.reset();
+    tripServiceMock.getMyTripBookingById.calls.reset();
     tripServiceMock.cancelBooking.calls.reset();
     messagingServiceMock.createConversationDraft.calls.reset();
 
     tripServiceMock.getTripById.and.returnValue(of(buildTrip()));
-    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking()));
+    tripServiceMock.getMyTripBookingById.and.returnValue(of(buildBooking()));
     tripServiceMock.cancelBooking.and.returnValue(of({ ...buildBooking(), status: 'CANCELLED' }));
     messagingServiceMock.createConversationDraft.and.returnValue(of({
       id: 3,
@@ -75,7 +75,7 @@ describe('SentBookingDetailPageComponent', () => {
     createComponent();
 
     expect(tripServiceMock.getTripById).toHaveBeenCalledWith(12);
-    expect(tripServiceMock.getTripBookingById).toHaveBeenCalledWith(12, 7);
+    expect(tripServiceMock.getMyTripBookingById).toHaveBeenCalledWith(12, 7);
     expect(fixture.nativeElement.textContent).toContain('Documents');
     expect(fixture.nativeElement.textContent).toContain('Paris, France');
     expect(fixture.nativeElement.textContent).toContain('Ada Lovelace');
@@ -83,7 +83,7 @@ describe('SentBookingDetailPageComponent', () => {
   });
 
   it('redirects to 404 when the booking cannot be found', () => {
-    tripServiceMock.getTripBookingById.and.returnValue(
+    tripServiceMock.getMyTripBookingById.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 404 }))
     );
 
@@ -116,7 +116,7 @@ describe('SentBookingDetailPageComponent', () => {
   });
 
   it('does not show cancel action for rejected bookings', () => {
-    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking({ status: 'REJECTED' })));
+    tripServiceMock.getMyTripBookingById.and.returnValue(of(buildBooking({ status: 'REJECTED' })));
 
     createComponent();
 

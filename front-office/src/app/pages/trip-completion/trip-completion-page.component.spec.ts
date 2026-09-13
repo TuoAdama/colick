@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { BookingResponse } from '../../models/booking.model';
@@ -135,6 +136,16 @@ describe('TripCompletionPageComponent', () => {
     createComponent();
 
     expect(component.loadError).toBe('Impossible de charger cette page de validation.');
+  });
+
+  it('redirects to 404 when the reservations cannot be accessed', () => {
+    tripServiceMock.getTripBookings.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 404 }))
+    );
+
+    createComponent();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/404']);
   });
 });
 
