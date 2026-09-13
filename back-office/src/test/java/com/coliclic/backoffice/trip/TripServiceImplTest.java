@@ -534,7 +534,7 @@ class TripServiceImplTest {
     }
 
     @Test
-    void getBookingById_shouldReturnBooking_whenRequesterIsSender() {
+    void getBookingById_shouldThrowNotFound_whenRequesterIsSender() {
         TripBooking pending = TripBooking.builder()
                 .id(12L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.PENDING).build();
@@ -542,10 +542,9 @@ class TripServiceImplTest {
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(12L)).thenReturn(Optional.of(pending));
 
-        TripBookingResponse booking = tripService.getBookingById(10L, 12L, sender);
-
-        assertThat(booking.getId()).isEqualTo(12L);
-        assertThat(booking.getSenderName()).isEqualTo("Bob Martin");
+        assertThatThrownBy(() -> tripService.getBookingById(10L, 12L, sender))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("12");
     }
 
     @Test
@@ -565,6 +564,53 @@ class TripServiceImplTest {
         when(bookingRepository.findById(12L)).thenReturn(Optional.of(pending));
 
         assertThatThrownBy(() -> tripService.getBookingById(10L, 12L, otherUser))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("12");
+    }
+
+    @Test
+    void getMyBookingById_shouldReturnBooking_whenRequesterIsSender() {
+        TripBooking pending = TripBooking.builder()
+                .id(12L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.PENDING).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(12L)).thenReturn(Optional.of(pending));
+
+        TripBookingResponse booking = tripService.getMyBookingById(10L, 12L, sender);
+
+        assertThat(booking.getId()).isEqualTo(12L);
+    }
+
+    @Test
+    void getMyBookingById_shouldThrowNotFound_whenRequesterDoesNotOwnBooking() {
+        User otherUser = User.builder()
+                .id(3L).firstName("Claire").lastName("Durand")
+                .email("claire@example.com").role(User.Role.USER).build();
+        TripBooking pending = TripBooking.builder()
+                .id(12L).trip(sampleTrip).sender(sender)
+                .status(TripBooking.BookingStatus.PENDING).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(12L)).thenReturn(Optional.of(pending));
+
+        assertThatThrownBy(() -> tripService.getMyBookingById(10L, 12L, otherUser))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("12");
+    }
+
+    @Test
+    void getMyBookingById_shouldThrowNotFound_whenBookingBelongsToAnotherTrip() {
+        Trip anotherTrip = Trip.builder()
+                .id(42L).traveler(traveler).status(Trip.TripStatus.ACTIVE).build();
+        TripBooking pending = TripBooking.builder()
+                .id(12L).trip(anotherTrip).sender(sender)
+                .status(TripBooking.BookingStatus.PENDING).build();
+
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(12L)).thenReturn(Optional.of(pending));
+
+        assertThatThrownBy(() -> tripService.getMyBookingById(10L, 12L, sender))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("12");
     }
