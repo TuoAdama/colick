@@ -129,6 +129,20 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(component.netAmount()).toBe(30);
   });
 
+  it('keeps the net earnings summary on one line on small screens', () => {
+    createComponent();
+
+    const summaryRows = Array.from(fixture.nativeElement.querySelectorAll('aside section:first-child .flex.items-center')) as HTMLElement[];
+    const netEarningsRow = summaryRows[2];
+    const label = netEarningsRow.querySelector('span:first-child') as HTMLElement;
+    const amount = netEarningsRow.querySelector('span:last-child') as HTMLElement;
+
+    expect(label.classList).toContain('text-xs');
+    expect(label.classList).toContain('whitespace-nowrap');
+    expect(amount.classList).toContain('text-lg');
+    expect(amount.classList).toContain('whitespace-nowrap');
+  });
+
   it('provides a link to the sender profile page', () => {
     createComponent();
 
