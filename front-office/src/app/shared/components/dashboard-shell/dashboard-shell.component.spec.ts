@@ -78,9 +78,21 @@ describe('DashboardShellComponent', () => {
     fixture.detectChanges();
 
     const logo = fixture.nativeElement.querySelector('header a[routerLink="/"]') as HTMLAnchorElement | null;
+    const accentPart = logo?.querySelector('.text-accent') as HTMLElement | null;
 
     expect(logo).not.toBeNull();
     expect(logo?.textContent?.trim()).toBe('Coliclic');
+    expect(accentPart?.textContent).toBe('Coli');
+    expect(accentPart?.classList.contains('text-accent')).toBeTrue();
+
+    fixture.componentInstance.openMobileMenu();
+    fixture.detectChanges();
+
+    const mobileLogo = fixture.nativeElement.querySelector('[role="dialog"] a[routerLink="/"]') as HTMLAnchorElement | null;
+    const mobileAccentPart = mobileLogo?.querySelector('.text-accent') as HTMLElement | null;
+    expect(mobileLogo?.textContent?.trim()).toBe('Coliclic');
+    expect(mobileAccentPart?.textContent).toBe('Coli');
+    expect(mobileAccentPart?.classList.contains('text-accent')).toBeTrue();
   });
 
   it('shows the clarified navigation labels in the sidebar and mobile menu', () => {

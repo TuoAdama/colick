@@ -174,7 +174,7 @@ describe('HeaderComponent', () => {
 
     expect(logo).not.toBeNull();
     expect(logo?.textContent?.trim()).toBe('Coliclic');
-    expect(accentPart?.textContent).toBe('Co');
+    expect(accentPart?.textContent).toBe('Coli');
     expect(accentPart?.classList.contains('text-accent')).toBeTrue();
     expect(logo?.getAttribute('aria-label')).toBe('Coliclic - Accueil');
   });

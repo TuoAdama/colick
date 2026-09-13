@@ -28,4 +28,13 @@ describe('FooterComponent', () => {
 
     expect(contactLink?.getAttribute('href')).toBe('/contact');
   });
+
+  it('renders the Coli-accented brand logo without a trailing dot', () => {
+    const logo = fixture.nativeElement.querySelector('a[routerLink="/"]') as HTMLAnchorElement | null;
+    const accentPart = logo?.querySelector('.text-accent') as HTMLElement | null;
+
+    expect(logo?.textContent?.trim()).toBe('Coliclic');
+    expect(accentPart?.textContent).toBe('Coli');
+    expect(accentPart?.classList.contains('text-accent')).toBeTrue();
+  });
 });

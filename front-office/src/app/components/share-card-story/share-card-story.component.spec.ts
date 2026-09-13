@@ -55,6 +55,12 @@ describe('ShareCardStoryComponent', () => {
     expect(text).toContain('coliclic.test/trips/ref/TRP-2026-000001');
     expect(text).toContain('TRP-2026-000001');
     expect(text).toContain('Coliclic');
+    const logo = Array.from(fixture.nativeElement.querySelectorAll('p') as NodeListOf<HTMLElement>)
+      .find((element) => element.classList.contains('text-[4.2rem]')) as HTMLElement | undefined;
+    const accentPart = logo?.querySelector('.text-accent') as HTMLElement | null;
+    expect(logo?.textContent?.trim()).toBe('Coliclic');
+    expect(accentPart?.textContent).toBe('Coli');
+    expect(accentPart?.classList.contains('text-accent')).toBeTrue();
     expect(text).not.toContain('Transaction sécurisée');
     expect(text).not.toContain('Prélèvement de 7%');
   });
