@@ -2,8 +2,17 @@ export interface CreateBookingRequest {
   title: string;
   weight: number;
   description?: string;
-  packagePhotoUrl?: string;
   recipientContact: string;
+  parcelPolicyAccepted: boolean;
+  parcelPolicyVersion: string;
+}
+
+export interface ParcelGuidelines {
+  version: string;
+  prohibitedItems: string[];
+  packagingRecommendations: string[];
+  allowedPhotoContentTypes: string[];
+  maxPhotoBytes: number;
 }
 
 export interface ConfirmBookingDeliveryRequest {

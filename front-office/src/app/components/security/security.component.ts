@@ -41,7 +41,7 @@ export class SecurityComponent {
       },
       {
         title: "Système d'avis",
-        description: 'Les avis certifiés permettent d\'identifier les voyageurs de confiance.',
+        description: 'Les avis sont publiés par des expéditeurs après un trajet terminé.',
       },
     ];
   }

@@ -3,6 +3,7 @@ package com.coliclic.backoffice.trip.dto;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.AssertTrue;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -22,8 +23,12 @@ public class CreateBookingRequest {
 
     private String description;
 
-    private String packagePhotoUrl;
-
     @NotBlank
     private String recipientContact;
+
+    @AssertTrue
+    private boolean parcelPolicyAccepted;
+
+    @NotBlank
+    private String parcelPolicyVersion;
 }

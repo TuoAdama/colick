@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -165,6 +166,16 @@ public class TripController {
             @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(tripService.createBooking(id, request, currentUser));
+    }
+
+    @PostMapping("/{id}/bookings/{bookingId}/photo")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TripBookingResponse> uploadBookingPhoto(
+            @PathVariable Long id,
+            @PathVariable Long bookingId,
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(tripService.uploadBookingPhoto(id, bookingId, file, currentUser));
     }
 
     /** Accept a booking request. Only the trip owner can do this. */

@@ -57,7 +57,7 @@
               </div>
             </div>
 
-            <div class="mt-8 flex items-center gap-4 rounded-xl bg-primary/[0.04] p-5">
+            <a [routerLink]="['/travelers', trip.travelerId]" class="mt-8 flex items-center gap-4 rounded-xl bg-primary/[0.04] p-5 transition hover:bg-primary/[0.08] focus:outline-none focus:ring-2 focus:ring-accent" [attr.aria-label]="'Voir le profil de ' + trip.travelerName">
               <app-user-avatar
                 [name]="trip.travelerName"
                 [photoUrl]="trip.travelerPhotoUrl"
@@ -75,7 +75,7 @@
                   }
                 </p>
               </div>
-            </div>
+            </a>
           </div>
 
           <aside class="flex flex-col justify-between border-t border-[#E8E8EC] bg-[#FAFAFA] p-6 sm:p-8 lg:border-l lg:border-t-0">

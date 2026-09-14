@@ -47,6 +47,12 @@ public class TripBooking {
     @Column
     private String packagePhotoUrl;
 
+    @Column
+    private String parcelPolicyVersion;
+
+    @Column
+    private LocalDateTime parcelPolicyAcceptedAt;
+
     /** Contact information of the person who will pick up the package. */
     @Column(nullable = false)
     private String recipientContact;

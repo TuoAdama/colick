@@ -8,6 +8,7 @@ import {
   SentBookingResponse,
   BookingSenderProfileResponse,
   ConfirmBookingDeliveryRequest,
+  ParcelGuidelines,
 } from '../models/booking.model';
 import { PhotoUrlService } from './photo-url.service';
 
@@ -116,6 +117,18 @@ export class TripService {
     return this.http.post<BookingResponse>(`${this.baseUrl}/${tripId}/bookings`, request).pipe(
       map((booking) => this.normalizeBooking(booking))
     );
+  }
+
+  uploadBookingPhoto(tripId: number, bookingId: number, file: File): Observable<BookingResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<BookingResponse>(`${this.baseUrl}/${tripId}/bookings/${bookingId}/photo`, formData).pipe(
+      map((booking) => this.normalizeBooking(booking))
+    );
+  }
+
+  getParcelGuidelines(): Observable<ParcelGuidelines> {
+    return this.http.get<ParcelGuidelines>('/api/public/parcel-guidelines');
   }
 
   /** Get trips published by the current user. */

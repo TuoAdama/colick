@@ -174,6 +174,7 @@ public class UserServiceImpl implements UserService {
                 throw new ResourceNotFoundException(localizedMessages.get("error.user.tokenExpired"));
             }
             signupUser.setEnabled(true);
+            signupUser.setEmailVerifiedAt(LocalDateTime.now());
             signupUser.setSignupConfirmToken(null);
             signupUser.setSignupConfirmTokenExpiresAt(null);
             return UserResponse.from(userRepository.save(signupUser));
@@ -188,6 +189,7 @@ public class UserServiceImpl implements UserService {
             throw new ResourceNotFoundException(localizedMessages.get("error.user.invalidOrExpiredToken"));
         }
         user.setEmail(user.getPendingEmail());
+        user.setEmailVerifiedAt(LocalDateTime.now());
         user.setPendingEmail(null);
         user.setEmailConfirmToken(null);
         user.setEmailConfirmTokenExpiresAt(null);

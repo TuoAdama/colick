@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -99,6 +100,7 @@ public class GoogleAuthenticationServiceImpl implements GoogleAuthenticationServ
                 .enabled(true)
                 .authProvider(User.AuthProvider.GOOGLE)
                 .googleSubject(payload.subject())
+                .emailVerifiedAt(LocalDateTime.now())
                 .role(User.Role.USER)
                 .build();
     }
@@ -108,6 +110,9 @@ public class GoogleAuthenticationServiceImpl implements GoogleAuthenticationServ
             user.setEnabled(true);
             user.setSignupConfirmToken(null);
             user.setSignupConfirmTokenExpiresAt(null);
+        }
+        if (user.getEmailVerifiedAt() == null) {
+            user.setEmailVerifiedAt(LocalDateTime.now());
         }
     }
 

@@ -26,6 +26,10 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
     long countByTravelerAndStatus(User traveler, Trip.TripStatus status);
 
+    boolean existsByTravelerAndStatusIn(User traveler, List<Trip.TripStatus> statuses);
+
+    Optional<Trip> findFirstByTravelerAndCreatedAtIsNotNullOrderByCreatedAtAsc(User traveler);
+
     @Query("select t from Trip t where t.reference is null or trim(t.reference) = ''")
     List<Trip> findTripsMissingReference();
 }

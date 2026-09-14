@@ -130,6 +130,7 @@ describe('LandingPageComponent', () => {
 function buildLandingTripCard(overrides: { reference?: string } = {}) {
   return {
     id: 13,
+    travelerId: 7,
     tag: 'Flash',
     price: '12€',
     departure: 'Paris, France',

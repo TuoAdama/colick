@@ -12,6 +12,7 @@ import com.coliclic.backoffice.file.FileStorageService;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
 import com.coliclic.backoffice.location.entity.LocationType;
 import com.coliclic.backoffice.location.repository.LocationRepository;
+import com.coliclic.backoffice.parcelguidelines.ParcelGuidelines;
 import com.coliclic.backoffice.trip.dto.*;
 import com.coliclic.backoffice.trip.entity.Trip;
 import com.coliclic.backoffice.trip.entity.TripBooking;
@@ -29,6 +30,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Implementation of {@link TripService}.
@@ -234,6 +236,11 @@ public class TripServiceImpl implements TripService {
     public TripBookingResponse createBooking(Long tripId, CreateBookingRequest request, User sender) {
         Trip trip = findTripOrThrow(tripId);
 
+        if (!request.isParcelPolicyAccepted()
+                || !ParcelGuidelines.VERSION.equals(request.getParcelPolicyVersion())) {
+            throw new BadRequestException("Vous devez accepter la version actuelle des règles relatives aux colis.");
+        }
+
         if (trip.getStatus() != Trip.TripStatus.ACTIVE) {
             throw new ConflictException(localizedMessages.get("error.trip.onlyActiveBookingsCreatable"));
         }
@@ -265,7 +272,8 @@ public class TripServiceImpl implements TripService {
                 .title(request.getTitle())
                 .weight(request.getWeight())
                 .description(request.getDescription())
-                .packagePhotoUrl(request.getPackagePhotoUrl())
+                .parcelPolicyVersion(ParcelGuidelines.VERSION)
+                .parcelPolicyAcceptedAt(LocalDateTime.now())
                 .recipientContact(bookingValidationService.normalizeRecipientContact(request.getRecipientContact()))
                 .status(initialStatus)
                 .commercialMode(commercialProperties.getMode())
@@ -288,6 +296,19 @@ public class TripServiceImpl implements TripService {
         );
 
         return toTripBookingResponse(saved);
+    }
+
+    @Override
+    public TripBookingResponse uploadBookingPhoto(Long tripId, Long bookingId, MultipartFile file, User sender) {
+        TripBooking booking = findSenderBookingOrThrow(tripId, bookingId, sender);
+        if (booking.getStatus() == TripBooking.BookingStatus.CANCELLED
+                || booking.getStatus() == TripBooking.BookingStatus.REJECTED
+                || booking.getStatus() == TripBooking.BookingStatus.REMOVED
+                || booking.getStatus() == TripBooking.BookingStatus.DELIVERED) {
+            throw new ConflictException("La photo ne peut plus être modifiée pour cette demande.");
+        }
+        booking.setPackagePhotoUrl(fileStorageService.storeImage(file, ParcelGuidelines.MAX_PHOTO_BYTES));
+        return toTripBookingResponse(bookingRepository.save(booking));
     }
 
     private String reservationUrl(Long tripId, Long bookingId) {

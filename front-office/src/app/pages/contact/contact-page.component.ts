@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ContactService } from '../../services/contact.service';
+import { ActivatedRoute } from '@angular/router';
 
 function requiredTrimmed(control: AbstractControl<string>): ValidationErrors | null {
   return control.value.trim() ? null : { required: true };
@@ -13,9 +14,13 @@ function requiredTrimmed(control: AbstractControl<string>): ValidationErrors | n
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './contact-page.component.html',
 })
-export class ContactPageComponent {
+export class ContactPageComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly contactService = inject(ContactService);
+  private readonly route = inject(ActivatedRoute, { optional: true });
+  private reportTravelerId?: number;
+  private reportTripId?: number;
+  isProfileReport = false;
 
   readonly contactForm = this.fb.nonNullable.group({
     email: ['', [requiredTrimmed, Validators.email, Validators.maxLength(254)]],
@@ -27,6 +32,19 @@ export class ContactPageComponent {
   successMessage = '';
   errorMessage = '';
 
+  ngOnInit(): void {
+    const params = this.route?.snapshot.queryParamMap;
+    if (!params) return;
+    const travelerId = Number(params.get('travelerId'));
+    const tripId = Number(params.get('tripId'));
+    if (params.get('type') === 'report' && Number.isInteger(travelerId) && travelerId > 0) {
+      this.isProfileReport = true;
+      this.reportTravelerId = travelerId;
+      this.reportTripId = Number.isInteger(tripId) && tripId > 0 ? tripId : undefined;
+      this.contactForm.controls.subject.setValue('Signalement d’un profil voyageur');
+    }
+  }
+
   onSubmit(): void {
     if (this.contactForm.invalid || this.isLoading) {
       this.contactForm.markAllAsTouched();
@@ -36,7 +54,15 @@ export class ContactPageComponent {
     this.isLoading = true;
     this.successMessage = '';
     this.errorMessage = '';
-    this.contactService.send(this.contactForm.getRawValue()).subscribe({
+    const payload = this.isProfileReport
+      ? {
+          ...this.contactForm.getRawValue(),
+          category: 'PROFILE_REPORT' as const,
+          travelerId: this.reportTravelerId,
+          ...(this.reportTripId && { tripId: this.reportTripId }),
+        }
+      : this.contactForm.getRawValue();
+    this.contactService.send(payload).subscribe({
       next: () => {
         this.isLoading = false;
         this.contactForm.reset();

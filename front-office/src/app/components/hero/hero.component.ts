@@ -46,7 +46,7 @@ export class HeroComponent {
     return [
       { icon: 'verified', label: 'Compte activé' },
       { icon: 'secure', label: this.commercialContent.content().heroTrustLabel },
-      { icon: 'certified', label: 'Avis certifiés' },
+      { icon: 'certified', label: 'Avis après trajet' },
     ];
   }
 

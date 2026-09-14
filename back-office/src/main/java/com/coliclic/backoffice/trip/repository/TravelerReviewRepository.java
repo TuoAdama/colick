@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * JPA repository for {@link TravelerReview} entities.
@@ -52,6 +54,20 @@ public interface TravelerReviewRepository extends JpaRepository<TravelerReview, 
             ORDER BY review.submittedAt DESC
             """)
     List<TravelerReview> findSubmittedReviewsByTravelerId(@Param("travelerId") Long travelerId);
+
+    @Query(value = """
+            SELECT review FROM TravelerReview review
+            JOIN FETCH review.booking booking
+            JOIN FETCH booking.sender sender
+            JOIN FETCH booking.trip trip
+            WHERE review.submittedAt IS NOT NULL AND trip.traveler.id = :travelerId
+            """, countQuery = """
+            SELECT COUNT(review) FROM TravelerReview review
+            JOIN review.booking booking JOIN booking.trip trip
+            WHERE review.submittedAt IS NOT NULL AND trip.traveler.id = :travelerId
+            """)
+    Page<TravelerReview> findSubmittedReviewsPageByTravelerId(
+            @Param("travelerId") Long travelerId, Pageable pageable);
 
     interface TravelerRatingStatsProjection {
         Long getTravelerId();

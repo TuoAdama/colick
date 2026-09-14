@@ -13,6 +13,7 @@ import com.coliclic.backoffice.file.FileStorageService;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
 import com.coliclic.backoffice.location.entity.LocationType;
 import com.coliclic.backoffice.location.repository.LocationRepository;
+import com.coliclic.backoffice.parcelguidelines.ParcelGuidelines;
 import com.coliclic.backoffice.support.TestLocalizedMessages;
 import com.coliclic.backoffice.trip.dto.*;
 import com.coliclic.backoffice.trip.entity.Trip;
@@ -37,6 +38,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -765,6 +767,7 @@ class TripServiceImplTest {
         request.setWeight(BigDecimal.valueOf(5));
         request.setDescription("Fragile items");
         request.setRecipientContact("+225 07 00 00 00");
+        acceptParcelPolicy(request);
 
         TripBooking savedBooking = TripBooking.builder()
                 .id(1L)
@@ -806,6 +809,64 @@ class TripServiceImplTest {
     }
 
     @Test
+    void createBooking_shouldRejectAnOutdatedParcelPolicy() {
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setParcelPolicyAccepted(true);
+        request.setParcelPolicyVersion("obsolete-version");
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+
+        assertThatThrownBy(() -> tripService.createBooking(10L, request, sender))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("version actuelle");
+
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void uploadBookingPhoto_shouldStoreTheImageForTheBookingSender() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L)
+                .trip(sampleTrip)
+                .sender(sender)
+                .title("Documents")
+                .weight(BigDecimal.ONE)
+                .status(TripBooking.BookingStatus.PENDING)
+                .build();
+        MockMultipartFile photo = new MockMultipartFile(
+                "file", "parcel.png", "image/png", new byte[]{(byte) 0x89, 0x50, 0x4e, 0x47});
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(fileStorageService.storeImage(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
+                .thenReturn("/uploads/parcel.png");
+        when(bookingRepository.save(booking)).thenReturn(booking);
+
+        TripBookingResponse response = tripService.uploadBookingPhoto(10L, 1L, photo, sender);
+
+        assertThat(response.getPackagePhotoUrl()).isEqualTo("/uploads/parcel.png");
+        verify(bookingRepository).save(booking);
+    }
+
+    @Test
+    void uploadBookingPhoto_shouldHideTheBookingFromAnotherUser() {
+        TripBooking booking = TripBooking.builder()
+                .id(1L)
+                .trip(sampleTrip)
+                .sender(sender)
+                .status(TripBooking.BookingStatus.PENDING)
+                .build();
+        User anotherUser = User.builder().id(3L).role(User.Role.USER).build();
+        MockMultipartFile photo = new MockMultipartFile(
+                "file", "parcel.png", "image/png", new byte[]{(byte) 0x89, 0x50, 0x4e, 0x47});
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> tripService.uploadBookingPhoto(10L, 1L, photo, anotherUser))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(fileStorageService, never()).storeImage(any(), anyLong());
+    }
+
+    @Test
     void createBooking_shouldSaveWithAcceptedStatus_whenInstantAcceptance() {
         sampleTrip.setInstantAcceptance(true);
 
@@ -813,6 +874,7 @@ class TripServiceImplTest {
         request.setTitle("Clothes");
         request.setWeight(BigDecimal.valueOf(3));
         request.setRecipientContact("+225 01 00 00 00");
+        acceptParcelPolicy(request);
 
         TripBooking savedBooking = TripBooking.builder()
                 .id(2L).trip(sampleTrip).sender(sender)
@@ -842,6 +904,7 @@ class TripServiceImplTest {
         request.setTitle("Clothes");
         request.setWeight(BigDecimal.valueOf(3));
         request.setRecipientContact("+225 01 00 00 00");
+        acceptParcelPolicy(request);
 
         TripBooking savedBooking = TripBooking.builder()
                 .id(2L).trip(sampleTrip).sender(sender)
@@ -883,6 +946,7 @@ class TripServiceImplTest {
         request.setTitle("Electronics");
         request.setWeight(BigDecimal.valueOf(5));
         request.setRecipientContact("+225 07 00 00 00");
+        acceptParcelPolicy(request);
 
         List<TripBooking.BookingStatus> activeStatuses = List.of(
                 TripBooking.BookingStatus.PENDING, TripBooking.BookingStatus.ACCEPTED);
@@ -904,6 +968,7 @@ class TripServiceImplTest {
         request.setTitle("Electronics");
         request.setWeight(BigDecimal.valueOf(5));
         request.setRecipientContact("+225 07 00 00 00");
+        acceptParcelPolicy(request);
 
         TripBooking savedBooking = TripBooking.builder()
                 .id(3L)
@@ -938,6 +1003,7 @@ class TripServiceImplTest {
                 request.setTitle("My own trip booking");
                 request.setWeight(BigDecimal.valueOf(1));
                 request.setRecipientContact("+225 07 00 00 00");
+                acceptParcelPolicy(request);
 
                 when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
 
@@ -1129,6 +1195,7 @@ class TripServiceImplTest {
         request.setTitle("Electronics");
         request.setWeight(BigDecimal.valueOf(5));
         request.setRecipientContact("+225 07 00 00 00");
+        acceptParcelPolicy(request);
 
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
 
@@ -1271,6 +1338,7 @@ class TripServiceImplTest {
         request.setTitle("Heavy package");
         request.setWeight(BigDecimal.valueOf(10)); // exceeds available 5 kg
         request.setRecipientContact("+225 07 00 00 00");
+        acceptParcelPolicy(request);
 
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
@@ -1779,5 +1847,10 @@ class TripServiceImplTest {
         request.setMaxWeight(BigDecimal.valueOf(20));
         request.setPricePerKilo(BigDecimal.valueOf(5));
         return request;
+    }
+
+    private void acceptParcelPolicy(CreateBookingRequest request) {
+        request.setParcelPolicyAccepted(true);
+        request.setParcelPolicyVersion(ParcelGuidelines.VERSION);
     }
 }

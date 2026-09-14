@@ -6,6 +6,9 @@ import com.coliclic.backoffice.trip.entity.Trip;
 import com.coliclic.backoffice.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,4 +42,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
      * @return all conversations involving the user
      */
     List<Conversation> findByParticipant1OrParticipant2(User participant1, User participant2);
+
+    @Query("SELECT MIN(c.createdAt) FROM Conversation c WHERE c.participant1 = :user OR c.participant2 = :user")
+    Optional<LocalDateTime> findEarliestCreatedAtForUser(@Param("user") User user);
 }

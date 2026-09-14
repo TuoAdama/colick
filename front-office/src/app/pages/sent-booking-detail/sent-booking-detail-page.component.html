@@ -126,7 +126,15 @@
                 decoding="async"
               />
             </section>
+          } @else if (canCancelBooking()) {
+            <section class="rounded-xl border border-dashed border-border bg-surface p-5 sm:p-6">
+              <h2 class="text-lg font-bold text-text-primary">Photo du colis</h2>
+              <p class="mt-2 text-sm text-text-secondary">L’ajout reste facultatif. Formats JPEG, PNG ou WebP, 5 Mo maximum.</p>
+              <label for="retry-package-photo" class="btn-outline mt-4 inline-flex cursor-pointer !py-2.5 !text-sm">Ajouter une photo</label>
+              <input id="retry-package-photo" type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" (change)="retryPhotoUpload($event)" />
+            </section>
           }
+          @if (photoMessage) { <p class="rounded-lg bg-success/10 p-3 text-sm text-success" role="status">{{ photoMessage }}</p> }
         </div>
 
         <aside class="space-y-6">

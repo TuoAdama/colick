@@ -85,6 +85,27 @@ public class User {
     @Column
     private LocalDateTime signupConfirmTokenExpiresAt;
 
+    /** Exact account creation time, or the earliest provable activity for legacy accounts. */
+    @Column
+    private LocalDateTime createdAt;
+
+    /** Whether createdAt was reconstructed from legacy activity rather than captured at signup. */
+    @Column
+    @Builder.Default
+    private boolean createdAtEstimated = false;
+
+    /** Time at which ownership of the active e-mail address was verified. */
+    @Column
+    private LocalDateTime emailVerifiedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+            createdAtEstimated = false;
+        }
+    }
+
     public enum Role {
         USER, ADMIN
     }
