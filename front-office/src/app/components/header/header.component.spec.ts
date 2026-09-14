@@ -141,6 +141,7 @@ describe('HeaderComponent', () => {
     expect(publishLink?.getAttribute('href')).toBe('/propose');
     expect(mobileMenu?.textContent).not.toContain("S'inscrire");
     expect(Array.from(mobileMenu?.querySelectorAll('a') ?? []).map((link) => link.textContent?.trim())).toEqual([
+      'Trouver un trajet',
       'Comment ca marche',
       'Nous contacter',
       'Connexion',
@@ -342,6 +343,19 @@ describe('HeaderComponent', () => {
       .find((element) => element.textContent?.trim() === 'Nous contacter') as HTMLAnchorElement | undefined;
 
     expect(link?.getAttribute('href')).toBe('/contact');
+    link?.click();
+    expect(component.isMobileMenuOpen).toBeFalse();
+  });
+
+  it('links the mobile menu search action to the trip search page and closes it on navigation', () => {
+    fixture.detectChanges();
+    component.toggleMobileMenu();
+    fixture.detectChanges();
+
+    const link = Array.from(fixture.nativeElement.querySelectorAll('#mobile-menu a') as NodeListOf<HTMLAnchorElement>)
+      .find((element) => element.textContent?.trim() === 'Trouver un trajet') as HTMLAnchorElement | undefined;
+
+    expect(link?.getAttribute('href')).toBe('/search');
     link?.click();
     expect(component.isMobileMenuOpen).toBeFalse();
   });

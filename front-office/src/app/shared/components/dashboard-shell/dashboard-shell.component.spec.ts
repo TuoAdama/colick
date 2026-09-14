@@ -1,7 +1,11 @@
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { DashboardShellComponent } from './dashboard-shell.component';
+
+@Component({ standalone: true, template: '' })
+class TestRouteComponent {}
 
 describe('DashboardShellComponent', () => {
   let fixture: ComponentFixture<DashboardShellComponent>;
@@ -24,7 +28,13 @@ describe('DashboardShellComponent', () => {
     await TestBed.configureTestingModule({
       imports: [DashboardShellComponent],
       providers: [
-        provideRouter([]),
+        provideRouter([
+          { path: 'search', component: TestRouteComponent },
+          { path: 'trips', component: TestRouteComponent },
+          { path: 'sent-bookings', component: TestRouteComponent },
+          { path: 'messages', component: TestRouteComponent },
+          { path: 'settings', component: TestRouteComponent },
+        ]),
         { provide: AuthService, useValue: authServiceMock },
       ],
     }).compileComponents();
@@ -129,5 +139,51 @@ describe('DashboardShellComponent', () => {
       expect(icon.querySelector('path[d="M5 19c0-5.5 2.5-9 7-9h2c3 0 5-2 5-5"]')).not.toBeNull();
       expect(icon.querySelector('path[d="M3 7h18M6 3h12M6 21h12M4 10l2 8m14-8-2 8"]')).toBeNull();
     });
+  });
+
+  it('renders the five primary destinations in the mobile bottom navigation', () => {
+    fixture.detectChanges();
+
+    const navigation = fixture.nativeElement.querySelector('[data-testid="mobile-bottom-navigation"]') as HTMLElement | null;
+    const links = Array.from(navigation?.querySelectorAll('a') ?? []) as HTMLAnchorElement[];
+
+    expect(navigation).not.toBeNull();
+    expect(navigation?.classList.contains('md:hidden')).toBeTrue();
+    expect(links.map((link) => ({ label: link.textContent?.trim(), href: link.getAttribute('href') }))).toEqual([
+      { label: 'Rechercher', href: '/search' },
+      { label: 'Voyages', href: '/trips' },
+      { label: 'Demandes', href: '/sent-bookings' },
+      { label: 'Messages', href: '/messages' },
+      { label: 'Profil', href: '/settings' },
+    ]);
+    expect(links.map((link) => link.getAttribute('aria-label'))).toEqual([
+      'Rechercher un trajet',
+      'Mes voyages',
+      'Mes demandes envoyées',
+      'Messages',
+      'Mon profil',
+    ]);
+  });
+
+  it('reserves mobile space for the fixed bottom navigation', () => {
+    fixture.detectChanges();
+
+    const shell = fixture.nativeElement.firstElementChild as HTMLElement;
+    expect(shell.classList.contains('pb-20')).toBeTrue();
+    expect(shell.classList.contains('md:pb-0')).toBeTrue();
+  });
+
+  it('marks the current bottom-navigation destination as active', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/trips');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const tripsLink = fixture.nativeElement.querySelector(
+      '[data-testid="mobile-bottom-navigation"] a[href="/trips"]'
+    ) as HTMLAnchorElement | null;
+
+    expect(tripsLink?.classList.contains('text-primary')).toBeTrue();
   });
 });
