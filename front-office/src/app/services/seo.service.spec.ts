@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
-import { SeoService } from './seo.service';
+import { DEFAULT_SEO, SeoService } from './seo.service';
 
 describe('SeoService', () => {
   let service: SeoService;
@@ -35,6 +35,15 @@ describe('SeoService', () => {
 
     expect(title.getTitle()).toBe('Conditions générales d’utilisation | Coliclic');
     expect(meta.getTag('name="description"')?.content).toBe('Conditions applicables à Coliclic.');
+    expect(meta.getTag('name="robots"')?.content).toBe('index, follow');
+    expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href.endsWith('/cgu')).toBeTrue();
+  });
+
+  it('restores default metadata when the destination has no SEO configuration', () => {
+    service.update({ data: {}, firstChild: null } as unknown as ActivatedRouteSnapshot);
+
+    expect(title.getTitle()).toBe(DEFAULT_SEO.title);
+    expect(meta.getTag('name="description"')?.content).toBe(DEFAULT_SEO.description);
     expect(meta.getTag('name="robots"')?.content).toBe('index, follow');
     expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href.endsWith('/cgu')).toBeTrue();
   });

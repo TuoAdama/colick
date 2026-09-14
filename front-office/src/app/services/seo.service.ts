@@ -9,6 +9,12 @@ export interface SeoRouteData {
   index?: boolean;
 }
 
+export const DEFAULT_SEO: SeoRouteData = {
+  title: 'Coliclic - Envoyez vos colis avec des voyageurs de confiance',
+  description: 'Coliclic met en relation expéditeurs et voyageurs pour transporter des colis.',
+  index: true,
+};
+
 @Injectable({ providedIn: 'root' })
 export class SeoService {
   private readonly title = inject(Title);
@@ -19,8 +25,7 @@ export class SeoService {
 
   update(snapshot: ActivatedRouteSnapshot): void {
     const leaf = this.deepestChild(snapshot);
-    const seo = leaf.data['seo'] as SeoRouteData | undefined;
-    if (!seo) return;
+    const seo = (leaf.data['seo'] as SeoRouteData | undefined) ?? DEFAULT_SEO;
 
     this.title.setTitle(seo.title);
     this.meta.updateTag({ name: 'description', content: seo.description });

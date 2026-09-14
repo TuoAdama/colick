@@ -59,4 +59,11 @@ describe('app routes', () => {
       expect(route?.data?.['seo']?.description).withContext(path).toBeTruthy();
     }
   });
+
+  it('prevents indexing legal drafts until their mandatory information is validated', () => {
+    for (const path of ['cgu', 'confidentialite', 'mentions-legales', 'annulation-litiges']) {
+      const route = routes.find((candidate) => candidate.path === path);
+      expect(route?.data?.['seo']?.index).withContext(path).toBeFalse();
+    }
+  });
 });
