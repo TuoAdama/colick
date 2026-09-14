@@ -38,4 +38,25 @@ describe('app routes', () => {
     expect(contactRoute).toBeDefined();
     expect(contactRoute?.loadComponent).toBeDefined();
   });
+
+  it('defines every public trust route with lazy loading and SEO metadata', () => {
+    const publicTrustPaths = [
+      'a-propos',
+      'tarifs',
+      'aide',
+      'cgu',
+      'confidentialite',
+      'mentions-legales',
+      'securite',
+      'annulation-litiges',
+    ];
+
+    for (const path of publicTrustPaths) {
+      const route = routes.find((candidate) => candidate.path === path);
+      expect(route).withContext(path).toBeDefined();
+      expect(route?.loadComponent).withContext(path).toBeDefined();
+      expect(route?.data?.['seo']?.title).withContext(path).toBeTruthy();
+      expect(route?.data?.['seo']?.description).withContext(path).toBeTruthy();
+    }
+  });
 });

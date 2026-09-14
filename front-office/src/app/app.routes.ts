@@ -44,6 +44,67 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'tarifs',
+    data: {
+      seo: {
+        title: 'Tarifs | Coliclic',
+        description: 'Découvrez le calcul des tarifs et le mode commercial actif sur Coliclic.',
+        index: true,
+      },
+    },
+    loadComponent: () =>
+      import('./pages/pricing/pricing-page.component').then((m) => m.PricingPageComponent),
+  },
+  ...[
+    {
+      path: 'a-propos',
+      trustSlug: 'about',
+      title: 'À propos de Coliclic',
+      description: 'Mission, fonctionnement et rôle de Coliclic.',
+    },
+    {
+      path: 'aide',
+      trustSlug: 'help',
+      title: 'Centre d’aide Coliclic',
+      description: 'Aide sur les comptes, trajets, réservations et colis Coliclic.',
+    },
+    {
+      path: 'cgu',
+      trustSlug: 'terms',
+      title: 'Conditions générales d’utilisation | Coliclic',
+      description: 'Conditions applicables à l’utilisation de Coliclic.',
+    },
+    {
+      path: 'confidentialite',
+      trustSlug: 'privacy',
+      title: 'Politique de confidentialité | Coliclic',
+      description: 'Traitements de données personnelles et droits des utilisateurs Coliclic.',
+    },
+    {
+      path: 'mentions-legales',
+      trustSlug: 'legal-notice',
+      title: 'Mentions légales | Coliclic',
+      description: 'Informations relatives à l’éditeur et à l’hébergement de Coliclic.',
+    },
+    {
+      path: 'securite',
+      trustSlug: 'security',
+      title: 'Sécurité et objets interdits | Coliclic',
+      description: 'Règles de sécurité, emballage, douane et objets interdits sur Coliclic.',
+    },
+    {
+      path: 'annulation-litiges',
+      trustSlug: 'cancellation-disputes',
+      title: 'Annulation et litiges | Coliclic',
+      description: 'Règles d’annulation, remboursement et réclamation sur Coliclic.',
+    },
+  ].map(({ path, trustSlug, title, description }) => ({
+    path,
+    data: { trustSlug, seo: { title, description, index: true } },
+    loadComponent: () =>
+      import('./pages/trust/trust-page.component').then((m) => m.TrustPageComponent),
+  } satisfies Routes[number])),
+  {
     path: 'trips/ref/:reference',
     loadComponent: () =>
       import('./pages/trip-reference/trip-reference-page.component').then(
