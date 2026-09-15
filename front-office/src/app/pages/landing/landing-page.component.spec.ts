@@ -54,6 +54,18 @@ describe('LandingPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Publier un trajet');
   });
 
+  it('uses clear sender and traveler labels for the landing mode selector', () => {
+    fixture.detectChanges();
+
+    const modeButtons = Array.from(fixture.nativeElement.querySelectorAll('button'))
+      .slice(0, 2) as HTMLButtonElement[];
+
+    expect(modeButtons.map((button) => button.textContent?.trim())).toEqual([
+      'Je veux envoyer',
+      'Je voyage',
+    ]);
+  });
+
   it('updates the URL query param when switching tabs', () => {
     fixture.detectChanges();
 

@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NavigationEnd, Router } from '@angular/router';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
+import { AuthService } from './services/auth.service';
+import { SeoService } from './services/seo.service';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
@@ -17,7 +19,11 @@ describe('AppComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [{ provide: Router, useValue: routerMock }],
+      providers: [
+        { provide: Router, useValue: routerMock },
+        { provide: AuthService, useValue: { currentUser$: new BehaviorSubject(null) } },
+        { provide: SeoService, useValue: { update: jasmine.createSpy('update') } },
+      ],
     })
       .overrideComponent(AppComponent, {
         set: { template: '' },
@@ -38,6 +44,15 @@ describe('AppComponent', () => {
     routerEvents.next(new NavigationEnd(1, '/trips/ref/TRP-2026-000004', '/trips/ref/TRP-2026-000004'));
 
     expect(fixture.componentInstance.showSharedChrome).toBeTrue();
+  });
+
+  it('keeps the authenticated bottom navigation mounted on search', () => {
+    routerEvents.next(new NavigationEnd(1, '/search?from=Paris', '/search?from=Paris'));
+
+    expect(fixture.componentInstance.showMobileBottomSearchNavigation).toBeTrue();
+
+    routerEvents.next(new NavigationEnd(2, '/comment-ca-marche', '/comment-ca-marche'));
+    expect(fixture.componentInstance.showMobileBottomSearchNavigation).toBeFalse();
   });
 
   it('exposes the Coliclic application title', () => {

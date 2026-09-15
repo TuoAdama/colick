@@ -259,6 +259,16 @@ describe('ReservationDetailsPageComponent', () => {
     expect(shareButton?.textContent).toContain("Partager l'annonce");
   });
 
+  it('positions fixed mobile trip actions above the bottom navigation', () => {
+    createComponent();
+
+    const mobileActions = Array.from(
+      fixture.nativeElement.querySelectorAll('div.fixed') as NodeListOf<HTMLElement>
+    ).find((element) => element.classList.contains('md:hidden'));
+
+    expect(mobileActions?.classList.contains('bottom-20')).toBeTrue();
+  });
+
   it('does not render the share announcement button for inactive trips', () => {
     tripServiceMock.getTripById.and.returnValue(of({ ...buildTrip(), status: 'COMPLETED' }));
 

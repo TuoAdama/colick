@@ -189,6 +189,15 @@
       <ul class="flex flex-col px-4 py-3" role="list">
         <li>
           <a
+            routerLink="/search"
+            class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-background-primary transition-colors duration-200 text-sm"
+            (click)="closeMenus()"
+          >
+            Trouver un trajet
+          </a>
+        </li>
+        <li>
+          <a
             routerLink="/comment-ca-marche"
             class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-background-primary transition-colors duration-200 text-sm"
             (click)="closeMenus()"
