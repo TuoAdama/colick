@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NavigationEnd, Router } from '@angular/router';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { AuthService } from './services/auth.service';
+import { SeoService } from './services/seo.service';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
@@ -21,6 +22,7 @@ describe('AppComponent', () => {
       providers: [
         { provide: Router, useValue: routerMock },
         { provide: AuthService, useValue: { currentUser$: new BehaviorSubject(null) } },
+        { provide: SeoService, useValue: { update: jasmine.createSpy('update') } },
       ],
     })
       .overrideComponent(AppComponent, {

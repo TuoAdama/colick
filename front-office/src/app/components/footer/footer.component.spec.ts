@@ -29,6 +29,28 @@ describe('FooterComponent', () => {
     expect(contactLink?.getAttribute('href')).toBe('/contact');
   });
 
+  it('links every trust page from the three navigation columns', () => {
+    const links = Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[];
+    const destinations = links.map((link) => link.getAttribute('href'));
+
+    expect(destinations).toContain('/a-propos');
+    expect(destinations).toContain('/tarifs');
+    expect(destinations).toContain('/aide');
+    expect(destinations).toContain('/securite');
+    expect(destinations).toContain('/cgu');
+    expect(destinations).toContain('/confidentialite');
+    expect(destinations).toContain('/mentions-legales');
+    expect(destinations).toContain('/annulation-litiges');
+    expect(fixture.nativeElement.querySelectorAll('nav').length).toBe(3);
+  });
+
+  it('renders French as non-interactive text and has no placeholder links', () => {
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('[aria-label="Langue actuelle : français"]')?.tagName).toBe('SPAN');
+    expect(host.querySelector('a[href="#"]')).toBeNull();
+  });
+
   it('renders the Coli-accented brand logo without a trailing dot', () => {
     const logo = fixture.nativeElement.querySelector('a[routerLink="/"]') as HTMLAnchorElement | null;
     const accentPart = logo?.querySelector('.text-accent') as HTMLElement | null;
