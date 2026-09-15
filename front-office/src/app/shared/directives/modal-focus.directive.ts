@@ -49,7 +49,7 @@ export class ModalFocusDirective implements AfterViewInit, OnDestroy {
     }
   }
 
-  @HostListener('keydown', ['$event'])
+  @HostListener('document:keydown', ['$event'])
   onKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Tab') {
       return;
@@ -65,7 +65,10 @@ export class ModalFocusDirective implements AfterViewInit, OnDestroy {
     const lastElement = focusableElements[focusableElements.length - 1];
     const activeElement = this.document.activeElement;
 
-    if (event.shiftKey && activeElement === firstElement) {
+    if (!this.elementRef.nativeElement.contains(activeElement)) {
+      event.preventDefault();
+      (event.shiftKey ? lastElement : firstElement).focus();
+    } else if (event.shiftKey && activeElement === firstElement) {
       event.preventDefault();
       lastElement.focus();
     } else if (!event.shiftKey && activeElement === lastElement) {

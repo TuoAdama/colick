@@ -9,7 +9,9 @@ import { ModalFocusDirective } from './modal-focus.directive';
     <button id="modal-opener" type="button">Ouvrir</button>
     @if (isOpen) {
       <div role="dialog" appModalFocus="#modal-initial">
-        <button id="modal-initial" type="button">Initial</button>
+        @if (isInitialVisible) {
+          <button id="modal-initial" type="button">Initial</button>
+        }
         <button id="modal-disabled" type="button" disabled>Désactivé</button>
         <button id="modal-last" type="button">Dernier</button>
       </div>
@@ -18,6 +20,7 @@ import { ModalFocusDirective } from './modal-focus.directive';
 })
 class ModalFocusTestComponent {
   isOpen = false;
+  isInitialVisible = true;
 }
 
 describe('ModalFocusDirective', () => {
@@ -37,6 +40,7 @@ describe('ModalFocusDirective', () => {
   async function openDialog(): Promise<void> {
     (fixture.nativeElement.querySelector('#modal-opener') as HTMLButtonElement).focus();
     component.isOpen = true;
+    component.isInitialVisible = true;
     fixture.detectChanges();
     await fixture.whenStable();
   }
@@ -66,6 +70,18 @@ describe('ModalFocusDirective', () => {
 
     const event = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true });
     initial.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBeTrue();
+    expect(document.activeElement?.id).toBe('modal-last');
+  });
+
+  it('returns focus to the dialog when the focused control is removed', async () => {
+    await openDialog();
+    component.isInitialVisible = false;
+    fixture.detectChanges();
+
+    const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
 
     expect(event.defaultPrevented).toBeTrue();
     expect(document.activeElement?.id).toBe('modal-last');
