@@ -8,8 +8,7 @@ import { CommercialContentService } from '../../services/commercial-content.serv
  */
 interface FooterLink {
   label: string;
-  href?: string;
-  routerLink?: string;
+  routerLink: string;
 }
 
 /**
@@ -21,17 +20,7 @@ interface FooterSection {
 }
 
 /**
- * SocialLink interface representing a social media link
- */
-interface SocialLink {
-  name: string;
-  href: string;
-  icon: string;
-}
-
-/**
- * FooterComponent - Site footer with navigation links and social media.
- * Contains platform links, support links, legal information, and social icons.
+ * FooterComponent - Site footer with platform, support, and legal navigation.
  */
 @Component({
   selector: 'app-footer',
@@ -54,21 +43,28 @@ export class FooterComponent {
       {
         title: 'PLATEFORME',
         links: [
-          { label: 'A propos de nous', href: '#' },
+          { label: 'À propos de nous', routerLink: '/a-propos' },
           { label: 'Comment ca marche', routerLink: '/comment-ca-marche' },
-          { label: this.commercialContent.content().footerCommercialLink, href: '#' },
+          { label: this.commercialContent.content().footerCommercialLink, routerLink: '/tarifs' },
+        ],
+      },
+      {
+        title: 'ASSISTANCE',
+        links: [
+          { label: 'Aide', routerLink: '/aide' },
           { label: 'Nous contacter', routerLink: '/contact' },
+          { label: 'Sécurité', routerLink: '/securite' },
+        ],
+      },
+      {
+        title: 'INFORMATIONS LÉGALES',
+        links: [
+          { label: 'CGU', routerLink: '/cgu' },
+          { label: 'Confidentialité', routerLink: '/confidentialite' },
+          { label: 'Mentions légales', routerLink: '/mentions-legales' },
+          { label: 'Annulation et litiges', routerLink: '/annulation-litiges' },
         ],
       },
     ];
   }
-
-  /**
-   * Social media links
-   */
-  socialLinks: SocialLink[] = [
-    { name: 'Facebook', href: '#', icon: 'facebook' },
-    { name: 'Twitter', href: '#', icon: 'twitter' },
-    { name: 'Instagram', href: '#', icon: 'instagram' },
-  ];
 }

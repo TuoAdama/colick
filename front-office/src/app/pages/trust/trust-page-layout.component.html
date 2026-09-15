@@ -1,0 +1,55 @@
+<article class="min-h-screen bg-background-primary pb-20 pt-28 sm:pt-32">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <header class="max-w-3xl">
+      <p class="text-sm font-semibold uppercase tracking-[0.16em] text-accent">Confiance et transparence</p>
+      <h1 class="mt-4 font-display text-4xl font-bold tracking-tight text-primary sm:text-5xl">{{ document().title }}</h1>
+      <p class="mt-5 text-lg leading-8 text-text-secondary">{{ document().description }}</p>
+      <p class="mt-4 text-sm text-text-muted">
+        Version {{ document().version }} · Mise à jour le
+        <time [attr.datetime]="document().updatedAt">{{ document().updatedAtLabel }}</time>
+      </p>
+    </header>
+
+    @if (document().notice) {
+      <aside class="mt-8 max-w-3xl rounded-xl border border-accent/30 bg-accent/10 p-4 text-sm leading-6 text-primary" role="note">
+        <strong>Information importante :</strong> {{ document().notice }}
+      </aside>
+    }
+
+    <div class="mt-12 grid gap-10 lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start">
+      <nav class="rounded-2xl border border-border bg-white p-5 lg:sticky lg:top-28" aria-label="Sommaire de la page">
+        <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-primary">Sommaire</h2>
+        <ol class="mt-4 space-y-3 text-sm text-text-secondary">
+          @for (section of document().sections; track section.id) {
+            <li><a class="rounded-sm transition hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary" [href]="'#' + section.id">{{ section.title }}</a></li>
+          }
+        </ol>
+      </nav>
+
+      <div class="min-w-0 space-y-12">
+        @for (section of document().sections; track section.id) {
+          <section [id]="section.id" class="scroll-mt-28" tabindex="-1">
+            <h2 class="font-display text-2xl font-bold text-primary sm:text-3xl">{{ section.title }}</h2>
+            @for (paragraph of section.paragraphs ?? []; track $index) {
+              <p class="mt-4 text-base leading-7 text-text-secondary">{{ paragraph }}</p>
+            }
+            @if (section.bullets?.length) {
+              <ul class="mt-4 list-disc space-y-3 pl-6 text-base leading-7 text-text-secondary">
+                @for (bullet of section.bullets; track $index) { <li>{{ bullet }}</li> }
+              </ul>
+            }
+          </section>
+        }
+
+        <nav class="border-t border-border pt-8" aria-label="Documents associés">
+          <h2 class="text-lg font-bold text-primary">Documents associés</h2>
+          <ul class="mt-4 flex flex-wrap gap-3">
+            @for (related of document().related; track related.route) {
+              <li><a [routerLink]="related.route" class="inline-flex rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-primary transition hover:border-secondary hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">{{ related.label }}</a></li>
+            }
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</article>

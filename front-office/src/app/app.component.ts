@@ -4,6 +4,7 @@ import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { filter } from 'rxjs';
+import { SeoService } from './services/seo.service';
 
 /**
  * AppComponent - Root component for the Coliclic front-office application.
@@ -19,6 +20,7 @@ import { filter } from 'rxjs';
 export class AppComponent {
   private readonly router = inject(Router);
   private readonly documentTitle = inject(Title);
+  private readonly seo = inject(SeoService);
   private readonly reservationShellRoutePattern = /^\/trips\/\d+\/reservations(?:\/[^?#]*)?(?:[?#].*)?$/;
   private readonly publicTripReferenceRoutePattern = /^\/trips\/ref\/[^/?#]+(?:[?#].*)?$/;
   private readonly dashboardShellRoutePatterns = [
@@ -44,6 +46,8 @@ export class AppComponent {
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
         this.updateSharedChrome(event.urlAfterRedirects);
+        const routeSnapshot = this.router.routerState?.snapshot?.root;
+        if (routeSnapshot) this.seo.update(routeSnapshot);
       });
   }
 
