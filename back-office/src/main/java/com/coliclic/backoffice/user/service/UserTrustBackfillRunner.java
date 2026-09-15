@@ -35,6 +35,10 @@ public class UserTrustBackfillRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         for (User user : users.findAll()) {
             boolean changed = false;
+            if (user.getCreatedAtEstimated() == null) {
+                user.setCreatedAtEstimated(false);
+                changed = true;
+            }
             if (user.getCreatedAt() == null) {
                 LocalDateTime earliest = Stream.of(
                                 trips.findFirstByTravelerAndCreatedAtIsNotNullOrderByCreatedAtAsc(user)

@@ -29,7 +29,7 @@ class UserTrustBackfillRunnerTest {
 
     @Test
     void run_backfillsTheEarliestProvableDateAndIsIdempotent() {
-        User user = User.builder().id(5L).enabled(false).build();
+        User user = User.builder().id(5L).enabled(false).createdAtEstimated(null).build();
         LocalDateTime tripDate = LocalDateTime.of(2024, 3, 10, 9, 0);
         LocalDateTime conversationDate = tripDate.minusDays(2);
         Trip trip = Trip.builder().createdAt(tripDate).build();
@@ -48,5 +48,21 @@ class UserTrustBackfillRunnerTest {
         assertThat(user.isCreatedAtEstimated()).isTrue();
         verify(users, times(1)).save(user);
         verify(trips, times(1)).findFirstByTravelerAndCreatedAtIsNotNullOrderByCreatedAtAsc(user);
+    }
+
+    @Test
+    void run_initializesTheLegacyFlagWithoutInventingAnAccountDate() {
+        User user = User.builder().id(6L).enabled(false).createdAtEstimated(null).build();
+        when(users.findAll()).thenReturn(List.of(user));
+        when(trips.findFirstByTravelerAndCreatedAtIsNotNullOrderByCreatedAtAsc(user)).thenReturn(Optional.empty());
+        when(bookings.findFirstBySenderAndCreatedAtIsNotNullOrderByCreatedAtAsc(user)).thenReturn(Optional.empty());
+        when(conversations.findEarliestCreatedAtForUser(user)).thenReturn(Optional.empty());
+
+        new UserTrustBackfillRunner(users, trips, bookings, conversations)
+                .run(new DefaultApplicationArguments(new String[0]));
+
+        assertThat(user.getCreatedAt()).isNull();
+        assertThat(user.isCreatedAtEstimated()).isFalse();
+        verify(users).save(user);
     }
 }

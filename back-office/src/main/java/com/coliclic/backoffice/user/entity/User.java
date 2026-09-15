@@ -92,7 +92,7 @@ public class User {
     /** Whether createdAt was reconstructed from legacy activity rather than captured at signup. */
     @Column
     @Builder.Default
-    private boolean createdAtEstimated = false;
+    private Boolean createdAtEstimated = false;
 
     /** Time at which ownership of the active e-mail address was verified. */
     @Column
@@ -104,6 +104,10 @@ public class User {
             createdAt = LocalDateTime.now();
             createdAtEstimated = false;
         }
+    }
+
+    public boolean isCreatedAtEstimated() {
+        return Boolean.TRUE.equals(createdAtEstimated);
     }
 
     public enum Role {

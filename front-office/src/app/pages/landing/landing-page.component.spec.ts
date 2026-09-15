@@ -115,6 +115,18 @@ describe('LandingPageComponent', () => {
     expect(link?.getAttribute('aria-label')).toBe('Voir le trajet de Paris, France vers Abidjan, Côte d\'Ivoire');
   });
 
+  it('keeps the traveler profile link above the full-card trip overlay', () => {
+    fixture.detectChanges();
+    component.trips = [buildLandingTripCard({ reference: 'TRP-2026-000013' })];
+    component.isTripsLoading = false;
+    fixture.detectChanges();
+
+    const travelerLink = fixture.nativeElement.querySelector('a[href="/travelers/7"]') as HTMLElement | null;
+    expect(travelerLink).not.toBeNull();
+    expect(travelerLink?.classList.contains('relative')).toBeTrue();
+    expect(travelerLink?.classList.contains('z-20')).toBeTrue();
+  });
+
   it('keeps a landing trip card visible without a link when its reference is missing', () => {
     fixture.detectChanges();
     component.trips = [buildLandingTripCard()];

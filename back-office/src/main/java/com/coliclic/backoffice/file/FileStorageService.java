@@ -5,11 +5,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.UUID;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Service responsible for persisting uploaded files to the local filesystem
@@ -18,7 +21,10 @@ import java.util.Map;
 @Service
 public class FileStorageService {
 
+    private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
     private static final String PUBLIC_UPLOAD_PREFIX = "/uploads/";
+    private static final Pattern MANAGED_IMAGE_FILENAME = Pattern.compile(
+            "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\\.(jpg|png|webp)");
     @Value("${upload.dir:./uploads}")
     private String uploadDir;
 
@@ -104,6 +110,20 @@ public class FileStorageService {
             return PUBLIC_UPLOAD_PREFIX + target.getFileName();
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file", e);
+        }
+    }
+
+    /** Deletes only a single file under the managed upload directory, never an external URL. */
+    public void deleteManagedUpload(String publicUrl) {
+        if (publicUrl == null || !isManagedUploadUrl(publicUrl)) return;
+        Path path = resolveManagedUploadPath(publicUrl);
+        Path directory = Paths.get(uploadDir).toAbsolutePath().normalize();
+        if (path == null || !directory.equals(path.getParent())
+                || !MANAGED_IMAGE_FILENAME.matcher(path.getFileName().toString()).matches()) return;
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException ex) {
+            log.warn("Could not delete superseded managed upload {}", path.getFileName(), ex);
         }
     }
 

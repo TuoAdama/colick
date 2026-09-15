@@ -39,6 +39,8 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -844,6 +846,75 @@ class TripServiceImplTest {
 
         assertThat(response.getPackagePhotoUrl()).isEqualTo("/uploads/parcel.png");
         verify(bookingRepository).save(booking);
+    }
+
+    @Test
+    void uploadBookingPhoto_shouldDeleteTheSupersededManagedPhotoAfterSave() {
+        TripBooking booking = TripBooking.builder().id(1L).trip(sampleTrip).sender(sender)
+                .title("Documents").weight(BigDecimal.ONE)
+                .packagePhotoUrl("/uploads/old.png")
+                .status(TripBooking.BookingStatus.PENDING).build();
+        MockMultipartFile photo = new MockMultipartFile(
+                "file", "parcel.png", "image/png", new byte[]{(byte) 0x89, 0x50, 0x4e, 0x47});
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(fileStorageService.storeImage(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
+                .thenReturn("/uploads/new.png");
+        when(bookingRepository.save(booking)).thenReturn(booking);
+
+        tripService.uploadBookingPhoto(10L, 1L, photo, sender);
+
+        verify(fileStorageService).deleteManagedUpload("/uploads/old.png");
+        verify(fileStorageService, never()).deleteManagedUpload("/uploads/new.png");
+    }
+
+    @Test
+    void uploadBookingPhoto_shouldDeleteTheNewFileWhenPersistenceFails() {
+        TripBooking booking = TripBooking.builder().id(1L).trip(sampleTrip).sender(sender)
+                .packagePhotoUrl("/uploads/old.png")
+                .status(TripBooking.BookingStatus.PENDING).build();
+        MockMultipartFile photo = new MockMultipartFile(
+                "file", "parcel.png", "image/png", new byte[]{(byte) 0x89, 0x50, 0x4e, 0x47});
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(fileStorageService.storeImage(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
+                .thenReturn("/uploads/new.png");
+        when(bookingRepository.save(booking)).thenThrow(new IllegalStateException("database unavailable"));
+
+        assertThatThrownBy(() -> tripService.uploadBookingPhoto(10L, 1L, photo, sender))
+                .isInstanceOf(IllegalStateException.class);
+
+        assertThat(booking.getPackagePhotoUrl()).isEqualTo("/uploads/old.png");
+        verify(fileStorageService).deleteManagedUpload("/uploads/new.png");
+        verify(fileStorageService, never()).deleteManagedUpload("/uploads/old.png");
+    }
+
+    @Test
+    void uploadBookingPhoto_shouldDeleteTheNewFileAfterTransactionRollback() {
+        TripBooking booking = TripBooking.builder().id(1L).trip(sampleTrip).sender(sender)
+                .title("Documents").weight(BigDecimal.ONE)
+                .packagePhotoUrl("/uploads/old.png")
+                .status(TripBooking.BookingStatus.PENDING).build();
+        MockMultipartFile photo = new MockMultipartFile(
+                "file", "parcel.png", "image/png", new byte[]{(byte) 0x89, 0x50, 0x4e, 0x47});
+        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(fileStorageService.storeImage(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
+                .thenReturn("/uploads/new.png");
+        when(bookingRepository.save(booking)).thenReturn(booking);
+
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            tripService.uploadBookingPhoto(10L, 1L, photo, sender);
+            verify(fileStorageService, never()).deleteManagedUpload(any());
+            for (TransactionSynchronization synchronization : TransactionSynchronizationManager.getSynchronizations()) {
+                synchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
+            }
+            verify(fileStorageService).deleteManagedUpload("/uploads/new.png");
+            verify(fileStorageService, never()).deleteManagedUpload("/uploads/old.png");
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 
     @Test

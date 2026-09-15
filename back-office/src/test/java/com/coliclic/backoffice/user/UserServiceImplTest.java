@@ -2,6 +2,7 @@ package com.coliclic.backoffice.user;
 
 import com.coliclic.backoffice.email.EmailService;
 import com.coliclic.backoffice.exception.ResourceNotFoundException;
+import com.coliclic.backoffice.exception.BadRequestException;
 import com.coliclic.backoffice.exception.UserAlreadyExistsException;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
 import com.coliclic.backoffice.support.TestLocalizedMessages;
@@ -153,6 +154,22 @@ class UserServiceImplTest {
 
         assertThat(sampleUser.getFirstName()).isEqualTo("Jane");
         verify(userRepository).save(sampleUser);
+    }
+
+    @Test
+    void updateUser_shouldRejectDirectEmailReplacementAndKeepVerification() {
+        sampleUser.setEmailVerifiedAt(LocalDateTime.now());
+        UpdateUserRequest request = new UpdateUserRequest();
+        request.setEmail("unconfirmed@example.com");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+
+        assertThatThrownBy(() -> userService.updateUser(1L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("confirmation flow");
+
+        assertThat(sampleUser.getEmail()).isEqualTo("john@example.com");
+        assertThat(sampleUser.getEmailVerifiedAt()).isNotNull();
+        verify(userRepository, never()).save(any());
     }
 
     @Test

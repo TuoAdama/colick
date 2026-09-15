@@ -24,6 +24,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -307,8 +309,36 @@ public class TripServiceImpl implements TripService {
                 || booking.getStatus() == TripBooking.BookingStatus.DELIVERED) {
             throw new ConflictException("La photo ne peut plus être modifiée pour cette demande.");
         }
-        booking.setPackagePhotoUrl(fileStorageService.storeImage(file, ParcelGuidelines.MAX_PHOTO_BYTES));
-        return toTripBookingResponse(bookingRepository.save(booking));
+        String previousPhotoUrl = booking.getPackagePhotoUrl();
+        String newPhotoUrl = fileStorageService.storeImage(file, ParcelGuidelines.MAX_PHOTO_BYTES);
+        booking.setPackagePhotoUrl(newPhotoUrl);
+        try {
+            TripBookingResponse response = toTripBookingResponse(bookingRepository.save(booking));
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (!Objects.equals(previousPhotoUrl, newPhotoUrl)) {
+                            fileStorageService.deleteManagedUpload(previousPhotoUrl);
+                        }
+                    }
+
+                    @Override
+                    public void afterCompletion(int status) {
+                        if (status != STATUS_COMMITTED) {
+                            fileStorageService.deleteManagedUpload(newPhotoUrl);
+                        }
+                    }
+                });
+            } else if (!Objects.equals(previousPhotoUrl, newPhotoUrl)) {
+                fileStorageService.deleteManagedUpload(previousPhotoUrl);
+            }
+            return response;
+        } catch (RuntimeException ex) {
+            booking.setPackagePhotoUrl(previousPhotoUrl);
+            fileStorageService.deleteManagedUpload(newPhotoUrl);
+            throw ex;
+        }
     }
 
     private String reservationUrl(Long tripId, Long bookingId) {
