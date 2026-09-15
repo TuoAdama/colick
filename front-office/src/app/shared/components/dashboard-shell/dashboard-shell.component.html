@@ -248,7 +248,7 @@
 </div>
 
 @if (isMobileMenuOpen) {
-  <div class="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu de navigation">
+  <div class="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu de navigation" appModalFocus="[data-testid=mobile-menu-close]">
     <div
       class="absolute inset-0 bg-text-primary/40 backdrop-blur-sm"
       aria-hidden="true"
@@ -266,6 +266,7 @@
         </a>
         <button
           type="button"
+          data-testid="mobile-menu-close"
           class="inline-flex h-8 w-8 items-center justify-center rounded-xl text-text-secondary transition hover:bg-background-primary hover:text-primary"
           aria-label="Fermer le menu"
           (click)="closeMobileMenu()"

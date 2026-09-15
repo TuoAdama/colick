@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { ModalFocusDirective } from '../../directives/modal-focus.directive';
 
 @Component({
   selector: 'app-dashboard-shell',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, ModalFocusDirective],
   templateUrl: './dashboard-shell.component.html',
 })
 export class DashboardShellComponent {

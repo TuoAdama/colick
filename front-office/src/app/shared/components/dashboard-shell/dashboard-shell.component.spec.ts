@@ -105,6 +105,24 @@ describe('DashboardShellComponent', () => {
     expect(mobileAccentPart?.classList.contains('text-accent')).toBeTrue();
   });
 
+  it('focuses the close button and restores the menu trigger when the mobile menu closes', async () => {
+    fixture.detectChanges();
+    const menuTrigger = fixture.nativeElement.querySelector('[aria-label="Ouvrir le menu"]') as HTMLButtonElement;
+    menuTrigger.focus();
+
+    fixture.componentInstance.openMobileMenu();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const closeButton = fixture.nativeElement.querySelector('[data-testid="mobile-menu-close"]') as HTMLButtonElement;
+    expect(document.activeElement).toBe(closeButton);
+
+    fixture.componentInstance.closeMobileMenu();
+    fixture.detectChanges();
+
+    expect(document.activeElement).toBe(menuTrigger);
+  });
+
   it('shows the clarified navigation labels in the sidebar and mobile menu', () => {
     fixture.detectChanges();
     fixture.componentInstance.openMobileMenu();

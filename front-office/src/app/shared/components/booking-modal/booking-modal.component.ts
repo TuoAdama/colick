@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ModalFocusDirective } from '../../directives/modal-focus.directive';
 import { AbstractControl, ReactiveFormsModule, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { Trip } from '../../../models/trip.model';
 import { BookingResponse, ParcelGuidelines } from '../../../models/booking.model';
@@ -27,7 +28,7 @@ function recipientContactValidator(control: AbstractControl): ValidationErrors |
 @Component({
   selector: 'app-booking-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ModalFocusDirective],
   templateUrl: './booking-modal.component.html',
 })
 export class BookingModalComponent implements OnInit, OnDestroy {

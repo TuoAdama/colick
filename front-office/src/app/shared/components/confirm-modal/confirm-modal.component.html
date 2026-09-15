@@ -5,6 +5,7 @@
     role="dialog"
     aria-modal="true"
     [attr.aria-labelledby]="'confirm-modal-title'"
+    appModalFocus="[data-testid=confirm-modal-cancel]"
     (click)="onCancel()"
     (keydown.escape)="onCancel()"
   >
@@ -48,6 +49,7 @@
       <div class="px-6 pb-6 flex justify-end gap-3">
         <button
           type="button"
+          data-testid="confirm-modal-cancel"
           (click)="onCancel()"
           [disabled]="isLoading"
           class="px-5 py-2.5 rounded-lg border border-gray-200 text-sm font-semibold text-text-primary

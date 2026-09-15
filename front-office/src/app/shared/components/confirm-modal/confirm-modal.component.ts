@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ModalFocusDirective } from '../../directives/modal-focus.directive';
 
 /**
  * Generic confirmation modal.
@@ -9,7 +10,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-confirm-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ModalFocusDirective],
   templateUrl: './confirm-modal.component.html',
 })
 export class ConfirmModalComponent {
