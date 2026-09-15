@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * JPA repository for {@link Message} entities.
@@ -50,4 +52,13 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
      * @return unread messages from the other participant
      */
     List<Message> findByConversationAndReadFalseAndSenderNot(Conversation conversation, User sender);
+
+    @Query("""
+            SELECT message FROM Message message
+            JOIN FETCH message.conversation conversation
+            JOIN FETCH message.sender sender
+            WHERE conversation.trip.traveler.id = :travelerId
+            ORDER BY conversation.id ASC, message.sentAt ASC, message.id ASC
+            """)
+    List<Message> findTripConversationMessagesForTraveler(@Param("travelerId") Long travelerId);
 }

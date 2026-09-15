@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * JPA repository for {@link TripBooking} entities.
@@ -29,6 +30,8 @@ public interface TripBookingRepository extends JpaRepository<TripBooking, Long> 
     List<TripBooking> findBySender(User sender);
 
     long countBySender(User sender);
+
+    Optional<TripBooking> findFirstBySenderAndCreatedAtIsNotNullOrderByCreatedAtAsc(User sender);
 
     @Query("SELECT booking FROM TripBooking booking "
             + "WHERE booking.commercialMode IS NULL OR booking.platformFeeRate IS NULL")

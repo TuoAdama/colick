@@ -16,6 +16,7 @@ type LandingMode = 'send' | 'transport';
 
 interface LandingTripCard {
   id: number;
+  travelerId: number;
   reference?: string;
   tag: string;
   price: string;
@@ -266,6 +267,7 @@ export class LandingPageComponent {
     const avatarTones = ['bg-primary', 'bg-accent', 'bg-secondary'];
     return {
       id: trip.id,
+      travelerId: trip.travelerId,
       reference: trip.reference,
       tag: trip.instantAcceptance ? 'Flash' : 'Disponible',
       price: this.formatPrice(trip.pricePerKilo),
@@ -309,33 +311,12 @@ export class LandingPageComponent {
       .join('');
   }
 
-  readonly stats = [
-    {
-      icon: 'travel_explore',
-      value: '30 000+',
-      label: 'recherches effectuees ce mois',
-      tone: 'text-accent bg-accent/10',
-    },
-    {
-      icon: 'inventory_2',
-      value: '5 000+',
-      label: 'colis deja livres en Afrique et en Europe',
-      tone: 'text-accent bg-accent/10',
-    },
-    {
-      icon: 'add_circle',
-      value: '3 clics',
-      label: 'pour publier votre trajet',
-      tone: 'text-primary bg-gray-200',
-    },
-  ];
-
   get trustCards() {
     return [
       {
         icon: 'verified_user',
-        title: 'Profils verifies',
-        description: 'Chaque membre est authentifie pour creer un cadre fiable.',
+        title: 'E-mails vérifiés',
+        description: 'Le badge de vérification apparaît uniquement après confirmation de l’adresse e-mail.',
         tone: 'text-accent bg-accent/10',
       },
       {

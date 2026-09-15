@@ -27,6 +27,7 @@ export class SentBookingDetailPageComponent implements OnInit {
   isProcessing = false;
   loadError = '';
   actionError = '';
+  photoMessage = '';
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -169,6 +170,29 @@ export class SentBookingDetailPageComponent implements OnInit {
       error: (error: { error?: { message?: string } }) => {
         this.actionError = error.error?.message || "Impossible d'annuler cette demande pour le moment.";
         this.isProcessing = false;
+      },
+    });
+  }
+
+  retryPhotoUpload(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.trip || !this.booking || !this.canCancelBooking() || this.isProcessing) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      this.actionError = 'Choisissez une image JPEG, PNG ou WebP de 5 Mo maximum.';
+      return;
+    }
+    this.isProcessing = true;
+    this.actionError = '';
+    this.photoMessage = '';
+    this.tripService.uploadBookingPhoto(this.trip.id, this.booking.id, file).subscribe({
+      next: booking => {
+        this.booking = booking;
+        this.isProcessing = false;
+        this.photoMessage = 'La photo du colis a bien été ajoutée.';
+      },
+      error: error => {
+        this.isProcessing = false;
+        this.actionError = error?.error?.message || 'Impossible d’envoyer la photo.';
       },
     });
   }

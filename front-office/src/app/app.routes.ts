@@ -126,6 +126,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'travelers/:travelerId',
+    loadComponent: () =>
+      import('./pages/traveler-profile/traveler-profile-page.component').then(
+        (m) => m.TravelerProfilePageComponent
+      ),
+  },
+  {
     path: 'login',
     canActivate: [guestGuard],
     loadComponent: () =>

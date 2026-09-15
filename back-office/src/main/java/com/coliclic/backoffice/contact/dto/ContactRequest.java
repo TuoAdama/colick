@@ -4,9 +4,12 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import jakarta.validation.constraints.AssertTrue;
 
 @Data
 public class ContactRequest {
+
+    public enum Category { GENERAL, PROFILE_REPORT }
 
     @NotBlank
     @Email
@@ -20,4 +23,15 @@ public class ContactRequest {
     @NotBlank
     @Size(max = 5000)
     private String message;
+
+    private Category category = Category.GENERAL;
+
+    private Long travelerId;
+
+    private Long tripId;
+
+    @AssertTrue(message = "Un profil doit être indiqué pour un signalement.")
+    public boolean isContextValid() {
+        return category != Category.PROFILE_REPORT || travelerId != null;
+    }
 }

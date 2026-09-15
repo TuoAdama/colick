@@ -33,7 +33,7 @@ export class AdvantagesComponent {
     return [
       {
         title: 'Prix compétitifs',
-        description: "Économisez jusqu'à 70% par rapport aux services de transport traditionnels.",
+        description: 'Comparez librement les tarifs au kilo proposés par les voyageurs.',
         icon: 'price',
         iconBgColor: 'bg-primary/10',
         iconColor: 'text-primary',
@@ -46,7 +46,7 @@ export class AdvantagesComponent {
         iconColor: 'text-secondary',
       },
       {
-        title: '100% sécurisé',
+        title: 'Confiance documentée',
         description: this.commercialContent.content().advantageSecurityDescription,
         icon: 'secure',
         iconBgColor: 'bg-accent/10',
@@ -67,8 +67,8 @@ export class AdvantagesComponent {
         iconColor: 'text-primary',
       },
       {
-        title: '50+ destinations',
-        description: 'Envoyez vos colis vers plus de 50 destinations à travers le monde.',
+        title: 'Destinations publiées',
+        description: 'Recherchez les itinéraires réellement proposés par les voyageurs.',
         icon: 'destinations',
         iconBgColor: 'bg-secondary/10',
         iconColor: 'text-secondary',

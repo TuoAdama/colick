@@ -136,7 +136,7 @@ describe('ShareCardStoryComponent', () => {
     expect(text).toContain('--:--');
     expect(text).toContain('N/A kg');
     expect(text).toContain('N/A€ / kg');
-    expect(text).toContain('Profil vérifié Coliclic');
+    expect(text).toContain('Voyageur Coliclic');
     expect(text).not.toContain('ada@example.com');
     expect(text).not.toContain('+33 6 00 00 00 00');
   });

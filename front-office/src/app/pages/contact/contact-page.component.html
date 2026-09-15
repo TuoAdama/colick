@@ -1,9 +1,9 @@
 <section class="min-h-screen bg-background-primary pb-16 pt-28 sm:pb-20 sm:pt-32">
   <div class="mx-auto max-w-2xl px-4 sm:px-6">
     <div class="text-center">
-      <span class="inline-flex rounded-full bg-accent/10 px-4 py-1.5 text-sm font-semibold text-accent">Une question ?</span>
-      <h1 class="mt-5 font-display text-4xl font-bold tracking-tight text-primary sm:text-5xl">Nous contacter</h1>
-      <p class="mt-5 text-base leading-7 text-text-secondary sm:text-lg">Notre équipe est à votre écoute. Envoyez-nous votre message, nous vous répondrons dès que possible.</p>
+      <span class="inline-flex rounded-full bg-accent/10 px-4 py-1.5 text-sm font-semibold text-accent">{{ isProfileReport ? 'Signalement confidentiel' : 'Une question ?' }}</span>
+      <h1 class="mt-5 font-display text-4xl font-bold tracking-tight text-primary sm:text-5xl">{{ isProfileReport ? 'Signaler un profil' : 'Nous contacter' }}</h1>
+      <p class="mt-5 text-base leading-7 text-text-secondary sm:text-lg">{{ isProfileReport ? 'Décrivez précisément la situation. Les références du profil seront jointes automatiquement au message.' : 'Notre équipe est à votre écoute. Envoyez-nous votre message, nous vous répondrons dès que possible.' }}</p>
     </div>
 
     <div class="mt-10 rounded-2xl border border-border bg-white p-6 shadow-sm sm:p-8">

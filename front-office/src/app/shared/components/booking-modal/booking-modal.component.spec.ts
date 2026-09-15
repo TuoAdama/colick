@@ -19,9 +19,19 @@ describe('BookingModalComponent', () => {
       status: 'PENDING',
       validationCodeActive: false,
     })),
+    uploadBookingPhoto: jasmine.createSpy('uploadBookingPhoto'),
+    getParcelGuidelines: jasmine.createSpy('getParcelGuidelines').and.returnValue(of({
+      version: '2026-09-01',
+      prohibitedItems: ['Armes'],
+      packagingRecommendations: ['Emballage rigide'],
+      allowedPhotoContentTypes: ['image/jpeg', 'image/png', 'image/webp'],
+      maxPhotoBytes: 5 * 1024 * 1024,
+    })),
   };
 
   beforeEach(async () => {
+    tripServiceMock.createBooking.calls.reset();
+    tripServiceMock.uploadBookingPhoto.calls.reset();
     await TestBed.configureTestingModule({
       imports: [BookingModalComponent],
       providers: [{ provide: TripService, useValue: tripServiceMock }],
@@ -63,12 +73,21 @@ describe('BookingModalComponent', () => {
       title: 'Documents',
       weight: 1,
       recipientContact: ' recipient@example.com ',
+      parcelPolicyAccepted: true,
     });
 
     component.onSubmit();
 
     expect(tripServiceMock.createBooking).toHaveBeenCalledWith(10, jasmine.objectContaining({
       recipientContact: 'recipient@example.com',
+      parcelPolicyAccepted: true,
+      parcelPolicyVersion: '2026-09-01',
     }));
+  });
+
+  it('blocks submission until the parcel policy is accepted', () => {
+    component.bookingForm.patchValue({ title: 'Documents', weight: 1, recipientContact: 'recipient@example.com' });
+    component.onSubmit();
+    expect(tripServiceMock.createBooking).not.toHaveBeenCalled();
   });
 });

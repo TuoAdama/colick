@@ -2,6 +2,7 @@ package com.coliclic.backoffice.user.service;
 
 import com.coliclic.backoffice.email.EmailService;
 import com.coliclic.backoffice.exception.ResourceNotFoundException;
+import com.coliclic.backoffice.exception.BadRequestException;
 import com.coliclic.backoffice.exception.UserAlreadyExistsException;
 import com.coliclic.backoffice.file.FileStorageService;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
@@ -91,14 +92,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
         User user = findOrThrow(id);
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+            throw new BadRequestException(localizedMessages.get("error.user.emailChangeRequiresConfirmation"));
+        }
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
         if (request.getLastName() != null) user.setLastName(request.getLastName());
-        if (request.getEmail() != null) {
-            if (!request.getEmail().equals(user.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
-                throw new UserAlreadyExistsException(localizedMessages.get("error.user.exists", request.getEmail()));
-            }
-            user.setEmail(request.getEmail());
-        }
         if (request.getPhone() != null) user.setPhone(request.getPhone());
         if (request.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -174,6 +172,7 @@ public class UserServiceImpl implements UserService {
                 throw new ResourceNotFoundException(localizedMessages.get("error.user.tokenExpired"));
             }
             signupUser.setEnabled(true);
+            signupUser.setEmailVerifiedAt(LocalDateTime.now());
             signupUser.setSignupConfirmToken(null);
             signupUser.setSignupConfirmTokenExpiresAt(null);
             return UserResponse.from(userRepository.save(signupUser));
@@ -188,6 +187,7 @@ public class UserServiceImpl implements UserService {
             throw new ResourceNotFoundException(localizedMessages.get("error.user.invalidOrExpiredToken"));
         }
         user.setEmail(user.getPendingEmail());
+        user.setEmailVerifiedAt(LocalDateTime.now());
         user.setPendingEmail(null);
         user.setEmailConfirmToken(null);
         user.setEmailConfirmTokenExpiresAt(null);

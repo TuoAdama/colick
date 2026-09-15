@@ -6,6 +6,7 @@ import com.coliclic.backoffice.user.entity.User;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Service interface for trip and booking management operations.
@@ -47,6 +48,9 @@ public interface TripService {
 
     /** Submits a booking request on a trip. */
     TripBookingResponse createBooking(Long tripId, CreateBookingRequest request, User sender);
+
+    /** Uploads or replaces the optional parcel photo owned by the booking sender. */
+    TripBookingResponse uploadBookingPhoto(Long tripId, Long bookingId, MultipartFile file, User sender);
 
     /** Accepts a booking request (sends email notification). */
     TripBookingResponse acceptBooking(Long tripId, Long bookingId, User requester);
