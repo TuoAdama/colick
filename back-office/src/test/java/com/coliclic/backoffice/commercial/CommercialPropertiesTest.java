@@ -57,5 +57,16 @@ class CommercialPropertiesTest {
         assertThat(response.features().platformFee()).isTrue();
         assertThat(response.features().platformPayment()).isTrue();
         assertThat(response.contentVariant()).isEqualTo("commission");
+        assertThat(response.analyticsMeasurementId()).isNull();
+    }
+
+    @Test
+    void analyticsMeasurementIdIsTrimmedAndOptional() {
+        AnalyticsProperties properties = new AnalyticsProperties();
+        properties.setMeasurementId(" G-ABC123 ");
+
+        assertThat(properties.getMeasurementId()).isEqualTo("G-ABC123");
+        properties.setMeasurementId("  ");
+        assertThat(properties.getMeasurementId()).isNull();
     }
 }

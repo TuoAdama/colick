@@ -14,6 +14,7 @@ import { Location } from '../../models/location.model';
 import { Trip } from '../../models/trip.model';
 import { BookingResponse } from '../../models/booking.model';
 import { UserResponse } from '../../models/auth.model';
+import { AnalyticsService } from '../../services/analytics.service';
 
 /**
  * SearchPageComponent - Page for searching trips by departure and destination.
@@ -45,6 +46,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   private readonly tripAlertService = inject(TripAlertService);
   private readonly authService = inject(AuthService);
   private readonly messagingService = inject(MessagingService);
+  readonly analytics = inject(AnalyticsService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private queryParamsSubscription?: Subscription;
@@ -281,6 +283,12 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   }
 
   private searchTripsByCriteria(criteria: TripSearchCriteria): void {
+    this.analytics.track('search_started', {
+      departure: criteria.departure,
+      destination: criteria.destination,
+      date: criteria.date,
+      sort: criteria.sort,
+    });
     this.isLoading = true;
     this.hasSearched = true;
     this.errorMessage = '';
@@ -292,6 +300,11 @@ export class SearchPageComponent implements OnInit, OnDestroy {
         next: (results) => {
           this.trips = results;
           this.isLoading = false;
+          this.analytics.track('results_displayed', {
+            departure: criteria.departure,
+            destination: criteria.destination,
+            result_count: results.length,
+          });
         },
         error: () => {
           this.errorMessage =
@@ -391,6 +404,11 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     }
     this.selectedTrip = trip;
     this.isBookingModalOpen = true;
+    this.analytics.track('request_started', {
+      trip_id: trip.id,
+      trip_reference: trip.reference,
+      source: 'search_results',
+    });
   }
 
   /**
@@ -406,6 +424,11 @@ export class SearchPageComponent implements OnInit, OnDestroy {
    */
   onBookingCreated(booking: BookingResponse): void {
     this.myBookings = [...this.myBookings, booking];
+    this.analytics.track('request_submitted', {
+      trip_id: booking.tripId,
+      booking_id: booking.id,
+      status: booking.status,
+    });
     this.bookingSuccessMessage = `Demande envoyée avec succès pour "${booking.title}" !`;
     // Auto-close modal and clear message after delay
     setTimeout(() => {

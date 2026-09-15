@@ -29,6 +29,7 @@ class PublicAppConfigControllerIntegrationTest {
                 .andExpect(jsonPath("$.platformFeeRate").value(0))
                 .andExpect(jsonPath("$.features.platformPayment").value(false))
                 .andExpect(jsonPath("$.features.platformFee").value(false))
-                .andExpect(jsonPath("$.contentVariant").value("free"));
+                .andExpect(jsonPath("$.contentVariant").value("free"))
+                .andExpect(jsonPath("$.analyticsMeasurementId").doesNotExist());
     }
 }

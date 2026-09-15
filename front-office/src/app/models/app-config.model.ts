@@ -2,6 +2,7 @@ export type CommercialMode = 'FREE' | 'COMMISSION';
 export type CommercialContentVariant = 'free' | 'commission';
 
 export interface PublicAppConfig {
+  analyticsMeasurementId?: string | null;
   commercialMode: CommercialMode;
   platformFeeRate: number;
   features: {
@@ -12,6 +13,7 @@ export interface PublicAppConfig {
 }
 
 export const FREE_APP_CONFIG: PublicAppConfig = {
+  analyticsMeasurementId: null,
   commercialMode: 'FREE',
   platformFeeRate: 0,
   features: {

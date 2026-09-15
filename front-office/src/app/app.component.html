@@ -33,3 +33,13 @@
     <a routerLink="/settings" routerLinkActive="!text-primary" class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[10px] font-semibold text-text-secondary" aria-label="Mon profil"><svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8"/><path stroke-linecap="round" d="M5 21a7 7 0 0 1 14 0"/></svg><span>Profil</span></a>
   </nav>
 }
+
+@if (analytics.consentRequired()) {
+  <aside class="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-2xl rounded-2xl border border-border bg-white p-5 shadow-xl" role="dialog" aria-label="Préférences de mesure d’audience">
+    <p class="text-sm leading-6 text-text-secondary">Nous utilisons Google Analytics uniquement avec votre accord pour comprendre les étapes où les utilisateurs abandonnent. Aucun nom, e-mail ou téléphone n’est transmis.</p>
+    <div class="mt-4 flex flex-wrap justify-end gap-3">
+      <button type="button" class="btn-outline !py-2.5 !text-sm" (click)="analytics.decline()">Refuser</button>
+      <button type="button" class="btn-primary !py-2.5 !text-sm" (click)="analytics.accept()">Accepter la mesure</button>
+    </div>
+  </aside>
+}

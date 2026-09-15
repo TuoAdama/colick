@@ -5,6 +5,8 @@ import { Subscription } from 'rxjs';
 import { PublicTravelerReview, TravelerProfile } from '../../models/traveler-profile.model';
 import { TravelerProfileService } from '../../services/traveler-profile.service';
 import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
+import { SeoService } from '../../services/seo.service';
+import { AnalyticsService } from '../../services/analytics.service';
 
 @Component({
   selector: 'app-traveler-profile-page',
@@ -16,6 +18,8 @@ export class TravelerProfilePageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(TravelerProfileService);
+  private readonly seo = inject(SeoService);
+  private readonly analytics = inject(AnalyticsService);
   private subscription?: Subscription;
 
   profile: TravelerProfile | null = null;
@@ -70,6 +74,18 @@ export class TravelerProfilePageComponent implements OnInit, OnDestroy {
       next: profile => {
         this.profile = profile;
         this.isLoading = false;
+        const rating = profile.averageRating == null ? 'Aucun avis' : `${profile.averageRating.toFixed(1)}/5 sur ${profile.reviewCount} avis`;
+        this.seo.updateMetadata({
+          title: `${profile.displayName} | Profil voyageur Coliclic`,
+          description: `${profile.displayName}, voyageur Coliclic. ${profile.completedTripCount} trajets terminés, ${rating}.`,
+          type: 'profile',
+          structuredData: {
+            '@context': 'https://schema.org', '@type': 'ProfilePage', name: profile.displayName,
+            url: this.router.url.split(/[?#]/)[0],
+            mainEntity: { '@type': 'Person', name: profile.displayName, image: profile.photoUrl ?? undefined },
+          },
+        });
+        this.analytics.track('detail_opened', { detail_type: 'traveler', traveler_id: profile.travelerId });
         this.loadReviews(id, 0, false);
       },
       error: error => {

@@ -48,6 +48,15 @@ export class AppConfigService {
       && config.features?.platformFee === true
       && config.features?.platformPayment === true;
 
-    return isCommission ? config : FREE_APP_CONFIG;
+    const analyticsMeasurementId = this.normalizeMeasurementId(config?.analyticsMeasurementId);
+    return {
+      ...(isCommission ? config : FREE_APP_CONFIG),
+      ...(analyticsMeasurementId ? { analyticsMeasurementId } : {}),
+    };
+  }
+
+  private normalizeMeasurementId(value?: string | null): string | null {
+    const normalized = value?.trim();
+    return normalized && /^G-[A-Z0-9]+$/i.test(normalized) ? normalized : null;
   }
 }

@@ -10,6 +10,8 @@ import { MessagingService } from '../../services/messaging.service';
 import { TripService } from '../../services/trip.service';
 import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
 import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
+import { SeoService } from '../../services/seo.service';
+import { AnalyticsService } from '../../services/analytics.service';
 
 @Component({
   selector: 'app-trip-reference-page',
@@ -23,6 +25,8 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
   private readonly tripService = inject(TripService);
   private readonly authService = inject(AuthService);
   private readonly messagingService = inject(MessagingService);
+  private readonly seo = inject(SeoService);
+  private readonly analytics = inject(AnalyticsService);
   private routeSubscription?: Subscription;
 
   trip: Trip | null = null;
@@ -62,6 +66,7 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
     }
 
     this.isBookingModalOpen = true;
+    this.analytics.track('request_started', { trip_id: this.trip.id, trip_reference: this.trip.reference, source: 'trip_reference' });
   }
 
   contactTraveler(): void {
@@ -98,6 +103,7 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
   }
 
   onBookingCreated(booking: BookingResponse): void {
+    this.analytics.track('request_submitted', { trip_id: booking.tripId, booking_id: booking.id, status: booking.status });
     this.bookingSuccessMessage = `Demande envoyée avec succès pour "${booking.title}" !`;
     setTimeout(() => {
       this.bookingSuccessMessage = '';
@@ -150,6 +156,19 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
       next: (trip) => {
         this.trip = trip;
         this.isLoading = false;
+        const routeLabel = `${trip.departureAddress} → ${trip.destination}`;
+        this.seo.updateMetadata({
+          title: `${routeLabel} | Coliclic`,
+          description: `${routeLabel} le ${this.formatDate(trip.departureTime)} avec ${trip.travelerName}. ${trip.pricePerKilo} € / kg, ${trip.availableWeight} kg disponibles.`,
+          type: 'article',
+          structuredData: {
+            '@context': 'https://schema.org', '@type': 'Trip', name: routeLabel,
+            url: this.router.url.split(/[?#]/)[0], departureTime: trip.departureTime,
+            arrivalTime: trip.arrivalTime, provider: { '@type': 'Person', name: trip.travelerName },
+            offers: { '@type': 'Offer', price: trip.pricePerKilo, priceCurrency: 'EUR', availability: 'https://schema.org/InStock' },
+          },
+        });
+        this.analytics.track('detail_opened', { detail_type: 'trip', trip_id: trip.id, trip_reference: trip.reference });
       },
       error: () => {
         this.showNotFound();
