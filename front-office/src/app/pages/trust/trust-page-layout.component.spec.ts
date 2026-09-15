@@ -1,3 +1,4 @@
+import { ViewportScroller } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { NavigationEnd, provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -47,6 +48,21 @@ describe('TrustPageLayoutComponent', () => {
     await navigationEnd;
 
     expect(router.url).toBe('/cgu#paiement');
+  });
+
+  it('scrolls again when the selected section fragment is already active', async () => {
+    await harness.navigateByUrl('/cgu#paiement', TrustPageComponent);
+    const host = harness.routeNativeElement as HTMLElement;
+    const paymentLink = Array.from(host.querySelectorAll<HTMLAnchorElement>('nav[aria-label="Sommaire de la page"] a'))
+      .find((link) => link.textContent?.trim() === 'Tarifs et règlement');
+    const viewportScroller = TestBed.inject(ViewportScroller);
+    const scrollToAnchor = spyOn(viewportScroller, 'scrollToAnchor');
+
+    expect(paymentLink).toBeDefined();
+    paymentLink?.click();
+
+    expect(scrollToAnchor).toHaveBeenCalledWith('paiement');
+    expect(TestBed.inject(Router).url).toBe('/cgu#paiement');
   });
 
   it('provides navigation to associated documents', () => {

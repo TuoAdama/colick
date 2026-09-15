@@ -21,7 +21,7 @@
         <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-primary">Sommaire</h2>
         <ol class="mt-4 space-y-3 text-sm text-text-secondary">
           @for (section of document().sections; track section.id) {
-            <li><a class="rounded-sm transition hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary" [routerLink]="[]" [fragment]="section.id">{{ section.title }}</a></li>
+            <li><a class="rounded-sm transition hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary" [routerLink]="[]" [fragment]="section.id" (click)="reScrollActiveSection(section.id)">{{ section.title }}</a></li>
           }
         </ol>
       </nav>

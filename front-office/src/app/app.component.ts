@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DOCUMENT } from '@angular/common';
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
@@ -21,6 +21,7 @@ import { SeoService } from './services/seo.service';
 })
 export class AppComponent {
   private readonly router = inject(Router);
+  private readonly document = inject(DOCUMENT);
   readonly authService = inject(AuthService);
   private readonly documentTitle = inject(Title);
   private readonly seo = inject(SeoService);
@@ -54,6 +55,10 @@ export class AppComponent {
         const routeSnapshot = this.router.routerState?.snapshot?.root;
         if (routeSnapshot) this.seo.update(routeSnapshot);
       });
+  }
+
+  focusMainContent(): void {
+    this.document.getElementById('main')?.focus({ preventScroll: true });
   }
 
   private updateSharedChrome(url: string): void {

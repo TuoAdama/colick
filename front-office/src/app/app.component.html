@@ -4,6 +4,7 @@
     [routerLink]="currentPagePath"
     queryParamsHandling="preserve"
     fragment="main"
+    (click)="focusMainContent()"
     class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-accent text-white px-4 py-2 rounded-lg z-50 font-medium"
   >
     Aller au contenu principal
@@ -14,7 +15,7 @@
 }
 
 <!-- Main Content -->
-<main id="main" [class.pb-20]="showMobileBottomSearchNavigation" [class.md:pb-0]="showMobileBottomSearchNavigation">
+<main id="main" tabindex="-1" [class.pb-20]="showMobileBottomSearchNavigation" [class.md:pb-0]="showMobileBottomSearchNavigation">
   <router-outlet />
 </main>
 
