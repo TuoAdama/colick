@@ -10,6 +10,7 @@ import { AppConfigService } from './services/app-config.service';
 
 export const appRouterScrolling = withInMemoryScrolling({
   scrollPositionRestoration: 'enabled',
+  anchorScrolling: 'enabled',
 });
 
 /**

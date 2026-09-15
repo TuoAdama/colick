@@ -46,6 +46,14 @@ describe('AppComponent', () => {
     expect(fixture.componentInstance.showSharedChrome).toBeTrue();
   });
 
+  it('keeps the skip link on the active route', () => {
+    routerEvents.next(new NavigationEnd(1, '/cgu#paiement', '/cgu#paiement'));
+    expect(fixture.componentInstance.currentPagePath).toBe('/cgu');
+
+    routerEvents.next(new NavigationEnd(2, '/search?from=Paris', '/search?from=Paris'));
+    expect(fixture.componentInstance.currentPagePath).toBe('/search');
+  });
+
   it('keeps the authenticated bottom navigation mounted on search', () => {
     routerEvents.next(new NavigationEnd(1, '/search?from=Paris', '/search?from=Paris'));
 

@@ -40,6 +40,7 @@ describe('app router scrolling', () => {
           [
             { path: 'parcel-search', component: TestPageComponent },
             { path: 'login', component: TestPageComponent },
+            { path: 'cgu', component: TestPageComponent },
           ],
           appRouterScrolling,
         ),
@@ -84,5 +85,13 @@ describe('app router scrolling', () => {
     await new Promise((resolve) => setTimeout(resolve));
 
     expect(viewportScroller.scrollToPosition).toHaveBeenCalledWith([0, 640]);
+  });
+
+  it('scrolls to the anchor on a document route', async () => {
+    await router.navigateByUrl('/cgu#paiement');
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(viewportScroller.scrollToAnchor).toHaveBeenCalledWith('paiement');
+    expect(router.url).toBe('/cgu#paiement');
   });
 });
