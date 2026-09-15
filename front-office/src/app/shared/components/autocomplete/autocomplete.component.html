@@ -1,0 +1,100 @@
+<!-- Autocomplete input with dropdown suggestions -->
+<div class="autocomplete-wrapper relative">
+  <!-- Label -->
+  @if (label && variant === 'default') {
+    <label class="block text-sm font-medium text-text-secondary mb-1.5">
+      {{ label }}
+    </label>
+  }
+
+  <!-- Input field with icon -->
+  <div class="relative">
+    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+      <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        @if (icon) {
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="icon" />
+        } @else {
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        }
+      </svg>
+    </div>
+
+    <input
+      #inputRef
+      type="text"
+      [(ngModel)]="query"
+      [placeholder]="placeholder"
+      (input)="onInputChange()"
+      (keydown)="onKeyDown($event)"
+      (focus)="onFocus()"
+      [class]="variant === 'search'
+        ? 'w-full min-h-[76px] pl-12 pr-10 pt-8 pb-3 bg-[#FAFAFA] border border-[#E8E8EC] rounded-lg text-[15px] text-primary placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/20 transition-all'
+        : 'w-full pl-12 pr-10 py-3.5 bg-bg-secondary border border-gray-200 rounded-xl text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary transition-all'"
+      role="combobox"
+      [attr.aria-expanded]="isOpen"
+      aria-autocomplete="list"
+      aria-haspopup="listbox"
+    />
+
+    @if (label && variant === 'search') {
+      <span class="pointer-events-none absolute left-12 top-3 text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">
+        {{ label }}
+      </span>
+    }
+
+    <!-- Loading spinner -->
+    @if (isLoading) {
+      <div class="absolute inset-y-0 right-0 pr-4 flex items-center">
+        <svg class="animate-spin w-5 h-5 text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+    }
+
+    <!-- Clear button -->
+    @if (query && !isLoading) {
+      <button
+        type="button"
+        (click)="clearInput()"
+        class="absolute inset-y-0 right-0 pr-4 flex items-center text-text-muted hover:text-text-secondary transition"
+        aria-label="Effacer"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    }
+  </div>
+
+  <!-- Dropdown suggestions list -->
+  @if (isOpen && suggestions.length > 0) {
+    <ul
+      class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto"
+      role="listbox"
+    >
+      @for (location of suggestions; track location.id; let i = $index) {
+        <li
+          (click)="selectLocation(location)"
+          (mouseenter)="highlightedIndex = i"
+          [class.bg-bg-secondary]="i === highlightedIndex"
+          class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-bg-secondary transition-colors"
+          role="option"
+          [attr.aria-selected]="i === highlightedIndex"
+        >
+          <!-- Location pin icon -->
+          <svg class="w-4 h-4 text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+
+          <div>
+            <p class="text-sm font-medium text-text-primary">{{ location.name }}</p>
+            <p class="text-xs text-text-muted">{{ location.country }}</p>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>
