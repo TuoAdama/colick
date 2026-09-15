@@ -91,6 +91,8 @@ upload:
 app:
   commercial:
     mode: ${APP_COMMERCIAL_MODE:FREE}
+  analytics:
+    measurement-id: ${GA_MEASUREMENT_ID:}
   frontend:
     base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
   messaging:

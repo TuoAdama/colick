@@ -29,6 +29,10 @@ The front-office loads `/api/public/app-config` before rendering and reuses that
 
 See [`../docs/commercial-modes.md`](../docs/commercial-modes.md) for the supported modes and deployment procedure.
 
+## Analytics and consentement
+
+La mesure GA4 est désactivée par défaut et ne se charge qu'après consentement explicite. Le back-office expose l'identifiant public configuré par `GA_MEASUREMENT_ID` via `/api/public/app-config`; si la variable est absente ou invalide, aucun script analytics n'est chargé.
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
