@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DOCUMENT } from '@angular/common';
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
@@ -21,6 +21,7 @@ import { SeoService } from './services/seo.service';
 })
 export class AppComponent {
   private readonly router = inject(Router);
+  private readonly document = inject(DOCUMENT);
   readonly authService = inject(AuthService);
   private readonly documentTitle = inject(Title);
   private readonly seo = inject(SeoService);
@@ -42,6 +43,7 @@ export class AppComponent {
   title = 'Coliclic - Envoyez vos colis avec des voyageurs de confiance';
   showSharedChrome = true;
   showMobileBottomSearchNavigation = false;
+  currentPagePath = '/';
 
   constructor() {
     this.documentTitle.setTitle(this.title);
@@ -55,7 +57,12 @@ export class AppComponent {
       });
   }
 
+  focusMainContent(): void {
+    this.document.getElementById('main')?.focus({ preventScroll: true });
+  }
+
   private updateSharedChrome(url: string): void {
+    this.currentPagePath = url.split(/[?#]/, 1)[0] || '/';
     this.showSharedChrome =
       this.publicTripReferenceRoutePattern.test(url) ||
       (!this.reservationShellRoutePattern.test(url) &&

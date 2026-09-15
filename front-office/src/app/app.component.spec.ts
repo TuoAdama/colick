@@ -46,6 +46,28 @@ describe('AppComponent', () => {
     expect(fixture.componentInstance.showSharedChrome).toBeTrue();
   });
 
+  it('keeps the skip link on the active route', () => {
+    routerEvents.next(new NavigationEnd(1, '/cgu#paiement', '/cgu#paiement'));
+    expect(fixture.componentInstance.currentPagePath).toBe('/cgu');
+
+    routerEvents.next(new NavigationEnd(2, '/search?from=Paris', '/search?from=Paris'));
+    expect(fixture.componentInstance.currentPagePath).toBe('/search');
+  });
+
+  it('moves keyboard focus to the main content when the skip link is activated', () => {
+    const main = document.createElement('main');
+    main.id = 'main';
+    main.tabIndex = -1;
+    document.body.appendChild(main);
+
+    try {
+      fixture.componentInstance.focusMainContent();
+      expect(document.activeElement).toBe(main);
+    } finally {
+      main.remove();
+    }
+  });
+
   it('keeps the authenticated bottom navigation mounted on search', () => {
     routerEvents.next(new NavigationEnd(1, '/search?from=Paris', '/search?from=Paris'));
 
