@@ -90,4 +90,10 @@ describe('BookingModalComponent', () => {
     component.onSubmit();
     expect(tripServiceMock.createBooking).not.toHaveBeenCalled();
   });
+
+  it('focuses the parcel title field when opened', async () => {
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('#booking-title'));
+  });
 });
