@@ -1,9 +1,11 @@
 import { Component, inject } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
 import { Title } from '@angular/platform-browser';
-import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { filter } from 'rxjs';
+import { AuthService } from './services/auth.service';
 
 /**
  * AppComponent - Root component for the Coliclic front-office application.
@@ -12,12 +14,13 @@ import { filter } from 'rxjs';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, FooterComponent],
+  imports: [AsyncPipe, RouterLink, RouterLinkActive, RouterOutlet, HeaderComponent, FooterComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
 export class AppComponent {
   private readonly router = inject(Router);
+  readonly authService = inject(AuthService);
   private readonly documentTitle = inject(Title);
   private readonly reservationShellRoutePattern = /^\/trips\/\d+\/reservations(?:\/[^?#]*)?(?:[?#].*)?$/;
   private readonly publicTripReferenceRoutePattern = /^\/trips\/ref\/[^/?#]+(?:[?#].*)?$/;
@@ -36,6 +39,7 @@ export class AppComponent {
    */
   title = 'Coliclic - Envoyez vos colis avec des voyageurs de confiance';
   showSharedChrome = true;
+  showMobileBottomSearchNavigation = false;
 
   constructor() {
     this.documentTitle.setTitle(this.title);
@@ -52,5 +56,6 @@ export class AppComponent {
       this.publicTripReferenceRoutePattern.test(url) ||
       (!this.reservationShellRoutePattern.test(url) &&
         !this.dashboardShellRoutePatterns.some((pattern) => pattern.test(url)));
+    this.showMobileBottomSearchNavigation = /^\/search(?:[?#].*)?$/.test(url);
   }
 }

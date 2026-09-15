@@ -184,6 +184,6 @@ describe('DashboardShellComponent', () => {
       '[data-testid="mobile-bottom-navigation"] a[href="/trips"]'
     ) as HTMLAnchorElement | null;
 
-    expect(tripsLink?.classList.contains('text-primary')).toBeTrue();
+    expect(tripsLink?.classList.contains('!text-primary')).toBeTrue();
   });
 });

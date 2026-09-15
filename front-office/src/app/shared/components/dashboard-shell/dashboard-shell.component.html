@@ -176,13 +176,13 @@
   </div>
 
   <nav
-    class="fixed inset-x-0 bottom-0 z-50 flex h-20 border-t border-border bg-background-secondary/95 px-2 pb-[env(safe-area-inset-bottom)] pt-2 shadow-[0_-4px_16px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden"
+    class="fixed inset-x-0 bottom-0 z-30 flex h-20 border-t border-border bg-background-secondary/95 px-2 pb-[env(safe-area-inset-bottom)] pt-2 shadow-[0_-4px_16px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden"
     aria-label="Navigation principale mobile"
     data-testid="mobile-bottom-navigation"
   >
     <a
       routerLink="/search"
-      routerLinkActive="text-primary"
+      routerLinkActive="!text-primary"
       [routerLinkActiveOptions]="{ exact: true }"
       class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[10px] font-semibold text-text-secondary transition hover:bg-background-primary hover:text-primary"
       aria-label="Rechercher un trajet"
@@ -195,7 +195,7 @@
     </a>
     <a
       routerLink="/trips"
-      routerLinkActive="text-primary"
+      routerLinkActive="!text-primary"
       [routerLinkActiveOptions]="{ exact: false }"
       class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[10px] font-semibold text-text-secondary transition hover:bg-background-primary hover:text-primary"
       aria-label="Mes voyages"
@@ -209,7 +209,7 @@
     </a>
     <a
       routerLink="/sent-bookings"
-      routerLinkActive="text-primary"
+      routerLinkActive="!text-primary"
       [routerLinkActiveOptions]="{ exact: false }"
       class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[10px] font-semibold text-text-secondary transition hover:bg-background-primary hover:text-primary"
       aria-label="Mes demandes envoyées"
@@ -221,7 +221,7 @@
     </a>
     <a
       routerLink="/messages"
-      routerLinkActive="text-primary"
+      routerLinkActive="!text-primary"
       [routerLinkActiveOptions]="{ exact: false }"
       class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[10px] font-semibold text-text-secondary transition hover:bg-background-primary hover:text-primary"
       aria-label="Messages"
@@ -233,7 +233,7 @@
     </a>
     <a
       routerLink="/settings"
-      routerLinkActive="text-primary"
+      routerLinkActive="!text-primary"
       [routerLinkActiveOptions]="{ exact: false }"
       class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[10px] font-semibold text-text-secondary transition hover:bg-background-primary hover:text-primary"
       aria-label="Mon profil"
