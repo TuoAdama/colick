@@ -25,7 +25,7 @@ export class AnalyticsService {
   private readonly appConfig = inject(AppConfigService);
   private readonly consentKey = 'coliclic.analytics.consent';
   private loaded = false;
-  readonly consentRequired = signal(this.readConsent() === null);
+  readonly consentRequired = signal(this.readConsent() === null && !!this.appConfig.config().analyticsMeasurementId);
 
   accept(): void {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -42,6 +42,7 @@ export class AnalyticsService {
 
   track(name: AnalyticsEventName, params: AnalyticsParams = {}): void {
     if (!isPlatformBrowser(this.platformId) || this.readConsent() !== 'granted') return;
+    if (!this.appConfig.config().analyticsMeasurementId) return;
     this.load();
     window.gtag?.('event', name, this.cleanParams(params));
   }

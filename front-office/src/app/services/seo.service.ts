@@ -21,7 +21,7 @@ export const DEFAULT_SEO: SeoRouteData = {
   index: true,
 };
 
-export const DEFAULT_OG_IMAGE = '/og-coliclic.svg';
+export const DEFAULT_OG_IMAGE = '/og-coliclic.png';
 
 @Injectable({ providedIn: 'root' })
 export class SeoService {
@@ -84,7 +84,7 @@ export class SeoService {
     if (!data) return;
     const script = this.document.createElement('script');
     script.type = 'application/ld+json';
-    script.dataset['coliclicStructuredData'] = 'true';
+    script.setAttribute('data-coliclic-structured-data', 'true');
     script.textContent = JSON.stringify(data);
     this.document.head.appendChild(script);
   }

@@ -14,7 +14,7 @@ describe('AnalyticsService', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: PLATFORM_ID, useValue: 'browser' },
-        { provide: AppConfigService, useValue: { config: () => ({ analyticsMeasurementId: null }) } },
+        { provide: AppConfigService, useValue: { config: () => ({ analyticsMeasurementId: 'G-TEST123' }) } },
       ],
     });
     service = TestBed.inject(AnalyticsService);

@@ -51,7 +51,7 @@ describe('SeoService', () => {
     expect(meta.getTag('property="og:type"')?.content).toBe('article');
     expect(meta.getTag('name="twitter:card"')?.content).toBe('summary_large_image');
     expect(meta.getTag('property="og:url"')?.content.endsWith('/trips/ref/TRP-1')).toBeTrue();
-    expect(meta.getTag('property="og:image"')?.content.endsWith('/og-coliclic.svg')).toBeTrue();
+    expect(meta.getTag('property="og:image"')?.content.endsWith('/og-coliclic.png')).toBeTrue();
     expect(document.head.querySelector('script[data-coliclic-structured-data]')?.textContent).toContain('Paris → Abidjan');
   });
 
