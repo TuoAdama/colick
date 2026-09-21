@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { SearchPageComponent } from './search-page.component';
@@ -161,8 +161,10 @@ describe('SearchPageComponent', () => {
       createdAt: '2026-09-21T00:00:00.000Z',
     };
 
+    component.isSearchModalOpen = true;
     component.selectSearchHistory(entry);
 
+    expect(component.isSearchModalOpen).toBeFalse();
     expect(router.navigate).toHaveBeenCalledWith([], {
       relativeTo: activatedRoute,
       queryParams: {
@@ -187,6 +189,41 @@ describe('SearchPageComponent', () => {
     expect(searchHistoryServiceMock.clear).toHaveBeenCalled();
     expect(component.searchHistory).toEqual([]);
   });
+
+  it('opens a search modal from the departure field and displays recent searches', () => {
+    component.searchHistory = [{
+      criteria: { departure: 'Paris', destination: 'Abidjan', date: '2026-10-01' },
+      createdAt: '2026-09-21T00:00:00.000Z',
+    }];
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const departureTrigger = host.querySelector<HTMLButtonElement>('[data-testid="search-departure-trigger"]');
+
+    expect(departureTrigger).not.toBeNull();
+    expect(departureTrigger?.tagName).toBe('BUTTON');
+    departureTrigger!.click();
+    fixture.detectChanges();
+
+    const modal = host.querySelector<HTMLElement>('[data-testid="search-modal"]');
+    expect(modal).not.toBeNull();
+    expect(modal?.querySelectorAll('input')).toHaveSize(3);
+    expect(modal?.textContent).toContain('Recherches récentes');
+    expect(modal?.textContent).toContain('Paris');
+    expect(modal?.textContent).toContain('Abidjan');
+  });
+
+  it('focuses the destination field when the destination trigger opens the modal', fakeAsync(() => {
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const destinationTrigger = host.querySelector<HTMLButtonElement>('[data-testid="search-destination-trigger"]');
+    destinationTrigger!.click();
+    fixture.detectChanges();
+    flushMicrotasks();
+
+    expect(document.activeElement?.getAttribute('placeholder')).toBe('Où allez-vous ?');
+  }));
 
   it('does not auto-search when query params are incomplete', () => {
     setQueryParams({ from: 'Paris' });

@@ -13,8 +13,10 @@
       </h1>
 
       <div class="flex flex-col items-stretch gap-2 rounded-xl border border-[#E8E8EC] bg-white p-2 shadow-sm md:grid md:grid-cols-2 lg:flex lg:flex-row lg:items-center">
-        <div class="w-full flex-1">
+        <div class="relative w-full flex-1">
           <app-autocomplete
+            inert
+            aria-hidden="true"
             label="DÉPART"
             placeholder="Ville de départ"
             [initialQuery]="departureQuery"
@@ -23,6 +25,7 @@
             (selected)="onDepartureSelected($event)"
             (cleared)="departure = null"
           ></app-autocomplete>
+          <button type="button" class="absolute inset-0 z-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" (click)="openSearchModal('departure')" aria-haspopup="dialog" data-testid="search-departure-trigger"><span class="sr-only">Choisir la ville de départ</span></button>
         </div>
 
         <div class="hidden items-center justify-center px-2 text-text-muted lg:flex" aria-hidden="true">
@@ -31,8 +34,10 @@
           </svg>
         </div>
 
-        <div class="w-full flex-1">
+        <div class="relative w-full flex-1">
           <app-autocomplete
+            inert
+            aria-hidden="true"
             label="DESTINATION"
             placeholder="Où allez-vous ?"
             [initialQuery]="destinationQuery"
@@ -41,6 +46,7 @@
             (selected)="onDestinationSelected($event)"
             (cleared)="destination = null"
           ></app-autocomplete>
+          <button type="button" class="absolute inset-0 z-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" (click)="openSearchModal('destination')" aria-haspopup="dialog" data-testid="search-destination-trigger"><span class="sr-only">Choisir la ville de destination</span></button>
         </div>
 
         <label class="flex min-h-[76px] w-full flex-1 items-center gap-3 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-3 transition focus-within:ring-2 focus-within:ring-primary/20">
@@ -78,6 +84,41 @@
         </button>
       </div>
     </section>
+
+    @if (isSearchModalOpen) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" (click)="closeSearchModal()" (keydown.escape)="closeSearchModal()">
+        <section class="max-h-[90dvh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="search-modal-title" [appModalFocus]="searchModalInitialFocus" (click)="$event.stopPropagation()" data-testid="search-modal">
+          <div class="flex items-start justify-between gap-4 border-b border-[#E8E8EC] px-5 py-4 sm:px-6">
+            <div>
+              <h2 id="search-modal-title" class="text-xl font-bold text-primary">Rechercher un trajet</h2>
+              <p class="mt-1 text-sm text-text-secondary">Renseignez votre itinéraire ou relancez une recherche récente.</p>
+            </div>
+            <button type="button" class="min-h-11 min-w-11 rounded-full text-2xl text-text-secondary hover:bg-[#F8FAFB] focus:outline-none focus:ring-2 focus:ring-primary/20" (click)="closeSearchModal()" aria-label="Fermer la recherche">×</button>
+          </div>
+          <div class="space-y-4 p-5 sm:p-6">
+            <div class="grid gap-3 md:grid-cols-2">
+              <div class="search-modal-departure"><app-autocomplete label="DÉPART" placeholder="Ville de départ" [initialQuery]="departureQuery" variant="search" icon="M12 21s7-4.438 7-11a7 7 0 10-14 0c0 6.562 7 11 7 11zM12 13a3 3 0 100-6 3 3 0 000 6z" (selected)="onDepartureSelected($event)" (cleared)="departure = null; departureQuery = ''"></app-autocomplete></div>
+              <div class="search-modal-destination"><app-autocomplete label="DESTINATION" placeholder="Où allez-vous ?" [initialQuery]="destinationQuery" variant="search" icon="M3 11l18-8-8 18-2-8-8-2z" (selected)="onDestinationSelected($event)" (cleared)="destination = null; destinationQuery = ''"></app-autocomplete></div>
+            </div>
+            <label class="flex min-h-[76px] items-center gap-3 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-3 transition focus-within:ring-2 focus-within:ring-primary/20">
+              <svg class="h-6 w-6 shrink-0 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              <span class="flex min-w-0 flex-1 flex-col"><span class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">DATE</span><input type="date" [(ngModel)]="selectedDate" class="w-full border-none bg-transparent p-0 text-[15px] text-primary outline-none focus:ring-0" aria-label="Date de départ minimum" /></span>
+            </label>
+            <button type="button" class="min-h-12 w-full rounded-lg bg-accent px-6 py-3 text-sm font-bold text-white transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50" [disabled]="!isFormValid || isLoading" (click)="searchTrips()">Rechercher</button>
+            @if (searchHistory.length > 0) {
+              <section class="border-t border-[#E8E8EC] pt-5" aria-labelledby="search-history-title">
+                <div class="mb-3 flex items-center justify-between gap-3"><h3 id="search-history-title" class="text-lg font-bold text-primary">Recherches récentes</h3><button type="button" class="text-sm font-semibold text-text-secondary underline" (click)="clearSearchHistory()">Effacer l’historique</button></div>
+                <ul class="flex flex-col gap-2">
+                  @for (entry of searchHistory; track entry.createdAt) {
+                    <li><button type="button" class="flex min-h-11 w-full items-center justify-between rounded-lg border border-[#E8E8EC] px-4 py-3 text-left hover:border-primary/30 hover:bg-[#F8FAFB]" (click)="selectSearchHistory(entry)" [attr.aria-label]="'Relancer la recherche de ' + entry.criteria.departure + ' vers ' + entry.criteria.destination"><span class="font-semibold text-primary">{{ entry.criteria.departure }} → {{ entry.criteria.destination }}</span><span class="text-xs text-text-secondary">{{ entry.criteria.date ? formatDate(entry.criteria.date) : 'Toutes les dates' }}</span></button></li>
+                  }
+                </ul>
+              </section>
+            }
+          </div>
+        </section>
+      </div>
+    }
 
     <div class="flex flex-col gap-3 md:gap-8 lg:flex-row">
       <div class="flex gap-2 overflow-x-auto pb-2 md:hidden" aria-label="Filtres actifs">
@@ -352,31 +393,6 @@
         }
 
         @if (!hasSearched && !isLoading) {
-          @if (searchHistory.length > 0) {
-            <section class="mb-4 rounded-xl border border-[#E8E8EC] bg-white p-5" aria-labelledby="search-history-title">
-              <div class="mb-3 flex items-center justify-between gap-3">
-                <h2 id="search-history-title" class="text-lg font-bold text-primary">Recherches récentes</h2>
-                <button type="button" class="text-sm font-semibold text-text-secondary underline" (click)="clearSearchHistory()">
-                  Effacer l’historique
-                </button>
-              </div>
-              <ul class="flex flex-col gap-2">
-                @for (entry of searchHistory; track entry.createdAt) {
-                  <li>
-                    <button
-                      type="button"
-                      class="flex min-h-11 w-full items-center justify-between rounded-lg border border-[#E8E8EC] px-4 py-3 text-left hover:border-primary/30 hover:bg-[#F8FAFB]"
-                      (click)="selectSearchHistory(entry)"
-                      [attr.aria-label]="'Relancer la recherche de ' + entry.criteria.departure + ' vers ' + entry.criteria.destination"
-                    >
-                      <span class="font-semibold text-primary">{{ entry.criteria.departure }} → {{ entry.criteria.destination }}</span>
-                      <span class="text-xs text-text-secondary">{{ entry.criteria.date || 'Toutes les dates' }}</span>
-                    </button>
-                  </li>
-                }
-              </ul>
-            </section>
-          }
           <div class="rounded-xl border border-[#E8E8EC] bg-white p-10 text-center">
             <h2 class="mb-2 text-2xl font-bold text-primary">Lancez votre recherche.</h2>
             <p class="text-text-secondary">Sélectionnez un départ et une destination pour découvrir les trajets disponibles.</p>
