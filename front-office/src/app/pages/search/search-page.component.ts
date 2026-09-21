@@ -88,6 +88,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   /** Whether the search form and history modal is open. */
   isSearchModalOpen = false;
 
+  /** CSS selector for the field that receives focus when the modal opens. */
+  searchModalInitialFocus = '.search-modal-departure input';
+
   /** Error message if search fails */
   errorMessage = '';
 
@@ -259,7 +262,10 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     this.searchHistory = [];
   }
 
-  openSearchModal(): void {
+  openSearchModal(focusTarget: 'departure' | 'destination' = 'departure'): void {
+    this.searchModalInitialFocus = focusTarget === 'destination'
+      ? '.search-modal-destination input'
+      : '.search-modal-departure input';
     this.isSearchModalOpen = true;
   }
 

@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { SearchPageComponent } from './search-page.component';
@@ -212,6 +212,18 @@ describe('SearchPageComponent', () => {
     expect(modal?.textContent).toContain('Paris');
     expect(modal?.textContent).toContain('Abidjan');
   });
+
+  it('focuses the destination field when the destination trigger opens the modal', fakeAsync(() => {
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const destinationTrigger = host.querySelector<HTMLButtonElement>('[data-testid="search-destination-trigger"]');
+    destinationTrigger!.click();
+    fixture.detectChanges();
+    flushMicrotasks();
+
+    expect(document.activeElement?.getAttribute('placeholder')).toBe('Où allez-vous ?');
+  }));
 
   it('does not auto-search when query params are incomplete', () => {
     setQueryParams({ from: 'Paris' });
