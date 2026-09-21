@@ -17,6 +17,7 @@ import { UserResponse } from '../../models/auth.model';
 import { AnalyticsService } from '../../services/analytics.service';
 import { SearchHistoryService } from '../../services/search-history.service';
 import { SearchHistoryEntry } from '../../models/search-history.model';
+import { ModalFocusDirective } from '../../shared/directives/modal-focus.directive';
 
 /**
  * SearchPageComponent - Page for searching trips by departure and destination.
@@ -26,7 +27,7 @@ import { SearchHistoryEntry } from '../../models/search-history.model';
 @Component({
   selector: 'app-search-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AutocompleteComponent, BookingModalComponent, UserAvatarComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AutocompleteComponent, BookingModalComponent, UserAvatarComponent, ModalFocusDirective],
   templateUrl: './search-page.component.html',
 })
 export class SearchPageComponent implements OnInit, OnDestroy {
@@ -84,6 +85,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   /** Searches recently executed in this browser */
   searchHistory: SearchHistoryEntry[] = this.searchHistoryService.getEntries();
 
+  /** Whether the search form and history modal is open. */
+  isSearchModalOpen = false;
+
   /** Error message if search fails */
   errorMessage = '';
 
@@ -115,6 +119,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
    */
   onDepartureSelected(location: Location): void {
     this.departure = location;
+    this.departureQuery = location.name;
   }
 
   /**
@@ -122,6 +127,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
    */
   onDestinationSelected(location: Location): void {
     this.destination = location;
+    this.destinationQuery = location.name;
   }
 
   /**
@@ -210,6 +216,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     }
 
     this.isMobileSearchEditing = false;
+    this.closeSearchModal();
     const from = this.departure.name;
     const to = this.destination.name;
     const criteria = this.buildCriteria(
@@ -240,6 +247,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   }
 
   selectSearchHistory(entry: SearchHistoryEntry): void {
+    this.closeSearchModal();
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: this.toQueryParams(entry.criteria),
@@ -249,6 +257,14 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   clearSearchHistory(): void {
     this.searchHistoryService.clear();
     this.searchHistory = [];
+  }
+
+  openSearchModal(): void {
+    this.isSearchModalOpen = true;
+  }
+
+  closeSearchModal(): void {
+    this.isSearchModalOpen = false;
   }
 
   toggleMobileFilters(): void {

@@ -161,8 +161,10 @@ describe('SearchPageComponent', () => {
       createdAt: '2026-09-21T00:00:00.000Z',
     };
 
+    component.isSearchModalOpen = true;
     component.selectSearchHistory(entry);
 
+    expect(component.isSearchModalOpen).toBeFalse();
     expect(router.navigate).toHaveBeenCalledWith([], {
       relativeTo: activatedRoute,
       queryParams: {
@@ -186,6 +188,29 @@ describe('SearchPageComponent', () => {
 
     expect(searchHistoryServiceMock.clear).toHaveBeenCalled();
     expect(component.searchHistory).toEqual([]);
+  });
+
+  it('opens a search modal from the departure field and displays recent searches', () => {
+    component.searchHistory = [{
+      criteria: { departure: 'Paris', destination: 'Abidjan', date: '2026-10-01' },
+      createdAt: '2026-09-21T00:00:00.000Z',
+    }];
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const departureTrigger = host.querySelector<HTMLButtonElement>('[data-testid="search-departure-trigger"]');
+
+    expect(departureTrigger).not.toBeNull();
+    expect(departureTrigger?.tagName).toBe('BUTTON');
+    departureTrigger!.click();
+    fixture.detectChanges();
+
+    const modal = host.querySelector<HTMLElement>('[data-testid="search-modal"]');
+    expect(modal).not.toBeNull();
+    expect(modal?.querySelectorAll('input')).toHaveSize(3);
+    expect(modal?.textContent).toContain('Recherches récentes');
+    expect(modal?.textContent).toContain('Paris');
+    expect(modal?.textContent).toContain('Abidjan');
   });
 
   it('does not auto-search when query params are incomplete', () => {
