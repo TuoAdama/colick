@@ -7,6 +7,8 @@ import { TripAlertService } from '../../services/trip-alert.service';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 import { LocationService } from '../../services/location.service';
+import { SearchHistoryService } from '../../services/search-history.service';
+import { SearchHistoryEntry } from '../../models/search-history.model';
 import { Trip } from '../../models/trip.model';
 
 describe('SearchPageComponent', () => {
@@ -44,6 +46,12 @@ describe('SearchPageComponent', () => {
     searchLocations: jasmine.createSpy('searchLocations').and.returnValue(of([])),
   };
 
+  const searchHistoryServiceMock = {
+    getEntries: jasmine.createSpy('getEntries').and.returnValue([] as SearchHistoryEntry[]),
+    add: jasmine.createSpy('add').and.callFake((criteria) => [{ criteria, createdAt: '2026-09-21T00:00:00.000Z' }]),
+    clear: jasmine.createSpy('clear'),
+  };
+
   beforeEach(async () => {
     queryParamMapSubject = new BehaviorSubject(convertToParamMap({}));
     routeMock = {
@@ -64,6 +72,7 @@ describe('SearchPageComponent', () => {
         { provide: AuthService, useValue: authServiceMock },
         { provide: MessagingService, useValue: messagingServiceMock },
         { provide: LocationService, useValue: locationServiceMock },
+        { provide: SearchHistoryService, useValue: searchHistoryServiceMock },
       ],
     }).compileComponents();
 
@@ -78,6 +87,10 @@ describe('SearchPageComponent', () => {
     tripAlertServiceMock.createAlert.and.returnValue(of({ id: 1 }));
     authServiceMock.isLoggedIn.and.returnValue(false);
     authServiceMock.getUser.and.returnValue(null);
+    searchHistoryServiceMock.getEntries.calls.reset();
+    searchHistoryServiceMock.getEntries.and.returnValue([]);
+    searchHistoryServiceMock.add.calls.reset();
+    searchHistoryServiceMock.clear.calls.reset();
   });
 
   function setQueryParams(params: Record<string, string>): void {
@@ -102,6 +115,77 @@ describe('SearchPageComponent', () => {
       minPrice: null,
       maxPrice: null,
     });
+  });
+
+  it('resets stale results when navigating back to the bare search route', () => {
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
+    fixture.detectChanges();
+    component.trips = [{ id: 1 } as Trip];
+    expect(component.hasSearched).toBeTrue();
+
+    setQueryParams({});
+
+    expect(component.hasSearched).toBeFalse();
+    expect(component.trips).toEqual([]);
+    expect(component.departure).toBeNull();
+    expect(component.destination).toBeNull();
+  });
+
+  it('stores complete criteria when a search is executed', () => {
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
+    fixture.detectChanges();
+    searchHistoryServiceMock.add.calls.reset();
+
+    component.searchTrips();
+
+    expect(searchHistoryServiceMock.add).toHaveBeenCalledWith({
+      departure: 'Paris',
+      destination: 'Abidjan',
+      date: undefined,
+      sort: 'price_asc',
+      minPrice: null,
+      maxPrice: null,
+    });
+  });
+
+  it('navigates with all criteria when selecting a saved search', () => {
+    const entry: SearchHistoryEntry = {
+      criteria: {
+        departure: 'Paris',
+        destination: 'Abidjan',
+        date: '2026-10-01',
+        sort: 'rating_desc',
+        minPrice: 8,
+        maxPrice: 15,
+      },
+      createdAt: '2026-09-21T00:00:00.000Z',
+    };
+
+    component.selectSearchHistory(entry);
+
+    expect(router.navigate).toHaveBeenCalledWith([], {
+      relativeTo: activatedRoute,
+      queryParams: {
+        from: 'Paris',
+        to: 'Abidjan',
+        date: '2026-10-01',
+        sort: 'rating_desc',
+        minPrice: 8,
+        maxPrice: 15,
+      },
+    });
+  });
+
+  it('clears the saved searches and local state', () => {
+    component.searchHistory = [{
+      criteria: { departure: 'Paris', destination: 'Abidjan' },
+      createdAt: '2026-09-21T00:00:00.000Z',
+    }];
+
+    component.clearSearchHistory();
+
+    expect(searchHistoryServiceMock.clear).toHaveBeenCalled();
+    expect(component.searchHistory).toEqual([]);
   });
 
   it('does not auto-search when query params are incomplete', () => {

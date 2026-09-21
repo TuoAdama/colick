@@ -15,6 +15,8 @@ import { Trip } from '../../models/trip.model';
 import { BookingResponse } from '../../models/booking.model';
 import { UserResponse } from '../../models/auth.model';
 import { AnalyticsService } from '../../services/analytics.service';
+import { SearchHistoryService } from '../../services/search-history.service';
+import { SearchHistoryEntry } from '../../models/search-history.model';
 
 /**
  * SearchPageComponent - Page for searching trips by departure and destination.
@@ -46,6 +48,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   private readonly tripAlertService = inject(TripAlertService);
   private readonly authService = inject(AuthService);
   private readonly messagingService = inject(MessagingService);
+  private readonly searchHistoryService = inject(SearchHistoryService);
   readonly analytics = inject(AnalyticsService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -77,6 +80,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
   /** Whether a search request is in progress */
   isLoading = false;
+
+  /** Searches recently executed in this browser */
+  searchHistory: SearchHistoryEntry[] = this.searchHistoryService.getEntries();
 
   /** Error message if search fails */
   errorMessage = '';
@@ -142,6 +148,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       const maxPrice = this.parseOptionalNumber(params.get('maxPrice'));
 
       if (!from && !to) {
+        if (this.hasSearched || this.trips.length > 0 || this.lastAutoSearchKey) {
+          this.resetSearchState();
+        }
         return;
       }
 
@@ -179,6 +188,22 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     this.closeMobileFilters();
   }
 
+  private resetSearchState(): void {
+    this.departure = null;
+    this.destination = null;
+    this.departureQuery = '';
+    this.destinationQuery = '';
+    this.selectedDate = '';
+    this.sort = 'price_asc';
+    this.minPrice = null;
+    this.maxPrice = null;
+    this.trips = [];
+    this.hasSearched = false;
+    this.isLoading = false;
+    this.errorMessage = '';
+    this.lastAutoSearchKey = '';
+  }
+
   searchTrips(): void {
     if (!this.isFormValid || !this.departure || !this.destination) {
       return;
@@ -212,6 +237,18 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     if (this.isFormValid) {
       this.searchTrips();
     }
+  }
+
+  selectSearchHistory(entry: SearchHistoryEntry): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: this.toQueryParams(entry.criteria),
+    });
+  }
+
+  clearSearchHistory(): void {
+    this.searchHistoryService.clear();
+    this.searchHistory = [];
   }
 
   toggleMobileFilters(): void {
@@ -283,6 +320,8 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   }
 
   private searchTripsByCriteria(criteria: TripSearchCriteria): void {
+    this.searchHistoryService.add(criteria);
+    this.searchHistory = this.searchHistoryService.getEntries();
     this.analytics.track('search_started', {
       departure: criteria.departure,
       destination: criteria.destination,

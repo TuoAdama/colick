@@ -352,6 +352,31 @@
         }
 
         @if (!hasSearched && !isLoading) {
+          @if (searchHistory.length > 0) {
+            <section class="mb-4 rounded-xl border border-[#E8E8EC] bg-white p-5" aria-labelledby="search-history-title">
+              <div class="mb-3 flex items-center justify-between gap-3">
+                <h2 id="search-history-title" class="text-lg font-bold text-primary">Recherches récentes</h2>
+                <button type="button" class="text-sm font-semibold text-text-secondary underline" (click)="clearSearchHistory()">
+                  Effacer l’historique
+                </button>
+              </div>
+              <ul class="flex flex-col gap-2">
+                @for (entry of searchHistory; track entry.createdAt) {
+                  <li>
+                    <button
+                      type="button"
+                      class="flex min-h-11 w-full items-center justify-between rounded-lg border border-[#E8E8EC] px-4 py-3 text-left hover:border-primary/30 hover:bg-[#F8FAFB]"
+                      (click)="selectSearchHistory(entry)"
+                      [attr.aria-label]="'Relancer la recherche de ' + entry.criteria.departure + ' vers ' + entry.criteria.destination"
+                    >
+                      <span class="font-semibold text-primary">{{ entry.criteria.departure }} → {{ entry.criteria.destination }}</span>
+                      <span class="text-xs text-text-secondary">{{ entry.criteria.date || 'Toutes les dates' }}</span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
           <div class="rounded-xl border border-[#E8E8EC] bg-white p-10 text-center">
             <h2 class="mb-2 text-2xl font-bold text-primary">Lancez votre recherche.</h2>
             <p class="text-text-secondary">Sélectionnez un départ et une destination pour découvrir les trajets disponibles.</p>
