@@ -73,13 +73,17 @@ describe('SearchHistoryService', () => {
   });
 
   it('keeps searches working when browser storage is unavailable', () => {
-    spyOn(Storage.prototype, 'getItem').and.throwError('storage unavailable');
-    spyOn(Storage.prototype, 'setItem').and.throwError('storage unavailable');
-    spyOn(Storage.prototype, 'removeItem').and.throwError('storage unavailable');
+    const getItemSpy = spyOn(Storage.prototype, 'getItem').and.throwError('storage unavailable');
+    const setItemSpy = spyOn(Storage.prototype, 'setItem').and.throwError('storage unavailable');
+    const removeItemSpy = spyOn(Storage.prototype, 'removeItem').and.throwError('storage unavailable');
 
     expect(() => service.getEntries()).not.toThrow();
     expect(() => service.add(criteria(1))).not.toThrow();
     expect(() => service.clear()).not.toThrow();
+
+    getItemSpy.and.callThrough();
+    setItemSpy.and.callThrough();
+    removeItemSpy.and.callThrough();
   });
 
   it('clears the complete history', () => {

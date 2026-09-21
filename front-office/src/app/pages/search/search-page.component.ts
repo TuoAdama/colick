@@ -148,7 +148,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       const maxPrice = this.parseOptionalNumber(params.get('maxPrice'));
 
       if (!from && !to) {
-        this.resetSearchState();
+        if (this.hasSearched || this.trips.length > 0 || this.lastAutoSearchKey) {
+          this.resetSearchState();
+        }
         return;
       }
 
