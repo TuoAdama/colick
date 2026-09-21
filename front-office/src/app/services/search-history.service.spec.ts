@@ -72,6 +72,16 @@ describe('SearchHistoryService', () => {
     expect(service.getEntries()).toEqual([]);
   });
 
+  it('keeps searches working when browser storage is unavailable', () => {
+    spyOn(Storage.prototype, 'getItem').and.throwError('storage unavailable');
+    spyOn(Storage.prototype, 'setItem').and.throwError('storage unavailable');
+    spyOn(Storage.prototype, 'removeItem').and.throwError('storage unavailable');
+
+    expect(() => service.getEntries()).not.toThrow();
+    expect(() => service.add(criteria(1))).not.toThrow();
+    expect(() => service.clear()).not.toThrow();
+  });
+
   it('clears the complete history', () => {
     service.add(criteria(1));
 

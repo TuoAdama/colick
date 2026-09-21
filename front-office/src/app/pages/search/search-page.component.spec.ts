@@ -117,6 +117,20 @@ describe('SearchPageComponent', () => {
     });
   });
 
+  it('resets stale results when navigating back to the bare search route', () => {
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
+    fixture.detectChanges();
+    component.trips = [{ id: 1 } as Trip];
+    expect(component.hasSearched).toBeTrue();
+
+    setQueryParams({});
+
+    expect(component.hasSearched).toBeFalse();
+    expect(component.trips).toEqual([]);
+    expect(component.departure).toBeNull();
+    expect(component.destination).toBeNull();
+  });
+
   it('stores complete criteria when a search is executed', () => {
     setQueryParams({ from: 'Paris', to: 'Abidjan' });
     fixture.detectChanges();

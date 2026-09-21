@@ -12,7 +12,7 @@ export class SearchHistoryService {
   getEntries(): SearchHistoryEntry[] {
     if (!isPlatformBrowser(this.platformId)) return [];
 
-    const raw = localStorage.getItem(this.storageKey);
+    const raw = this.readStoredValue();
     if (!raw) return [];
 
     try {
@@ -46,13 +46,29 @@ export class SearchHistoryService {
       ...this.getEntries().filter((entry) => this.criteriaKey(entry.criteria) !== key),
     ].slice(0, this.maxEntries);
 
-    localStorage.setItem(this.storageKey, JSON.stringify(next));
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(next));
+    } catch {
+      // Search history is optional; a storage failure must not block search.
+    }
     return next;
   }
 
   clear(): void {
     if (!isPlatformBrowser(this.platformId)) return;
-    localStorage.removeItem(this.storageKey);
+    try {
+      localStorage.removeItem(this.storageKey);
+    } catch {
+      // Ignore disabled or unavailable browser storage.
+    }
+  }
+
+  private readStoredValue(): string | null {
+    try {
+      return localStorage.getItem(this.storageKey);
+    } catch {
+      return null;
+    }
   }
 
   private criteriaKey(criteria: TripSearchCriteria): string {

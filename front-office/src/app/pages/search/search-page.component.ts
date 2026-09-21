@@ -148,6 +148,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       const maxPrice = this.parseOptionalNumber(params.get('maxPrice'));
 
       if (!from && !to) {
+        this.resetSearchState();
         return;
       }
 
@@ -183,6 +184,22 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
     this.closeMobileFilters();
+  }
+
+  private resetSearchState(): void {
+    this.departure = null;
+    this.destination = null;
+    this.departureQuery = '';
+    this.destinationQuery = '';
+    this.selectedDate = '';
+    this.sort = 'price_asc';
+    this.minPrice = null;
+    this.maxPrice = null;
+    this.trips = [];
+    this.hasSearched = false;
+    this.isLoading = false;
+    this.errorMessage = '';
+    this.lastAutoSearchKey = '';
   }
 
   searchTrips(): void {
