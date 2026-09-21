@@ -88,7 +88,6 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     version: '1.0',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
-    notice: 'Projet de CGU en attente de validation juridique. Ce document ne doit pas être publié en production avant l’immatriculation de l’éditeur.',
     sections: [
       { id: 'objet', title: 'Objet et acceptation', paragraphs: ['Les présentes conditions encadrent l’accès à Coliclic et la mise en relation entre voyageurs et expéditeurs. La création d’un compte vaut acceptation de la version présentée au moment de l’inscription.'] },
       { id: 'compte', title: 'Compte utilisateur', paragraphs: ['Chaque utilisateur fournit des informations exactes, protège ses accès et informe Coliclic de toute utilisation non autorisée. Un compte peut être suspendu en cas de fraude, de danger ou de violation de ces conditions.'] },
