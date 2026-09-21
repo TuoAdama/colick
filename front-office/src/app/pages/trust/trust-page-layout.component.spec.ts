@@ -33,6 +33,13 @@ describe('TrustPageLayoutComponent', () => {
     expect(host.querySelector('#mission')?.classList.contains('scroll-mt-28')).toBeTrue();
   });
 
+  it('does not render the draft notice on the terms page', async () => {
+    await harness.navigateByUrl('/cgu', TrustPageComponent);
+    const host = harness.routeNativeElement as HTMLElement;
+
+    expect(host.querySelector('aside[role="note"]')).toBeNull();
+  });
+
   it('keeps the document route when navigating to a section', async () => {
     await harness.navigateByUrl('/cgu', TrustPageComponent);
     const host = harness.routeNativeElement as HTMLElement;
