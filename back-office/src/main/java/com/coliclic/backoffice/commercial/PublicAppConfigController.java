@@ -10,14 +10,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class PublicAppConfigController {
 
     private final CommercialProperties commercialProperties;
+    private final AnalyticsProperties analyticsProperties;
 
-    public PublicAppConfigController(CommercialProperties commercialProperties) {
+    public PublicAppConfigController(CommercialProperties commercialProperties,
+                                     AnalyticsProperties analyticsProperties) {
         this.commercialProperties = commercialProperties;
+        this.analyticsProperties = analyticsProperties;
     }
 
     @GetMapping("/app-config")
     @Operation(summary = "Get the public application and commercial configuration")
     public PublicAppConfigResponse getAppConfig() {
-        return PublicAppConfigResponse.from(commercialProperties);
+        return PublicAppConfigResponse.from(commercialProperties, analyticsProperties.getMeasurementId());
     }
 }
