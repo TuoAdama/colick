@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { afterNextRender, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -32,7 +32,10 @@ import { ModalFocusDirective } from '../../shared/directives/modal-focus.directi
 })
 export class SearchPageComponent implements OnInit, OnDestroy {
   private readonly document = inject(DOCUMENT);
-  isMobileViewport = this.detectMobileViewport();
+  isMobileViewport = false;
+  private readonly viewportRender = afterNextRender(() => {
+    this.isMobileViewport = this.detectMobileViewport();
+  });
   @ViewChild('filterPanel') filterPanel?: ElementRef<HTMLElement>;
   isMobileSearchEditing = false;
   draftSort: TripSearchSort = 'price_asc';
