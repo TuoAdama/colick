@@ -15,8 +15,8 @@
       <div class="flex flex-col items-stretch gap-2 rounded-xl border border-[#E8E8EC] bg-white p-2 shadow-sm md:grid md:grid-cols-2 lg:flex lg:flex-row lg:items-center">
         <div class="relative w-full flex-1">
           <app-autocomplete
-            inert
-            aria-hidden="true"
+            [attr.inert]="isMobileViewport ? '' : null"
+            [attr.aria-hidden]="isMobileViewport ? 'true' : null"
             label="DÉPART"
             placeholder="Ville de départ"
             [initialQuery]="departureQuery"
@@ -25,7 +25,9 @@
             (selected)="onDepartureSelected($event)"
             (cleared)="departure = null"
           ></app-autocomplete>
-          <button type="button" class="absolute inset-0 z-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" (click)="openSearchModal('departure')" aria-haspopup="dialog" data-testid="search-departure-trigger"><span class="sr-only">Choisir la ville de départ</span></button>
+          @if (isMobileViewport) {
+            <button type="button" class="absolute inset-0 z-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" (click)="openSearchModal('departure')" aria-haspopup="dialog" data-testid="search-departure-trigger"><span class="sr-only">Choisir la ville de départ</span></button>
+          }
         </div>
 
         <div class="hidden items-center justify-center px-2 text-text-muted lg:flex" aria-hidden="true">
@@ -36,8 +38,8 @@
 
         <div class="relative w-full flex-1">
           <app-autocomplete
-            inert
-            aria-hidden="true"
+            [attr.inert]="isMobileViewport ? '' : null"
+            [attr.aria-hidden]="isMobileViewport ? 'true' : null"
             label="DESTINATION"
             placeholder="Où allez-vous ?"
             [initialQuery]="destinationQuery"
@@ -46,7 +48,9 @@
             (selected)="onDestinationSelected($event)"
             (cleared)="destination = null"
           ></app-autocomplete>
-          <button type="button" class="absolute inset-0 z-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" (click)="openSearchModal('destination')" aria-haspopup="dialog" data-testid="search-destination-trigger"><span class="sr-only">Choisir la ville de destination</span></button>
+          @if (isMobileViewport) {
+            <button type="button" class="absolute inset-0 z-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" (click)="openSearchModal('destination')" aria-haspopup="dialog" data-testid="search-destination-trigger"><span class="sr-only">Choisir la ville de destination</span></button>
+          }
         </div>
 
         <label class="flex min-h-[76px] w-full flex-1 items-center gap-3 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-3 transition focus-within:ring-2 focus-within:ring-primary/20">
@@ -85,7 +89,7 @@
       </div>
     </section>
 
-    @if (isSearchModalOpen) {
+    @if (isSearchModalOpen && isMobileViewport) {
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" (click)="closeSearchModal()" (keydown.escape)="closeSearchModal()">
         <section class="max-h-[90dvh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="search-modal-title" [appModalFocus]="searchModalInitialFocus" (click)="$event.stopPropagation()" data-testid="search-modal">
           <div class="flex items-start justify-between gap-4 border-b border-[#E8E8EC] px-5 py-4 sm:px-6">

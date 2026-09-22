@@ -191,6 +191,7 @@ describe('SearchPageComponent', () => {
   });
 
   it('opens a search modal from the departure field and displays recent searches', () => {
+    component.isMobileViewport = true;
     component.searchHistory = [{
       criteria: { departure: 'Paris', destination: 'Abidjan', date: '2026-10-01' },
       createdAt: '2026-09-21T00:00:00.000Z',
@@ -214,6 +215,7 @@ describe('SearchPageComponent', () => {
   });
 
   it('focuses the destination field when the destination trigger opens the modal', fakeAsync(() => {
+    component.isMobileViewport = true;
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
@@ -224,6 +226,35 @@ describe('SearchPageComponent', () => {
 
     expect(document.activeElement?.getAttribute('placeholder')).toBe('Où allez-vous ?');
   }));
+
+  it('keeps the inline autocomplete interactive and hides modal triggers on desktop', () => {
+    component.isMobileViewport = false;
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const autocomplete = host.querySelector('app-autocomplete');
+
+    expect(host.querySelector('[data-testid="search-departure-trigger"]')).toBeNull();
+    expect(host.querySelector('[data-testid="search-destination-trigger"]')).toBeNull();
+    expect(autocomplete?.hasAttribute('inert')).toBeFalse();
+    expect(autocomplete?.getAttribute('aria-hidden')).toBeNull();
+
+    component.openSearchModal();
+
+    expect(component.isSearchModalOpen).toBeFalse();
+  });
+
+  it('closes the search modal when resizing from mobile to desktop', () => {
+    component.isMobileViewport = true;
+    component.openSearchModal();
+    expect(component.isSearchModalOpen).toBeTrue();
+
+    spyOnProperty(window, 'innerWidth', 'get').and.returnValue(1024);
+    component.onViewportResize();
+
+    expect(component.isMobileViewport).toBeFalse();
+    expect(component.isSearchModalOpen).toBeFalse();
+  });
 
   it('does not auto-search when query params are incomplete', () => {
     setQueryParams({ from: 'Paris' });
