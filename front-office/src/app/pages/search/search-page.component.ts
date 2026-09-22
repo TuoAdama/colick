@@ -32,6 +32,7 @@ import { ModalFocusDirective } from '../../shared/directives/modal-focus.directi
 })
 export class SearchPageComponent implements OnInit, OnDestroy {
   private readonly document = inject(DOCUMENT);
+  isMobileViewport = this.detectMobileViewport();
   @ViewChild('filterPanel') filterPanel?: ElementRef<HTMLElement>;
   isMobileSearchEditing = false;
   draftSort: TripSearchSort = 'price_asc';
@@ -263,6 +264,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   }
 
   openSearchModal(focusTarget: 'departure' | 'destination' = 'departure'): void {
+    if (!this.isMobileViewport) {
+      return;
+    }
     this.searchModalInitialFocus = focusTarget === 'destination'
       ? '.search-modal-destination input'
       : '.search-modal-departure input';
@@ -330,7 +334,16 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize')
   onViewportResize(): void {
-    if ((this.document.defaultView?.innerWidth ?? 0) >= 768) this.closeMobileFilters();
+    this.isMobileViewport = this.detectMobileViewport();
+    if (!this.isMobileViewport) {
+      this.closeMobileFilters();
+      this.closeSearchModal();
+    }
+  }
+
+  private detectMobileViewport(): boolean {
+    const width = this.document.defaultView?.innerWidth;
+    return width !== undefined && width < 768;
   }
 
   formatPrice(price: number): string {
