@@ -210,8 +210,19 @@ describe('SearchPageComponent', () => {
     expect(modal).not.toBeNull();
     expect(modal?.querySelectorAll('input')).toHaveSize(3);
     expect(modal?.textContent).toContain('Recherches récentes');
+    expect(modal?.textContent).not.toContain('Renseignez votre itinéraire ou relancez une recherche récente.');
     expect(modal?.textContent).toContain('Paris');
     expect(modal?.textContent).toContain('Abidjan');
+
+    const historyTitle = modal?.querySelector('#search-history-title');
+    expect(historyTitle?.classList.contains('text-base')).toBeTrue();
+    expect(historyTitle?.classList.contains('text-lg')).toBeFalse();
+
+    const clearButton = Array.from(modal?.querySelectorAll('button') ?? [])
+      .find((button) => button.textContent?.trim() === 'Effacer');
+    expect(clearButton).not.toBeUndefined();
+    expect(clearButton?.getAttribute('aria-label')).toBe('Effacer l’historique des recherches');
+    expect(modal?.textContent).not.toContain('Effacer l’historique');
   });
 
   it('focuses the destination field when the destination trigger opens the modal', fakeAsync(() => {
@@ -546,6 +557,11 @@ describe('SearchPageComponent', () => {
     expect(host.textContent).toContain('publiez votre besoin');
     expect(publishLink?.getAttribute('href')).toBe('/parcel-requests/new?from=Paris&to=Abidjan');
     expect(alertButton).not.toBeNull();
+    expect(alertButton?.textContent).toContain("M'alerter");
+    expect(alertButton?.textContent).not.toContain("dès qu'un trajet arrive");
+    expect(host.querySelector('h2.text-xl')).not.toBeNull();
+    expect(publishLink?.classList.contains('min-h-12')).toBeTrue();
+    expect(alertButton?.classList.contains('min-h-12')).toBeTrue();
   });
 
   it('redirects to login when creating an alert while unauthenticated', () => {
