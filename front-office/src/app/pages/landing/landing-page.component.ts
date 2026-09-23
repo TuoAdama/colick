@@ -63,6 +63,7 @@ export class LandingPageComponent {
   isDepartureLoading = false;
   isDestinationLoading = false;
   isTripsLoading = true;
+  hasLocationPermission = false;
   activeMode: LandingMode = 'send';
   trips: LandingTripCard[] = [];
 
@@ -220,13 +221,20 @@ export class LandingPageComponent {
 
   private loadTripsFromApproximatePosition(): void {
     if (!isPlatformBrowser(this.platformId) || !('geolocation' in navigator)) {
-      this.loadLandingTrips();
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
-      () => this.loadLandingTrips(this.deriveCountryFromBrowser()),
-      () => this.loadLandingTrips(),
+      () => {
+        this.hasLocationPermission = true;
+        this.loadLandingTrips(this.deriveCountryFromBrowser());
+      },
+      (error) => {
+        this.hasLocationPermission = error.code !== 1;
+        if (this.hasLocationPermission) {
+          this.loadLandingTrips(this.deriveCountryFromBrowser());
+        }
+      },
       { enableHighAccuracy: false, timeout: 2000, maximumAge: 300000 }
     );
   }
