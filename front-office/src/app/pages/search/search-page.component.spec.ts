@@ -221,6 +221,7 @@ describe('SearchPageComponent', () => {
     const clearButton = Array.from(modal?.querySelectorAll('button') ?? [])
       .find((button) => button.textContent?.trim() === 'Effacer');
     expect(clearButton).not.toBeUndefined();
+    expect(clearButton?.getAttribute('aria-label')).toBe('Effacer l’historique des recherches');
     expect(modal?.textContent).not.toContain('Effacer l’historique');
   });
 
