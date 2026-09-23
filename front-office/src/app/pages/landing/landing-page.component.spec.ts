@@ -10,6 +10,9 @@ describe('LandingPageComponent', () => {
   let fixture: ComponentFixture<LandingPageComponent>;
   let component: LandingPageComponent;
   let router: Router;
+  let geolocationMock: {
+    getCurrentPosition: jasmine.Spy;
+  };
 
   const authServiceMock = {
     isLoggedIn: jasmine.createSpy('isLoggedIn').and.returnValue(true),
@@ -23,6 +26,16 @@ describe('LandingPageComponent', () => {
     getLandingFeed: jasmine.createSpy('getLandingFeed').and.returnValue(of([])),
   };
 
+  function installGeolocationMock(): void {
+    geolocationMock = {
+      getCurrentPosition: jasmine.createSpy('getCurrentPosition'),
+    };
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: geolocationMock,
+    });
+  }
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [LandingPageComponent],
@@ -34,6 +47,7 @@ describe('LandingPageComponent', () => {
       ],
     }).compileComponents();
 
+    installGeolocationMock();
     fixture = TestBed.createComponent(LandingPageComponent);
     component = fixture.componentInstance;
     router = TestBed.inject(Router);
@@ -195,6 +209,34 @@ describe('LandingPageComponent', () => {
     const card = fixture.nativeElement.querySelector('article');
     expect(card?.textContent).toContain('Paris, France');
     expect(fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]')).toBeNull();
+  });
+
+  it('hides the next departure section when location sharing is refused', () => {
+    geolocationMock.getCurrentPosition.and.callFake((_success: PositionCallback, error: PositionErrorCallback) => {
+      error({ code: 1, message: 'Permission denied' } as GeolocationPositionError);
+    });
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Ne ratez pas le prochain depart.');
+    expect(fixture.nativeElement.textContent).not.toContain('Voir tous les trajets');
+    expect(tripServiceMock.getLandingFeed).not.toHaveBeenCalled();
+  });
+
+  it('shows the next departure section after location sharing is accepted', () => {
+    geolocationMock.getCurrentPosition.and.callFake((success: PositionCallback) => {
+      success({
+        coords: { latitude: 48.8566, longitude: 2.3522, accuracy: 10 },
+        timestamp: Date.now(),
+      } as GeolocationPosition);
+    });
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Ne ratez pas le prochain depart.');
+    expect(fixture.nativeElement.textContent).toContain('Voir tous les trajets');
+    expect(tripServiceMock.getLandingFeed).toHaveBeenCalled();
+    expect(tripServiceMock.getLandingFeed.calls.mostRecent().args[1]).toBe(3);
   });
 });
 
