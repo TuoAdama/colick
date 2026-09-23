@@ -89,6 +89,10 @@ export class LandingPageComponent {
     const to = this.destination?.name ?? this.destinationQuery.trim();
     const date = this.travelDate.trim();
 
+    if (!from || !to) {
+      return;
+    }
+
     void this.router.navigate(['/search'], {
       queryParams: {
         ...(from && { from }),
@@ -117,6 +121,10 @@ export class LandingPageComponent {
     const from = this.departure?.name ?? this.departureQuery.trim();
     const to = this.destination?.name ?? this.destinationQuery.trim();
     const date = this.travelDate.trim();
+
+    if (!from || !to) {
+      return;
+    }
 
     void this.router.navigate(['/parcel-search'], {
       queryParams: {
