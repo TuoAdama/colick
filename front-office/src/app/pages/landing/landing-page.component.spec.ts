@@ -54,6 +54,53 @@ describe('LandingPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Publier un trajet');
   });
 
+  it('marks departure and destination as required in both landing search forms', () => {
+    fixture.detectChanges();
+
+    const sendFormInputs = Array.from(fixture.nativeElement.querySelectorAll('form input')) as HTMLInputElement[];
+    expect(sendFormInputs.find((input) => input.name === 'departure')?.required).toBeTrue();
+    expect(sendFormInputs.find((input) => input.name === 'departure')?.getAttribute('aria-required')).toBe('true');
+    expect(sendFormInputs.find((input) => input.name === 'destination')?.required).toBeTrue();
+    expect(sendFormInputs.find((input) => input.name === 'destination')?.getAttribute('aria-required')).toBe('true');
+
+    component.selectMode('transport');
+    fixture.detectChanges();
+
+    const transportFormInputs = Array.from(fixture.nativeElement.querySelectorAll('form input')) as HTMLInputElement[];
+    expect(transportFormInputs.find((input) => input.name === 'transportDeparture')?.required).toBeTrue();
+    expect(transportFormInputs.find((input) => input.name === 'transportDestination')?.required).toBeTrue();
+  });
+
+  it('does not navigate when departure or destination is missing', () => {
+    fixture.detectChanges();
+
+    component.searchTrips();
+    expect(router.navigate).not.toHaveBeenCalled();
+
+    component.departureQuery = 'Paris';
+    component.searchTrips();
+    expect(router.navigate).not.toHaveBeenCalled();
+
+    component.destinationQuery = 'Abidjan';
+    component.searchTrips();
+    expect(router.navigate).toHaveBeenCalledWith(['/search'], {
+      queryParams: { from: 'Paris', to: 'Abidjan' },
+    });
+  });
+
+  it('does not navigate to parcel search when departure or destination is missing', () => {
+    fixture.detectChanges();
+    component.selectMode('transport');
+    (router.navigate as jasmine.Spy).calls.reset();
+
+    component.searchParcelRequests();
+    expect(router.navigate).not.toHaveBeenCalled();
+
+    component.departureQuery = 'Paris';
+    component.searchParcelRequests();
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
   it('uses clear sender and traveler labels for the landing mode selector', () => {
     fixture.detectChanges();
 
