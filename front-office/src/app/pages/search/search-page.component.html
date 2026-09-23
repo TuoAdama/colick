@@ -1,6 +1,6 @@
 <div class="min-h-screen bg-[#FAFAFA] text-text-primary" aria-labelledby="search-title">
   <main class="mx-auto w-full max-w-[1280px] px-4 pb-28 pt-20 md:px-16 md:py-14">
-    @if (isFormValid && hasSearched && !isMobileSearchEditing) {
+    @if (isFormValid && hasSearched && !isMobileSearchEditing && !isSearchModalOpen) {
       <button type="button" class="mb-4 flex w-full items-center gap-3 rounded-2xl border border-border bg-white p-3 text-left md:hidden" (click)="openSearchModal('departure')" aria-label="Modifier la recherche" data-testid="mobile-search-summary">
         <span class="rounded-xl bg-accent/10 p-2 text-accent" aria-hidden="true">⌕</span>
         <span class="min-w-0 flex-1"><span class="block break-words text-sm font-bold text-primary">{{ departure?.name }} <span class="text-accent">→</span> {{ destination?.name }}</span><span class="text-xs text-text-secondary">{{ selectedDate ? formatDate(selectedDate) : 'Toutes les dates' }}</span></span>
