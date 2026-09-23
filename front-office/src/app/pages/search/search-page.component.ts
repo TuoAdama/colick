@@ -278,6 +278,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
   closeSearchModal(): void {
     this.isSearchModalOpen = false;
+    this.isMobileSearchEditing = false;
   }
 
   toggleMobileFilters(): void {
