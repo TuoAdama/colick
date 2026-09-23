@@ -229,8 +229,11 @@ export class LandingPageComponent {
         this.hasLocationPermission = true;
         this.loadLandingTrips(this.deriveCountryFromBrowser());
       },
-      () => {
-        this.hasLocationPermission = false;
+      (error) => {
+        this.hasLocationPermission = error.code !== 1;
+        if (this.hasLocationPermission) {
+          this.loadLandingTrips(this.deriveCountryFromBrowser());
+        }
       },
       { enableHighAccuracy: false, timeout: 2000, maximumAge: 300000 }
     );

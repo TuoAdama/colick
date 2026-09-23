@@ -30,6 +30,12 @@ describe('LandingPageComponent', () => {
     geolocationMock = {
       getCurrentPosition: jasmine.createSpy('getCurrentPosition'),
     };
+    geolocationMock.getCurrentPosition.and.callFake((success: PositionCallback) => {
+      success({
+        coords: { latitude: 48.8566, longitude: 2.3522, accuracy: 10 },
+        timestamp: Date.now(),
+      } as GeolocationPosition);
+    });
     Object.defineProperty(navigator, 'geolocation', {
       configurable: true,
       value: geolocationMock,
@@ -237,6 +243,17 @@ describe('LandingPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Voir tous les trajets');
     expect(tripServiceMock.getLandingFeed).toHaveBeenCalled();
     expect(tripServiceMock.getLandingFeed.calls.mostRecent().args[1]).toBe(3);
+  });
+
+  it('shows the next departure section when the position is temporarily unavailable', () => {
+    geolocationMock.getCurrentPosition.and.callFake((_success: PositionCallback, error: PositionErrorCallback) => {
+      error({ code: 2, message: 'Position unavailable' } as GeolocationPositionError);
+    });
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Ne ratez pas le prochain depart.');
+    expect(tripServiceMock.getLandingFeed).toHaveBeenCalled();
   });
 });
 
