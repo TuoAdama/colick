@@ -557,6 +557,11 @@ describe('SearchPageComponent', () => {
     expect(host.textContent).toContain('publiez votre besoin');
     expect(publishLink?.getAttribute('href')).toBe('/parcel-requests/new?from=Paris&to=Abidjan');
     expect(alertButton).not.toBeNull();
+    expect(alertButton?.textContent).toContain("M'alerter");
+    expect(alertButton?.textContent).not.toContain("dès qu'un trajet arrive");
+    expect(host.querySelector('h2.text-xl')).not.toBeNull();
+    expect(publishLink?.classList.contains('min-h-12')).toBeTrue();
+    expect(alertButton?.classList.contains('min-h-12')).toBeTrue();
   });
 
   it('redirects to login when creating an alert while unauthenticated', () => {
