@@ -634,6 +634,7 @@ describe('SearchPageComponent', () => {
     expect(fallback?.textContent?.trim()).toBe('AM');
   });
   it('shows a compact summary for a complete route and lets the user edit it', () => {
+    component.isMobileViewport = true;
     setQueryParams({ from: 'Paris', to: 'Lyon', date: '2026-09-04' });
     fixture.detectChanges();
     const summary = fixture.nativeElement.querySelector('[data-testid=mobile-search-summary]');
@@ -641,9 +642,48 @@ describe('SearchPageComponent', () => {
     expect(summary.textContent).toContain('4 sept. 2026');
     summary.click();
     fixture.detectChanges();
-    expect(component.isMobileSearchEditing).toBeTrue();
-    component.searchTrips();
+
+    expect(component.isSearchModalOpen).toBeTrue();
     expect(component.isMobileSearchEditing).toBeFalse();
+    expect(fixture.nativeElement.querySelector('[data-testid="search-modal"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-label="Formulaire de recherche"]')?.classList.contains('hidden')).toBeTrue();
+  });
+
+  it('restores the compact search summary when the edit modal is closed', () => {
+    component.isMobileViewport = true;
+    setQueryParams({ from: 'Nantes', to: 'Paris' });
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const summary = host.querySelector<HTMLButtonElement>('[data-testid="mobile-search-summary"]');
+    summary!.click();
+    fixture.detectChanges();
+
+    expect(host.querySelector('[data-testid="search-modal"]')).not.toBeNull();
+    expect(host.querySelector('[data-testid="mobile-search-summary"]')).toBeNull();
+
+    component.closeSearchModal();
+    fixture.detectChanges();
+
+    expect(host.querySelector('[data-testid="search-modal"]')).toBeNull();
+    expect(host.querySelector('[data-testid="mobile-search-summary"]')).not.toBeNull();
+    expect(host.querySelector('[aria-label="Formulaire de recherche"]')?.classList.contains('hidden')).toBeTrue();
+  });
+
+  it('restores the compact summary when the modal close button is clicked', () => {
+    component.isMobileViewport = true;
+    setQueryParams({ from: 'Nantes', to: 'Paris' });
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    host.querySelector<HTMLButtonElement>('[data-testid="mobile-search-summary"]')!.click();
+    fixture.detectChanges();
+
+    host.querySelector<HTMLButtonElement>('[aria-label="Fermer la recherche"]')!.click();
+    fixture.detectChanges();
+
+    expect(component.isSearchModalOpen).toBeFalse();
+    expect(host.querySelector('[data-testid="mobile-search-summary"]')).not.toBeNull();
   });
 
   it('discards draft edits on Escape and restores body scrolling', () => {
