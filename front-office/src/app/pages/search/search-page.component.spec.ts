@@ -210,8 +210,18 @@ describe('SearchPageComponent', () => {
     expect(modal).not.toBeNull();
     expect(modal?.querySelectorAll('input')).toHaveSize(3);
     expect(modal?.textContent).toContain('Recherches récentes');
+    expect(modal?.textContent).not.toContain('Renseignez votre itinéraire ou relancez une recherche récente.');
     expect(modal?.textContent).toContain('Paris');
     expect(modal?.textContent).toContain('Abidjan');
+
+    const historyTitle = modal?.querySelector('#search-history-title');
+    expect(historyTitle?.classList.contains('text-base')).toBeTrue();
+    expect(historyTitle?.classList.contains('text-lg')).toBeFalse();
+
+    const clearButton = Array.from(modal?.querySelectorAll('button') ?? [])
+      .find((button) => button.textContent?.trim() === 'Effacer');
+    expect(clearButton).not.toBeUndefined();
+    expect(modal?.textContent).not.toContain('Effacer l’historique');
   });
 
   it('focuses the destination field when the destination trigger opens the modal', fakeAsync(() => {
