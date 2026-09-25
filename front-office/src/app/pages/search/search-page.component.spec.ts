@@ -353,6 +353,25 @@ describe('SearchPageComponent', () => {
     expect(panel).toBeNull();
   });
 
+  it('places the floating mobile filters button near the bottom edge without bottom navigation', () => {
+    authServiceMock.isLoggedIn.and.returnValue(false);
+    fixture.detectChanges();
+
+    const toggle = fixture.nativeElement.querySelector('[data-testid="mobile-filters-floating"]') as HTMLElement;
+
+    expect(toggle.classList.contains('bottom-4')).toBeTrue();
+    expect(toggle.classList.contains('bottom-24')).toBeFalse();
+  });
+
+  it('keeps the floating mobile filters button above the authenticated bottom navigation', () => {
+    authServiceMock.isLoggedIn.and.returnValue(true);
+    fixture.detectChanges();
+
+    const toggle = fixture.nativeElement.querySelector('[data-testid="mobile-filters-floating"]') as HTMLElement;
+
+    expect(toggle.classList.contains('bottom-24')).toBeTrue();
+  });
+
   it('opens and closes the mobile filters panel', () => {
     fixture.detectChanges();
 
