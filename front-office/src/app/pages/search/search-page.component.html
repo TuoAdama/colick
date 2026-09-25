@@ -411,7 +411,7 @@
     </div>
   }
 
-  <button type="button" class="fixed right-4 z-30 min-h-11 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white shadow-lg md:hidden" [class.bottom-4]="!shouldOffsetMobileFiltersForNavigation" [class.bottom-24]="shouldOffsetMobileFiltersForNavigation" (click)="toggleMobileFilters()" [attr.aria-expanded]="areMobileFiltersOpen" aria-controls="mobile-search-filters" data-testid="mobile-filters-floating">☷ Filtres <span class="ml-2 rounded-full bg-accent px-1.5">{{ activeFilterCount }}</span></button>
+  <button type="button" class="fixed bottom-4 right-4 z-30 min-h-11 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white shadow-lg md:hidden" (click)="toggleMobileFilters()" [attr.aria-expanded]="areMobileFiltersOpen" aria-controls="mobile-search-filters" data-testid="mobile-filters-floating">☷ Filtres <span class="ml-2 rounded-full bg-accent px-1.5">{{ activeFilterCount }}</span></button>
   @if (areMobileFiltersOpen) {
     <div class="fixed inset-0 z-50 flex items-end bg-black/40" (click)="closeMobileFilters()">
       <section #filterPanel id="mobile-search-filters" role="dialog" aria-modal="true" aria-labelledby="filters-title" class="max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-8" (click)="$event.stopPropagation()" data-testid="mobile-filters-panel">

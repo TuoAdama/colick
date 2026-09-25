@@ -49,10 +49,6 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     return Number(this.minPrice !== null) + Number(this.maxPrice !== null);
   }
 
-  get shouldOffsetMobileFiltersForNavigation(): boolean {
-    return this.authService.isLoggedIn();
-  }
-
   private readonly tripService = inject(TripService);
   private readonly tripAlertService = inject(TripAlertService);
   private readonly authService = inject(AuthService);
