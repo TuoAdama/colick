@@ -29,7 +29,9 @@
       (keydown)="onKeyDown($event)"
       (focus)="onFocus()"
       [class]="variant === 'search'
-        ? 'w-full min-h-[76px] pl-12 pr-10 pt-8 pb-3 bg-[#FAFAFA] border border-[#E8E8EC] rounded-lg text-[15px] text-primary placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/20 transition-all'
+        ? (compact
+          ? 'w-full min-h-[64px] pl-12 pr-10 pt-7 pb-1 bg-[#FAFAFA] border border-[#E8E8EC] rounded-lg text-[15px] text-primary placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/20 transition-all'
+          : 'w-full min-h-[76px] pl-12 pr-10 pt-8 pb-3 bg-[#FAFAFA] border border-[#E8E8EC] rounded-lg text-[15px] text-primary placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/20 transition-all')
         : 'w-full pl-12 pr-10 py-3.5 bg-bg-secondary border border-gray-200 rounded-xl text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary transition-all'"
       role="combobox"
       [attr.aria-expanded]="isOpen"

@@ -100,10 +100,10 @@
           </div>
           <div class="space-y-4 p-5 sm:p-6">
             <div class="grid gap-3 md:grid-cols-2">
-              <div class="search-modal-departure"><app-autocomplete label="DÉPART" placeholder="Ville de départ" [initialQuery]="departureQuery" variant="search" icon="M12 21s7-4.438 7-11a7 7 0 10-14 0c0 6.562 7 11 7 11zM12 13a3 3 0 100-6 3 3 0 000 6z" (selected)="onDepartureSelected($event)" (cleared)="departure = null; departureQuery = ''"></app-autocomplete></div>
-              <div class="search-modal-destination"><app-autocomplete label="DESTINATION" placeholder="Où allez-vous ?" [initialQuery]="destinationQuery" variant="search" icon="M3 11l18-8-8 18-2-8-8-2z" (selected)="onDestinationSelected($event)" (cleared)="destination = null; destinationQuery = ''"></app-autocomplete></div>
+              <div class="search-modal-departure"><app-autocomplete label="DÉPART" placeholder="Ville de départ" [initialQuery]="departureQuery" variant="search" [compact]="true" icon="M12 21s7-4.438 7-11a7 7 0 10-14 0c0 6.562 7 11 7 11zM12 13a3 3 0 100-6 3 3 0 000 6z" (selected)="onDepartureSelected($event)" (cleared)="departure = null; departureQuery = ''"></app-autocomplete></div>
+              <div class="search-modal-destination"><app-autocomplete label="DESTINATION" placeholder="Où allez-vous ?" [initialQuery]="destinationQuery" variant="search" [compact]="true" icon="M3 11l18-8-8 18-2-8-8-2z" (selected)="onDestinationSelected($event)" (cleared)="destination = null; destinationQuery = ''"></app-autocomplete></div>
             </div>
-            <label class="flex min-h-[76px] items-center gap-3 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-3 transition focus-within:ring-2 focus-within:ring-primary/20">
+            <label class="flex h-16 items-center gap-3 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-1 transition focus-within:ring-2 focus-within:ring-primary/20">
               <svg class="h-6 w-6 shrink-0 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               <span class="flex min-w-0 flex-1 flex-col"><span class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">DATE</span><input type="date" [(ngModel)]="selectedDate" class="w-full border-none bg-transparent p-0 text-[15px] text-primary outline-none focus:ring-0" aria-label="Date de départ minimum" /></span>
             </label>
