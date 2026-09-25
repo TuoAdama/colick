@@ -687,6 +687,31 @@ describe('SearchPageComponent', () => {
     expect(fixture.nativeElement.querySelector('[aria-label="Formulaire de recherche"]')?.classList.contains('hidden')).toBeTrue();
   });
 
+  it('uses compact search fields only inside the mobile search modal', () => {
+    component.isMobileViewport = true;
+    component.openSearchModal();
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const modal = host.querySelector<HTMLElement>('[data-testid="search-modal"]')!;
+    const modalHeader = modal.querySelector<HTMLElement>('#search-modal-title')?.parentElement?.parentElement;
+    const closeButton = modal.querySelector<HTMLButtonElement>('[aria-label="Fermer la recherche"]');
+    const modalAutocompleteInputs = Array.from(
+      modal.querySelectorAll<HTMLInputElement>('.search-modal-departure input, .search-modal-destination input')
+    );
+    const dateInput = modal.querySelector<HTMLInputElement>('input[type="date"]')!;
+    const regularSearchInput = host.querySelector<HTMLInputElement>(
+      '[aria-label="Formulaire de recherche"] app-autocomplete input'
+    )!;
+
+    expect(modalAutocompleteInputs.length).toBe(2);
+    expect(modalHeader?.classList.contains('py-2')).toBeTrue();
+    expect(closeButton?.classList.contains('min-h-11')).toBeTrue();
+    expect(modalAutocompleteInputs.every((input) => input.classList.contains('min-h-[64px]'))).toBeTrue();
+    expect(dateInput.closest('label')?.classList.contains('h-16')).toBeTrue();
+    expect(regularSearchInput.classList.contains('min-h-[76px]')).toBeTrue();
+  });
+
   it('restores the compact search summary when the edit modal is closed', () => {
     component.isMobileViewport = true;
     setQueryParams({ from: 'Nantes', to: 'Paris' });

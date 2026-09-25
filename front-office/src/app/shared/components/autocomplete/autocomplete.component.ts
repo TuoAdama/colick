@@ -46,6 +46,9 @@ export class AutocompleteComponent implements OnInit, OnDestroy, OnChanges {
   /** Visual density/style variant. */
   @Input() variant: 'default' | 'search' = 'default';
 
+  /** Use the compact search-field density where vertical space is limited. */
+  @Input() compact = false;
+
   /** Emits the selected location */
   @Output() selected = new EventEmitter<Location>();
 
