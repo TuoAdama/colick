@@ -92,7 +92,7 @@
     @if (isSearchModalOpen && isMobileViewport) {
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" (click)="closeSearchModal()" (keydown.escape)="closeSearchModal()">
         <section class="max-h-[90dvh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="search-modal-title" [appModalFocus]="searchModalInitialFocus" (click)="$event.stopPropagation()" data-testid="search-modal">
-          <div class="flex items-start justify-between gap-4 border-b border-[#E8E8EC] px-5 py-4 sm:px-6">
+          <div class="flex items-start justify-between gap-4 border-b border-[#E8E8EC] px-5 py-2 sm:px-6">
             <div>
               <h2 id="search-modal-title" class="text-xl font-bold text-primary">Rechercher un trajet</h2>
             </div>

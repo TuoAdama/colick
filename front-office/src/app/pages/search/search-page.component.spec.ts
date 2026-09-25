@@ -694,6 +694,8 @@ describe('SearchPageComponent', () => {
 
     const host = fixture.nativeElement as HTMLElement;
     const modal = host.querySelector<HTMLElement>('[data-testid="search-modal"]')!;
+    const modalHeader = modal.querySelector<HTMLElement>('#search-modal-title')?.parentElement?.parentElement;
+    const closeButton = modal.querySelector<HTMLButtonElement>('[aria-label="Fermer la recherche"]');
     const modalAutocompleteInputs = Array.from(
       modal.querySelectorAll<HTMLInputElement>('.search-modal-departure input, .search-modal-destination input')
     );
@@ -703,6 +705,8 @@ describe('SearchPageComponent', () => {
     )!;
 
     expect(modalAutocompleteInputs.length).toBe(2);
+    expect(modalHeader?.classList.contains('py-2')).toBeTrue();
+    expect(closeButton?.classList.contains('min-h-11')).toBeTrue();
     expect(modalAutocompleteInputs.every((input) => input.classList.contains('min-h-[64px]'))).toBeTrue();
     expect(dateInput.closest('label')?.classList.contains('h-16')).toBeTrue();
     expect(regularSearchInput.classList.contains('min-h-[76px]')).toBeTrue();
