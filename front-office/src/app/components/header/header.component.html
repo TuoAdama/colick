@@ -218,8 +218,16 @@
         @if (authService.currentUser$ | async) {
           <li>
             <a
-              [routerLink]="['/dashboard']"
-              [queryParams]="{ tab: 'profile' }"
+              routerLink="/trips"
+              class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
+              (click)="closeMenus()"
+            >
+              Mes voyages
+            </a>
+          </li>
+          <li>
+            <a
+              routerLink="/settings"
               class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
               (click)="closeMenus()"
             >
@@ -238,12 +246,11 @@
           </li>
           <li>
             <a
-              [routerLink]="['/dashboard']"
-              [queryParams]="{ tab: 'sent' }"
+              routerLink="/sent-bookings"
               class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
               (click)="closeMenus()"
             >
-              Mes demandes
+              Mes demandes envoyées
             </a>
           </li>
           <li>

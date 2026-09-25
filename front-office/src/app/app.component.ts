@@ -1,11 +1,10 @@
 import { Component, inject } from '@angular/core';
-import { AsyncPipe, DOCUMENT } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
 import { Title } from '@angular/platform-browser';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
+import { Router, RouterLink, RouterOutlet, NavigationEnd } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { filter } from 'rxjs';
-import { AuthService } from './services/auth.service';
 import { SeoService } from './services/seo.service';
 import { AnalyticsService } from './services/analytics.service';
 
@@ -16,14 +15,13 @@ import { AnalyticsService } from './services/analytics.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [AsyncPipe, RouterLink, RouterLinkActive, RouterOutlet, HeaderComponent, FooterComponent],
+  imports: [RouterLink, RouterOutlet, HeaderComponent, FooterComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
 export class AppComponent {
   private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
-  readonly authService = inject(AuthService);
   private readonly documentTitle = inject(Title);
   private readonly seo = inject(SeoService);
   readonly analytics = inject(AnalyticsService);
@@ -44,7 +42,6 @@ export class AppComponent {
    */
   title = 'Coliclic - Envoyez vos colis avec des voyageurs de confiance';
   showSharedChrome = true;
-  showMobileBottomSearchNavigation = false;
   currentPagePath = '/';
 
   constructor() {
@@ -71,6 +68,5 @@ export class AppComponent {
       this.publicTripReferenceRoutePattern.test(url) ||
       (!this.reservationShellRoutePattern.test(url) &&
         !this.dashboardShellRoutePatterns.some((pattern) => pattern.test(url)));
-    this.showMobileBottomSearchNavigation = /^\/search(?:[?#].*)?$/.test(url);
   }
 }
