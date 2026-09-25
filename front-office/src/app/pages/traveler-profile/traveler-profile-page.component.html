@@ -1,0 +1,66 @@
+<section class="min-h-screen bg-background-primary pb-16 pt-28 sm:pt-32">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6">
+    <a routerLink="/search" class="text-sm font-semibold text-text-secondary hover:text-primary">← Retour aux trajets</a>
+
+    @if (isLoading) {
+      <div class="py-24 text-center text-text-secondary" role="status">Chargement du profil…</div>
+    } @else if (errorMessage) {
+      <div class="mt-8 rounded-xl bg-error/10 p-5 text-error" role="alert">{{ errorMessage }}</div>
+    } @else if (profile) {
+      <div class="mt-6 grid gap-6 lg:grid-cols-[340px_1fr]">
+        <aside class="h-fit rounded-2xl border border-border bg-white p-6 shadow-sm">
+          <div class="flex items-center gap-4">
+            <app-user-avatar [name]="profile.displayName" [photoUrl]="profile.photoUrl" sizeClasses="h-20 w-20" textClasses="text-xl" />
+            <div>
+              <h1 class="font-display text-2xl font-bold text-primary">{{ profile.displayName }}</h1>
+              @if (profile.emailVerified) {
+                <span class="mt-2 inline-flex items-center gap-1 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
+                  <span class="material-symbols-outlined text-sm" aria-hidden="true">verified</span>E-mail vérifié
+                </span>
+              }
+            </div>
+          </div>
+          <p class="mt-5 text-sm text-text-secondary">{{ memberSinceLabel() }}</p>
+          <div class="mt-6 grid grid-cols-2 gap-3">
+            <div class="rounded-xl bg-background-primary p-4"><p class="text-2xl font-bold text-primary">{{ profile.completedTripCount }}</p><p class="text-xs text-text-secondary">trajets terminés</p></div>
+            <div class="rounded-xl bg-background-primary p-4"><p class="text-2xl font-bold text-primary">{{ profile.averageRating == null ? '—' : (profile.averageRating | number:'1.1-1') }}</p><p class="text-xs text-text-secondary">{{ profile.reviewCount }} avis</p></div>
+          </div>
+          <div class="mt-6 space-y-3 border-t border-border pt-5">
+            @if (profile.responseSampleSize < 3) {
+              <p class="text-sm text-text-secondary">Réactivité : <strong>Pas assez de données</strong></p>
+            } @else {
+              <p class="text-sm text-text-secondary">Taux de réponse : <strong class="text-primary">{{ profile.responseRatePercent }} %</strong></p>
+              <p class="text-sm text-text-secondary">Délai moyen : <strong class="text-primary">{{ responseDelayLabel() }}</strong></p>
+              <p class="text-xs text-text-muted">Calculé sur {{ profile.responseSampleSize }} conversations des 90 derniers jours.</p>
+            }
+          </div>
+          <div class="mt-6 grid gap-2">
+            <a routerLink="/contact" class="btn-outline text-center !py-2.5 !text-sm">Contacter le support</a>
+            <a routerLink="/contact" [queryParams]="{ type: 'report', travelerId: profile.travelerId }" class="text-center text-sm font-semibold text-error">Signaler ce profil</a>
+          </div>
+        </aside>
+
+        <main class="rounded-2xl border border-border bg-white p-6 shadow-sm">
+          <h2 class="font-display text-2xl font-bold text-primary">Avis issus de trajets terminés</h2>
+          <p class="mt-1 text-sm text-text-secondary">Seuls les expéditeurs ayant terminé un trajet peuvent laisser un avis.</p>
+          @if (!reviewsLoading && reviews.length === 0) {
+            <p class="mt-8 rounded-xl bg-background-primary p-5 text-sm text-text-secondary">Aucun avis publié pour le moment.</p>
+          }
+          <div class="mt-6 space-y-4">
+            @for (review of reviews; track review.id) {
+              <article class="rounded-xl border border-border p-5">
+                <div class="flex items-center justify-between gap-3"><strong class="text-primary">{{ review.reviewerDisplayName }}</strong><span class="text-sm text-warning">★ {{ review.rating }}/5</span></div>
+                <time class="mt-1 block text-xs text-text-muted">{{ formatReviewDate(review.submittedAt) }}</time>
+                <p class="mt-3 text-sm leading-6 text-text-secondary">{{ review.comment || 'Aucun commentaire détaillé.' }}</p>
+              </article>
+            }
+          </div>
+          @if (reviewsLoading) { <p class="mt-5 text-center text-sm text-text-secondary" role="status">Chargement des avis…</p> }
+          @if (currentPage + 1 < totalPages) {
+            <button type="button" class="btn-outline mt-6 w-full" (click)="loadMore()" [disabled]="reviewsLoading">Afficher plus d’avis</button>
+          }
+        </main>
+      </div>
+    }
+  </div>
+</section>
