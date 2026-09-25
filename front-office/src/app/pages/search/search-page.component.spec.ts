@@ -359,6 +359,7 @@ describe('SearchPageComponent', () => {
 
     const toggle = fixture.nativeElement.querySelector('[data-testid="mobile-filters-floating"]') as HTMLElement;
 
+    expect(getComputedStyle(toggle).bottom).toBe('16px');
     expect(toggle.classList.contains('bottom-4')).toBeTrue();
     expect(toggle.classList.contains('bottom-24')).toBeFalse();
   });
@@ -369,6 +370,8 @@ describe('SearchPageComponent', () => {
 
     const toggle = fixture.nativeElement.querySelector('[data-testid="mobile-filters-floating"]') as HTMLElement;
 
+    expect(getComputedStyle(toggle).bottom).toBe('96px');
+    expect(toggle.classList.contains('bottom-4')).toBeFalse();
     expect(toggle.classList.contains('bottom-24')).toBeTrue();
   });
 
