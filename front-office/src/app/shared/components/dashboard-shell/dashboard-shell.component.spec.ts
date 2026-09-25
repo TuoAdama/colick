@@ -159,49 +159,26 @@ describe('DashboardShellComponent', () => {
     });
   });
 
-  it('renders the five primary destinations in the mobile bottom navigation', () => {
-    fixture.detectChanges();
-
-    const navigation = fixture.nativeElement.querySelector('[data-testid="mobile-bottom-navigation"]') as HTMLElement | null;
-    const links = Array.from(navigation?.querySelectorAll('a') ?? []) as HTMLAnchorElement[];
-
-    expect(navigation).not.toBeNull();
-    expect(navigation?.classList.contains('md:hidden')).toBeTrue();
-    expect(links.map((link) => ({ label: link.textContent?.trim(), href: link.getAttribute('href') }))).toEqual([
-      { label: 'Rechercher', href: '/search' },
-      { label: 'Voyages', href: '/trips' },
-      { label: 'Demandes', href: '/sent-bookings' },
-      { label: 'Messages', href: '/messages' },
-      { label: 'Profil', href: '/settings' },
-    ]);
-    expect(links.map((link) => link.getAttribute('aria-label'))).toEqual([
-      'Rechercher un trajet',
-      'Mes voyages',
-      'Mes demandes envoyées',
-      'Messages',
-      'Mon profil',
-    ]);
-  });
-
-  it('reserves mobile space for the fixed bottom navigation', () => {
+  it('removes the fixed mobile navigation and its reserved bottom space', () => {
     fixture.detectChanges();
 
     const shell = fixture.nativeElement.firstElementChild as HTMLElement;
-    expect(shell.classList.contains('pb-20')).toBeTrue();
-    expect(shell.classList.contains('md:pb-0')).toBeTrue();
+    expect(fixture.nativeElement.querySelector('[data-testid="mobile-bottom-navigation"]')).toBeNull();
+    expect(shell.classList.contains('pb-20')).toBeFalse();
+    expect(shell.classList.contains('md:pb-0')).toBeFalse();
   });
 
-  it('marks the current bottom-navigation destination as active', async () => {
-    const router = TestBed.inject(Router);
-    await router.navigateByUrl('/trips');
-    fixture.detectChanges();
-    await fixture.whenStable();
+  it('keeps the primary destinations accessible from the mobile menu', () => {
+    fixture.componentInstance.openMobileMenu();
     fixture.detectChanges();
 
-    const tripsLink = fixture.nativeElement.querySelector(
-      '[data-testid="mobile-bottom-navigation"] a[href="/trips"]'
-    ) as HTMLAnchorElement | null;
+    const mobileMenu = fixture.nativeElement.querySelector('[role="dialog"]') as HTMLElement | null;
+    const links = Array.from(mobileMenu?.querySelectorAll('a') ?? []) as HTMLAnchorElement[];
 
-    expect(tripsLink?.classList.contains('!text-primary')).toBeTrue();
+    expect(links.map((link) => link.getAttribute('href'))).toContain('/search');
+    expect(links.map((link) => link.getAttribute('href'))).toContain('/trips');
+    expect(links.map((link) => link.getAttribute('href'))).toContain('/sent-bookings');
+    expect(links.map((link) => link.getAttribute('href'))).toContain('/messages');
+    expect(links.map((link) => link.getAttribute('href'))).toContain('/settings');
   });
 });

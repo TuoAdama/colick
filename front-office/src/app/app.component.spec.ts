@@ -68,15 +68,6 @@ describe('AppComponent', () => {
     }
   });
 
-  it('keeps the authenticated bottom navigation mounted on search', () => {
-    routerEvents.next(new NavigationEnd(1, '/search?from=Paris', '/search?from=Paris'));
-
-    expect(fixture.componentInstance.showMobileBottomSearchNavigation).toBeTrue();
-
-    routerEvents.next(new NavigationEnd(2, '/comment-ca-marche', '/comment-ca-marche'));
-    expect(fixture.componentInstance.showMobileBottomSearchNavigation).toBeFalse();
-  });
-
   it('exposes the Coliclic application title', () => {
     expect(fixture.componentInstance.title).toBe(
       'Coliclic - Envoyez vos colis avec des voyageurs de confiance',
