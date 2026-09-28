@@ -3,7 +3,7 @@ import { Component, Injector, OnDestroy, OnInit, afterNextRender, inject } from 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, Scroll } from '@angular/router';
 import { Subject, Subscription, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, filter, map, switchMap, tap } from 'rxjs/operators';
 import { Location } from '../../models/location.model';
 import { ParcelRequest } from '../../models/parcel-request.model';
 import { AuthService } from '../../services/auth.service';
@@ -188,6 +188,8 @@ export class ParcelSearchPageComponent implements OnInit, OnDestroy {
     this.departureSuggestions = [];
     this.destinationSuggestions = [];
     this.activeAutocomplete = null;
+    this.isDepartureLoading = false;
+    this.isDestinationLoading = false;
   }
 
   dateLabel(date?: string): string {
@@ -234,11 +236,16 @@ export class ParcelSearchPageComponent implements OnInit, OnDestroy {
       this.departureSearchSubject.pipe(
         debounceTime(250),
         distinctUntilChanged(),
-        tap(() => {
-          this.isDepartureLoading = this.departureQuery.trim().length >= 2;
+        tap((query) => {
+          if (query === this.departureQuery.trim()) {
+            this.isDepartureLoading = query.length >= 2;
+          }
         }),
-        switchMap((query) => this.searchLocations(query))
-      ).subscribe((suggestions) => {
+        switchMap((query) => this.searchLocations(query).pipe(map((suggestions) => ({ query, suggestions }))))
+      ).subscribe(({ query, suggestions }) => {
+        if (query !== this.departureQuery.trim()) {
+          return;
+        }
         this.departureSuggestions = suggestions;
         this.isDepartureLoading = false;
       })
@@ -248,11 +255,16 @@ export class ParcelSearchPageComponent implements OnInit, OnDestroy {
       this.destinationSearchSubject.pipe(
         debounceTime(250),
         distinctUntilChanged(),
-        tap(() => {
-          this.isDestinationLoading = this.destinationQuery.trim().length >= 2;
+        tap((query) => {
+          if (query === this.destinationQuery.trim()) {
+            this.isDestinationLoading = query.length >= 2;
+          }
         }),
-        switchMap((query) => this.searchLocations(query))
-      ).subscribe((suggestions) => {
+        switchMap((query) => this.searchLocations(query).pipe(map((suggestions) => ({ query, suggestions }))))
+      ).subscribe(({ query, suggestions }) => {
+        if (query !== this.destinationQuery.trim()) {
+          return;
+        }
         this.destinationSuggestions = suggestions;
         this.isDestinationLoading = false;
       })

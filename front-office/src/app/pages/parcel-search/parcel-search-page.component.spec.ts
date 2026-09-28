@@ -1,5 +1,5 @@
 import { ViewportScroller } from '@angular/common';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NavigationEnd, provideRouter, Router, Scroll } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { ParcelRequest } from '../../models/parcel-request.model';
@@ -125,6 +125,22 @@ describe('ParcelSearchPageComponent', () => {
     expect(component.destinationSuggestions).toEqual([]);
     expect(component.activeAutocomplete).toBeNull();
   });
+
+  it('ignores an autocomplete response started before the route is swapped', fakeAsync(() => {
+    const staleSuggestions = new Subject<{ id: number; name: string; country: string; isoCode: string; type: 'CITY' }[]>();
+    locationServiceMock.searchLocations.and.returnValue(staleSuggestions);
+    createComponent();
+
+    component.departureQuery = 'Paris';
+    component.onDepartureInput();
+    tick(250);
+    component.destinationQuery = 'Abidjan';
+    component.swapRoute();
+    staleSuggestions.next([{ id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' }]);
+
+    expect(component.departureSuggestions).toEqual([]);
+    expect(component.isDepartureLoading).toBeFalse();
+  }));
 
   it('loads parcel requests for unauthenticated users', async () => {
     authServiceMock.isLoggedIn.and.returnValue(false);

@@ -1,6 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
 import { TripService } from '../../services/trip.service';
@@ -122,6 +122,22 @@ describe('LandingPageComponent', () => {
     fixture.detectChanges();
     expect(host.querySelector('[data-testid="landing-route-swap"]')).not.toBeNull();
   });
+
+  it('ignores an autocomplete response started before the route is swapped', fakeAsync(() => {
+    const staleSuggestions = new Subject<{ id: number; name: string; country: string; isoCode: string; type: 'CITY' }[]>();
+    locationServiceMock.searchLocations.and.returnValue(staleSuggestions);
+    fixture.detectChanges();
+
+    component.departureQuery = 'Paris';
+    component.onDepartureInput();
+    tick(250);
+    component.destinationQuery = 'Abidjan';
+    component.swapRoute();
+    staleSuggestions.next([{ id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' }]);
+
+    expect(component.departureSuggestions).toEqual([]);
+    expect(component.isDepartureLoading).toBeFalse();
+  }));
 
   it('does not navigate when departure or destination is missing', () => {
     fixture.detectChanges();
