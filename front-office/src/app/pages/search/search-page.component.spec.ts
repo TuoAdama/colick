@@ -749,6 +749,25 @@ describe('SearchPageComponent', () => {
     expect(regularSearchInput.classList.contains('min-h-[76px]')).toBeTrue();
   });
 
+  it('labels the trip search date as a lower bound in the desktop form and mobile modal', () => {
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const desktopDateInput = host.querySelector<HTMLInputElement>(
+      '[aria-label="Formulaire de recherche"] input[type="date"]'
+    )!;
+    expect(desktopDateInput.closest('label')?.textContent).toContain('À PARTIR DE');
+
+    component.isMobileViewport = true;
+    component.openSearchModal();
+    fixture.detectChanges();
+
+    const modalDateInput = host.querySelector<HTMLInputElement>(
+      '[data-testid="search-modal"] input[type="date"]'
+    )!;
+    expect(modalDateInput.closest('label')?.textContent).toContain('À PARTIR DE');
+  });
+
   it('restores the compact search summary when the edit modal is closed', () => {
     component.isMobileViewport = true;
     setQueryParams({ from: 'Nantes', to: 'Paris' });
