@@ -220,7 +220,7 @@
                        focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary
                        transition-shadow" />
               <p id="recipient-hint" class="mt-1.5 text-xs text-text-muted">
-                Renseignez un numéro de téléphone ou une adresse e-mail. Le code de validation partira après acceptation.
+                Le voyageur reçoit ce contact avec votre demande. Le code de remise sera envoyé après acceptation.
               </p>
               @if (bookingForm.get('recipientContact')?.touched && bookingForm.get('recipientContact')?.hasError('required')) {
                 <p id="recipient-error" class="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">

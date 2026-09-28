@@ -36,6 +36,8 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
   isBookingModalOpen = false;
   isContactingTraveler = false;
   bookingSuccessMessage = '';
+  selectedBookingWeight: number | null = 1;
+  bookingModalInitialWeight: number | null = null;
 
   ngOnInit(): void {
     this.routeSubscription = this.route.paramMap.subscribe((params) => {
@@ -53,7 +55,7 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
     this.routeSubscription?.unsubscribe();
   }
 
-  openBookingModal(): void {
+  openBookingModal(initialWeight: number | null = null): void {
     if (!this.trip || this.isOwnTrip()) {
       return;
     }
@@ -65,6 +67,7 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.bookingModalInitialWeight = initialWeight;
     this.isBookingModalOpen = true;
     this.analytics.track('request_started', { trip_id: this.trip.id, trip_reference: this.trip.reference, source: 'trip_reference' });
   }
@@ -100,6 +103,31 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
 
   closeBookingModal(): void {
     this.isBookingModalOpen = false;
+    this.bookingModalInitialWeight = null;
+  }
+
+  updateSelectedBookingWeight(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.selectedBookingWeight = value === '' ? null : Number(value);
+  }
+
+  canSubmitBookingWeight(): boolean {
+    return this.selectedBookingWeight !== null
+      && Number.isFinite(this.selectedBookingWeight)
+      && this.selectedBookingWeight >= 0.1
+      && !!this.trip
+      && this.selectedBookingWeight <= this.trip.availableWeight;
+  }
+
+  estimatedBookingPrice(): string {
+    if (!this.trip || !this.canSubmitBookingWeight()) {
+      return '—';
+    }
+
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(this.selectedBookingWeight! * this.trip.pricePerKilo);
   }
 
   onBookingCreated(booking: BookingResponse): void {
@@ -155,6 +183,9 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
     this.tripService.getTripByReference(reference).subscribe({
       next: (trip) => {
         this.trip = trip;
+        this.selectedBookingWeight = trip.availableWeight > 0
+          ? Math.min(1, trip.availableWeight)
+          : null;
         this.isLoading = false;
         const routeLabel = `${trip.departureAddress} → ${trip.destination}`;
         this.seo.updateMetadata({

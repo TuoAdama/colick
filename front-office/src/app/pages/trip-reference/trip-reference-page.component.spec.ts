@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { Trip } from '../../models/trip.model';
@@ -6,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 import { TripService } from '../../services/trip.service';
 import { TripReferencePageComponent } from './trip-reference-page.component';
+import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
 
 describe('TripReferencePageComponent', () => {
   let fixture: ComponentFixture<TripReferencePageComponent>;
@@ -100,6 +102,72 @@ describe('TripReferencePageComponent', () => {
     expect(prices[0].className).toContain('sm:text-4xl');
   });
 
+  it('shows a fixed mobile booking bar with an estimate based on the selected weight', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const bar = host.querySelector('[aria-label="Estimation et envoi de la demande"]');
+    const weightInput = host.querySelector('#mobile-booking-weight') as HTMLInputElement;
+
+    expect(bar?.className).toContain('fixed');
+    expect(bar?.className).toContain('md:hidden');
+    expect(weightInput.value).toBe('1');
+    expect(bar?.textContent).toContain('12,00');
+
+    weightInput.value = '2.5';
+    weightInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(component.estimatedBookingPrice()).toContain('30,00');
+  });
+
+  it('disables the mobile booking action when the selected weight exceeds availability', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const weightInput = host.querySelector('#mobile-booking-weight') as HTMLInputElement;
+    const submitButton = host.querySelector('[data-testid="mobile-book-reference-trip-button"]') as HTMLButtonElement;
+
+    weightInput.value = '8.1';
+    weightInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(component.canSubmitBookingWeight()).toBeFalse();
+    expect(submitButton.disabled).toBeTrue();
+    expect(component.estimatedBookingPrice()).toBe('—');
+  });
+
+  it('opens the booking modal with the weight selected in the mobile bar', () => {
+    authServiceMock.isLoggedIn.and.returnValue(true);
+    authServiceMock.getUser.and.returnValue({ id: 99 });
+    const host = fixture.nativeElement as HTMLElement;
+    const weightInput = host.querySelector('#mobile-booking-weight') as HTMLInputElement;
+    weightInput.value = '2.5';
+    weightInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    (host.querySelector('[data-testid="mobile-book-reference-trip-button"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const modal = fixture.debugElement.query(By.directive(BookingModalComponent)).componentInstance as BookingModalComponent;
+    expect(modal.isOpen).toBeTrue();
+    expect(modal.bookingForm.controls.weight.value).toBe(2.5);
+  });
+
+  it('redirects anonymous users to login when they use the mobile booking action', () => {
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('[data-testid="mobile-book-reference-trip-button"]')!
+      .click();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: '/trips/ref/TRP-2026-000013' },
+    });
+    expect(component.isBookingModalOpen).toBeFalse();
+  });
+
+  it('does not show the mobile booking bar for the traveler’s own trip', () => {
+    authServiceMock.getUser.and.returnValue({ id: 2 });
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="mobile-book-reference-trip-button"]')).toBeNull();
+  });
+
   it('redirects anonymous users to login with returnUrl when booking is requested', () => {
     component.openBookingModal();
 
@@ -162,6 +230,7 @@ describe('TripReferencePageComponent', () => {
     const host = fixture.nativeElement as HTMLElement;
     expect(component.trip).toBeNull();
     expect(host.textContent).toContain('Annonce introuvable');
+    expect(host.querySelector('[data-testid="mobile-book-reference-trip-button"]')).toBeNull();
   });
 });
 

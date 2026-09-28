@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, OnDestroy, OnInit, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ModalFocusDirective } from '../../directives/modal-focus.directive';
 import { AbstractControl, ReactiveFormsModule, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
@@ -31,12 +31,13 @@ function recipientContactValidator(control: AbstractControl): ValidationErrors |
   imports: [CommonModule, ReactiveFormsModule, ModalFocusDirective],
   templateUrl: './booking-modal.component.html',
 })
-export class BookingModalComponent implements OnInit, OnDestroy {
+export class BookingModalComponent implements OnInit, OnChanges, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly tripService = inject(TripService);
 
   @Input() trip: Trip | null = null;
   @Input() isOpen = false;
+  @Input() initialWeight: number | null = null;
   @Output() closed = new EventEmitter<void>();
   @Output() bookingCreated = new EventEmitter<BookingResponse>();
 
@@ -70,6 +71,12 @@ export class BookingModalComponent implements OnInit, OnDestroy {
       next: guidelines => this.guidelines = guidelines,
       error: () => this.guidelinesError = 'Les règles relatives aux colis sont indisponibles. Réessayez plus tard.',
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (this.isOpen && (changes['isOpen'] || changes['initialWeight'])) {
+      this.bookingForm.controls.weight.setValue(this.initialWeight);
+    }
   }
 
   ngOnDestroy(): void {
