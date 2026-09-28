@@ -77,7 +77,8 @@ describe('LandingPageComponent', () => {
   it('labels the trip search date as a lower bound', () => {
     fixture.detectChanges();
 
-    const dateInput = fixture.nativeElement.querySelector<HTMLInputElement>('input[name="travelDate"]');
+    const host = fixture.nativeElement as HTMLElement;
+    const dateInput = host.querySelector<HTMLInputElement>('input[name="travelDate"]');
     expect(dateInput?.closest('label')?.textContent).toContain('À partir de');
   });
 
