@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -139,7 +140,8 @@ public class TripAlertServiceImpl implements TripAlertService {
         if (alert.getDate() != null && trip.getDepartureTime().toLocalDate().isBefore(alert.getDate())) {
             return false;
         }
-        if (alert.getDateEnd() != null && trip.getDepartureTime().toLocalDate().isAfter(alert.getDateEnd())) {
+        LocalDate effectiveDateEnd = alert.getDateEnd() != null ? alert.getDateEnd() : alert.getDate();
+        if (effectiveDateEnd != null && trip.getDepartureTime().toLocalDate().isAfter(effectiveDateEnd)) {
             return false;
         }
         if (alert.getMinPrice() != null && trip.getPricePerKilo().compareTo(alert.getMinPrice()) < 0) {

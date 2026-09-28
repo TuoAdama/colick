@@ -583,9 +583,8 @@ public class TripServiceImpl implements TripService {
                                           BigDecimal maxPrice) {
         List<Trip> activeTrips = tripRepository.findByStatus(Trip.TripStatus.ACTIVE);
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime searchReferenceTime = date == null
-                ? now
-                : date.atStartOfDay();
+        LocalDateTime requestedStart = date != null ? date.atStartOfDay() : now;
+        LocalDateTime searchReferenceTime = requestedStart.isAfter(now) ? requestedStart : now;
         LocalDateTime endOfDate = dateEnd != null
                 ? dateEnd.plusDays(1).atStartOfDay()
                 : date != null ? date.plusDays(1).atStartOfDay() : null;

@@ -72,6 +72,7 @@ export class AlertsPageComponent implements OnInit {
       from: alert.departure,
       to: alert.destination,
       date: alert.date ?? null,
+      ...(alert.dateEnd ? { dateEnd: alert.dateEnd } : {}),
       sort: alert.sort ?? 'price_asc',
       minPrice: alert.minPrice ?? null,
       maxPrice: alert.maxPrice ?? null,

@@ -70,6 +70,16 @@ describe('AlertsPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('5 - 15 €/kg');
   });
 
+  it('preserves a saved alert date range in the search link', () => {
+    expect(component.alertSearchQueryParams({
+      id: 1,
+      departure: 'Paris',
+      destination: 'Abidjan',
+      date: '2026-06-20',
+      dateEnd: '2026-06-23',
+    })).toEqual(jasmine.objectContaining({ date: '2026-06-20', dateEnd: '2026-06-23' }));
+  });
+
   it('renders empty state', () => {
     fixture.detectChanges();
 
