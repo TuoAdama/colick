@@ -18,6 +18,8 @@ export interface TripSearchCriteria {
   departure?: string;
   destination?: string;
   date?: string;
+  dateEnd?: string;
+  flexible?: boolean;
   sort?: TripSearchSort;
   minPrice?: number | null;
   maxPrice?: number | null;
@@ -49,6 +51,9 @@ export class TripService {
     }
     if (criteria.date?.trim()) {
       params = params.set('date', criteria.date.trim());
+    }
+    if (criteria.dateEnd?.trim()) {
+      params = params.set('dateEnd', criteria.dateEnd.trim());
     }
     if (criteria.sort) {
       params = params.set('sort', criteria.sort);

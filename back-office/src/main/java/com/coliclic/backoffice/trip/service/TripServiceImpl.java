@@ -558,7 +558,7 @@ public class TripServiceImpl implements TripService {
     @Override
     @Transactional(readOnly = true)
     public List<TripResponse> searchTrips(String departure, String destination) {
-        return searchTrips(departure, destination, null, null, null, null);
+        return searchTrips(departure, destination, null, null, null, null, null);
     }
 
     @Override
@@ -569,16 +569,33 @@ public class TripServiceImpl implements TripService {
                                           String sort,
                                           BigDecimal minPrice,
                                           BigDecimal maxPrice) {
+        return searchTrips(departure, destination, date, null, sort, minPrice, maxPrice);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TripResponse> searchTrips(String departure,
+                                          String destination,
+                                          LocalDate date,
+                                          LocalDate dateEnd,
+                                          String sort,
+                                          BigDecimal minPrice,
+                                          BigDecimal maxPrice) {
         List<Trip> activeTrips = tripRepository.findByStatus(Trip.TripStatus.ACTIVE);
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime dateReferenceTime = date != null ? date.atStartOfDay() : now;
-        LocalDateTime searchReferenceTime = dateReferenceTime.isAfter(now) ? dateReferenceTime : now;
+        LocalDateTime searchReferenceTime = date == null
+                ? now
+                : date.atStartOfDay();
+        LocalDateTime endOfDate = dateEnd != null
+                ? dateEnd.plusDays(1).atStartOfDay()
+                : date != null ? date.plusDays(1).atStartOfDay() : null;
 
         Set<String> departureTerms = expandSearchTerm(departure);
         Set<String> destinationTerms = expandSearchTerm(destination);
 
         List<Trip> matchingTrips = activeTrips.stream()
                 .filter(trip -> departsAtOrAfter(trip, searchReferenceTime))
+                .filter(trip -> endOfDate == null || trip.getDepartureTime().isBefore(endOfDate))
                 .filter(t -> departureTerms == null || matchesAnyTerm(t.getDepartureAddress(), departureTerms))
                 .filter(t -> destinationTerms == null || matchesAnyTerm(t.getDestination(), destinationTerms))
                 .filter(t -> minPrice == null || t.getPricePerKilo().compareTo(minPrice) >= 0)

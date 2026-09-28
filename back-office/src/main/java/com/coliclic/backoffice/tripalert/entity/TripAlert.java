@@ -41,6 +41,9 @@ public class TripAlert {
     private LocalDate date;
 
     @Column
+    private LocalDate dateEnd;
+
+    @Column
     private String sort;
 
     @Column(precision = 10, scale = 2)

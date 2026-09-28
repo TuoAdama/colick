@@ -70,6 +70,8 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   departureQuery = '';
   destinationQuery = '';
   selectedDate = '';
+  selectedDateEnd = '';
+  dateMode: 'single' | 'range' | 'flexible' = 'single';
   sort: TripSearchSort = 'price_asc';
   minPrice: number | null = null;
   maxPrice: number | null = null;
@@ -161,6 +163,8 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       const from = params.get('from')?.trim() ?? '';
       const to = params.get('to')?.trim() ?? '';
       const date = params.get('date')?.trim() ?? '';
+      const dateEnd = params.get('dateEnd')?.trim() ?? '';
+      const flexible = params.get('flexible') === 'true';
       const sort = this.parseSort(params.get('sort'));
       const minPrice = this.parseOptionalNumber(params.get('minPrice'));
       const maxPrice = this.parseOptionalNumber(params.get('maxPrice'));
@@ -174,7 +178,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
       this.departureQuery = from;
       this.destinationQuery = to;
-      this.selectedDate = date;
+      this.selectedDate = flexible && date ? this.addCalendarDays(date, 3) : date;
+      this.selectedDateEnd = dateEnd;
+      this.dateMode = flexible ? 'flexible' : dateEnd ? 'range' : 'single';
       this.sort = sort;
       this.minPrice = minPrice;
       this.maxPrice = maxPrice;
@@ -190,7 +196,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
         return;
       }
 
-      const criteria = this.buildCriteria(from, to, date, sort, minPrice, maxPrice);
+      const criteria = this.buildCriteria(from, to, date, dateEnd, flexible, sort, minPrice, maxPrice);
       const searchKey = this.buildSearchKey(criteria);
       if (searchKey === this.lastAutoSearchKey) {
         return;
@@ -212,6 +218,8 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     this.departureQuery = '';
     this.destinationQuery = '';
     this.selectedDate = '';
+    this.selectedDateEnd = '';
+    this.dateMode = 'single';
     this.sort = 'price_asc';
     this.minPrice = null;
     this.maxPrice = null;
@@ -223,7 +231,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   }
 
   searchTrips(): void {
-    if (!this.isFormValid || !this.departure || !this.destination) {
+    if (!this.isFormValid || !this.isDateRangeValid || !this.departure || !this.destination) {
       return;
     }
 
@@ -234,7 +242,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     const criteria = this.buildCriteria(
       from,
       to,
-      this.selectedDate,
+      this.dateStartForSearch(),
+      this.dateEndForSearch(),
+      this.dateMode === 'flexible',
       this.sort,
       this.minPrice,
       this.maxPrice
@@ -256,6 +266,21 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     if (this.isFormValid) {
       this.searchTrips();
     }
+  }
+
+  onDateModeChange(mode: 'single' | 'range' | 'flexible'): void {
+    this.dateMode = mode;
+    if (mode !== 'range') this.selectedDateEnd = '';
+  }
+
+  get isDateRangeValid(): boolean {
+    return !this.selectedDateEnd || !this.selectedDate || this.selectedDateEnd >= this.selectedDate;
+  }
+
+  dateSummary(date = this.dateStartForSearch(), dateEnd = this.dateEndForSearch(), flexible = this.dateMode === 'flexible'): string {
+    if (!date) return 'Toutes les dates';
+    if (dateEnd && dateEnd !== date) return `${flexible ? 'Flexible : ' : ''}${this.formatDate(date)} – ${this.formatDate(dateEnd)}`;
+    return this.formatDate(date);
   }
 
   selectSearchHistory(entry: SearchHistoryEntry): void {
@@ -370,6 +395,8 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       departure: criteria.departure,
       destination: criteria.destination,
       date: criteria.date,
+      date_end: criteria.dateEnd,
+      flexible: criteria.flexible === true,
       sort: criteria.sort,
     });
     this.isLoading = true;
@@ -402,6 +429,8 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     return currentParams.get('from')?.trim() === criteria.departure
       && currentParams.get('to')?.trim() === criteria.destination
       && (currentParams.get('date')?.trim() ?? '') === (criteria.date ?? '')
+      && (currentParams.get('dateEnd')?.trim() ?? '') === (criteria.dateEnd ?? '')
+      && (currentParams.get('flexible') === 'true') === (criteria.flexible === true)
       && (this.parseSort(currentParams.get('sort'))) === criteria.sort
       && this.parseOptionalNumber(currentParams.get('minPrice')) === (criteria.minPrice ?? null)
       && this.parseOptionalNumber(currentParams.get('maxPrice')) === (criteria.maxPrice ?? null);
@@ -411,6 +440,8 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     departure: string,
     destination: string,
     date: string,
+    dateEnd: string,
+    flexible: boolean,
     sort: TripSearchSort,
     minPrice: number | null,
     maxPrice: number | null,
@@ -419,6 +450,8 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       departure,
       destination,
       date: date || undefined,
+      ...(dateEnd ? { dateEnd } : {}),
+      ...(flexible ? { flexible: true } : {}),
       sort,
       minPrice,
       maxPrice,
@@ -430,6 +463,8 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       from: criteria.departure ?? null,
       to: criteria.destination ?? null,
       date: criteria.date ?? null,
+      ...(criteria.dateEnd ? { dateEnd: criteria.dateEnd } : {}),
+      ...(criteria.flexible ? { flexible: 'true' } : {}),
       sort: criteria.sort ?? null,
       minPrice: criteria.minPrice ?? null,
       maxPrice: criteria.maxPrice ?? null,
@@ -441,6 +476,8 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       departure: criteria.departure ?? '',
       destination: criteria.destination ?? '',
       date: criteria.date ?? '',
+      dateEnd: criteria.dateEnd ?? '',
+      flexible: criteria.flexible === true,
       sort: criteria.sort ?? '',
       minPrice: criteria.minPrice ?? null,
       maxPrice: criteria.maxPrice ?? null,
@@ -459,6 +496,25 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     }
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private dateEndForSearch(): string {
+    if (!this.selectedDate) return '';
+    if (this.dateMode === 'range') return this.selectedDateEnd;
+    if (this.dateMode !== 'flexible') return '';
+    return this.addCalendarDays(this.selectedDate, 3);
+  }
+
+  private dateStartForSearch(): string {
+    return this.dateMode === 'flexible' && this.selectedDate
+      ? this.addCalendarDays(this.selectedDate, -3)
+      : this.selectedDate;
+  }
+
+  private addCalendarDays(value: string, amount: number): string {
+    const date = new Date(`${value}T00:00:00`);
+    date.setDate(date.getDate() + amount);
+    return date.toISOString().slice(0, 10);
   }
 
   private createLocationFromQuery(name: string): Location {
@@ -579,7 +635,9 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     const criteria = this.buildCriteria(
       this.departure.name,
       this.destination.name,
-      this.selectedDate,
+      this.dateStartForSearch(),
+      this.dateEndForSearch(),
+      this.dateMode === 'flexible',
       this.sort,
       this.minPrice,
       this.maxPrice
@@ -593,6 +651,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       departure: criteria.departure ?? '',
       destination: criteria.destination ?? '',
       date: criteria.date,
+      ...(criteria.dateEnd ? { dateEnd: criteria.dateEnd } : {}),
       sort: criteria.sort,
       minPrice: criteria.minPrice,
       maxPrice: criteria.maxPrice,

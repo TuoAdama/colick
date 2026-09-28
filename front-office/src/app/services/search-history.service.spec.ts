@@ -48,6 +48,14 @@ describe('SearchHistoryService', () => {
     expect(result[0].criteria).toEqual(criteria(1));
   });
 
+  it('distinguishes date ranges and flexible searches in the history', () => {
+    service.add({ departure: 'Paris', destination: 'Abidjan', date: '2026-10-01', dateEnd: '2026-10-07' });
+    service.add({ departure: 'Paris', destination: 'Abidjan', date: '2026-10-01', dateEnd: '2026-10-07', flexible: true });
+
+    expect(service.getEntries()).toHaveSize(2);
+    expect(service.getEntries()[0].criteria.flexible).toBeTrue();
+  });
+
   it('keeps only the ten most recent searches', () => {
     for (let index = 0; index < 12; index += 1) {
       service.add(criteria(index));

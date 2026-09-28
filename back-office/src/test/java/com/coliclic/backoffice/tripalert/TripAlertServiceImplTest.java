@@ -116,6 +116,19 @@ class TripAlertServiceImplTest {
     }
 
     @Test
+    void createAlert_shouldPersistTheEndOfADateRange() {
+        CreateTripAlertRequest request = request("Paris", "Abidjan");
+        request.setDateEnd(request.getDate().plusDays(3));
+        when(tripAlertRepository.findByUser(sender)).thenReturn(List.of());
+        when(tripAlertRepository.save(any(TripAlert.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        TripAlertResponse response = service.createAlert(request, sender);
+
+        assertThat(response.getDateEnd()).isEqualTo(request.getDateEnd());
+        verify(tripAlertRepository).save(argThat(alert -> request.getDateEnd().equals(alert.getDateEnd())));
+    }
+
+    @Test
     void deleteAlert_shouldDeleteOwnedAlertAndNotifications() {
         TripAlert alert = alert(5L, sender, "Paris", "Abidjan");
         when(tripAlertRepository.findById(5L)).thenReturn(Optional.of(alert));

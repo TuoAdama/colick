@@ -1568,6 +1568,43 @@ class TripServiceImplTest {
     }
 
     @Test
+    void searchTrips_shouldTreatASingleDateAsAnExactDay() {
+        LocalDate day = LocalDate.now().plusDays(3);
+        Trip onDay = Trip.builder().id(21L).traveler(traveler).departureAddress("Paris").destination("Abidjan")
+                .departureTime(day.atTime(9, 0)).arrivalTime(day.atTime(16, 0)).maxWeight(BigDecimal.TEN)
+                .pricePerKilo(BigDecimal.TEN).status(Trip.TripStatus.ACTIVE).build();
+        Trip afterDay = Trip.builder().id(22L).traveler(traveler).departureAddress("Paris").destination("Abidjan")
+                .departureTime(day.plusDays(1).atTime(9, 0)).arrivalTime(day.plusDays(1).atTime(16, 0)).maxWeight(BigDecimal.TEN)
+                .pricePerKilo(BigDecimal.TEN).status(Trip.TripStatus.ACTIVE).build();
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(onDay, afterDay));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris")).thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(onDay, TripBooking.BookingStatus.ACCEPTED)).thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null, day, null, null, null);
+
+        assertThat(results).extracting(TripResponse::getId).containsExactly(21L);
+    }
+
+    @Test
+    void searchTrips_shouldIncludeBothEndsOfADateRange() {
+        LocalDate start = LocalDate.now().plusDays(3);
+        Trip first = Trip.builder().id(31L).traveler(traveler).departureAddress("Paris").destination("Abidjan")
+                .departureTime(start.atTime(9, 0)).arrivalTime(start.atTime(16, 0)).maxWeight(BigDecimal.TEN)
+                .pricePerKilo(BigDecimal.TEN).status(Trip.TripStatus.ACTIVE).build();
+        Trip last = Trip.builder().id(32L).traveler(traveler).departureAddress("Paris").destination("Abidjan")
+                .departureTime(start.plusDays(2).atTime(9, 0)).arrivalTime(start.plusDays(2).atTime(16, 0)).maxWeight(BigDecimal.TEN)
+                .pricePerKilo(BigDecimal.TEN).status(Trip.TripStatus.ACTIVE).build();
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE)).thenReturn(List.of(first, last));
+        when(locationRepository.findNamesByTypeAndCountryContaining(LocationType.CITY, "Paris")).thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(first, TripBooking.BookingStatus.ACCEPTED)).thenReturn(List.of());
+        when(bookingRepository.findByTripAndStatus(last, TripBooking.BookingStatus.ACCEPTED)).thenReturn(List.of());
+
+        List<TripResponse> results = tripService.searchTrips("Paris", null, start, start.plusDays(2), null, null, null);
+
+        assertThat(results).extracting(TripResponse::getId).containsExactly(31L, 32L);
+    }
+
+    @Test
     void searchTrips_shouldFilterByMinAndMaxPrice() {
         Trip cheapTrip = Trip.builder()
                 .id(11L).traveler(traveler)
