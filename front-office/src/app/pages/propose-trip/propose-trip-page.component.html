@@ -51,9 +51,10 @@
           </div>
         } @else {
 
-          <!-- ── Error / warning message ── -->
-          @if (errorMessage) {
+          <!-- The same alert is rendered at the form top on larger screens and near the action on mobile. -->
+          <ng-template #tripErrorAlert>
             <div
+              data-testid="propose-trip-error"
               class="flex items-start gap-3 rounded-xl px-4 py-3 mb-6 text-sm border"
               [class]="canEditTrip
                 ? 'bg-red-50 border-red-200 text-red-700'
@@ -72,6 +73,12 @@
                 </svg>
               }
               <span>{{ errorMessage }}</span>
+            </div>
+          </ng-template>
+
+          @if (errorMessage) {
+            <div data-testid="propose-trip-error-desktop" class="hidden sm:block">
+              <ng-container [ngTemplateOutlet]="tripErrorAlert"></ng-container>
             </div>
           }
 
@@ -251,6 +258,11 @@
               </fieldset>
 
               <!-- ── Submit button — dynamic label & disabled state ── -->
+              @if (errorMessage) {
+                <div data-testid="propose-trip-error-mobile" class="sm:hidden">
+                  <ng-container [ngTemplateOutlet]="tripErrorAlert"></ng-container>
+                </div>
+              }
               <button
                 type="submit"
                 [disabled]="isSubmitDisabled"

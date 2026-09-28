@@ -91,6 +91,26 @@ describe('ProposeTripPageComponent', () => {
     paramMapSubject.next(paramMap);
   }
 
+  function expectErrorDisplayedResponsively(): void {
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const desktopRegion = host.querySelector('[data-testid="propose-trip-error-desktop"]') as HTMLElement;
+    const mobileRegion = host.querySelector('[data-testid="propose-trip-error-mobile"]') as HTMLElement;
+    const desktopAlert = desktopRegion.querySelector('[role="alert"]');
+    const mobileAlert = mobileRegion.querySelector('[role="alert"]');
+    const submitButton = host.querySelector('button[type="submit"]');
+
+    expect(desktopRegion.className).toContain('hidden');
+    expect(desktopRegion.className).toContain('sm:block');
+    expect(mobileRegion.className).toContain('sm:hidden');
+    expect(desktopAlert?.getAttribute('aria-live')).toBe('assertive');
+    expect(mobileAlert?.getAttribute('aria-live')).toBe('assertive');
+    expect(mobileRegion.nextElementSibling).toBe(submitButton);
+    expect(desktopAlert?.textContent?.trim()).toBe(component.errorMessage);
+    expect(mobileAlert?.textContent?.trim()).toBe(component.errorMessage);
+  }
+
   it('creates a trip in creation mode and redirects to trips management with a success flag', () => {
     setRouteId();
     fixture.detectChanges();
@@ -242,6 +262,7 @@ describe('ProposeTripPageComponent', () => {
 
     expect(component.canEditTrip).toBeFalse();
     expect(component.errorMessage).toContain('Seuls les voyages actifs peuvent être modifiés.');
+    expectErrorDisplayedResponsively();
 
     component.submit();
 
@@ -256,6 +277,7 @@ describe('ProposeTripPageComponent', () => {
 
     expect(component.errorMessage).toContain('Une erreur est survenue lors du chargement du voyage.');
     expect(component.isPageLoading).toBeFalse();
+    expectErrorDisplayedResponsively();
   });
 
   // --- Backend error message surfacing (issue #74) ---
@@ -296,6 +318,7 @@ describe('ProposeTripPageComponent', () => {
     component.submit();
 
     expect(component.errorMessage).toContain('Une erreur est survenue lors de la publication du voyage.');
+    expectErrorDisplayedResponsively();
   });
 
   it('shows the backend message when updateTrip fails with a structured error', () => {
@@ -309,6 +332,7 @@ describe('ProposeTripPageComponent', () => {
     component.submit();
 
     expect(component.errorMessage).toBe('Max weight must be at least 1 kg');
+    expectErrorDisplayedResponsively();
   });
 
   it('falls back to the generic update error when updateTrip fails without a backend message', () => {
@@ -349,6 +373,19 @@ describe('ProposeTripPageComponent', () => {
 
     expect(component.errorMessage).toBe('Veuillez choisir une date et une heure de départ dans le futur.');
     expect(tripServiceMock.createTrip).not.toHaveBeenCalled();
+    expectErrorDisplayedResponsively();
+  });
+
+  it('shows validation errors near the edit action on mobile as well', () => {
+    setRouteId('12');
+    fixture.detectChanges();
+    component.departureTime = '2000-05-10T08:00';
+
+    component.submit();
+
+    expect(component.errorMessage).toBe('Veuillez choisir une date et une heure de départ dans le futur.');
+    expect(tripServiceMock.updateTrip).not.toHaveBeenCalled();
+    expectErrorDisplayedResponsively();
   });
 
   it('shows an English contextual message when the page language is English', () => {
