@@ -39,7 +39,7 @@ describe('BookingModalComponent', () => {
 
     fixture = TestBed.createComponent(BookingModalComponent);
     component = fixture.componentInstance;
-    component.trip = {
+    fixture.componentRef.setInput('trip', {
       id: 10,
       travelerId: 99,
       travelerName: 'Alice Dupont',
@@ -52,8 +52,9 @@ describe('BookingModalComponent', () => {
       pricePerKilo: 5,
       instantAcceptance: false,
       status: 'ACTIVE',
-    };
-    component.isOpen = true;
+    });
+    fixture.componentRef.setInput('initialWeight', 2.5);
+    fixture.componentRef.setInput('isOpen', true);
     fixture.detectChanges();
   });
 
@@ -66,6 +67,17 @@ describe('BookingModalComponent', () => {
     component.bookingForm.get('recipientContact')?.markAsTouched();
 
     expect(component.bookingForm.get('recipientContact')?.hasError('recipientContact')).toBeTrue();
+  });
+
+  it('keeps recipient contact required and explains when it is used', () => {
+    expect(component.bookingForm.controls.recipientContact.hasError('required')).toBeTrue();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'Le voyageur reçoit ce contact avec votre demande. Le code de remise sera envoyé après acceptation.',
+    );
+  });
+
+  it('uses the weight selected on the trip page when the modal opens', () => {
+    expect(component.bookingForm.controls.weight.value).toBe(2.5);
   });
 
   it('trims recipient contact before sending the booking request', () => {

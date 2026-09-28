@@ -1,5 +1,5 @@
 <main class="min-h-screen bg-[#FAFAFA] text-text-primary">
-  <div class="mx-auto flex w-full max-w-[1120px] flex-col gap-8 px-4 pb-8 pt-24 sm:px-6 lg:px-8">
+  <div class="mx-auto flex w-full max-w-[1120px] flex-col gap-8 px-4 pb-40 pt-24 sm:px-6 md:pb-8 lg:px-8">
     <a routerLink="/search" class="inline-flex w-fit items-center gap-2 text-sm font-semibold text-text-secondary transition hover:text-primary">
       <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5m0 0 7-7m-7 7 7 7" />
@@ -123,6 +123,44 @@
           </aside>
         </div>
       </section>
+
+      @if (!isOwnTrip()) {
+        <section
+          class="fixed inset-x-0 bottom-0 z-40 border-t border-[#E8E8EC] bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,23,42,0.10)] backdrop-blur md:hidden"
+          aria-label="Estimation et envoi de la demande">
+          <div class="mx-auto flex w-full max-w-[1120px] flex-col gap-2">
+            <div class="flex items-end gap-4">
+              <div class="min-w-0 flex-1">
+                <label for="mobile-booking-weight" class="block text-[11px] font-bold text-text-secondary">Poids (kg)</label>
+                <input
+                  id="mobile-booking-weight"
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  [max]="trip.availableWeight"
+                  [value]="selectedBookingWeight ?? ''"
+                  (input)="updateSelectedBookingWeight($event)"
+                  [attr.aria-invalid]="!canSubmitBookingWeight()"
+                  aria-describedby="mobile-booking-weight-hint"
+                  class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-text-primary focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/40" />
+                <span id="mobile-booking-weight-hint" class="sr-only">Entre 0,1 kg et {{ trip.availableWeight }} kg</span>
+              </div>
+              <div class="shrink-0 pb-1 text-right" aria-live="polite">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-text-secondary">Prix estimé</p>
+                <p class="text-sm font-extrabold text-primary">{{ estimatedBookingPrice() }}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="min-h-11 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              [disabled]="!canSubmitBookingWeight()"
+              (click)="openBookingModal(selectedBookingWeight)"
+              data-testid="mobile-book-reference-trip-button">
+              Envoyer une demande
+            </button>
+          </div>
+        </section>
+      }
     }
   </div>
 
@@ -135,6 +173,7 @@
   <app-booking-modal
     [trip]="trip"
     [isOpen]="isBookingModalOpen"
+    [initialWeight]="bookingModalInitialWeight"
     (closed)="closeBookingModal()"
     (bookingCreated)="onBookingCreated($event)"
   />
