@@ -180,6 +180,14 @@ export class LandingPageComponent {
     this.activeAutocomplete = null;
   }
 
+  swapRoute(): void {
+    [this.departureQuery, this.destinationQuery] = [this.destinationQuery, this.departureQuery];
+    [this.departure, this.destination] = [this.destination, this.departure];
+    this.departureSuggestions = [];
+    this.destinationSuggestions = [];
+    this.activeAutocomplete = null;
+  }
+
   private setupAutocomplete(): void {
     this.subscriptions.add(
       this.departureSearchSubject.pipe(

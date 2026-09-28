@@ -182,6 +182,14 @@ export class ParcelSearchPageComponent implements OnInit, OnDestroy {
     this.activeAutocomplete = null;
   }
 
+  swapRoute(): void {
+    [this.departureQuery, this.destinationQuery] = [this.destinationQuery, this.departureQuery];
+    [this.departure, this.destination] = [this.destination, this.departure];
+    this.departureSuggestions = [];
+    this.destinationSuggestions = [];
+    this.activeAutocomplete = null;
+  }
+
   dateLabel(date?: string): string {
     if (!date) {
       return 'Date flexible';

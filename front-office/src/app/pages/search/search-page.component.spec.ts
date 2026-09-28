@@ -117,6 +117,45 @@ describe('SearchPageComponent', () => {
     });
   });
 
+  it('swaps the route without changing the date or active filters', () => {
+    const departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' as const };
+    const destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', type: 'CITY' as const };
+    component.departure = departure;
+    component.destination = destination;
+    component.departureQuery = 'Paris';
+    component.destinationQuery = 'Abidjan';
+    component.selectedDate = '2026-10-15';
+    component.sort = 'rating_desc';
+    component.minPrice = 8;
+    component.maxPrice = 20;
+    fixture.detectChanges();
+
+    const swapButton = fixture.nativeElement.querySelector('[data-testid="search-route-swap"]') as HTMLButtonElement;
+    expect(swapButton.getAttribute('aria-label')).toBe('Inverser le départ et la destination');
+    swapButton.click();
+
+    expect(component.departure).toBe(destination);
+    expect(component.destination).toBe(departure);
+    expect(component.departureQuery).toBe('Abidjan');
+    expect(component.destinationQuery).toBe('Paris');
+    expect(component.selectedDate).toBe('2026-10-15');
+    expect(component.sort).toBe('rating_desc');
+    expect(component.minPrice).toBe(8);
+    expect(component.maxPrice).toBe(20);
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(tripServiceMock.searchTrips).not.toHaveBeenCalled();
+  });
+
+  it('offers the same route swap action in the mobile search modal', () => {
+    component.isMobileViewport = true;
+    component.openSearchModal();
+    fixture.detectChanges();
+
+    const swapButton = fixture.nativeElement.querySelector('[data-testid="search-modal-route-swap"]') as HTMLButtonElement;
+    expect(swapButton).not.toBeNull();
+    expect(swapButton.getAttribute('aria-label')).toBe('Inverser le départ et la destination');
+  });
+
   it('resets stale results when navigating back to the bare search route', () => {
     setQueryParams({ from: 'Paris', to: 'Abidjan' });
     fixture.detectChanges();

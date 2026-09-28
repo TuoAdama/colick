@@ -12,8 +12,9 @@
         Trouvez le trajet idéal pour votre colis.
       </h1>
 
-      <div class="flex flex-col items-stretch gap-2 rounded-xl border border-[#E8E8EC] bg-white p-2 shadow-sm md:grid md:grid-cols-2 lg:flex lg:flex-row lg:items-center">
-        <div class="relative w-full flex-1">
+      <div class="grid gap-2 rounded-xl border border-[#E8E8EC] bg-white p-2 shadow-sm md:grid-cols-[2fr_1fr_auto] md:items-center">
+        <div class="relative grid gap-2 md:grid-cols-2">
+          <div class="relative w-full">
           <app-autocomplete
             [attr.inert]="isMobileViewport ? '' : null"
             [attr.aria-hidden]="isMobileViewport ? 'true' : null"
@@ -28,15 +29,9 @@
           @if (isMobileViewport) {
             <button type="button" class="absolute inset-0 z-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" (click)="openSearchModal('departure')" aria-haspopup="dialog" data-testid="search-departure-trigger"><span class="sr-only">Choisir la ville de départ</span></button>
           }
-        </div>
+          </div>
 
-        <div class="hidden items-center justify-center px-2 text-text-muted lg:flex" aria-hidden="true">
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </div>
-
-        <div class="relative w-full flex-1">
+          <div class="relative w-full">
           <app-autocomplete
             [attr.inert]="isMobileViewport ? '' : null"
             [attr.aria-hidden]="isMobileViewport ? 'true' : null"
@@ -51,6 +46,17 @@
           @if (isMobileViewport) {
             <button type="button" class="absolute inset-0 z-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" (click)="openSearchModal('destination')" aria-haspopup="dialog" data-testid="search-destination-trigger"><span class="sr-only">Choisir la ville de destination</span></button>
           }
+          </div>
+
+          <button
+            type="button"
+            class="absolute right-3 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl border border-border bg-white text-primary shadow-sm transition hover:bg-background-primary focus:outline-none focus:ring-2 focus:ring-accent md:left-1/2 md:right-auto md:-translate-x-1/2"
+            (click)="swapRoute()"
+            aria-label="Inverser le départ et la destination"
+            data-testid="search-route-swap"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">swap_vert</span>
+          </button>
         </div>
 
         <label class="flex min-h-[76px] w-full flex-1 items-center gap-3 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-3 transition focus-within:ring-2 focus-within:ring-primary/20">
@@ -99,9 +105,10 @@
             <button type="button" class="min-h-11 min-w-11 rounded-full text-2xl text-text-secondary hover:bg-[#F8FAFB] focus:outline-none focus:ring-2 focus:ring-primary/20" (click)="closeSearchModal()" aria-label="Fermer la recherche">×</button>
           </div>
           <div class="space-y-4 p-5 sm:p-6">
-            <div class="grid gap-3 md:grid-cols-2">
+            <div class="relative grid gap-3 md:grid-cols-2">
               <div class="search-modal-departure"><app-autocomplete label="DÉPART" placeholder="Ville de départ" [initialQuery]="departureQuery" variant="search" [compact]="true" icon="M12 21s7-4.438 7-11a7 7 0 10-14 0c0 6.562 7 11 7 11zM12 13a3 3 0 100-6 3 3 0 000 6z" (selected)="onDepartureSelected($event)" (cleared)="departure = null; departureQuery = ''"></app-autocomplete></div>
               <div class="search-modal-destination"><app-autocomplete label="DESTINATION" placeholder="Où allez-vous ?" [initialQuery]="destinationQuery" variant="search" [compact]="true" icon="M3 11l18-8-8 18-2-8-8-2z" (selected)="onDestinationSelected($event)" (cleared)="destination = null; destinationQuery = ''"></app-autocomplete></div>
+              <button type="button" class="absolute right-3 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl border border-border bg-white text-primary shadow-sm transition hover:bg-background-primary focus:outline-none focus:ring-2 focus:ring-accent md:left-1/2 md:right-auto md:-translate-x-1/2" (click)="swapRoute()" aria-label="Inverser le départ et la destination" data-testid="search-modal-route-swap"><span class="material-symbols-outlined" aria-hidden="true">swap_vert</span></button>
             </div>
             <label class="flex h-16 items-center gap-3 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-1 transition focus-within:ring-2 focus-within:ring-primary/20">
               <svg class="h-6 w-6 shrink-0 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>

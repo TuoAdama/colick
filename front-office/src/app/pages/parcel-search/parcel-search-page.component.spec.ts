@@ -98,6 +98,34 @@ describe('ParcelSearchPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Documents · 2kg');
   });
 
+  it('swaps the route while preserving the date and clearing autocomplete state', () => {
+    createComponent();
+    const departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' as const };
+    const destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', type: 'CITY' as const };
+    component.departure = departure;
+    component.destination = destination;
+    component.departureQuery = 'Paris, France';
+    component.destinationQuery = "Abidjan, Côte d'Ivoire";
+    component.selectedDate = '2026-10-15';
+    component.departureSuggestions = [departure];
+    component.destinationSuggestions = [destination];
+    component.activeAutocomplete = 'destination';
+    fixture.detectChanges();
+
+    const swapButton = fixture.nativeElement.querySelector('[data-testid="parcel-search-route-swap"]') as HTMLButtonElement;
+    expect(swapButton.getAttribute('aria-label')).toBe('Inverser le départ et la destination');
+    swapButton.click();
+
+    expect(component.departure).toBe(destination);
+    expect(component.destination).toBe(departure);
+    expect(component.departureQuery).toBe("Abidjan, Côte d'Ivoire");
+    expect(component.destinationQuery).toBe('Paris, France');
+    expect(component.selectedDate).toBe('2026-10-15');
+    expect(component.departureSuggestions).toEqual([]);
+    expect(component.destinationSuggestions).toEqual([]);
+    expect(component.activeAutocomplete).toBeNull();
+  });
+
   it('loads parcel requests for unauthenticated users', async () => {
     authServiceMock.isLoggedIn.and.returnValue(false);
     await router.navigateByUrl('/parcel-search?from=Paris&to=Abidjan');

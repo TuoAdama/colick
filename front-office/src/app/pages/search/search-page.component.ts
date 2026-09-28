@@ -137,6 +137,11 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     this.destinationQuery = location.name;
   }
 
+  swapRoute(): void {
+    [this.departureQuery, this.destinationQuery] = [this.destinationQuery, this.departureQuery];
+    [this.departure, this.destination] = [this.destination, this.departure];
+  }
+
   /**
    * Check if the search form is valid (both locations selected)
    */
