@@ -74,6 +74,13 @@ describe('LandingPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Publier un trajet');
   });
 
+  it('labels the trip search date as a lower bound', () => {
+    fixture.detectChanges();
+
+    const dateInput = fixture.nativeElement.querySelector<HTMLInputElement>('input[name="travelDate"]');
+    expect(dateInput?.closest('label')?.textContent).toContain('À partir de');
+  });
+
   it('marks departure and destination as required in both landing search forms', () => {
     fixture.detectChanges();
 
