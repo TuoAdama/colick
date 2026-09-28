@@ -5,7 +5,8 @@
         Trouvez une demande de colis a transporter.
       </h1>
 
-      <form class="grid gap-2 rounded-2xl border border-border bg-white p-2.5 shadow-card md:grid-cols-[1fr_1fr_1fr_240px]" (ngSubmit)="searchRequests()">
+      <form class="grid gap-2 rounded-2xl border border-border bg-white p-2.5 shadow-card md:grid-cols-[2fr_1fr_240px]" (ngSubmit)="searchRequests()">
+        <div class="relative grid gap-2 md:grid-cols-2">
         <label class="group relative flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
           <span class="material-symbols-outlined text-accent" aria-hidden="true">location_on</span>
           <span class="min-w-0 flex-1">
@@ -93,6 +94,17 @@
             </ul>
           }
         </label>
+
+        <button
+          type="button"
+          class="absolute right-3 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl border border-border bg-white text-primary shadow-sm transition hover:bg-background-primary focus:outline-none focus:ring-2 focus:ring-accent md:left-1/2 md:right-auto md:-translate-x-1/2"
+          (click)="swapRoute()"
+          aria-label="Inverser le départ et la destination"
+          data-testid="parcel-search-route-swap"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">swap_vert</span>
+        </button>
+        </div>
 
         <label class="group flex min-h-[68px] items-center gap-3 rounded-xl bg-background-primary px-4 py-3 text-left transition focus-within:bg-accent/10 hover:bg-accent/10">
           <span class="material-symbols-outlined text-primary" aria-hidden="true">event_available</span>

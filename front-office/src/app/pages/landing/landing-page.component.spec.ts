@@ -1,6 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
 import { TripService } from '../../services/trip.service';
@@ -90,6 +90,54 @@ describe('LandingPageComponent', () => {
     expect(transportFormInputs.find((input) => input.name === 'transportDeparture')?.required).toBeTrue();
     expect(transportFormInputs.find((input) => input.name === 'transportDestination')?.required).toBeTrue();
   });
+
+  it('swaps the route values and selected locations without changing the date in both modes', () => {
+    const departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' as const };
+    const destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', type: 'CITY' as const };
+    component.departure = departure;
+    component.destination = destination;
+    component.departureQuery = 'Paris, France';
+    component.destinationQuery = "Abidjan, Côte d'Ivoire";
+    component.travelDate = '2026-10-15';
+    component.departureSuggestions = [departure];
+    component.destinationSuggestions = [destination];
+    component.activeAutocomplete = 'departure';
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const sendSwapButton = host.querySelector('[data-testid="landing-route-swap"]') as HTMLButtonElement;
+    expect(sendSwapButton.getAttribute('aria-label')).toBe('Inverser le départ et la destination');
+    sendSwapButton.click();
+
+    expect(component.departure).toBe(destination);
+    expect(component.destination).toBe(departure);
+    expect(component.departureQuery).toBe("Abidjan, Côte d'Ivoire");
+    expect(component.destinationQuery).toBe('Paris, France');
+    expect(component.travelDate).toBe('2026-10-15');
+    expect(component.departureSuggestions).toEqual([]);
+    expect(component.destinationSuggestions).toEqual([]);
+    expect(component.activeAutocomplete).toBeNull();
+
+    component.selectMode('transport');
+    fixture.detectChanges();
+    expect(host.querySelector('[data-testid="landing-route-swap"]')).not.toBeNull();
+  });
+
+  it('ignores an autocomplete response started before the route is swapped', fakeAsync(() => {
+    const staleSuggestions = new Subject<{ id: number; name: string; country: string; isoCode: string; type: 'CITY' }[]>();
+    locationServiceMock.searchLocations.and.returnValue(staleSuggestions);
+    fixture.detectChanges();
+
+    component.departureQuery = 'Paris';
+    component.onDepartureInput();
+    tick(250);
+    component.destinationQuery = 'Abidjan';
+    component.swapRoute();
+    staleSuggestions.next([{ id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' }]);
+
+    expect(component.departureSuggestions).toEqual([]);
+    expect(component.isDepartureLoading).toBeFalse();
+  }));
 
   it('does not navigate when departure or destination is missing', () => {
     fixture.detectChanges();

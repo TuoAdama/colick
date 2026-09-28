@@ -15,7 +15,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, catchError, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, map, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { LocationService } from '../../../services/location.service';
 import { Location } from '../../../models/location.model';
@@ -85,20 +85,26 @@ export class AutocompleteComponent implements OnInit, OnDestroy, OnChanges {
       .pipe(
         debounceTime(300),
         distinctUntilChanged(),
-        tap(() => {
-          this.isLoading = true;
-          this.highlightedIndex = -1;
+        tap((query) => {
+          if (query === this.query) {
+            this.isLoading = true;
+            this.highlightedIndex = -1;
+          }
         }),
         switchMap((query) => {
           if (query.length < 2) {
-            return of([]);
+            return of({ query, results: [] as Location[] });
           }
           return this.locationService.searchLocations(query).pipe(
-            catchError(() => of([]))
+            catchError(() => of([])),
+            map((results) => ({ query, results }))
           );
         })
       )
-      .subscribe((results) => {
+      .subscribe(({ query, results }) => {
+        if (query !== this.query) {
+          return;
+        }
         this.suggestions = results;
         this.isLoading = false;
         this.isOpen = results.length > 0;
@@ -122,6 +128,7 @@ export class AutocompleteComponent implements OnInit, OnDestroy, OnChanges {
     this.query = nextQuery;
     this.suggestions = [];
     this.isOpen = false;
+    this.isLoading = false;
     this.hasSelected = nextQuery.length > 0;
   }
 
