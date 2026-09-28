@@ -64,7 +64,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <span class="flex min-w-0 flex-1 flex-col">
-            <span class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">DATE</span>
+            <span class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">À PARTIR DE</span>
             <input
               type="date"
               [(ngModel)]="selectedDate"
@@ -112,7 +112,7 @@
             </div>
             <label class="flex h-16 items-center gap-3 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-1 transition focus-within:ring-2 focus-within:ring-primary/20">
               <svg class="h-6 w-6 shrink-0 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              <span class="flex min-w-0 flex-1 flex-col"><span class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">DATE</span><input type="date" [(ngModel)]="selectedDate" class="w-full border-none bg-transparent p-0 text-[15px] text-primary outline-none focus:ring-0" aria-label="Date de départ minimum" /></span>
+              <span class="flex min-w-0 flex-1 flex-col"><span class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">À PARTIR DE</span><input type="date" [(ngModel)]="selectedDate" class="w-full border-none bg-transparent p-0 text-[15px] text-primary outline-none focus:ring-0" aria-label="Date de départ minimum" /></span>
             </label>
             <button type="button" class="min-h-12 w-full rounded-lg bg-accent px-6 py-3 text-sm font-bold text-white transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50" [disabled]="!isFormValid || isLoading" (click)="searchTrips()">Rechercher</button>
             @if (searchHistory.length > 0) {
