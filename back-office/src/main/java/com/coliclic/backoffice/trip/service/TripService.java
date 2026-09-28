@@ -86,7 +86,8 @@ public interface TripService {
      *
      * @param departure   departure filter (optional)
      * @param destination destination filter (optional)
-     * @param date        minimum departure date, inclusive (optional)
+     * @param date        departure date or range start, inclusive (optional)
+     * @param dateEnd     range end, inclusive; when absent, {@code date} is an exact day (optional)
      * @param sort        optional sort key: price_asc, departure_asc, rating_desc
      * @param minPrice    minimum price per kilo, inclusive (optional)
      * @param maxPrice    maximum price per kilo, inclusive (optional)
@@ -95,6 +96,17 @@ public interface TripService {
     List<TripResponse> searchTrips(String departure,
                                    String destination,
                                    LocalDate date,
+                                   String sort,
+                                   BigDecimal minPrice,
+                                   BigDecimal maxPrice);
+
+    /**
+     * Searches active trips with an optional exact day or inclusive date range.
+     */
+    List<TripResponse> searchTrips(String departure,
+                                   String destination,
+                                   LocalDate date,
+                                   LocalDate dateEnd,
                                    String sort,
                                    BigDecimal minPrice,
                                    BigDecimal maxPrice);

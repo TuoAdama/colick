@@ -16,6 +16,7 @@ public class TripAlertResponse {
     private String departure;
     private String destination;
     private LocalDate date;
+    private LocalDate dateEnd;
     private String sort;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
@@ -36,6 +37,7 @@ public class TripAlertResponse {
                 .departure(alert.getDeparture())
                 .destination(alert.getDestination())
                 .date(alert.getDate())
+                .dateEnd(alert.getDateEnd())
                 .sort(alert.getSort())
                 .minPrice(alert.getMinPrice())
                 .maxPrice(alert.getMaxPrice())

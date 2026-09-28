@@ -2,6 +2,7 @@ export interface CreateTripAlertRequest {
   departure: string;
   destination: string;
   date?: string;
+  dateEnd?: string;
   sort?: string;
   minPrice?: number | null;
   maxPrice?: number | null;
@@ -12,6 +13,7 @@ export interface TripAlert {
   departure: string;
   destination: string;
   date?: string;
+  dateEnd?: string;
   sort?: string;
   minPrice?: number | null;
   maxPrice?: number | null;

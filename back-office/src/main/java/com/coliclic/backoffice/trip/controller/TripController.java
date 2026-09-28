@@ -52,6 +52,7 @@ public class TripController {
             @RequestParam(required = false) String departure,
             @RequestParam(required = false) String destination,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateEnd,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice) {
@@ -60,7 +61,10 @@ public class TripController {
                 && (destination == null || destination.isBlank())) {
             throw new BadRequestException(localizedMessages.get("error.trip.searchCriteriaRequired"));
         }
-        return ResponseEntity.ok(tripService.searchTrips(departure, destination, date, sort, minPrice, maxPrice));
+        if (date != null && dateEnd != null && dateEnd.isBefore(date)) {
+            throw new BadRequestException("La date de fin doit être postérieure ou égale à la date de début.");
+        }
+        return ResponseEntity.ok(tripService.searchTrips(departure, destination, date, dateEnd, sort, minPrice, maxPrice));
     }
 
     /** List all active trips (public). */

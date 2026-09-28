@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -63,6 +64,7 @@ public class TripAlertServiceImpl implements TripAlertService {
                 .filter(alert -> alert.getNormalizedDeparture().equals(normalizedDeparture))
                 .filter(alert -> alert.getNormalizedDestination().equals(normalizedDestination))
                 .filter(alert -> Objects.equals(alert.getDate(), request.getDate()))
+                .filter(alert -> Objects.equals(alert.getDateEnd(), request.getDateEnd()))
                 .filter(alert -> priceEquals(alert.getMinPrice(), request.getMinPrice()))
                 .filter(alert -> priceEquals(alert.getMaxPrice(), request.getMaxPrice()))
                 .findFirst()
@@ -74,6 +76,7 @@ public class TripAlertServiceImpl implements TripAlertService {
                         .destination(destination)
                         .normalizedDestination(normalizedDestination)
                         .date(request.getDate())
+                        .dateEnd(request.getDateEnd())
                         .sort(sort)
                         .minPrice(request.getMinPrice())
                         .maxPrice(request.getMaxPrice())
@@ -137,6 +140,10 @@ public class TripAlertServiceImpl implements TripAlertService {
         if (alert.getDate() != null && trip.getDepartureTime().toLocalDate().isBefore(alert.getDate())) {
             return false;
         }
+        LocalDate effectiveDateEnd = alert.getDateEnd() != null ? alert.getDateEnd() : alert.getDate();
+        if (effectiveDateEnd != null && trip.getDepartureTime().toLocalDate().isAfter(effectiveDateEnd)) {
+            return false;
+        }
         if (alert.getMinPrice() != null && trip.getPricePerKilo().compareTo(alert.getMinPrice()) < 0) {
             return false;
         }
@@ -156,6 +163,9 @@ public class TripAlertServiceImpl implements TripAlertService {
                 .queryParam("sort", alert.getSort() != null ? alert.getSort() : "price_asc");
         if (alert.getDate() != null) {
             builder.queryParam("date", alert.getDate());
+        }
+        if (alert.getDateEnd() != null) {
+            builder.queryParam("dateEnd", alert.getDateEnd());
         }
         if (alert.getMinPrice() != null) {
             builder.queryParam("minPrice", alert.getMinPrice());

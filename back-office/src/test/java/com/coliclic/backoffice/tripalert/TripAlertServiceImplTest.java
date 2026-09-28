@@ -116,6 +116,19 @@ class TripAlertServiceImplTest {
     }
 
     @Test
+    void createAlert_shouldPersistTheEndOfADateRange() {
+        CreateTripAlertRequest request = request("Paris", "Abidjan");
+        request.setDateEnd(request.getDate().plusDays(3));
+        when(tripAlertRepository.findByUser(sender)).thenReturn(List.of());
+        when(tripAlertRepository.save(any(TripAlert.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        TripAlertResponse response = service.createAlert(request, sender);
+
+        assertThat(response.getDateEnd()).isEqualTo(request.getDateEnd());
+        verify(tripAlertRepository).save(argThat(alert -> request.getDateEnd().equals(alert.getDateEnd())));
+    }
+
+    @Test
     void deleteAlert_shouldDeleteOwnedAlertAndNotifications() {
         TripAlert alert = alert(5L, sender, "Paris", "Abidjan");
         when(tripAlertRepository.findById(5L)).thenReturn(Optional.of(alert));
@@ -148,6 +161,7 @@ class TripAlertServiceImplTest {
     void notifyMatchingAlerts_shouldSendEmailAndRecordNotification() {
         TripAlert alert = alert(5L, sender, "Paris", "Abidjan");
         Trip trip = trip("Paris 10", "Abidjan", traveler);
+        alert.setDate(trip.getDepartureTime().toLocalDate());
         when(tripAlertRepository.findAll()).thenReturn(List.of(alert));
         when(notificationRepository.existsByAlertAndTrip(alert, trip)).thenReturn(false);
         when(locationRepository.findNamesByTypeAndCountryContaining(eq(LocationType.CITY), anyString()))
@@ -168,11 +182,32 @@ class TripAlertServiceImplTest {
     }
 
     @Test
+    void notifyMatchingAlerts_shouldTreatASingleDateAsAnExactDay() {
+        TripAlert alert = alert(5L, sender, "Paris", "Abidjan");
+        LocalDate alertDate = LocalDate.now().plusDays(1);
+        alert.setDate(alertDate);
+        alert.setDateEnd(null);
+        Trip trip = trip("Paris", "Abidjan", traveler);
+        trip.setDepartureTime(alertDate.plusDays(1).atTime(10, 0));
+        when(tripAlertRepository.findAll()).thenReturn(List.of(alert));
+        when(notificationRepository.existsByAlertAndTrip(alert, trip)).thenReturn(false);
+
+        service.notifyMatchingAlerts(trip);
+
+        verify(emailService, never()).sendTripAlertMatchEmail(anyString(), anyString(), anyString(), anyString(), any(), any(), anyString());
+        verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
     void notifyMatchingAlerts_shouldSkipNonMatchingOwnAndAlreadyNotifiedAlerts() {
         TripAlert ownAlert = alert(1L, traveler, "Paris", "Abidjan");
         TripAlert notifiedAlert = alert(2L, sender, "Paris", "Abidjan");
         TripAlert nonMatchingAlert = alert(3L, sender, "Lyon", "Dakar");
         Trip trip = trip("Paris", "Abidjan", traveler);
+        LocalDate tripDate = trip.getDepartureTime().toLocalDate();
+        ownAlert.setDate(tripDate);
+        notifiedAlert.setDate(tripDate);
+        nonMatchingAlert.setDate(tripDate);
         when(tripAlertRepository.findAll()).thenReturn(List.of(ownAlert, notifiedAlert, nonMatchingAlert));
         when(notificationRepository.existsByAlertAndTrip(notifiedAlert, trip)).thenReturn(true);
         when(notificationRepository.existsByAlertAndTrip(nonMatchingAlert, trip)).thenReturn(false);

@@ -3,7 +3,7 @@
     @if (isFormValid && hasSearched && !isMobileSearchEditing && !isSearchModalOpen) {
       <button type="button" class="mb-4 flex w-full items-center gap-3 rounded-2xl border border-border bg-white p-3 text-left md:hidden" (click)="openSearchModal('departure')" aria-label="Modifier la recherche" data-testid="mobile-search-summary">
         <span class="rounded-xl bg-accent/10 p-2 text-accent" aria-hidden="true">⌕</span>
-        <span class="min-w-0 flex-1"><span class="block break-words text-sm font-bold text-primary">{{ departure?.name }} <span class="text-accent">→</span> {{ destination?.name }}</span><span class="text-xs text-text-secondary">{{ selectedDate ? formatDate(selectedDate) : 'Toutes les dates' }}</span></span>
+        <span class="min-w-0 flex-1"><span class="block break-words text-sm font-bold text-primary">{{ departure?.name }} <span class="text-accent">→</span> {{ destination?.name }}</span><span class="text-xs text-text-secondary">{{ dateSummary() }}</span></span>
         <span class="rounded-lg border border-border px-2 py-1 text-primary" aria-hidden="true">✎</span>
       </button>
     }
@@ -59,7 +59,13 @@
           </button>
         </div>
 
-        <label class="flex min-h-[76px] w-full flex-1 items-center gap-3 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-3 transition focus-within:ring-2 focus-within:ring-primary/20">
+        <div class="w-full flex-1 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-3">
+          <div class="mb-2 flex gap-3 text-xs font-semibold text-text-secondary" role="radiogroup" aria-label="Mode de date">
+            <label><input type="radio" name="desktop-date-mode" [checked]="dateMode === 'single'" (change)="onDateModeChange('single')" /> Une date</label>
+            <label><input type="radio" name="desktop-date-mode" [checked]="dateMode === 'range'" (change)="onDateModeChange('range')" /> Plage</label>
+            <label><input type="radio" name="desktop-date-mode" [checked]="dateMode === 'flexible'" (change)="onDateModeChange('flexible')" /> Flexible ±3 jours</label>
+          </div>
+          <label class="flex min-h-[48px] items-center gap-3 transition focus-within:ring-2 focus-within:ring-primary/20">
           <svg class="h-6 w-6 shrink-0 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -72,12 +78,17 @@
               aria-label="Date de départ minimum"
             />
           </span>
-        </label>
+          </label>
+          @if (dateMode === 'range') {
+            <label class="mt-2 flex min-h-[48px] items-center gap-3"><span class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">FIN</span><input type="date" [(ngModel)]="selectedDateEnd" [min]="selectedDate" class="w-full border-none bg-transparent p-0 text-[15px] text-primary outline-none" aria-label="Date de fin" /></label>
+          }
+          @if (!isDateRangeValid) { <p class="mt-1 text-xs text-error" role="alert">La date de fin doit être postérieure ou égale à la date de début.</p> }
+        </div>
 
         <button
           type="button"
           class="flex min-h-[64px] w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-accent px-8 py-4 text-sm font-bold text-white transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
-          [disabled]="!isFormValid || isLoading"
+          [disabled]="!isFormValid || isLoading || !isDateRangeValid"
           (click)="searchTrips()"
         >
           @if (isLoading) {
@@ -110,17 +121,26 @@
               <div class="search-modal-destination"><app-autocomplete label="DESTINATION" placeholder="Où allez-vous ?" [initialQuery]="destinationQuery" variant="search" [compact]="true" icon="M3 11l18-8-8 18-2-8-8-2z" (selected)="onDestinationSelected($event)" (cleared)="destination = null; destinationQuery = ''"></app-autocomplete></div>
               <button type="button" class="absolute right-3 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl border border-border bg-white text-primary shadow-sm transition hover:bg-background-primary focus:outline-none focus:ring-2 focus:ring-accent md:left-1/2 md:right-auto md:-translate-x-1/2" (click)="swapRoute()" aria-label="Inverser le départ et la destination" data-testid="search-modal-route-swap"><span class="material-symbols-outlined" aria-hidden="true">swap_vert</span></button>
             </div>
-            <label class="flex h-16 items-center gap-3 rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-1 transition focus-within:ring-2 focus-within:ring-primary/20">
+            <div class="rounded-lg border border-[#E8E8EC] bg-[#FAFAFA] px-4 py-3">
+              <div class="mb-2 flex gap-3 text-xs font-semibold text-text-secondary" role="radiogroup" aria-label="Mode de date">
+                <button type="button" role="radio" [attr.aria-checked]="dateMode === 'single'" (click)="onDateModeChange('single')">Une date</button>
+                <button type="button" role="radio" [attr.aria-checked]="dateMode === 'range'" (click)="onDateModeChange('range')">Plage</button>
+                <button type="button" role="radio" [attr.aria-checked]="dateMode === 'flexible'" (click)="onDateModeChange('flexible')">Flexible ±3 jours</button>
+              </div>
+              <label class="flex h-16 items-center gap-3 transition focus-within:ring-2 focus-within:ring-primary/20">
               <svg class="h-6 w-6 shrink-0 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               <span class="flex min-w-0 flex-1 flex-col"><span class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">DATE</span><input type="date" [(ngModel)]="selectedDate" class="w-full border-none bg-transparent p-0 text-[15px] text-primary outline-none focus:ring-0" aria-label="Date de départ minimum" /></span>
-            </label>
-            <button type="button" class="min-h-12 w-full rounded-lg bg-accent px-6 py-3 text-sm font-bold text-white transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50" [disabled]="!isFormValid || isLoading" (click)="searchTrips()">Rechercher</button>
+              </label>
+              @if (dateMode === 'range') { <label class="mt-2 flex h-12 items-center gap-3"><span class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-secondary">FIN</span><input type="date" [(ngModel)]="selectedDateEnd" [min]="selectedDate" class="w-full border-none bg-transparent p-0 text-[15px] text-primary outline-none" aria-label="Date de fin" /></label> }
+              @if (!isDateRangeValid) { <p class="mt-1 text-xs text-error" role="alert">La date de fin doit être postérieure ou égale à la date de début.</p> }
+            </div>
+            <button type="button" class="min-h-12 w-full rounded-lg bg-accent px-6 py-3 text-sm font-bold text-white transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50" [disabled]="!isFormValid || isLoading || !isDateRangeValid" (click)="searchTrips()">Rechercher</button>
             @if (searchHistory.length > 0) {
               <section class="border-t border-[#E8E8EC] pt-5" aria-labelledby="search-history-title">
                 <div class="mb-3 flex items-center justify-between gap-3"><h3 id="search-history-title" class="text-base font-bold text-primary">Recherches récentes</h3><button type="button" class="text-sm font-semibold text-text-secondary underline" aria-label="Effacer l’historique des recherches" (click)="clearSearchHistory()">Effacer</button></div>
                 <ul class="flex flex-col gap-2">
                   @for (entry of searchHistory; track entry.createdAt) {
-                    <li><button type="button" class="flex min-h-11 w-full items-center justify-between rounded-lg border border-[#E8E8EC] px-4 py-3 text-left hover:border-primary/30 hover:bg-[#F8FAFB]" (click)="selectSearchHistory(entry)" [attr.aria-label]="'Relancer la recherche de ' + entry.criteria.departure + ' vers ' + entry.criteria.destination"><span class="font-semibold text-primary">{{ entry.criteria.departure }} → {{ entry.criteria.destination }}</span><span class="text-xs text-text-secondary">{{ entry.criteria.date ? formatDate(entry.criteria.date) : 'Toutes les dates' }}</span></button></li>
+                    <li><button type="button" class="flex min-h-11 w-full items-center justify-between rounded-lg border border-[#E8E8EC] px-4 py-3 text-left hover:border-primary/30 hover:bg-[#F8FAFB]" (click)="selectSearchHistory(entry)" [attr.aria-label]="'Relancer la recherche de ' + entry.criteria.departure + ' vers ' + entry.criteria.destination"><span class="font-semibold text-primary">{{ entry.criteria.departure }} → {{ entry.criteria.destination }}</span><span class="text-xs text-text-secondary">{{ dateSummary(entry.criteria.date, entry.criteria.dateEnd, entry.criteria.flexible) }}</span></button></li>
                   }
                 </ul>
               </section>

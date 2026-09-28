@@ -25,6 +25,7 @@ describe('TripService', () => {
       departure: 'Paris',
       destination: 'Abidjan',
       date: '2026-06-14',
+      dateEnd: '2026-06-18',
       sort: 'price_asc',
       minPrice: 8,
       maxPrice: 15,
@@ -39,6 +40,7 @@ describe('TripService', () => {
       && request.params.get('departure') === 'Paris'
       && request.params.get('destination') === 'Abidjan'
       && request.params.get('date') === '2026-06-14'
+      && request.params.get('dateEnd') === '2026-06-18'
       && request.params.get('sort') === 'price_asc'
       && request.params.get('minPrice') === '8'
       && request.params.get('maxPrice') === '15'
