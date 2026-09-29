@@ -138,6 +138,11 @@ describe('DashboardPageComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('does not render the help card', () => {
+    expect(fixture.nativeElement.textContent).not.toContain("Besoin d'aide ?");
+    expect(fixture.nativeElement.textContent).not.toContain('Consultez notre FAQ');
+  });
+
   it('loads sent bookings on init', () => {
     expect(tripServiceMock.getMyBookings).toHaveBeenCalled();
     expect(component.myBookings).toEqual(mockSentBookings);
