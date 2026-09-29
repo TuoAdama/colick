@@ -142,11 +142,12 @@ describe('HeaderComponent', () => {
     expect(mobileMenu?.textContent).not.toContain("S'inscrire");
     expect(Array.from(mobileMenu?.querySelectorAll('a') ?? []).map((link) => link.textContent?.trim())).toEqual([
       'Trouver un trajet',
-      'Comment ca marche',
       'Nous contacter',
+      'Comment ca marche',
       'Connexion',
       'Publier un trajet',
     ]);
+    expect(mobileMenu?.textContent).not.toContain('Mes réservations');
   });
 
   it('keeps the primary authenticated destinations in the hamburger menu', () => {
@@ -161,13 +162,26 @@ describe('HeaderComponent', () => {
     const links = destinations.map((link) => ({ label: link.textContent?.trim(), href: link.getAttribute('href') }));
 
     expect(links).toContain({ label: 'Trouver un trajet', href: '/search' });
-    expect(links).toContain({ label: 'Mes voyages', href: '/trips' });
+    expect(links).toContain({ label: 'Trajets publiés', href: '/trips' });
     expect(links).toContain({ label: 'Mes demandes envoyées', href: '/sent-bookings' });
     expect(links).toContain({ label: 'Mon profil', href: '/settings' });
     expect(links).toContain({ label: 'Messages', href: '/messages' });
+    expect(links).toContain({ label: 'Nous contacter', href: '/contact' });
     expect(links.filter(({ label }) => label === 'Mes demandes envoyées')).toHaveSize(1);
     expect(links.filter(({ label }) => label === 'Mon profil')).toHaveSize(1);
     expect(links.filter(({ label }) => label === 'Messages')).toHaveSize(1);
+    expect(mobileMenu?.textContent).not.toContain('Mes réservations');
+    expect(Array.from(mobileMenu?.querySelectorAll('ul > li') ?? []).map((item) => item.textContent?.trim())).toEqual([
+      'Trouver un trajet',
+      'Trajets publiés',
+      'Mon profil',
+      'Mes demandes envoyées',
+      'Messages',
+      'Nous contacter',
+      'Comment ca marche',
+      'Déconnexion',
+      'Publier un trajet',
+    ]);
   });
 
   it('keeps the mobile menu available through the tablet breakpoint', () => {
