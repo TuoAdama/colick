@@ -198,15 +198,6 @@
         </li>
         <li>
           <a
-            routerLink="/comment-ca-marche"
-            class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-background-primary transition-colors duration-200 text-sm"
-            (click)="closeMenus()"
-          >
-            Comment ca marche
-          </a>
-        </li>
-        <li>
-          <a
             routerLink="/contact"
             class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-background-primary transition-colors duration-200 text-sm"
             (click)="closeMenus()"
@@ -222,7 +213,7 @@
               class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
               (click)="closeMenus()"
             >
-              Mes voyages
+              Trajets publiés
             </a>
           </li>
           <li>
@@ -232,16 +223,6 @@
               (click)="closeMenus()"
             >
               Mon profil
-            </a>
-          </li>
-          <li>
-            <a
-              [routerLink]="['/dashboard']"
-              [queryParams]="{ tab: 'received' }"
-              class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
-              (click)="closeMenus()"
-            >
-              Mes réservations
             </a>
           </li>
           <li>
@@ -263,6 +244,15 @@
             </a>
           </li>
           <li>
+            <a
+              routerLink="/comment-ca-marche"
+              class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-background-primary transition-colors duration-200 text-sm"
+              (click)="closeMenus()"
+            >
+              Comment ca marche
+            </a>
+          </li>
+          <li>
             <button
               (click)="logout()"
               type="button"
@@ -272,6 +262,15 @@
             </button>
           </li>
         } @else {
+          <li>
+            <a
+              routerLink="/comment-ca-marche"
+              class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-background-primary transition-colors duration-200 text-sm"
+              (click)="closeMenus()"
+            >
+              Comment ca marche
+            </a>
+          </li>
           <li>
             <a
               routerLink="/login"
