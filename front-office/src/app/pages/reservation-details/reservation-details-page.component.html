@@ -28,9 +28,14 @@
               <div class="rounded-2xl bg-primary/10 p-3 text-primary">
                 <span class="material-symbols-outlined block text-[20px] leading-none" aria-hidden="true">directions_transit</span>
               </div>
-              <div>
-                <h1 class="text-base font-bold text-text-primary">
-                  {{ trip.departureAddress }} → {{ trip.destination }}
+              <div class="min-w-0">
+                <h1 class="truncate text-base font-bold text-text-primary">
+                  <span class="sm:hidden" data-testid="mobile-trip-route">
+                    {{ cityName(trip.departureAddress) }} → {{ cityName(trip.destination) }}
+                  </span>
+                  <span class="hidden sm:inline" data-testid="desktop-trip-route">
+                    {{ trip.departureAddress }} → {{ trip.destination }}
+                  </span>
                 </h1>
                 <p class="text-sm text-text-secondary">
                   {{ trip.departureTime | date:'dd/MM • HH:mm' }}
@@ -131,7 +136,7 @@
 
       <section class="mb-6">
         <div class="mb-4">
-          <h2 class="text-[1.625rem] font-bold leading-[1.15] tracking-[-0.02em] text-text-primary sm:text-[2rem] sm:leading-tight">Demandes en cours</h2>
+          <h2 class="text-xl font-bold leading-[1.15] tracking-[-0.02em] text-text-primary sm:text-[2rem] sm:leading-tight">Demandes en cours</h2>
         </div>
 
         <div class="w-full max-w-md rounded-2xl bg-background-primary p-1">
@@ -273,7 +278,7 @@
     </div>
   </div>
 
-  <div class="fixed bottom-20 left-0 right-0 z-40 border-t border-border bg-background-secondary/90 p-2 backdrop-blur-md md:bottom-0 md:hidden">
+  <div class="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background-secondary/90 p-2 backdrop-blur-md md:hidden">
     <div class="flex gap-2">
       <button
         type="button"

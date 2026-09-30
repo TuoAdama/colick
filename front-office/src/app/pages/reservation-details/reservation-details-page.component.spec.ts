@@ -259,14 +259,50 @@ describe('ReservationDetailsPageComponent', () => {
     expect(shareButton?.textContent).toContain("Partager l'annonce");
   });
 
-  it('positions fixed mobile trip actions above the bottom navigation', () => {
+  it('anchors fixed mobile trip actions to the bottom of the viewport', () => {
     createComponent();
 
     const mobileActions = Array.from(
       fixture.nativeElement.querySelectorAll('div.fixed') as NodeListOf<HTMLElement>
     ).find((element) => element.classList.contains('md:hidden'));
 
-    expect(mobileActions?.classList.contains('bottom-20')).toBeTrue();
+    expect(mobileActions?.classList.contains('bottom-0')).toBeTrue();
+    expect(mobileActions?.classList.contains('bottom-20')).toBeFalse();
+  });
+
+  it('renders city-only route labels on mobile and full route labels from small screens', () => {
+    createComponent();
+
+    const mobileRoute = fixture.nativeElement.querySelector(
+      '[data-testid="mobile-trip-route"]'
+    ) as HTMLElement | null;
+    const desktopRoute = fixture.nativeElement.querySelector(
+      '[data-testid="desktop-trip-route"]'
+    ) as HTMLElement | null;
+
+    expect(mobileRoute?.textContent?.trim()).toBe('Paris → Abidjan');
+    expect(mobileRoute?.classList.contains('sm:hidden')).toBeTrue();
+    expect(desktopRoute?.textContent?.trim()).toBe("Paris, France → Abidjan, Côte d'Ivoire");
+    expect(desktopRoute?.classList.contains('sm:inline')).toBeTrue();
+  });
+
+  it('keeps locations without a country unchanged in the mobile route label', () => {
+    createComponent();
+
+    expect(component.cityName('Nantes')).toBe('Nantes');
+    expect(component.cityName(' Abidjan ')).toBe('Abidjan');
+  });
+
+  it('uses the compact mobile heading size and restores the desktop heading size', () => {
+    createComponent();
+
+    const headings = fixture.nativeElement.querySelectorAll('h2') as NodeListOf<HTMLHeadingElement>;
+    const heading = Array.from(headings).find(
+      (element) => element.textContent?.trim() === 'Demandes en cours'
+    );
+
+    expect(heading?.classList.contains('text-xl')).toBeTrue();
+    expect(heading?.classList.contains('sm:text-[2rem]')).toBeTrue();
   });
 
   it('does not render the share announcement button for inactive trips', () => {

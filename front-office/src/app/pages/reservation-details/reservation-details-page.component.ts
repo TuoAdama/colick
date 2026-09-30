@@ -85,6 +85,11 @@ export class ReservationDetailsPageComponent implements OnInit {
     this.tripSummaryExpanded = !this.tripSummaryExpanded;
   }
 
+  cityName(location: string): string {
+    const normalizedLocation = location.trim();
+    return normalizedLocation.split(',')[0]?.trim() || normalizedLocation;
+  }
+
   tripStatusLabel(status: Trip['status']): string {
     return ({
       ACTIVE: 'Actif',
