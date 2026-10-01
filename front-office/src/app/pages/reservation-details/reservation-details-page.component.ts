@@ -96,7 +96,7 @@ export class ReservationDetailsPageComponent implements OnInit {
       .map((segment) => segment.trim())
       .filter(Boolean);
 
-    return segments.length > 1 ? segments.at(-1) ?? '' : '';
+    return segments.length > 1 ? segments.slice(1).join(', ') : '';
   }
 
   tripStatusLabel(status: Trip['status']): string {

@@ -508,6 +508,14 @@ describe('ReservationDetailsPageComponent', () => {
     expect(metadata?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Côte d\'Ivoire • Départ le 14/07 • 08:00');
     expect(editLink?.getAttribute('href')).toContain('/propose/12');
   });
+
+  it('preserves country names that contain commas', () => {
+    createComponent();
+
+    expect(component.countryName('Kinshasa, Congo, Democratic Republic of the')).toBe(
+      'Congo, Democratic Republic of the'
+    );
+  });
 });
 
 function buildTrip(): Trip {
