@@ -108,10 +108,13 @@ describe('DashboardShellComponent', () => {
   it('focuses the close button and restores the menu trigger when the mobile menu closes', async () => {
     fixture.detectChanges();
     const menuTrigger = fixture.nativeElement.querySelector('[aria-label="Ouvrir le menu"]') as HTMLButtonElement;
+    menuTrigger.classList.remove('md:hidden');
     menuTrigger.focus();
 
     fixture.componentInstance.openMobileMenu();
     fixture.detectChanges();
+    const mobileMenu = fixture.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
+    mobileMenu.classList.remove('md:hidden');
     await fixture.whenStable();
 
     const closeButton = fixture.nativeElement.querySelector('[data-testid="mobile-menu-close"]') as HTMLButtonElement;
