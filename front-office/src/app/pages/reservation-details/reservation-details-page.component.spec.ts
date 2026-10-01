@@ -462,10 +462,51 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.bookings[0].deliveredAt).toBe('2025-07-15T10:00:00');
   });
 
-  it('displays the trip business reference in the trip summary', () => {
+  it('expands the trip card summary to reveal its details', () => {
     createComponent();
 
-    expect(fixture.nativeElement.textContent).toContain('TRP-2026-000012');
+    const summaryButton = fixture.nativeElement.querySelector(
+      '[data-testid="trip-information-card"] button'
+    ) as HTMLButtonElement;
+
+    expect(summaryButton.getAttribute('aria-expanded')).toBe('false');
+
+    summaryButton.click();
+    fixture.detectChanges();
+
+    expect(summaryButton.getAttribute('aria-expanded')).toBe('true');
+    expect(fixture.nativeElement.textContent).toContain('Poids disponible');
+  });
+
+  it('renders the compact trip information card with navigation and edit affordances', () => {
+    createComponent();
+
+    const backLink = fixture.nativeElement.querySelector(
+      '[data-testid="back-to-trips"]'
+    ) as HTMLAnchorElement | null;
+    const reference = fixture.nativeElement.querySelector(
+      '[data-testid="trip-reference"]'
+    ) as HTMLElement | null;
+    const tripCard = fixture.nativeElement.querySelector(
+      '[data-testid="trip-information-card"]'
+    ) as HTMLElement | null;
+    const route = fixture.nativeElement.querySelector(
+      '[data-testid="mobile-trip-route"]'
+    ) as HTMLElement | null;
+    const metadata = fixture.nativeElement.querySelector(
+      '[data-testid="trip-information-metadata"]'
+    ) as HTMLElement | null;
+    const editLink = fixture.nativeElement.querySelector(
+      '[data-testid="edit-trip-link"]'
+    ) as HTMLAnchorElement | null;
+
+    expect(backLink?.textContent?.trim()).toContain('Tous mes trajets');
+    expect(backLink?.getAttribute('href')).toBe('/trips');
+    expect(reference?.textContent?.trim()).toBe('TRP-2026-000012');
+    expect(tripCard).not.toBeNull();
+    expect(route?.textContent?.trim()).toBe('Paris → Abidjan');
+    expect(metadata?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Côte d\'Ivoire • Départ le 14/07 • 08:00');
+    expect(editLink?.getAttribute('href')).toContain('/propose/12');
   });
 });
 
