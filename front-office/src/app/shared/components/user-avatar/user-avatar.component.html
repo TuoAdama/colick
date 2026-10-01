@@ -1,0 +1,19 @@
+@if (displayPhotoUrl) {
+  <img
+    [src]="displayPhotoUrl"
+    [alt]="'Photo de profil de ' + name"
+    [class]="sizeClasses + ' rounded-full object-cover border-2 border-bg-secondary bg-bg-secondary shadow-sm shrink-0'"
+    loading="lazy"
+    decoding="async"
+    (error)="onImageError()"
+  />
+} @else {
+  <span
+    class="inline-flex items-center justify-center rounded-full border-2 border-bg-secondary bg-primary text-white font-semibold uppercase shadow-sm shrink-0 select-none"
+    [class]="sizeClasses + ' ' + textClasses"
+    aria-hidden="true"
+    data-testid="user-avatar-fallback"
+  >
+    {{ initials }}
+  </span>
+}

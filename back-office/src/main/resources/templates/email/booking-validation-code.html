@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="#{email.subject.bookingValidationCode}">Recipient validation code - Coliclic</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:Poppins,Arial,sans-serif;color:#111827;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:24px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;">
+                <tr>
+                    <td style="background:#023047;padding:20px 24px;color:#ffffff;font-size:20px;font-weight:700;" th:text="#{email.common.brand}">Coliclic</td>
+                </tr>
+                <tr>
+                    <td style="padding:28px 24px;">
+                        <p style="margin:0 0 12px 0;font-size:16px;" th:text="#{email.common.genericGreeting}">Hello,</p>
+                        <p style="margin:0 0 20px 0;line-height:1.6;" th:text="#{email.bookingValidationCode.intro(${packageTitle}, ${departureAddress}, ${destination})}">Your parcel is now validated.</p>
+                        <p style="margin:0 0 16px 0;line-height:1.6;" th:text="#{email.bookingValidationCode.instruction}">Share this code with the traveler upon arrival:</p>
+                        <div style="margin:0 0 20px 0;padding:16px;border-radius:14px;background:#F9FAFB;border:1px solid #e5e7eb;text-align:center;">
+                            <p style="margin:0 0 12px 0;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#6B7280;" th:text="#{email.bookingValidationCode.codeLabel}">Validation code</p>
+                            <p style="margin:0;font-size:32px;font-weight:700;letter-spacing:0.2em;color:#023047;" th:text="${validationCode}">123456</p>
+                        </div>
+                        <div style="text-align:center;margin:0 0 20px 0;">
+                            <img th:src="${qrCodeDataUri}" th:alt="#{email.bookingValidationCode.qrAlt}" width="220" height="220" style="display:inline-block;border-radius:16px;border:1px solid #e5e7eb;background:#ffffff;padding:12px;" alt="Coliclic validation QR code" />
+                        </div>
+                        <p style="margin:0;line-height:1.6;color:#6B7280;" th:text="#{email.bookingValidationCode.note}">Keep this email until the parcel is handed over.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#F9FAFB;padding:16px 24px;font-size:12px;color:#6B7280;">
+                        <span th:text="#{email.common.help}">Need help?</span>
+                        <span style="color:#219ebc;" th:text="${supportEmail}">support@coliclic.app</span>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
