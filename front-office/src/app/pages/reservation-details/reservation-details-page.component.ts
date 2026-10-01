@@ -90,6 +90,15 @@ export class ReservationDetailsPageComponent implements OnInit {
     return normalizedLocation.split(',')[0]?.trim() || normalizedLocation;
   }
 
+  countryName(location: string): string {
+    const segments = location
+      .split(',')
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+
+    return segments.length > 1 ? segments.at(-1) ?? '' : '';
+  }
+
   tripStatusLabel(status: Trip['status']): string {
     return ({
       ACTIVE: 'Actif',
