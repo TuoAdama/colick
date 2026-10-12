@@ -236,7 +236,49 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.usedWeightPercentage()).toBe(35);
   });
 
-  it('renders mobile trip actions in the summary card', () => {
+  it('renders the mobile indicators between the trip card and pending requests when the trip summary is collapsed', () => {
+    tripServiceMock.getTripById.and.returnValue(of({ ...buildTrip(), maxWeight: 50 }));
+    tripServiceMock.getTripBookings.and.returnValue(of([
+      buildBooking({ id: 1, status: 'PENDING', weight: 4 }),
+      buildBooking({ id: 2, status: 'ACCEPTED', weight: 6 }),
+      buildBooking({ id: 3, status: 'REJECTED', weight: 5 }),
+    ]));
+
+    createComponent();
+
+    const tripCard = fixture.nativeElement.querySelector('[data-testid="trip-information-card"]') as HTMLElement;
+    const indicators = fixture.nativeElement.querySelector('[data-testid="mobile-trip-indicators"]') as HTMLElement;
+    const heading = Array.from(fixture.nativeElement.querySelectorAll('h2') as NodeListOf<HTMLElement>)
+      .find((element) => element.textContent?.trim() === 'Demandes en cours')!;
+    const loadCard = indicators.querySelector('[data-testid="mobile-load-card"]') as HTMLElement;
+    const potentialCard = indicators.querySelector('[data-testid="mobile-potential-card"]') as HTMLElement;
+
+    expect(component.tripSummaryExpanded).toBeFalse();
+    expect(tripCard.compareDocumentPosition(indicators) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(indicators.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(indicators.classList.contains('md:hidden')).toBeTrue();
+    expect(loadCard.textContent).toContain('20%');
+    expect(loadCard.textContent).toContain('10 kg');
+    expect(loadCard.textContent).toContain('max 50 kg');
+    expect(potentialCard.textContent).toContain('150 €');
+    expect(potentialCard.textContent).toContain('40 kg restants');
+  });
+
+  it('bounds the load gauge and remaining weight for zero and exceeded capacity', () => {
+    createComponent();
+
+    component.trip = { ...buildTrip(), maxWeight: 0 };
+    expect(component.usedWeightPercentage()).toBe(0);
+    expect(component.displayedWeightPercentage()).toBe(0);
+    expect(component.remainingWeight()).toBe(0);
+
+    component.trip = { ...buildTrip(), maxWeight: 1 };
+    expect(component.usedWeightPercentage()).toBe(100);
+    expect(component.displayedWeightPercentage()).toBe(100);
+    expect(component.remainingWeight()).toBe(0);
+  });
+
+  it('keeps the mobile trip actions in the summary card and shares from the new banner', () => {
     createComponent();
 
     component.toggleTripSummary();
@@ -256,7 +298,12 @@ describe('ReservationDetailsPageComponent', () => {
     expect(editLink?.getAttribute('href')).toContain('/propose/12');
     expect(deleteButton).not.toBeNull();
     expect(shareButton).not.toBeNull();
-    expect(shareButton?.textContent).toContain("Partager l'annonce");
+    expect(shareButton?.closest('[data-testid="mobile-trip-indicators"]')).not.toBeNull();
+    expect(shareButton?.textContent).toContain('Story & WhatsApp');
+
+    const share = spyOn(component, 'shareTripAnnouncement');
+    shareButton!.click();
+    expect(share).toHaveBeenCalledTimes(1);
   });
 
   it('anchors fixed mobile trip actions to the bottom of the viewport', () => {
@@ -325,14 +372,12 @@ describe('ReservationDetailsPageComponent', () => {
 
     createComponent();
 
-    component.toggleTripSummary();
-    fixture.detectChanges();
-
     const shareButton = fixture.nativeElement.querySelector(
       '[data-testid="share-trip-announcement-button"]'
     ) as HTMLButtonElement | null;
 
     expect(shareButton).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="mobile-trip-indicators"]')).not.toBeNull();
   });
 
   it('generates the share card and uses the native share fallback service', async () => {

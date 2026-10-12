@@ -176,7 +176,15 @@ export class ReservationDetailsPageComponent implements OnInit {
       return 0;
     }
 
-    return Math.min((this.usedWeight() / this.trip.maxWeight) * 100, 100);
+    return Math.min(Math.max((this.usedWeight() / this.trip.maxWeight) * 100, 0), 100);
+  }
+
+  displayedWeightPercentage(): number {
+    return Math.round(this.usedWeightPercentage());
+  }
+
+  potentialAmount(): number {
+    return this.trip ? this.usedWeight() * this.trip.pricePerKilo : 0;
   }
 
   editTrip(): void {
