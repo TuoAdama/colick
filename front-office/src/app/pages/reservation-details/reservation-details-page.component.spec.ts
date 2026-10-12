@@ -278,17 +278,30 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.remainingWeight()).toBe(0);
   });
 
-  it('keeps the mobile trip actions in the summary card and shares from the new banner', () => {
+  it('opens and closes the mobile trip actions with the pencil while keeping the share banner visible', () => {
     createComponent();
 
-    component.toggleTripSummary();
+    const pencil = fixture.nativeElement.querySelector(
+      '[data-testid="mobile-trip-actions-toggle"]'
+    ) as HTMLButtonElement;
+
+    expect(pencil.classList.contains('md:hidden')).toBeTrue();
+    expect(pencil.getAttribute('aria-expanded')).toBe('false');
+    expect(fixture.nativeElement.querySelector('#trip-summary-panel')).toBeNull();
+
+    pencil.click();
     fixture.detectChanges();
 
+    expect(pencil.getAttribute('aria-expanded')).toBe('true');
+    expect(pencil.getAttribute('aria-controls')).toBe('trip-summary-panel');
+    expect(fixture.nativeElement.querySelector('#trip-summary-panel')).not.toBeNull();
+    expect(router.navigate).not.toHaveBeenCalled();
+
     const editLink = fixture.nativeElement.querySelector(
-      'a[aria-label="Modifier le trajet"]'
+      '#trip-summary-panel a[aria-label="Modifier le trajet"]'
     ) as HTMLAnchorElement | null;
     const deleteButton = fixture.nativeElement.querySelector(
-      'button[aria-label="Supprimer le trajet"]'
+      '#trip-summary-panel button[aria-label="Supprimer le trajet"]'
     ) as HTMLButtonElement | null;
     const shareButton = fixture.nativeElement.querySelector(
       '[data-testid="share-trip-announcement-button"]'
@@ -304,6 +317,13 @@ describe('ReservationDetailsPageComponent', () => {
     const share = spyOn(component, 'shareTripAnnouncement');
     shareButton!.click();
     expect(share).toHaveBeenCalledTimes(1);
+
+    pencil.click();
+    fixture.detectChanges();
+
+    expect(pencil.getAttribute('aria-expanded')).toBe('false');
+    expect(fixture.nativeElement.querySelector('#trip-summary-panel')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="share-trip-announcement-button"]')).not.toBeNull();
   });
 
   it('anchors fixed mobile trip actions to the bottom of the viewport', () => {
@@ -405,7 +425,10 @@ describe('ReservationDetailsPageComponent', () => {
   it('opens the cancel trip modal from the mobile delete button', () => {
     createComponent();
 
-    component.toggleTripSummary();
+    const pencil = fixture.nativeElement.querySelector(
+      '[data-testid="mobile-trip-actions-toggle"]'
+    ) as HTMLButtonElement;
+    pencil.click();
     fixture.detectChanges();
 
     const deleteButton = fixture.nativeElement.querySelector(
@@ -567,6 +590,8 @@ describe('ReservationDetailsPageComponent', () => {
     expect(route?.textContent?.trim()).toBe('Paris → Abidjan');
     expect(metadata?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Côte d\'Ivoire • Départ le 14/07 • 08:00');
     expect(editLink?.getAttribute('href')).toContain('/propose/12');
+    expect(editLink?.classList.contains('hidden')).toBeTrue();
+    expect(editLink?.classList.contains('md:inline-flex')).toBeTrue();
   });
 });
 
