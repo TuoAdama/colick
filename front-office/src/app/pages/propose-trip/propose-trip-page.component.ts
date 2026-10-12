@@ -172,7 +172,18 @@ export class ProposeTripPageComponent implements OnInit {
   }
 
   goBack(): void {
-    this.location.back();
+    const navigationId = this.document.defaultView?.history.state?.navigationId;
+    if (typeof navigationId === 'number' && navigationId > 1) {
+      this.location.back();
+      return;
+    }
+
+    if (this.isEditMode) {
+      void this.router.navigate(['/dashboard'], { queryParams: { tab: 'received' } });
+      return;
+    }
+
+    void this.router.navigate(['/']);
   }
 
   /**

@@ -183,12 +183,40 @@ describe('ProposeTripPageComponent', () => {
 
   it('returns to the previous page when the back button is clicked in edit mode', () => {
     setRouteId('12');
+    window.history.replaceState({ navigationId: 2 }, '');
     fixture.detectChanges();
 
-    const backButton = fixture.nativeElement.querySelector('button[aria-label="Retour au tableau de bord"]') as HTMLButtonElement;
+    const backButton = fixture.nativeElement.querySelector('button[aria-label="Retour à la page précédente"]') as HTMLButtonElement;
     backButton.click();
 
     expect(locationMock.back).toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('falls back to trips management when edit mode has no previous in-app page', () => {
+    setRouteId('12');
+    window.history.replaceState({ navigationId: 1 }, '');
+    fixture.detectChanges();
+
+    const backButton = fixture.nativeElement.querySelector('button[aria-label="Retour à la page précédente"]') as HTMLButtonElement;
+    backButton.click();
+
+    expect(locationMock.back).not.toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['/dashboard'], {
+      queryParams: { tab: 'received' },
+    });
+  });
+
+  it('falls back to home when creation mode has no previous in-app page', () => {
+    setRouteId();
+    window.history.replaceState({ navigationId: 1 }, '');
+    fixture.detectChanges();
+
+    const backButton = fixture.nativeElement.querySelector('button[aria-label="Retour à la page précédente"]') as HTMLButtonElement;
+    backButton.click();
+
+    expect(locationMock.back).not.toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['/']);
   });
 
   it('renders a compact centered layout without the hero banner', () => {
@@ -207,7 +235,7 @@ describe('ProposeTripPageComponent', () => {
     expect(header?.className).toContain('max-w-2xl');
     expect(header?.className).not.toContain('rounded-3xl');
     expect(header?.className).not.toContain('bg-white');
-    expect(host.textContent).toContain('Retour à l\'accueil');
+    expect(host.textContent).toContain('Retour à la page précédente');
     expect(host.textContent).not.toContain('Nouveau trajet');
     expect(formRegion).not.toBeNull();
     expect(formWrapper).not.toBeNull();
