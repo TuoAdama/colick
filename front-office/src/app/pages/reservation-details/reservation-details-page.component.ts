@@ -164,11 +164,13 @@ export class ReservationDetailsPageComponent implements OnInit {
       return 0;
     }
 
-    return Math.max(this.trip.maxWeight - this.demandedWeight(), 0);
+    return Math.max(this.trip.maxWeight - this.usedWeight(), 0);
   }
 
   usedWeight(): number {
-    return this.demandedWeight();
+    return this.bookings
+      .filter((booking) => booking.status === 'ACCEPTED')
+      .reduce((total, booking) => total + (Number.isFinite(booking.weight) ? booking.weight : 0), 0);
   }
 
   usedWeightPercentage(): number {
@@ -184,11 +186,11 @@ export class ReservationDetailsPageComponent implements OnInit {
   }
 
   potentialAmount(): number {
-    return this.trip ? this.usedWeight() * this.trip.pricePerKilo : 0;
+    return this.trip ? this.demandedWeight() * this.trip.pricePerKilo : 0;
   }
 
   editTrip(): void {
-    if (!this.trip) {
+    if (!this.trip || this.trip.status !== 'ACTIVE') {
       return;
     }
 
@@ -277,7 +279,7 @@ export class ReservationDetailsPageComponent implements OnInit {
   }
 
   openCancelTripModal(): void {
-    if (!this.trip || this.isCompletingTrip || this.isCancellingTrip) {
+    if (!this.trip || this.trip.status !== 'ACTIVE' || this.isCompletingTrip || this.isCancellingTrip) {
       return;
     }
 
@@ -289,7 +291,7 @@ export class ReservationDetailsPageComponent implements OnInit {
   }
 
   confirmCancelTrip(): void {
-    if (!this.trip || this.isCancellingTrip) {
+    if (!this.trip || this.trip.status !== 'ACTIVE' || this.isCancellingTrip) {
       return;
     }
 

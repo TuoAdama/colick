@@ -222,7 +222,7 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.paginatedBookings().map((booking) => booking.id)).toEqual([6]);
   });
 
-  it('computes the demanded and remaining weight from active bookings', () => {
+  it('uses accepted bookings for loaded capacity and all active requests for potential revenue', () => {
     tripServiceMock.getTripBookings.and.returnValue(of([
       buildBooking({ id: 1, status: 'PENDING', weight: 3 }),
       buildBooking({ id: 2, status: 'ACCEPTED', weight: 4 }),
@@ -232,8 +232,10 @@ describe('ReservationDetailsPageComponent', () => {
     createComponent();
 
     expect(component.demandedWeight()).toBe(7);
-    expect(component.remainingWeight()).toBe(13);
-    expect(component.usedWeightPercentage()).toBe(35);
+    expect(component.usedWeight()).toBe(4);
+    expect(component.remainingWeight()).toBe(16);
+    expect(component.usedWeightPercentage()).toBe(20);
+    expect(component.potentialAmount()).toBe(105);
   });
 
   it('renders the mobile indicators between the trip card and pending requests when the trip summary is collapsed', () => {
@@ -257,11 +259,11 @@ describe('ReservationDetailsPageComponent', () => {
     expect(tripCard.compareDocumentPosition(indicators) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(indicators.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(indicators.classList.contains('md:hidden')).toBeTrue();
-    expect(loadCard.textContent).toContain('20%');
-    expect(loadCard.textContent).toContain('10 kg');
+    expect(loadCard.textContent).toContain('12%');
+    expect(loadCard.textContent).toContain('6 kg');
     expect(loadCard.textContent).toContain('max 50 kg');
     expect(potentialCard.textContent).toContain('150 €');
-    expect(potentialCard.textContent).toContain('40 kg restants');
+    expect(potentialCard.textContent).toContain('44 kg restants');
   });
 
   it('bounds the load gauge and remaining weight for zero and exceeded capacity', () => {
@@ -272,6 +274,7 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.displayedWeightPercentage()).toBe(0);
     expect(component.remainingWeight()).toBe(0);
 
+    component.bookings = [buildBooking({ status: 'ACCEPTED', weight: 2 })];
     component.trip = { ...buildTrip(), maxWeight: 1 };
     expect(component.usedWeightPercentage()).toBe(100);
     expect(component.displayedWeightPercentage()).toBe(100);
@@ -387,18 +390,27 @@ describe('ReservationDetailsPageComponent', () => {
     expect(heading?.classList.contains('sm:text-[2rem]')).toBeTrue();
   });
 
-  it('does not render the share announcement button for inactive trips', () => {
-    tripServiceMock.getTripById.and.returnValue(of({ ...buildTrip(), status: 'COMPLETED' }));
+  for (const status of ['COMPLETED', 'CANCELLED'] as const) {
+    it(`hides editing, deletion and sharing for ${status.toLowerCase()} trips`, () => {
+      tripServiceMock.getTripById.and.returnValue(of({ ...buildTrip(), status }));
 
-    createComponent();
+      createComponent();
 
-    const shareButton = fixture.nativeElement.querySelector(
-      '[data-testid="share-trip-announcement-button"]'
-    ) as HTMLButtonElement | null;
+      expect(fixture.nativeElement.querySelector('[data-testid="edit-trip-link"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-testid="mobile-trip-actions-toggle"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-testid="share-trip-announcement-button"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-testid="mobile-trip-indicators"]')).not.toBeNull();
 
-    expect(shareButton).toBeNull();
-    expect(fixture.nativeElement.querySelector('[data-testid="mobile-trip-indicators"]')).not.toBeNull();
-  });
+      component.toggleTripSummary();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('a[aria-label="Modifier le trajet"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('button[aria-label="Supprimer le trajet"]')).toBeNull();
+
+      component.openCancelTripModal();
+      expect(component.isCancelTripModalOpen).toBeFalse();
+    });
+  }
 
   it('generates the share card and uses the native share fallback service', async () => {
     createComponent();
@@ -408,7 +420,7 @@ describe('ReservationDetailsPageComponent', () => {
     expect(shareCardMapperServiceMock.mapActiveTripToShareCard).toHaveBeenCalledWith(
       component.trip,
       authServiceMock.getUser(),
-      jasmine.objectContaining({ availableWeight: 18 })
+      jasmine.objectContaining({ availableWeight: 20 })
     );
     expect(shareCardExportServiceMock.generateQrCodeDataUrl).toHaveBeenCalledWith(
       'http://localhost:4200/search?from=Paris&to=Abidjan'
@@ -447,6 +459,8 @@ describe('ReservationDetailsPageComponent', () => {
 
     expect(tripServiceMock.acceptBooking).toHaveBeenCalledWith(12, 7);
     expect(component.bookings[0].status).toBe('ACCEPTED');
+    expect(component.usedWeight()).toBe(2);
+    expect(component.remainingWeight()).toBe(18);
   });
 
   it('rejects a booking and updates it in the page state', () => {
@@ -456,6 +470,8 @@ describe('ReservationDetailsPageComponent', () => {
 
     expect(tripServiceMock.rejectBooking).toHaveBeenCalledWith(12, 7);
     expect(component.bookings[0].status).toBe('REJECTED');
+    expect(component.usedWeight()).toBe(0);
+    expect(component.potentialAmount()).toBe(0);
   });
 
   it('removes a booking after confirmation', () => {
