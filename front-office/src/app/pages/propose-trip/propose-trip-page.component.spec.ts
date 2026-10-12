@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Location } from '@angular/common';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
@@ -11,6 +12,7 @@ describe('ProposeTripPageComponent', () => {
   let fixture: ComponentFixture<ProposeTripPageComponent>;
   let component: ProposeTripPageComponent;
   let router: Router;
+  const locationMock = { back: jasmine.createSpy('back') };
   let paramMapSubject: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
   let routeMock: {
     paramMap: Observable<ReturnType<typeof convertToParamMap>>;
@@ -51,6 +53,7 @@ describe('ProposeTripPageComponent', () => {
       imports: [ProposeTripPageComponent],
       providers: [
         provideRouter([]),
+        { provide: Location, useValue: locationMock },
         { provide: ActivatedRoute, useValue: routeMock },
         { provide: TripService, useValue: tripServiceMock },
         { provide: LocationService, useValue: locationServiceMock },
@@ -61,6 +64,7 @@ describe('ProposeTripPageComponent', () => {
     spyOn(router, 'navigate').and.resolveTo(true);
 
     tripServiceMock.createTrip.calls.reset();
+    locationMock.back.calls.reset();
     tripServiceMock.getTripById.calls.reset();
     tripServiceMock.updateTrip.calls.reset();
     tripServiceMock.createTrip.and.returnValue(of({}));
@@ -175,6 +179,16 @@ describe('ProposeTripPageComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/dashboard'], {
       queryParams: { tab: 'received' },
     });
+  });
+
+  it('returns to the previous page when the back button is clicked in edit mode', () => {
+    setRouteId('12');
+    fixture.detectChanges();
+
+    const backButton = fixture.nativeElement.querySelector('button[aria-label="Retour au tableau de bord"]') as HTMLButtonElement;
+    backButton.click();
+
+    expect(locationMock.back).toHaveBeenCalled();
   });
 
   it('renders a compact centered layout without the hero banner', () => {

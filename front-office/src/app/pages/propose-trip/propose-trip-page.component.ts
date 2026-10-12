@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule, DOCUMENT } from '@angular/common';
+import { CommonModule, DOCUMENT, Location as AngularLocation } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AutocompleteComponent } from '../../shared/components/autocomplete/autocomplete.component';
 import { TripService } from '../../services/trip.service';
 import { Location } from '../../models/location.model';
@@ -20,13 +20,14 @@ import {
 @Component({
   selector: 'app-propose-trip-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AutocompleteComponent],
+  imports: [CommonModule, FormsModule, AutocompleteComponent],
   templateUrl: './propose-trip-page.component.html',
 })
 export class ProposeTripPageComponent implements OnInit {
   private readonly document = inject(DOCUMENT);
   private readonly tripService = inject(TripService);
   private readonly router = inject(Router);
+  private readonly location = inject(AngularLocation);
   private readonly route = inject(ActivatedRoute);
 
   /** Trip identifier when editing an existing trip. */
@@ -168,6 +169,10 @@ export class ProposeTripPageComponent implements OnInit {
 
   onDestinationCleared(): void {
     this.destination = null;
+  }
+
+  goBack(): void {
+    this.location.back();
   }
 
   /**
