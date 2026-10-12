@@ -286,6 +286,21 @@ describe('ReservationDetailsPageComponent', () => {
     expect(desktopRoute?.classList.contains('sm:inline')).toBeTrue();
   });
 
+  it('restricts route truncation and width constraints to mobile screens', () => {
+    createComponent();
+
+    const mobileRoute = fixture.nativeElement.querySelector(
+      '[data-testid="mobile-trip-route"]'
+    ) as HTMLElement;
+    const heading = mobileRoute.closest('h1')!;
+    const routeContainer = heading.parentElement!;
+
+    expect(heading.classList.contains('max-sm:truncate')).toBeTrue();
+    expect(heading.classList.contains('truncate')).toBeFalse();
+    expect(routeContainer.classList.contains('max-sm:min-w-0')).toBeTrue();
+    expect(routeContainer.classList.contains('min-w-0')).toBeFalse();
+  });
+
   it('keeps locations without a country unchanged in the mobile route label', () => {
     createComponent();
 
