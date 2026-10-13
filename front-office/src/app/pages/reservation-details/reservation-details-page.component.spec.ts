@@ -281,7 +281,7 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.remainingWeight()).toBe(0);
   });
 
-  it('opens and closes the mobile trip actions with the pencil while keeping the share banner visible', () => {
+  it('opens and closes the mobile trip actions with the pencil while keeping the share card visible', () => {
     createComponent();
 
     const pencil = fixture.nativeElement.querySelector(
@@ -315,7 +315,10 @@ describe('ReservationDetailsPageComponent', () => {
     expect(deleteButton).not.toBeNull();
     expect(shareButton).not.toBeNull();
     expect(shareButton?.closest('[data-testid="mobile-trip-indicators"]')).not.toBeNull();
-    expect(shareButton?.textContent).toContain('Story & WhatsApp');
+    expect(shareButton?.textContent).toContain("Partager l'annonce");
+    expect(shareButton?.textContent).toContain('Créer une affiche pour WhatsApp et les stories');
+    expect(shareButton?.classList.contains('bg-white')).toBeTrue();
+    expect(shareButton?.classList.contains('border')).toBeTrue();
 
     const share = spyOn(component, 'shareTripAnnouncement');
     shareButton!.click();
@@ -327,6 +330,19 @@ describe('ReservationDetailsPageComponent', () => {
     expect(pencil.getAttribute('aria-expanded')).toBe('false');
     expect(fixture.nativeElement.querySelector('#trip-summary-panel')).toBeNull();
     expect(fixture.nativeElement.querySelector('[data-testid="share-trip-announcement-button"]')).not.toBeNull();
+  });
+
+  it('disables the share card and shows progress while an affiche is generating', () => {
+    createComponent();
+    component.isGeneratingShareCard = true;
+    fixture.detectChanges();
+
+    const shareButton = fixture.nativeElement.querySelector(
+      '[data-testid="share-trip-announcement-button"]'
+    ) as HTMLButtonElement;
+
+    expect(shareButton.disabled).toBeTrue();
+    expect(shareButton.textContent).toContain('Génération de l’affiche...');
   });
 
   it('anchors fixed mobile trip actions to the bottom of the viewport', () => {
