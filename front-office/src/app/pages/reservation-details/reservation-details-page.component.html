@@ -190,22 +190,20 @@
         @if (trip.status === 'ACTIVE') {
           <button
             type="button"
-            class="mt-3 flex w-full items-center gap-3 rounded-[18px] bg-gradient-to-r from-[#FF6A0A] to-[#FFA01B] px-3.5 py-3 text-left text-white shadow-[0_5px_15px_rgba(242,111,19,0.2)] disabled:cursor-wait disabled:opacity-70"
+            class="mt-3 flex w-full items-center gap-3 rounded-[18px] border border-[#E6ECF1] bg-white px-3.5 py-3 text-left shadow-[0_4px_14px_rgba(19,44,70,0.07)] transition hover:border-[#F15A24]/40 hover:shadow-[0_6px_18px_rgba(19,44,70,0.1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F15A24] disabled:cursor-wait disabled:opacity-70"
             [disabled]="isGeneratingShareCard"
             (click)="shareTripAnnouncement()"
             aria-label="Partager l'annonce"
             data-testid="share-trip-announcement-button"
           >
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/20" aria-hidden="true">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FFF2E8] text-[#F15A24]" aria-hidden="true">
               <span class="material-symbols-outlined text-[23px] leading-none">image</span>
             </span>
             <span class="min-w-0 flex-1">
-              <span class="flex flex-wrap items-center gap-1.5 text-sm font-bold leading-tight">
-                Partagez en <span class="rounded-full bg-white px-2 py-1 text-[9px] font-extrabold uppercase tracking-[0.04em] text-[#F15A24]">Story &amp; WhatsApp</span>
-              </span>
-              <span class="mt-0.5 block text-[11px] font-medium">{{ isGeneratingShareCard ? 'Génération...' : "Générer l'affiche rapidement" }}</span>
+              <span class="block text-sm font-bold leading-tight text-[#152238]">Partager l'annonce</span>
+              <span class="mt-1 block text-[11px] font-medium leading-snug text-text-secondary">{{ isGeneratingShareCard ? 'Génération de l’affiche...' : 'Créer une affiche pour WhatsApp et les stories' }}</span>
             </span>
-            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#F15A24] shadow-sm" aria-hidden="true">
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F15A24] text-white" aria-hidden="true">
               <span class="material-symbols-outlined text-[20px] leading-none">arrow_forward</span>
             </span>
           </button>
