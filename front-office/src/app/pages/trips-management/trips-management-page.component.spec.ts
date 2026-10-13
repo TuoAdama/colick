@@ -138,10 +138,16 @@ describe('TripsManagementPageComponent', () => {
       expect(component.filteredTrips.length).toBe(6);
     });
 
+    it('should sort trips from the most recent departure to the oldest without reordering the source list', () => {
+      expect(component.filteredTrips.map((trip) => trip.id)).toEqual([6, 5, 4, 3, 2, 1]);
+      expect(component.trips.map((trip) => trip.id)).toEqual([1, 2, 3, 4, 5, 6]);
+    });
+
     it('should filter by ACTIVE status', () => {
       component.setFilter('ACTIVE');
       expect(component.filteredTrips.every((t) => t.status === 'ACTIVE')).toBeTrue();
       expect(component.filteredTrips.length).toBe(4);
+      expect(component.filteredTrips.map((trip) => trip.id)).toEqual([6, 5, 4, 1]);
     });
 
     it('should filter by COMPLETED status', () => {
@@ -192,6 +198,7 @@ describe('TripsManagementPageComponent', () => {
     it('should paginate results with default 5 items per page', () => {
       expect(component.itemsPerPage).toBe(5);
       expect(component.paginatedTrips.length).toBe(5);
+      expect(component.paginatedTrips.map((trip) => trip.id)).toEqual([6, 5, 4, 3, 2]);
       expect(component.totalPages).toBe(2);
     });
 
@@ -199,6 +206,7 @@ describe('TripsManagementPageComponent', () => {
       component.goToPage(2);
       expect(component.currentPage).toBe(2);
       expect(component.paginatedTrips.length).toBe(1);
+      expect(component.paginatedTrips[0].id).toBe(1);
     });
 
     it('should not navigate below page 1', () => {
@@ -295,10 +303,10 @@ describe('TripsManagementPageComponent', () => {
       ) as NodeListOf<HTMLButtonElement>;
 
       expect(mobileRows.length).toBe(5);
-      expect(mobileRows[0].textContent).toContain('Paris');
-      expect(mobileRows[0].textContent).toContain('Lyon');
-      expect(mobileRows[0].textContent).toContain('15 Mars 2024');
-      expect(mobileRows[0].textContent).toContain('20 kg');
+      expect(mobileRows[0].textContent).toContain('Dijon');
+      expect(mobileRows[0].textContent).toContain('Grenoble');
+      expect(mobileRows[0].textContent).toContain('12 Avril 2024');
+      expect(mobileRows[0].textContent).toContain('18 kg');
       expect(mobileRows[0].getAttribute('aria-label')).toContain('Voir les demandes');
     });
 
@@ -332,7 +340,7 @@ describe('TripsManagementPageComponent', () => {
 
       viewButton.click();
 
-      expect(router.navigate).toHaveBeenCalledWith(['/trips', 1, 'reservations']);
+      expect(router.navigate).toHaveBeenCalledWith(['/trips', 6, 'reservations']);
     });
 
     it('should navigate to trip reservations when clicking a mobile row', () => {
@@ -344,7 +352,7 @@ describe('TripsManagementPageComponent', () => {
 
       mobileRow.click();
 
-      expect(router.navigate).toHaveBeenCalledWith(['/trips', 1, 'reservations']);
+      expect(router.navigate).toHaveBeenCalledWith(['/trips', 6, 'reservations']);
     });
   });
 
