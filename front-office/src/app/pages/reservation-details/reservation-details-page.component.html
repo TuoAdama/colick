@@ -192,16 +192,16 @@
             type="button"
             class="mt-3 flex w-full items-center gap-3 rounded-[18px] border border-[#E6ECF1] bg-white px-3.5 py-3 text-left shadow-[0_4px_14px_rgba(19,44,70,0.07)] transition hover:border-[#F15A24]/40 hover:shadow-[0_6px_18px_rgba(19,44,70,0.1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F15A24] disabled:cursor-wait disabled:opacity-70"
             [disabled]="isGeneratingShareCard"
-            (click)="shareTripAnnouncement()"
-            aria-label="Partager l'annonce"
-            data-testid="share-trip-announcement-button"
+            (click)="downloadTripAnnouncementImage()"
+            aria-label="Télécharger l'image de l'annonce"
+            data-testid="download-trip-announcement-button"
           >
             <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FFF2E8] text-[#F15A24]" aria-hidden="true">
               <span class="material-symbols-outlined text-[23px] leading-none">image</span>
             </span>
             <span class="min-w-0 flex-1">
-              <span class="block text-sm font-bold leading-tight text-[#152238]">Partager l'annonce</span>
-              <span class="mt-1 block text-[11px] font-medium leading-snug text-text-secondary">{{ isGeneratingShareCard ? 'Génération de l’affiche...' : 'Créer une affiche pour WhatsApp et les stories' }}</span>
+              <span class="block text-sm font-bold leading-tight text-[#152238]">Télécharger l'affiche</span>
+              <span class="mt-1 block text-[11px] font-medium leading-snug text-text-secondary">{{ isGeneratingShareCard ? 'Génération de l’affiche...' : 'L’image sera téléchargée sur votre appareil' }}</span>
             </span>
             <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F15A24] text-white" aria-hidden="true">
               <span class="material-symbols-outlined text-[20px] leading-none">arrow_forward</span>

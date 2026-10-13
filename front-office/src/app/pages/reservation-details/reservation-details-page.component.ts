@@ -197,7 +197,7 @@ export class ReservationDetailsPageComponent implements OnInit {
     void this.router.navigate(['/propose', this.trip.id]);
   }
 
-  async shareTripAnnouncement(): Promise<void> {
+  async downloadTripAnnouncementImage(): Promise<void> {
     const user = this.authService.getUser();
     if (!this.trip || this.trip.status !== 'ACTIVE' || this.isGeneratingShareCard || !user) {
       return;
@@ -229,14 +229,9 @@ export class ReservationDetailsPageComponent implements OnInit {
         `coliclic-annonce-${this.shareCardMapperService.buildFileDate(this.trip.departureTime)}.png`
       );
 
-      await this.shareCardExportService.shareOrDownloadPng(pngFile, {
-        title: 'Trajet disponible sur Coliclic',
-        text: shareCardData.routeLabel
-          ? `Trajet disponible ${shareCardData.routeLabel}`
-          : 'Trajet disponible sur Coliclic',
-      });
+      this.shareCardExportService.downloadFile(pngFile);
     } catch {
-      this.actionError = "Impossible de générer l'image de partage pour le moment.";
+      this.actionError = "Impossible de télécharger l'affiche pour le moment.";
     } finally {
       this.isGeneratingShareCard = false;
       this.shareCardData = null;
