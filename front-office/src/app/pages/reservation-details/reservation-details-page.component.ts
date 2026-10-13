@@ -90,6 +90,15 @@ export class ReservationDetailsPageComponent implements OnInit {
     return normalizedLocation.split(',')[0]?.trim() || normalizedLocation;
   }
 
+  countryName(location: string): string {
+    const segments = location
+      .split(',')
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+
+    return segments.length > 1 ? segments.at(-1) ?? '' : '';
+  }
+
   tripStatusLabel(status: Trip['status']): string {
     return ({
       ACTIVE: 'Actif',
@@ -155,11 +164,13 @@ export class ReservationDetailsPageComponent implements OnInit {
       return 0;
     }
 
-    return Math.max(this.trip.maxWeight - this.demandedWeight(), 0);
+    return Math.max(this.trip.maxWeight - this.usedWeight(), 0);
   }
 
   usedWeight(): number {
-    return this.demandedWeight();
+    return this.bookings
+      .filter((booking) => booking.status === 'ACCEPTED')
+      .reduce((total, booking) => total + (Number.isFinite(booking.weight) ? booking.weight : 0), 0);
   }
 
   usedWeightPercentage(): number {
@@ -167,11 +178,19 @@ export class ReservationDetailsPageComponent implements OnInit {
       return 0;
     }
 
-    return Math.min((this.usedWeight() / this.trip.maxWeight) * 100, 100);
+    return Math.min(Math.max((this.usedWeight() / this.trip.maxWeight) * 100, 0), 100);
+  }
+
+  displayedWeightPercentage(): number {
+    return Math.round(this.usedWeightPercentage());
+  }
+
+  potentialAmount(): number {
+    return this.trip ? this.demandedWeight() * this.trip.pricePerKilo : 0;
   }
 
   editTrip(): void {
-    if (!this.trip) {
+    if (!this.trip || this.trip.status !== 'ACTIVE') {
       return;
     }
 
@@ -260,7 +279,7 @@ export class ReservationDetailsPageComponent implements OnInit {
   }
 
   openCancelTripModal(): void {
-    if (!this.trip || this.isCompletingTrip || this.isCancellingTrip) {
+    if (!this.trip || this.trip.status !== 'ACTIVE' || this.isCompletingTrip || this.isCancellingTrip) {
       return;
     }
 
@@ -272,7 +291,7 @@ export class ReservationDetailsPageComponent implements OnInit {
   }
 
   confirmCancelTrip(): void {
-    if (!this.trip || this.isCancellingTrip) {
+    if (!this.trip || this.trip.status !== 'ACTIVE' || this.isCancellingTrip) {
       return;
     }
 

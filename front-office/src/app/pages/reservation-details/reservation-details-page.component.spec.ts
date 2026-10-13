@@ -222,7 +222,7 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.paginatedBookings().map((booking) => booking.id)).toEqual([6]);
   });
 
-  it('computes the demanded and remaining weight from active bookings', () => {
+  it('uses accepted bookings for loaded capacity and all active requests for potential revenue', () => {
     tripServiceMock.getTripBookings.and.returnValue(of([
       buildBooking({ id: 1, status: 'PENDING', weight: 3 }),
       buildBooking({ id: 2, status: 'ACCEPTED', weight: 4 }),
@@ -232,21 +232,79 @@ describe('ReservationDetailsPageComponent', () => {
     createComponent();
 
     expect(component.demandedWeight()).toBe(7);
-    expect(component.remainingWeight()).toBe(13);
-    expect(component.usedWeightPercentage()).toBe(35);
+    expect(component.usedWeight()).toBe(4);
+    expect(component.remainingWeight()).toBe(16);
+    expect(component.usedWeightPercentage()).toBe(20);
+    expect(component.potentialAmount()).toBe(105);
   });
 
-  it('renders mobile trip actions in the summary card', () => {
+  it('renders the mobile indicators between the trip card and pending requests when the trip summary is collapsed', () => {
+    tripServiceMock.getTripById.and.returnValue(of({ ...buildTrip(), maxWeight: 50 }));
+    tripServiceMock.getTripBookings.and.returnValue(of([
+      buildBooking({ id: 1, status: 'PENDING', weight: 4 }),
+      buildBooking({ id: 2, status: 'ACCEPTED', weight: 6 }),
+      buildBooking({ id: 3, status: 'REJECTED', weight: 5 }),
+    ]));
+
     createComponent();
 
-    component.toggleTripSummary();
+    const tripCard = fixture.nativeElement.querySelector('[data-testid="trip-information-card"]') as HTMLElement;
+    const indicators = fixture.nativeElement.querySelector('[data-testid="mobile-trip-indicators"]') as HTMLElement;
+    const heading = Array.from(fixture.nativeElement.querySelectorAll('h2') as NodeListOf<HTMLElement>)
+      .find((element) => element.textContent?.trim() === 'Demandes en cours')!;
+    const loadCard = indicators.querySelector('[data-testid="mobile-load-card"]') as HTMLElement;
+    const potentialCard = indicators.querySelector('[data-testid="mobile-potential-card"]') as HTMLElement;
+
+    expect(component.tripSummaryExpanded).toBeFalse();
+    expect(tripCard.compareDocumentPosition(indicators) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(indicators.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(indicators.classList.contains('md:hidden')).toBeTrue();
+    expect(loadCard.textContent).toContain('12%');
+    expect(loadCard.textContent).toContain('6 kg');
+    expect(loadCard.textContent).toContain('max 50 kg');
+    expect(potentialCard.textContent).toContain('150 €');
+    expect(potentialCard.textContent).toContain('44 kg restants');
+  });
+
+  it('bounds the load gauge and remaining weight for zero and exceeded capacity', () => {
+    createComponent();
+
+    component.trip = { ...buildTrip(), maxWeight: 0 };
+    expect(component.usedWeightPercentage()).toBe(0);
+    expect(component.displayedWeightPercentage()).toBe(0);
+    expect(component.remainingWeight()).toBe(0);
+
+    component.bookings = [buildBooking({ status: 'ACCEPTED', weight: 2 })];
+    component.trip = { ...buildTrip(), maxWeight: 1 };
+    expect(component.usedWeightPercentage()).toBe(100);
+    expect(component.displayedWeightPercentage()).toBe(100);
+    expect(component.remainingWeight()).toBe(0);
+  });
+
+  it('opens and closes the mobile trip actions with the pencil while keeping the share banner visible', () => {
+    createComponent();
+
+    const pencil = fixture.nativeElement.querySelector(
+      '[data-testid="mobile-trip-actions-toggle"]'
+    ) as HTMLButtonElement;
+
+    expect(pencil.classList.contains('md:hidden')).toBeTrue();
+    expect(pencil.getAttribute('aria-expanded')).toBe('false');
+    expect(fixture.nativeElement.querySelector('#trip-summary-panel')).toBeNull();
+
+    pencil.click();
     fixture.detectChanges();
 
+    expect(pencil.getAttribute('aria-expanded')).toBe('true');
+    expect(pencil.getAttribute('aria-controls')).toBe('trip-summary-panel');
+    expect(fixture.nativeElement.querySelector('#trip-summary-panel')).not.toBeNull();
+    expect(router.navigate).not.toHaveBeenCalled();
+
     const editLink = fixture.nativeElement.querySelector(
-      'a[aria-label="Modifier le trajet"]'
+      '#trip-summary-panel a[aria-label="Modifier le trajet"]'
     ) as HTMLAnchorElement | null;
     const deleteButton = fixture.nativeElement.querySelector(
-      'button[aria-label="Supprimer le trajet"]'
+      '#trip-summary-panel button[aria-label="Supprimer le trajet"]'
     ) as HTMLButtonElement | null;
     const shareButton = fixture.nativeElement.querySelector(
       '[data-testid="share-trip-announcement-button"]'
@@ -256,7 +314,19 @@ describe('ReservationDetailsPageComponent', () => {
     expect(editLink?.getAttribute('href')).toContain('/propose/12');
     expect(deleteButton).not.toBeNull();
     expect(shareButton).not.toBeNull();
-    expect(shareButton?.textContent).toContain("Partager l'annonce");
+    expect(shareButton?.closest('[data-testid="mobile-trip-indicators"]')).not.toBeNull();
+    expect(shareButton?.textContent).toContain('Story & WhatsApp');
+
+    const share = spyOn(component, 'shareTripAnnouncement');
+    shareButton!.click();
+    expect(share).toHaveBeenCalledTimes(1);
+
+    pencil.click();
+    fixture.detectChanges();
+
+    expect(pencil.getAttribute('aria-expanded')).toBe('false');
+    expect(fixture.nativeElement.querySelector('#trip-summary-panel')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="share-trip-announcement-button"]')).not.toBeNull();
   });
 
   it('anchors fixed mobile trip actions to the bottom of the viewport', () => {
@@ -320,20 +390,27 @@ describe('ReservationDetailsPageComponent', () => {
     expect(heading?.classList.contains('sm:text-[2rem]')).toBeTrue();
   });
 
-  it('does not render the share announcement button for inactive trips', () => {
-    tripServiceMock.getTripById.and.returnValue(of({ ...buildTrip(), status: 'COMPLETED' }));
+  for (const status of ['COMPLETED', 'CANCELLED'] as const) {
+    it(`hides editing, deletion and sharing for ${status.toLowerCase()} trips`, () => {
+      tripServiceMock.getTripById.and.returnValue(of({ ...buildTrip(), status }));
 
-    createComponent();
+      createComponent();
 
-    component.toggleTripSummary();
-    fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('[data-testid="edit-trip-link"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-testid="mobile-trip-actions-toggle"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-testid="share-trip-announcement-button"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-testid="mobile-trip-indicators"]')).not.toBeNull();
 
-    const shareButton = fixture.nativeElement.querySelector(
-      '[data-testid="share-trip-announcement-button"]'
-    ) as HTMLButtonElement | null;
+      component.toggleTripSummary();
+      fixture.detectChanges();
 
-    expect(shareButton).toBeNull();
-  });
+      expect(fixture.nativeElement.querySelector('a[aria-label="Modifier le trajet"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('button[aria-label="Supprimer le trajet"]')).toBeNull();
+
+      component.openCancelTripModal();
+      expect(component.isCancelTripModalOpen).toBeFalse();
+    });
+  }
 
   it('generates the share card and uses the native share fallback service', async () => {
     createComponent();
@@ -343,7 +420,7 @@ describe('ReservationDetailsPageComponent', () => {
     expect(shareCardMapperServiceMock.mapActiveTripToShareCard).toHaveBeenCalledWith(
       component.trip,
       authServiceMock.getUser(),
-      jasmine.objectContaining({ availableWeight: 18 })
+      jasmine.objectContaining({ availableWeight: 20 })
     );
     expect(shareCardExportServiceMock.generateQrCodeDataUrl).toHaveBeenCalledWith(
       'http://localhost:4200/search?from=Paris&to=Abidjan'
@@ -360,7 +437,10 @@ describe('ReservationDetailsPageComponent', () => {
   it('opens the cancel trip modal from the mobile delete button', () => {
     createComponent();
 
-    component.toggleTripSummary();
+    const pencil = fixture.nativeElement.querySelector(
+      '[data-testid="mobile-trip-actions-toggle"]'
+    ) as HTMLButtonElement;
+    pencil.click();
     fixture.detectChanges();
 
     const deleteButton = fixture.nativeElement.querySelector(
@@ -379,6 +459,8 @@ describe('ReservationDetailsPageComponent', () => {
 
     expect(tripServiceMock.acceptBooking).toHaveBeenCalledWith(12, 7);
     expect(component.bookings[0].status).toBe('ACCEPTED');
+    expect(component.usedWeight()).toBe(2);
+    expect(component.remainingWeight()).toBe(18);
   });
 
   it('rejects a booking and updates it in the page state', () => {
@@ -388,6 +470,8 @@ describe('ReservationDetailsPageComponent', () => {
 
     expect(tripServiceMock.rejectBooking).toHaveBeenCalledWith(12, 7);
     expect(component.bookings[0].status).toBe('REJECTED');
+    expect(component.usedWeight()).toBe(0);
+    expect(component.potentialAmount()).toBe(0);
   });
 
   it('removes a booking after confirmation', () => {
@@ -477,10 +561,53 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.bookings[0].deliveredAt).toBe('2025-07-15T10:00:00');
   });
 
-  it('displays the trip business reference in the trip summary', () => {
+  it('expands the trip card summary to reveal its details', () => {
     createComponent();
 
-    expect(fixture.nativeElement.textContent).toContain('TRP-2026-000012');
+    const summaryButton = fixture.nativeElement.querySelector(
+      '[data-testid="trip-information-card"] button'
+    ) as HTMLButtonElement;
+
+    expect(summaryButton.getAttribute('aria-expanded')).toBe('false');
+
+    summaryButton.click();
+    fixture.detectChanges();
+
+    expect(summaryButton.getAttribute('aria-expanded')).toBe('true');
+    expect(fixture.nativeElement.textContent).toContain('Poids disponible');
+  });
+
+  it('renders the compact trip information card with navigation and edit affordances', () => {
+    createComponent();
+
+    const backLink = fixture.nativeElement.querySelector(
+      '[data-testid="back-to-trips"]'
+    ) as HTMLAnchorElement | null;
+    const reference = fixture.nativeElement.querySelector(
+      '[data-testid="trip-reference"]'
+    ) as HTMLElement | null;
+    const tripCard = fixture.nativeElement.querySelector(
+      '[data-testid="trip-information-card"]'
+    ) as HTMLElement | null;
+    const route = fixture.nativeElement.querySelector(
+      '[data-testid="mobile-trip-route"]'
+    ) as HTMLElement | null;
+    const metadata = fixture.nativeElement.querySelector(
+      '[data-testid="trip-information-metadata"]'
+    ) as HTMLElement | null;
+    const editLink = fixture.nativeElement.querySelector(
+      '[data-testid="edit-trip-link"]'
+    ) as HTMLAnchorElement | null;
+
+    expect(backLink?.textContent?.trim()).toContain('Tous mes trajets');
+    expect(backLink?.getAttribute('href')).toBe('/trips');
+    expect(reference?.textContent?.trim()).toBe('TRP-2026-000012');
+    expect(tripCard).not.toBeNull();
+    expect(route?.textContent?.trim()).toBe('Paris → Abidjan');
+    expect(metadata?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Côte d\'Ivoire • Départ le 14/07 • 08:00');
+    expect(editLink?.getAttribute('href')).toContain('/propose/12');
+    expect(editLink?.classList.contains('hidden')).toBeTrue();
+    expect(editLink?.classList.contains('md:inline-flex')).toBeTrue();
   });
 });
 
