@@ -115,6 +115,21 @@ class UserServiceImplTest {
     }
 
     @Test
+    void createUser_shouldFormatFrenchAlreadyExistsMessage() {
+        LocaleContextHolder.setLocale(Locale.FRENCH);
+        CreateUserRequest request = new CreateUserRequest();
+        request.setEmail("jean@example.com");
+        request.setPassword("password123");
+
+        when(userRepository.existsByEmail("jean@example.com")).thenReturn(true);
+
+        assertThatThrownBy(() -> userService.createUser(request))
+                .isInstanceOf(UserAlreadyExistsException.class)
+                .hasMessage("Un utilisateur avec l'adresse e-mail jean@example.com existe déjà")
+                .hasMessageNotContaining("{0}");
+    }
+
+    @Test
     void getAllUsers_shouldReturnAllUsers() {
         when(userRepository.findAll()).thenReturn(List.of(sampleUser));
 
