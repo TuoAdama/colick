@@ -103,9 +103,11 @@ describe('BookingModalComponent', () => {
     expect(tripServiceMock.createBooking).not.toHaveBeenCalled();
   });
 
-  it('focuses the parcel title field when opened', async () => {
+  it('focuses the modal heading when opened so the heading stays visible', async () => {
     await fixture.whenStable();
 
-    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('#booking-title'));
+    const modalHeading = fixture.nativeElement.querySelector('#booking-modal-title') as HTMLHeadingElement;
+    expect(document.activeElement).toBe(modalHeading);
+    expect(modalHeading.tabIndex).toBe(-1);
   });
 });

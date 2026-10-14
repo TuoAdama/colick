@@ -140,7 +140,8 @@ export class ModalFocusDirective implements AfterViewInit, OnDestroy {
 
     try {
       const element = this.elementRef.nativeElement.querySelector<HTMLElement>(this.initialFocusSelector);
-      return element && this.isFocusable(element) ? element : null;
+      const canReceiveProgrammaticFocus = element?.hasAttribute('tabindex') && element.tabIndex === -1;
+      return element && (this.isFocusable(element) || canReceiveProgrammaticFocus) ? element : null;
     } catch {
       return null;
     }
