@@ -260,7 +260,7 @@
         </section>
       } @else {
         <section>
-          <div class="divide-y divide-border">
+          <div [ngClass]="selectedTab === 'PENDING' ? 'space-y-3' : 'divide-y divide-border'">
             @for (booking of paginatedBookings(); track booking.id) {
               <app-booking-request-card
                 [booking]="booking"

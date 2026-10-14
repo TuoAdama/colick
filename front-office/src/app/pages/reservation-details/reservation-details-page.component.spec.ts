@@ -508,6 +508,24 @@ describe('ReservationDetailsPageComponent', () => {
     expect(fixture.nativeElement.querySelector('app-booking-request-card')).toBeNull();
   });
 
+  it('accepts a pending request from its footer and displays it as an accepted list row', () => {
+    createComponent();
+    fixture.detectChanges();
+    const footer = fixture.nativeElement.querySelector('app-booking-request-card footer');
+    expect(footer).not.toBeNull();
+    const buttons = Array.from(footer.querySelectorAll('button')) as HTMLButtonElement[];
+    buttons.find(button => button.textContent?.trim() === 'Accepter')!.click();
+    fixture.detectChanges();
+    expect(tripServiceMock.acceptBooking).toHaveBeenCalledWith(12, 7);
+    expect(component.bookings[0].status).toBe('ACCEPTED');
+    component.selectTab('ACCEPTED');
+    fixture.detectChanges();
+    const row = fixture.nativeElement.querySelector('app-booking-request-card');
+    expect(row).not.toBeNull();
+    expect(row.querySelector('footer')).toBeNull();
+    expect(row.querySelector('button[aria-expanded]')).not.toBeNull();
+  });
+
   it('removes a booking after confirmation', () => {
     createComponent();
 

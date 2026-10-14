@@ -202,7 +202,9 @@ describe('BookingRequestCardComponent', () => {
     expect(fixture.nativeElement.querySelector('button[aria-expanded]')).toBeNull();
   });
 
-  it('opens details through the amount and chevron control', () => {
+  it('opens details through the amount and chevron control for accepted bookings', () => {
+    component.booking = { ...buildBooking(), status: 'ACCEPTED' };
+    fixture.detectChanges();
     fixture.nativeElement.querySelector('button[aria-label^="Détails"]').click();
     expect(router.navigate).toHaveBeenCalledWith(['/trips', 12, 'reservations', 7]);
   });
@@ -219,6 +221,35 @@ describe('BookingRequestCardComponent', () => {
     component.goToDetails();
     expect(component.remove.emit).not.toHaveBeenCalled();
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('places both pending actions in the footer with a non-interactive amount', () => {
+    const footer = fixture.nativeElement.querySelector('footer');
+    const buttons = Array.from(footer.querySelectorAll('button')) as HTMLButtonElement[];
+    expect(buttons.map(button => button.textContent?.trim())).toEqual(['Détails', 'Accepter']);
+    expect(fixture.nativeElement.querySelectorAll('button').length).toBe(2);
+    expect(fixture.nativeElement.querySelector('article').classList).toContain('border');
+    buttons[0].click();
+    expect(router.navigate).toHaveBeenCalledWith(['/trips', 12, 'reservations', 7]);
+  });
+
+  it('blocks both pending footer actions while acceptance is processing', () => {
+    component.isProcessing = true;
+    spyOn(component.accept, 'emit');
+    fixture.detectChanges();
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('footer button')) as HTMLButtonElement[];
+    buttons.forEach(button => button.click());
+    expect(buttons.every(button => button.disabled)).toBeTrue();
+    expect(component.accept.emit).not.toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('removes the pending footer when a booking becomes accepted', () => {
+    component.booking = { ...buildBooking(), status: 'ACCEPTED' };
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('footer')).toBeNull();
+    expect(fixture.nativeElement.querySelector('button[aria-expanded]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('article').classList).not.toContain('border');
   });
 
   it('statusBadgeClass() returns neutral style for pending status', () => {
