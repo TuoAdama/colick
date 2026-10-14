@@ -1,11 +1,6 @@
 import { Injectable } from '@angular/core';
 import QRCode from 'qrcode';
 
-export interface ShareCardShareOptions {
-  title: string;
-  text: string;
-}
-
 @Injectable({
   providedIn: 'root',
 })
@@ -58,20 +53,6 @@ export class ShareCardExportService {
     }
 
     return new File([blob], filename, { type: 'image/png' });
-  }
-
-  async shareOrDownloadPng(file: File, options: ShareCardShareOptions): Promise<'shared' | 'downloaded'> {
-    const sharePayload: ShareData = {
-      files: [file],
-    };
-
-    if (navigator.share && (!navigator.canShare || navigator.canShare(sharePayload))) {
-      await navigator.share(sharePayload);
-      return 'shared';
-    }
-
-    this.downloadFile(file);
-    return 'downloaded';
   }
 
   downloadFile(file: File): void {

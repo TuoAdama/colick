@@ -54,7 +54,7 @@ describe('ReservationDetailsPageComponent', () => {
   const shareCardExportServiceMock = {
     generateQrCodeDataUrl: jasmine.createSpy('generateQrCodeDataUrl'),
     captureElementAsPngFile: jasmine.createSpy('captureElementAsPngFile'),
-    shareOrDownloadPng: jasmine.createSpy('shareOrDownloadPng'),
+    downloadFile: jasmine.createSpy('downloadFile'),
   };
 
   beforeEach(async () => {
@@ -75,7 +75,7 @@ describe('ReservationDetailsPageComponent', () => {
     shareCardMapperServiceMock.buildFileDate.calls.reset();
     shareCardExportServiceMock.generateQrCodeDataUrl.calls.reset();
     shareCardExportServiceMock.captureElementAsPngFile.calls.reset();
-    shareCardExportServiceMock.shareOrDownloadPng.calls.reset();
+    shareCardExportServiceMock.downloadFile.calls.reset();
 
     tripServiceMock.getTripById.and.returnValue(of(buildTrip()));
     tripServiceMock.getTripBookings.and.returnValue(of([buildBooking()]));
@@ -130,7 +130,6 @@ describe('ReservationDetailsPageComponent', () => {
     shareCardExportServiceMock.captureElementAsPngFile.and.resolveTo(
       new File(['png'], 'coliclic-annonce-2025-07-14.png', { type: 'image/png' })
     );
-    shareCardExportServiceMock.shareOrDownloadPng.and.resolveTo('downloaded');
 
     await TestBed.configureTestingModule({
       imports: [ReservationDetailsPageComponent],
@@ -306,43 +305,44 @@ describe('ReservationDetailsPageComponent', () => {
     const deleteButton = fixture.nativeElement.querySelector(
       '#trip-summary-panel button[aria-label="Supprimer le trajet"]'
     ) as HTMLButtonElement | null;
-    const shareButton = fixture.nativeElement.querySelector(
-      '[data-testid="share-trip-announcement-button"]'
+    const downloadButton = fixture.nativeElement.querySelector(
+      '[data-testid="download-trip-announcement-button"]'
     ) as HTMLButtonElement | null;
 
     expect(editLink).not.toBeNull();
     expect(editLink?.getAttribute('href')).toContain('/propose/12');
     expect(deleteButton).not.toBeNull();
-    expect(shareButton).not.toBeNull();
-    expect(shareButton?.closest('[data-testid="mobile-trip-indicators"]')).not.toBeNull();
-    expect(shareButton?.textContent).toContain("Partager l'annonce");
-    expect(shareButton?.textContent).toContain('Créer une affiche pour WhatsApp et les stories');
-    expect(shareButton?.classList.contains('bg-white')).toBeTrue();
-    expect(shareButton?.classList.contains('border')).toBeTrue();
+    expect(downloadButton).not.toBeNull();
+    expect(downloadButton?.closest('[data-testid="mobile-trip-indicators"]')).not.toBeNull();
+    expect(downloadButton?.getAttribute('aria-label')).toBe("Télécharger l'image de l'annonce");
+    expect(downloadButton?.textContent).toContain("Télécharger l'affiche");
+    expect(downloadButton?.textContent).toContain('L’image sera téléchargée sur votre appareil');
+    expect(downloadButton?.classList.contains('bg-white')).toBeTrue();
+    expect(downloadButton?.classList.contains('border')).toBeTrue();
 
-    const share = spyOn(component, 'shareTripAnnouncement');
-    shareButton!.click();
-    expect(share).toHaveBeenCalledTimes(1);
+    const download = spyOn(component, 'downloadTripAnnouncementImage');
+    downloadButton!.click();
+    expect(download).toHaveBeenCalledTimes(1);
 
     pencil.click();
     fixture.detectChanges();
 
     expect(pencil.getAttribute('aria-expanded')).toBe('false');
     expect(fixture.nativeElement.querySelector('#trip-summary-panel')).toBeNull();
-    expect(fixture.nativeElement.querySelector('[data-testid="share-trip-announcement-button"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="download-trip-announcement-button"]')).not.toBeNull();
   });
 
-  it('disables the share card and shows progress while an affiche is generating', () => {
+  it('disables the download button and shows progress while the image is generating', () => {
     createComponent();
     component.isGeneratingShareCard = true;
     fixture.detectChanges();
 
-    const shareButton = fixture.nativeElement.querySelector(
-      '[data-testid="share-trip-announcement-button"]'
+    const downloadButton = fixture.nativeElement.querySelector(
+      '[data-testid="download-trip-announcement-button"]'
     ) as HTMLButtonElement;
 
-    expect(shareButton.disabled).toBeTrue();
-    expect(shareButton.textContent).toContain('Génération de l’affiche...');
+    expect(downloadButton.disabled).toBeTrue();
+    expect(downloadButton.textContent).toContain('Génération de l’affiche...');
   });
 
   it('anchors fixed mobile trip actions to the bottom of the viewport', () => {
@@ -407,14 +407,14 @@ describe('ReservationDetailsPageComponent', () => {
   });
 
   for (const status of ['COMPLETED', 'CANCELLED'] as const) {
-    it(`hides editing, deletion and sharing for ${status.toLowerCase()} trips`, () => {
+    it(`hides editing, deletion and image download for ${status.toLowerCase()} trips`, () => {
       tripServiceMock.getTripById.and.returnValue(of({ ...buildTrip(), status }));
 
       createComponent();
 
       expect(fixture.nativeElement.querySelector('[data-testid="edit-trip-link"]')).toBeNull();
       expect(fixture.nativeElement.querySelector('[data-testid="mobile-trip-actions-toggle"]')).toBeNull();
-      expect(fixture.nativeElement.querySelector('[data-testid="share-trip-announcement-button"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-testid="download-trip-announcement-button"]')).toBeNull();
       expect(fixture.nativeElement.querySelector('[data-testid="mobile-trip-indicators"]')).not.toBeNull();
 
       component.toggleTripSummary();
@@ -428,10 +428,10 @@ describe('ReservationDetailsPageComponent', () => {
     });
   }
 
-  it('generates the share card and uses the native share fallback service', async () => {
+  it('generates and downloads the announcement PNG', async () => {
     createComponent();
 
-    await component.shareTripAnnouncement();
+    await component.downloadTripAnnouncementImage();
 
     expect(shareCardMapperServiceMock.mapActiveTripToShareCard).toHaveBeenCalledWith(
       component.trip,
@@ -442,9 +442,8 @@ describe('ReservationDetailsPageComponent', () => {
       'http://localhost:4200/search?from=Paris&to=Abidjan'
     );
     expect(shareCardExportServiceMock.captureElementAsPngFile).toHaveBeenCalled();
-    expect(shareCardExportServiceMock.shareOrDownloadPng).toHaveBeenCalledWith(
-      jasmine.any(File),
-      jasmine.objectContaining({ title: 'Trajet disponible sur Coliclic' })
+    expect(shareCardExportServiceMock.downloadFile).toHaveBeenCalledOnceWith(
+      jasmine.objectContaining({ name: 'coliclic-annonce-2025-07-14.png', type: 'image/png' })
     );
     expect(component.isGeneratingShareCard).toBeFalse();
     expect(component.shareCardData).toBeNull();
