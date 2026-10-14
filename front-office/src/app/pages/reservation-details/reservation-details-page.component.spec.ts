@@ -610,6 +610,15 @@ describe('ReservationDetailsPageComponent', () => {
     const metadata = fixture.nativeElement.querySelector(
       '[data-testid="trip-information-metadata"]'
     ) as HTMLElement | null;
+    const country = fixture.nativeElement.querySelector(
+      '[data-testid="trip-information-country"]'
+    ) as HTMLElement | null;
+    const separator = fixture.nativeElement.querySelector(
+      '[data-testid="trip-information-separator"]'
+    ) as HTMLElement | null;
+    const departure = fixture.nativeElement.querySelector(
+      '[data-testid="trip-information-departure"]'
+    ) as HTMLElement | null;
     const editLink = fixture.nativeElement.querySelector(
       '[data-testid="edit-trip-link"]'
     ) as HTMLAnchorElement | null;
@@ -620,6 +629,12 @@ describe('ReservationDetailsPageComponent', () => {
     expect(tripCard).not.toBeNull();
     expect(route?.textContent?.trim()).toBe('Paris → Abidjan');
     expect(metadata?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Côte d\'Ivoire • Départ le 14/07 • 08:00');
+    expect(country?.classList.contains('block')).toBeTrue();
+    expect(country?.classList.contains('sm:inline')).toBeTrue();
+    expect(separator?.classList.contains('hidden')).toBeTrue();
+    expect(separator?.classList.contains('sm:inline')).toBeTrue();
+    expect(departure?.classList.contains('block')).toBeTrue();
+    expect(departure?.classList.contains('sm:inline')).toBeTrue();
     expect(editLink?.getAttribute('href')).toContain('/propose/12');
     expect(editLink?.classList.contains('hidden')).toBeTrue();
     expect(editLink?.classList.contains('md:inline-flex')).toBeTrue();

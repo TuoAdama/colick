@@ -55,14 +55,16 @@
                     {{ trip.departureAddress }} → {{ trip.destination }}
                   </span>
                 </h1>
-                <p class="mt-0.5 truncate text-sm text-text-secondary" data-testid="trip-information-metadata">
+                <p class="mt-0.5 text-sm text-text-secondary sm:truncate" data-testid="trip-information-metadata">
                   @if (countryName(trip.destination)) {
-                    {{ countryName(trip.destination) }}
-                    <span class="mx-1 text-text-muted">•</span>
+                    <span class="block sm:inline" data-testid="trip-information-country">{{ countryName(trip.destination) }}</span>{{ ' ' }}
+                    <span class="mx-1 hidden text-text-muted sm:inline" data-testid="trip-information-separator">•</span>
                   }
-                  Départ le {{ trip.departureTime | date:'dd/MM' }}
-                  <span class="mx-1 text-text-muted">•</span>
-                  {{ trip.departureTime | date:'HH:mm' }}
+                  <span class="block sm:inline" data-testid="trip-information-departure">
+                    Départ le {{ trip.departureTime | date:'dd/MM' }}
+                    <span class="mx-1 text-text-muted">•</span>
+                    {{ trip.departureTime | date:'HH:mm' }}
+                  </span>
                 </p>
               </div>
             </button>
