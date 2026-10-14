@@ -553,16 +553,14 @@ describe('ReservationDetailsPageComponent', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('cancels the trip and navigates back to the dashboard received tab', () => {
+  it('cancels the trip and returns to its reservations page', () => {
     createComponent();
 
     component.openCancelTripModal();
     component.confirmCancelTrip();
 
     expect(tripServiceMock.cancelTrip).toHaveBeenCalledWith(12);
-    expect(router.navigate).toHaveBeenCalledWith(['/dashboard'], {
-      queryParams: { tab: 'received' },
-    });
+    expect(router.navigate).toHaveBeenCalledWith(['/trips', 12, 'reservations']);
   });
 
   it('confirms a booking delivery with the provided validation code', () => {
