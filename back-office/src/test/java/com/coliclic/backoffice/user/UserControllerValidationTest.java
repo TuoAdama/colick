@@ -11,8 +11,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -66,6 +68,25 @@ class UserControllerValidationTest {
                                   "password": "short"
                                 }
                                 """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void confirmEmail_shouldUsePostAfterExplicitUserAction() throws Exception {
+        when(userService.confirmEmailChange(eq("signup-token"))).thenReturn(UserResponse.builder()
+                .id(1L)
+                .firstName("Ada")
+                .lastName("Lovelace")
+                .email("ada@example.com")
+                .role(User.Role.USER)
+                .hasPassword(true)
+                .build());
+
+        mockMvc.perform(post("/users/confirm-email").param("token", "signup-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("ada@example.com"));
+
+        mockMvc.perform(get("/users/confirm-email").param("token", "signup-token"))
                 .andExpect(status().isBadRequest());
     }
 }

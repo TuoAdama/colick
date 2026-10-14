@@ -83,7 +83,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/public/parcel-guidelines", "/travelers/*/profile", "/travelers/*/reviews").permitAll()
                 .requestMatchers(HttpMethod.POST, "/users").permitAll()
                 .requestMatchers(HttpMethod.POST, "/contact").permitAll()
-                .requestMatchers(HttpMethod.GET, "/users/confirm-email").permitAll()
+                .requestMatchers(HttpMethod.POST, "/users/confirm-email").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/locations/**").permitAll()
                 .requestMatchers("/trips/search").permitAll()
