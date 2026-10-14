@@ -135,7 +135,9 @@ export class TripsManagementPageComponent implements OnInit {
       );
     }
 
-    return result;
+    return [...result].sort(
+      (a, b) => new Date(b.departureTime).getTime() - new Date(a.departureTime).getTime()
+    );
   }
 
   /** Get the paginated subset of filtered trips for the current page. */
