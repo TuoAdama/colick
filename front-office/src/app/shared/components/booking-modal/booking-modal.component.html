@@ -6,7 +6,7 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="booking-modal-title"
-    appModalFocus="#booking-title"
+    appModalFocus="#booking-modal-title"
     (click)="close()"
     (keydown.escape)="close()">
 
@@ -33,7 +33,7 @@
         </button>
 
         <!-- Title -->
-        <h2 id="booking-modal-title" class="text-xl font-bold text-text-primary pr-8">
+        <h2 id="booking-modal-title" tabindex="-1" class="text-xl font-bold text-text-primary pr-8">
           Envoyer une demande
         </h2>
         <p class="mt-1 text-xs font-semibold text-accent">Étape {{ currentStep }} sur 2 · {{ currentStep === 1 ? 'Informations' : 'Photo et sécurité' }}</p>
