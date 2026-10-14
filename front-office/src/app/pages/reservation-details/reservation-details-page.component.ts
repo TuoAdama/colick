@@ -296,7 +296,8 @@ export class ReservationDetailsPageComponent implements OnInit {
       next: () => {
         this.isCancellingTrip = false;
         this.isCancelTripModalOpen = false;
-        this.navigateBackToDashboard();
+        this.trip = { ...this.trip!, status: 'CANCELLED' };
+        void this.router.navigate(['/trips', this.trip!.id, 'reservations']);
       },
       error: (error: { error?: { message?: string } }) => {
         this.actionError = error.error?.message || "Impossible d'annuler ce trajet pour le moment.";
@@ -483,12 +484,6 @@ export class ReservationDetailsPageComponent implements OnInit {
       booking.id === updatedBooking.id ? updatedBooking : booking
     );
     this.clampCurrentPage();
-  }
-
-  private navigateBackToDashboard(): void {
-    void this.router.navigate(['/dashboard'], {
-      queryParams: { tab: 'received' },
-    });
   }
 
   private clampCurrentPage(): void {
