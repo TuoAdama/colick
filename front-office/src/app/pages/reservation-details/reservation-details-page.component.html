@@ -260,7 +260,7 @@
         </section>
       } @else {
         <section>
-          <div class="grid grid-cols-1 gap-4 xl:auto-rows-fr xl:grid-cols-2 xl:gap-6">
+          <div class="divide-y divide-border">
             @for (booking of paginatedBookings(); track booking.id) {
               <app-booking-request-card
                 [booking]="booking"
@@ -268,6 +268,7 @@
                 [isProcessing]="isBookingProcessing(booking.id)"
                 [tripId]="trip.id"
                 [pricePerKilo]="trip.pricePerKilo"
+                [destination]="trip.destination"
                 (accept)="acceptBooking($event)"
                 (reject)="rejectBooking($event)"
                 (remove)="openRemoveBookingModal($event)"

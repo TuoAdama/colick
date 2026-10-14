@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { BookingResponse } from '../../../models/booking.model';
 import { Trip } from '../../../models/trip.model';
@@ -9,16 +9,23 @@ import { Trip } from '../../../models/trip.model';
   standalone: true,
   imports: [CommonModule],
   host: {
-    class: 'block xl:h-full',
+    class: 'block',
   },
   templateUrl: './booking-request-card.component.html',
 })
 export class BookingRequestCardComponent {
   private readonly router = inject(Router);
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+
+  @ViewChild('optionsButton') private optionsButton?: ElementRef<HTMLButtonElement>;
+  @ViewChild('cancelButton') private cancelButton?: ElementRef<HTMLButtonElement>;
 
   @Input({ required: true }) booking!: BookingResponse;
   @Input({ required: true }) tripStatus!: Trip['status'];
   @Input() isProcessing = false;
+  @Input() destination = '';
+
+  isOptionsOpen = false;
   @Input({ required: true }) tripId!: number;
   @Input() pricePerKilo: number | null = null;
 
@@ -128,11 +135,48 @@ export class BookingRequestCardComponent {
     this.reject.emit(this.booking.id);
   }
 
+  toggleOptions(): void {
+    if (this.isProcessing) {
+      return;
+    }
+    this.isOptionsOpen = !this.isOptionsOpen;
+  }
+
+  focusCancel(event: Event): void {
+    event.preventDefault();
+    this.isOptionsOpen = true;
+    // Wait for Angular to render the action before moving keyboard focus.
+    setTimeout(() => this.cancelButton?.nativeElement.focus());
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.elementRef.nativeElement.contains(event.target as Node)) {
+      this.isOptionsOpen = false;
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  closeOptions(): void {
+    if (this.isOptionsOpen) {
+      this.isOptionsOpen = false;
+      this.optionsButton?.nativeElement.focus();
+    }
+  }
+
+  @HostListener('focusout', ['$event'])
+  onFocusOut(event: FocusEvent): void {
+    if (!this.elementRef.nativeElement.contains(event.relatedTarget as Node)) {
+      this.isOptionsOpen = false;
+    }
+  }
+
   onRemove(): void {
     if (this.isProcessing) {
       return;
     }
 
+    this.closeOptions();
     this.remove.emit(this.booking.id);
   }
 

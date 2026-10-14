@@ -489,6 +489,25 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.potentialAmount()).toBe(0);
   });
 
+  it('opens the existing confirmation from the list cancellation menu before removing a booking', () => {
+    tripServiceMock.getTripBookings.and.returnValue(of([buildBooking({ status: 'ACCEPTED' })]));
+    createComponent();
+    fixture.detectChanges();
+    const row = fixture.nativeElement.querySelector('app-booking-request-card');
+    expect(row.textContent).toContain(buildTrip().destination);
+    row.querySelector('button[aria-expanded]').click();
+    fixture.detectChanges();
+    row.querySelector('[id="booking-options-7"] button').click();
+    fixture.detectChanges();
+    expect(component.isRemoveBookingModalOpen).toBeTrue();
+    expect(component.pendingRemoveBookingId).toBe(7);
+    expect(tripServiceMock.removeBooking).not.toHaveBeenCalled();
+    component.confirmRemoveBooking();
+    fixture.detectChanges();
+    expect(tripServiceMock.removeBooking).toHaveBeenCalledWith(12, 7);
+    expect(fixture.nativeElement.querySelector('app-booking-request-card')).toBeNull();
+  });
+
   it('removes a booking after confirmation', () => {
     createComponent();
 
