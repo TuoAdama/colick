@@ -82,8 +82,8 @@ public class UserController {
         return ResponseEntity.accepted().build();
     }
 
-    /** Confirm an e-mail change via token (public endpoint, called from the front-end link). */
-    @GetMapping("/confirm-email")
+    /** Confirm an e-mail address via token after an explicit action in the front-end. */
+    @PostMapping("/confirm-email")
     public ResponseEntity<UserResponse> confirmEmailChange(@RequestParam String token) {
         return ResponseEntity.ok(userService.confirmEmailChange(token));
     }

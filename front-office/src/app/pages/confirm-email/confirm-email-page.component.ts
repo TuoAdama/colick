@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
-type State = 'loading' | 'success' | 'error';
+type State = 'ready' | 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-confirm-email-page',
@@ -15,13 +15,19 @@ export class ConfirmEmailPageComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
 
-  state: State = 'loading';
+  state: State = 'ready';
   email = '';
+  private token: string | null = null;
 
   ngOnInit(): void {
-    const token = this.route.snapshot.queryParamMap.get('token');
-    if (!token) { this.state = 'error'; return; }
-    this.authService.confirmEmail(token).subscribe({
+    this.token = this.route.snapshot.queryParamMap.get('token');
+    if (!this.token) this.state = 'error';
+  }
+
+  confirm(): void {
+    if (!this.token || this.state !== 'ready') return;
+    this.state = 'loading';
+    this.authService.confirmEmail(this.token).subscribe({
       next: (user) => {
         this.email = user.email;
         this.state = 'success';

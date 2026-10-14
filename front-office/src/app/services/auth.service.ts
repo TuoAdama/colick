@@ -160,7 +160,7 @@ export class AuthService {
 
   /** Confirm email token (signup activation or email change). */
   confirmEmail(token: string): Observable<UserResponse> {
-    return this.http.get<UserResponse>(`/api/users/confirm-email`, { params: { token } }).pipe(
+    return this.http.post<UserResponse>(`/api/users/confirm-email`, {}, { params: { token } }).pipe(
       tap((user) => {
         if (this.isLoggedIn()) {
           this.setUser(user);

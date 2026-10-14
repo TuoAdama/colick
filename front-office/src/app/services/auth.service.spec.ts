@@ -130,6 +130,15 @@ describe('AuthService', () => {
     httpMock.expectOne('/api/auth/google/config').flush({ enabled: true, clientId: 'google-client-id' });
   });
 
+  it('confirms an email only through an explicit POST request', () => {
+    service.confirmEmail('signup-token').subscribe();
+    const req = httpMock.expectOne((request) => request.url === '/api/users/confirm-email');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.params.get('token')).toBe('signup-token');
+    expect(req.request.body).toEqual({});
+    req.flush(user);
+  });
+
   it('normalizes the user after profile upload', () => {
     service.login('ada@example.com', 'password123').subscribe();
     httpMock.expectOne('/api/auth/login').flush({ user });
