@@ -28,6 +28,7 @@ export class ModalFocusDirective implements AfterViewInit, OnDestroy {
   private previouslyFocusedElement: HTMLElement | null = null;
   private destroyed = false;
   private previousBodyStyles: Partial<CSSStyleDeclaration> | null = null;
+  private previousScrollBehavior: string | null = null;
   private previousScrollY = 0;
 
   /** CSS selector for the element that receives focus when the dialog opens. */
@@ -59,6 +60,7 @@ export class ModalFocusDirective implements AfterViewInit, OnDestroy {
     if (!body || !view) return;
 
     this.previousScrollY = view.scrollY;
+    this.previousScrollBehavior = this.document.documentElement.style.scrollBehavior;
     this.previousBodyStyles = {
       position: body.style.position,
       top: body.style.top,
@@ -90,7 +92,12 @@ export class ModalFocusDirective implements AfterViewInit, OnDestroy {
     body.style.width = this.previousBodyStyles.width ?? '';
     body.style.overflow = this.previousBodyStyles.overflow ?? '';
     this.previousBodyStyles = null;
+
+    const root = this.document.documentElement;
+    root.style.scrollBehavior = 'auto';
     view.scrollTo(0, this.previousScrollY);
+    root.style.scrollBehavior = this.previousScrollBehavior ?? '';
+    this.previousScrollBehavior = null;
   }
 
   @HostListener('document:keydown', ['$event'])

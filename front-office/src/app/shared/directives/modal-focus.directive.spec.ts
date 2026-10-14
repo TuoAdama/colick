@@ -106,8 +106,13 @@ describe('ModalFocusDirective', () => {
       overflow: body.style.overflow,
     };
     const scrollYDescriptor = Object.getOwnPropertyDescriptor(window, 'scrollY');
+    const root = document.documentElement;
+    const originalScrollBehavior = root.style.scrollBehavior;
     Object.defineProperty(window, 'scrollY', { configurable: true, value: 240 });
-    const scrollTo = spyOn(window, 'scrollTo');
+    root.style.scrollBehavior = 'smooth';
+    const scrollTo = spyOn(window, 'scrollTo').and.callFake(() => {
+      expect(root.style.scrollBehavior).toBe('auto');
+    });
 
     await openDialog();
 
@@ -125,6 +130,8 @@ describe('ModalFocusDirective', () => {
     expect(body.style.width).toBe(originalStyles.width);
     expect(body.style.overflow).toBe(originalStyles.overflow);
     expect(scrollTo).toHaveBeenCalledWith(0, 240);
+    expect(root.style.scrollBehavior).toBe('smooth');
+    root.style.scrollBehavior = originalScrollBehavior;
 
     if (scrollYDescriptor) {
       Object.defineProperty(window, 'scrollY', scrollYDescriptor);
