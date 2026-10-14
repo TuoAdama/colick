@@ -296,6 +296,7 @@ export class ReservationDetailsPageComponent implements OnInit {
       next: () => {
         this.isCancellingTrip = false;
         this.isCancelTripModalOpen = false;
+        this.trip = { ...this.trip!, status: 'CANCELLED' };
         void this.router.navigate(['/trips', this.trip!.id, 'reservations']);
       },
       error: (error: { error?: { message?: string } }) => {

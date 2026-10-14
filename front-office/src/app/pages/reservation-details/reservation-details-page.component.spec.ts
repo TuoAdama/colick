@@ -560,6 +560,7 @@ describe('ReservationDetailsPageComponent', () => {
     component.confirmCancelTrip();
 
     expect(tripServiceMock.cancelTrip).toHaveBeenCalledWith(12);
+    expect(component.trip?.status).toBe('CANCELLED');
     expect(router.navigate).toHaveBeenCalledWith(['/trips', 12, 'reservations']);
   });
 
