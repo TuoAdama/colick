@@ -94,4 +94,49 @@ describe('ModalFocusDirective', () => {
 
     expect(document.activeElement?.id).toBe('modal-opener');
   });
+
+  it('locks background scrolling while the dialog is open and restores the page position on close', async () => {
+    const body = document.body;
+    const originalStyles = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
+    const scrollYDescriptor = Object.getOwnPropertyDescriptor(window, 'scrollY');
+    const root = document.documentElement;
+    const originalScrollBehavior = root.style.scrollBehavior;
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 240 });
+    root.style.scrollBehavior = 'smooth';
+    const scrollTo = spyOn(window, 'scrollTo').and.callFake(() => {
+      expect(root.style.scrollBehavior).toBe('auto');
+    });
+
+    await openDialog();
+
+    expect(body.style.position).toBe('fixed');
+    expect(body.style.top).toBe('-240px');
+    expect(body.style.overflow).toBe('hidden');
+
+    component.isOpen = false;
+    fixture.detectChanges();
+
+    expect(body.style.position).toBe(originalStyles.position);
+    expect(body.style.top).toBe(originalStyles.top);
+    expect(body.style.left).toBe(originalStyles.left);
+    expect(body.style.right).toBe(originalStyles.right);
+    expect(body.style.width).toBe(originalStyles.width);
+    expect(body.style.overflow).toBe(originalStyles.overflow);
+    expect(scrollTo).toHaveBeenCalledWith(0, 240);
+    expect(root.style.scrollBehavior).toBe('smooth');
+    root.style.scrollBehavior = originalScrollBehavior;
+
+    if (scrollYDescriptor) {
+      Object.defineProperty(window, 'scrollY', scrollYDescriptor);
+    } else {
+      Reflect.deleteProperty(window, 'scrollY');
+    }
+  });
 });

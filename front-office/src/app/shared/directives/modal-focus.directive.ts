@@ -27,6 +27,9 @@ export class ModalFocusDirective implements AfterViewInit, OnDestroy {
   private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private previouslyFocusedElement: HTMLElement | null = null;
   private destroyed = false;
+  private previousBodyStyles: Partial<CSSStyleDeclaration> | null = null;
+  private previousScrollBehavior: string | null = null;
+  private previousScrollY = 0;
 
   /** CSS selector for the element that receives focus when the dialog opens. */
   @Input('appModalFocus') initialFocusSelector = '';
@@ -34,6 +37,7 @@ export class ModalFocusDirective implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     const activeElement = this.document.activeElement;
     this.previouslyFocusedElement = activeElement instanceof HTMLElement ? activeElement : null;
+    this.lockPageScroll();
 
     queueMicrotask(() => {
       if (!this.destroyed) {
@@ -44,9 +48,56 @@ export class ModalFocusDirective implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    this.unlockPageScroll();
     if (this.previouslyFocusedElement?.isConnected) {
       this.previouslyFocusedElement.focus();
     }
+  }
+
+  private lockPageScroll(): void {
+    const body = this.document.body;
+    const view = this.document.defaultView;
+    if (!body || !view) return;
+
+    this.previousScrollY = view.scrollY;
+    this.previousScrollBehavior = this.document.documentElement.style.scrollBehavior;
+    this.previousBodyStyles = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
+
+    // Fixing the body prevents background scrolling in Safari on iOS as well as
+    // browsers that support overscroll-behavior on the modal scroll container.
+    body.style.position = 'fixed';
+    body.style.top = `-${this.previousScrollY}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+  }
+
+  private unlockPageScroll(): void {
+    const body = this.document.body;
+    const view = this.document.defaultView;
+    if (!body || !view || !this.previousBodyStyles) return;
+
+    body.style.position = this.previousBodyStyles.position ?? '';
+    body.style.top = this.previousBodyStyles.top ?? '';
+    body.style.left = this.previousBodyStyles.left ?? '';
+    body.style.right = this.previousBodyStyles.right ?? '';
+    body.style.width = this.previousBodyStyles.width ?? '';
+    body.style.overflow = this.previousBodyStyles.overflow ?? '';
+    this.previousBodyStyles = null;
+
+    const root = this.document.documentElement;
+    root.style.scrollBehavior = 'auto';
+    view.scrollTo(0, this.previousScrollY);
+    root.style.scrollBehavior = this.previousScrollBehavior ?? '';
+    this.previousScrollBehavior = null;
   }
 
   @HostListener('document:keydown', ['$event'])
