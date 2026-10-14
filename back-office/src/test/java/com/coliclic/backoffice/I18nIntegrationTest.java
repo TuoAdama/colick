@@ -1,5 +1,7 @@
 package com.coliclic.backoffice;
 
+import com.coliclic.backoffice.user.entity.User;
+import com.coliclic.backoffice.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -7,6 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -22,6 +26,34 @@ class I18nIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Test
+    void duplicateSignup_shouldReturnFormattedFrenchConflictMessage() throws Exception {
+        String email = "jean-" + UUID.randomUUID() + "@example.com";
+        userRepository.saveAndFlush(User.builder()
+                .firstName("Jean")
+                .lastName("Dupont")
+                .email(email)
+                .password("hashed-password")
+                .enabled(false)
+                .build());
+
+        mockMvc.perform(post("/api/users")
+                        .with(csrf())
+                        .contextPath("/api")
+                        .servletPath("/users")
+                        .header("Accept-Language", "fr")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"firstName":"Jean","lastName":"Dupont","email":"%s","password":"password123"}
+                                """.formatted(email)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(
+                        "Un utilisateur avec l'adresse e-mail " + email + " existe déjà"));
+    }
 
     @Test
     void forgotPassword_shouldTranslateSuccessMessageInEnglish() throws Exception {
