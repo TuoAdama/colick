@@ -93,6 +93,8 @@ describe('TripCompletionPageComponent', () => {
     createComponent();
 
     expect(fixture.nativeElement.textContent).toContain('Validation des codes de livraison');
+    expect(fixture.nativeElement.textContent).toContain('envoyés par e-mail aux expéditeurs');
+    expect(fixture.nativeElement.textContent).toContain('Chaque expéditeur reçoit un code unique par e-mail à l’adresse de son compte');
   });
 
   it('validates a booking code and updates the booking state', () => {

@@ -175,6 +175,7 @@ describe('BookingRequestFormComponent', () => {
     await fixture.whenStable();
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Demande envoyée avec succès !');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('l’expéditeur recevra le code par e-mail à l’adresse de son compte');
     expect(scrollCardIntoView).toHaveBeenCalledOnceWith({ behavior: 'smooth', block: 'start' });
   });
 
