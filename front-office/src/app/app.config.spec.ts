@@ -72,7 +72,7 @@ describe('app router scrolling', () => {
     expect(viewportScroller.scrollToPosition).toHaveBeenCalledWith([0, 0]);
   });
 
-  it('restores the saved position after a browser back navigation', async () => {
+  it('scrolls to the top after a browser back navigation', async () => {
     await router.navigate(['/login']);
     await new Promise((resolve) => setTimeout(resolve));
     viewportScroller.scrollToPosition.calls.reset();
@@ -84,7 +84,7 @@ describe('app router scrolling', () => {
     await navigationEnd;
     await new Promise((resolve) => setTimeout(resolve));
 
-    expect(viewportScroller.scrollToPosition).toHaveBeenCalledWith([0, 640]);
+    expect(viewportScroller.scrollToPosition).toHaveBeenCalledWith([0, 0]);
   });
 
   it('scrolls to the anchor on a document route', async () => {

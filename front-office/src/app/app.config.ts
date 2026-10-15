@@ -9,7 +9,7 @@ import { AuthService } from './services/auth.service';
 import { AppConfigService } from './services/app-config.service';
 
 export const appRouterScrolling = withInMemoryScrolling({
-  scrollPositionRestoration: 'enabled',
+  scrollPositionRestoration: 'top',
   anchorScrolling: 'enabled',
 });
 
