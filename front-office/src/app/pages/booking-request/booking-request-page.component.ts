@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnalyticsService } from '../../services/analytics.service';
 import { AuthService } from '../../services/auth.service';
@@ -15,6 +15,7 @@ import { Trip } from '../../models/trip.model';
   templateUrl: './booking-request-page.component.html',
 })
 export class BookingRequestPageComponent implements OnInit {
+  @ViewChild(BookingRequestFormComponent) private requestForm?: BookingRequestFormComponent;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly tripService = inject(TripService);
@@ -65,6 +66,14 @@ export class BookingRequestPageComponent implements OnInit {
 
   goBack(): void {
     void this.router.navigateByUrl(this.returnUrl);
+  }
+
+  goBackFromRequest(): void {
+    if (this.requestForm?.currentStep === 2) {
+      this.requestForm.backToDetails();
+      return;
+    }
+    this.goBack();
   }
 
   onBookingCreated(booking: BookingResponse): void {

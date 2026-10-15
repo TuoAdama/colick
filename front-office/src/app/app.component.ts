@@ -27,6 +27,7 @@ export class AppComponent {
   readonly analytics = inject(AnalyticsService);
   private readonly reservationShellRoutePattern = /^\/trips\/\d+\/reservations(?:\/[^?#]*)?(?:[?#].*)?$/;
   private readonly publicTripReferenceRoutePattern = /^\/trips\/ref\/[^/?#]+(?:[?#].*)?$/;
+  private readonly publicTripBookingRequestRoutePattern = /^\/trips\/ref\/[^/?#]+\/request(?:[?#].*)?$/;
   private readonly dashboardShellRoutePatterns = [
     /^\/dashboard(?:[?#].*)?$/,
     /^\/trips(?:\/[^?#]*)?(?:[?#].*)?$/,
@@ -66,6 +67,7 @@ export class AppComponent {
     this.currentPagePath = url.split(/[?#]/, 1)[0] || '/';
     this.showSharedChrome =
       this.publicTripReferenceRoutePattern.test(url) ||
+      this.publicTripBookingRequestRoutePattern.test(url) ||
       (!this.reservationShellRoutePattern.test(url) &&
         !this.dashboardShellRoutePatterns.some((pattern) => pattern.test(url)));
   }

@@ -1,8 +1,8 @@
-<main class="min-h-screen bg-background-primary px-4 pb-12 pt-24 sm:px-6 sm:pt-28">
+<main class="min-h-screen bg-background-primary px-4 pb-12 pt-20 sm:px-6 sm:pt-24">
   <div class="mx-auto max-w-4xl">
     <button
       type="button"
-      (click)="goBack()"
+      (click)="trip ? goBackFromRequest() : goBack()"
       class="mb-5 inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-primary transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-secondary"
       data-testid="booking-request-back-link">
       <span aria-hidden="true">←</span>

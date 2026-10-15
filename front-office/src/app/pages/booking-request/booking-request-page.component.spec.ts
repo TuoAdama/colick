@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { Trip } from '../../models/trip.model';
@@ -6,6 +7,7 @@ import { AnalyticsService } from '../../services/analytics.service';
 import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
 import { BookingRequestPageComponent } from './booking-request-page.component';
+import { BookingRequestFormComponent } from '../../shared/components/booking-request-form/booking-request-form.component';
 
 describe('BookingRequestPageComponent', () => {
   let fixture: ComponentFixture<BookingRequestPageComponent>;
@@ -80,6 +82,17 @@ describe('BookingRequestPageComponent', () => {
     component.goBack();
 
     expect(router.navigateByUrl).toHaveBeenCalledWith('/search?from=Paris&to=Abidjan&sort=price_asc');
+  });
+
+  it('uses the page back action to return from step 2 to step 1 before leaving', () => {
+    const requestForm = fixture.debugElement.query(By.directive(BookingRequestFormComponent)).componentInstance as BookingRequestFormComponent;
+    requestForm.currentStep = 2;
+    fixture.detectChanges();
+
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('[data-testid="booking-request-back-link"]')?.click();
+
+    expect(requestForm.currentStep as number).toBe(1);
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
   });
 
   it('falls back to the trip page when a return URL is external', () => {

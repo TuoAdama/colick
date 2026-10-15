@@ -79,6 +79,19 @@ describe('BookingRequestFormComponent', () => {
     expect(component.bookingForm.controls.weight.value).toBe(2.5);
   });
 
+  it('returns from the safety step to the information step using the footer action', () => {
+    component.currentStep = 2;
+    fixture.detectChanges();
+
+    const backButton = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
+      .find(button => button.textContent?.trim() === 'Retour aux informations');
+    backButton?.click();
+    fixture.detectChanges();
+
+    expect(component.currentStep as number).toBe(1);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Étape 1 sur 2');
+  });
+
   it('trims recipient contact before sending the booking request', () => {
     component.bookingForm.patchValue({
       title: 'Documents',
