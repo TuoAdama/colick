@@ -114,6 +114,7 @@ describe('ParcelSearchPageComponent', () => {
 
     const swapButton = fixture.nativeElement.querySelector('[data-testid="parcel-search-route-swap"]') as HTMLButtonElement;
     expect(swapButton.getAttribute('aria-label')).toBe('Inverser le départ et la destination');
+    expectResponsiveSwapIcons(swapButton);
     swapButton.click();
 
     expect(component.departure).toBe(destination);
@@ -275,3 +276,13 @@ describe('ParcelSearchPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Date flexible');
   });
 });
+
+function expectResponsiveSwapIcons(button: HTMLButtonElement): void {
+  const icons = button.querySelectorAll<HTMLElement>('.material-symbols-outlined');
+  expect(icons.length).toBe(2);
+  expect(icons[0].textContent?.trim()).toBe('swap_vert');
+  expect(icons[0].classList.contains('md:hidden')).toBeTrue();
+  expect(icons[1].textContent?.trim()).toBe('swap_horiz');
+  expect(icons[1].classList.contains('hidden')).toBeTrue();
+  expect(icons[1].classList.contains('md:inline')).toBeTrue();
+}

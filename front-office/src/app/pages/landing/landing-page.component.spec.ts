@@ -115,6 +115,7 @@ describe('LandingPageComponent', () => {
     const host = fixture.nativeElement as HTMLElement;
     const sendSwapButton = host.querySelector('[data-testid="landing-route-swap"]') as HTMLButtonElement;
     expect(sendSwapButton.getAttribute('aria-label')).toBe('Inverser le départ et la destination');
+    expectResponsiveSwapIcons(sendSwapButton);
     sendSwapButton.click();
 
     expect(component.departure).toBe(destination);
@@ -128,7 +129,9 @@ describe('LandingPageComponent', () => {
 
     component.selectMode('transport');
     fixture.detectChanges();
-    expect(host.querySelector('[data-testid="landing-route-swap"]')).not.toBeNull();
+    const transportSwapButton = host.querySelector('[data-testid="landing-route-swap"]') as HTMLButtonElement;
+    expect(transportSwapButton).not.toBeNull();
+    expectResponsiveSwapIcons(transportSwapButton);
   });
 
   it('ignores an autocomplete response started before the route is swapped', fakeAsync(() => {
@@ -312,6 +315,16 @@ describe('LandingPageComponent', () => {
     expect(tripServiceMock.getLandingFeed).toHaveBeenCalled();
   });
 });
+
+function expectResponsiveSwapIcons(button: HTMLButtonElement): void {
+  const icons = button.querySelectorAll<HTMLElement>('.material-symbols-outlined');
+  expect(icons.length).toBe(2);
+  expect(icons[0].textContent?.trim()).toBe('swap_vert');
+  expect(icons[0].classList.contains('md:hidden')).toBeTrue();
+  expect(icons[1].textContent?.trim()).toBe('swap_horiz');
+  expect(icons[1].classList.contains('hidden')).toBeTrue();
+  expect(icons[1].classList.contains('md:inline')).toBeTrue();
+}
 
 function buildLandingTripCard(overrides: { reference?: string } = {}) {
   return {
