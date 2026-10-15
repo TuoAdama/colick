@@ -48,6 +48,7 @@ class BookingValidationServiceTest {
     private BookingValidationService bookingValidationService;
 
     private Trip trip;
+    private User sender;
 
     @BeforeEach
     void setUp() {
@@ -67,6 +68,13 @@ class BookingValidationServiceTest {
                 .destination("Abidjan")
                 .departureTime(LocalDateTime.now().plusDays(5))
                 .arrivalTime(LocalDateTime.now().plusDays(6))
+                .build();
+        sender = User.builder()
+                .id(2L)
+                .firstName("Bob")
+                .lastName("Sender")
+                .email("bob@example.com")
+                .role(User.Role.USER)
                 .build();
     }
 
@@ -92,10 +100,11 @@ class BookingValidationServiceTest {
     }
 
     @Test
-    void sendValidationCode_shouldSendEmailAndStoreMetadata_forEmailContact() {
+    void sendValidationCode_shouldSendEmailToSenderAndStoreMetadata_forEmailContact() {
         TripBooking booking = TripBooking.builder()
                 .id(20L)
                 .trip(trip)
+                .sender(sender)
                 .title("Documents")
                 .recipientContact("Recipient@Example.com")
                 .status(TripBooking.BookingStatus.ACCEPTED)
@@ -105,7 +114,7 @@ class BookingValidationServiceTest {
 
         bookingValidationService.sendValidationCode(booking);
 
-        assertThat(booking.getRecipientContact()).isEqualTo("recipient@example.com");
+        assertThat(booking.getRecipientContact()).isEqualTo("Recipient@Example.com");
         assertThat(booking.getValidationDeliveryChannel()).isEqualTo(TripBooking.ValidationDeliveryChannel.EMAIL);
         assertThat(booking.getValidationDeliveryStatus()).isEqualTo(TripBooking.ValidationDeliveryStatus.DELIVERED);
         assertThat(booking.getValidationCode()).matches("\\d{6}");
@@ -120,7 +129,7 @@ class BookingValidationServiceTest {
                 .contains("TRIP:10")
                 .contains("CODE:" + booking.getValidationCode());
         verify(emailService).sendBookingValidationCodeEmail(
-                eq("recipient@example.com"),
+                eq("bob@example.com"),
                 eq("Documents"),
                 eq(booking.getValidationCode()),
                 eq("data:image/png;base64,qr"),
@@ -130,43 +139,47 @@ class BookingValidationServiceTest {
     }
 
     @Test
-    void sendValidationCode_shouldSendSmsAndStoreMetadata_forPhoneContact() {
+    void sendValidationCode_shouldSendEmailToSenderAndStoreMetadata_forPhoneContact() {
         TripBooking booking = TripBooking.builder()
                 .id(21L)
                 .trip(trip)
+                .sender(sender)
                 .title("Valise")
                 .recipientContact("+225 07 00 00 00")
                 .status(TripBooking.BookingStatus.ACCEPTED)
                 .build();
+        when(qrCodeService.generateDataUri(anyString())).thenReturn("data:image/png;base64,qr");
 
         bookingValidationService.sendValidationCode(booking);
 
-        assertThat(booking.getRecipientContact()).isEqualTo("+22507000000");
-        assertThat(booking.getValidationDeliveryChannel()).isEqualTo(TripBooking.ValidationDeliveryChannel.SMS);
+        assertThat(booking.getRecipientContact()).isEqualTo("+225 07 00 00 00");
+        assertThat(booking.getValidationDeliveryChannel()).isEqualTo(TripBooking.ValidationDeliveryChannel.EMAIL);
         assertThat(booking.getValidationDeliveryStatus()).isEqualTo(TripBooking.ValidationDeliveryStatus.DELIVERED);
         assertThat(booking.getValidationCode()).matches("\\d{6}");
         assertThat(booking.getValidationCodeSentAt()).isNotNull();
-        verify(smsService).sendValidationCode(
-                eq("+22507000000"),
+        verify(emailService).sendBookingValidationCodeEmail(
+                eq("bob@example.com"),
+                eq("Valise"),
                 eq(booking.getValidationCode()),
+                anyString(),
                 eq("Paris"),
                 eq("Abidjan"));
-        verifyNoInteractions(emailService);
-        verifyNoInteractions(qrCodeService);
+        verifyNoInteractions(smsService);
     }
 
     @Test
-    void sendValidationCode_shouldThrowDeliveryException_whenSmsSendFails() {
+    void sendValidationCode_shouldThrowDeliveryException_whenEmailSendFails() {
         TripBooking booking = TripBooking.builder()
                 .id(21L)
                 .trip(trip)
+                .sender(sender)
                 .title("Valise")
                 .recipientContact("+225 07 00 00 00")
                 .status(TripBooking.BookingStatus.ACCEPTED)
                 .build();
 
-        doThrow(new IllegalStateException("SMS delivery is not configured"))
-                .when(smsService).sendValidationCode(anyString(), anyString(), anyString(), anyString());
+        doThrow(new IllegalStateException("Email delivery is not configured"))
+                .when(emailService).sendBookingValidationCodeEmail(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
 
         assertThatThrownBy(() -> bookingValidationService.sendValidationCode(booking))
                 .isInstanceOf(ValidationCodeDeliveryException.class)
@@ -186,13 +199,12 @@ class BookingValidationServiceTest {
 
         bookingValidationService.markValidationCodeDeliveryFailed(
                 booking,
-                "+22507000000",
-                TripBooking.ValidationDeliveryChannel.SMS
+                TripBooking.ValidationDeliveryChannel.EMAIL
         );
 
         assertThat(booking.getRecipientContact()).isEqualTo("+22507000000");
         assertThat(booking.getValidationCode()).isNull();
-        assertThat(booking.getValidationDeliveryChannel()).isEqualTo(TripBooking.ValidationDeliveryChannel.SMS);
+        assertThat(booking.getValidationDeliveryChannel()).isEqualTo(TripBooking.ValidationDeliveryChannel.EMAIL);
         assertThat(booking.getValidationDeliveryStatus()).isEqualTo(TripBooking.ValidationDeliveryStatus.FAILED);
         assertThat(booking.getValidationCodeDeliveryFailedAt()).isNotNull();
     }

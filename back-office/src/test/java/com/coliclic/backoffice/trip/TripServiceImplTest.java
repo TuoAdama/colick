@@ -990,14 +990,12 @@ class TripServiceImplTest {
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
         doThrow(new ValidationCodeDeliveryException(
                 "Unable to deliver validation code",
-                "+22501000000",
-                TripBooking.ValidationDeliveryChannel.SMS,
-                new IllegalStateException("SMS delivery is not configured")
+                TripBooking.ValidationDeliveryChannel.EMAIL,
+                new IllegalStateException("Email delivery is not configured")
         )).when(bookingValidationService).sendValidationCode(savedBooking);
         doNothing().when(bookingValidationService).markValidationCodeDeliveryFailed(
                 savedBooking,
-                "+22501000000",
-                TripBooking.ValidationDeliveryChannel.SMS
+                TripBooking.ValidationDeliveryChannel.EMAIL
         );
         doNothing().when(emailService).sendTripBookingCreatedEmail(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
 
@@ -1006,8 +1004,7 @@ class TripServiceImplTest {
         assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
         verify(bookingValidationService).markValidationCodeDeliveryFailed(
                 savedBooking,
-                "+22501000000",
-                TripBooking.ValidationDeliveryChannel.SMS
+                TripBooking.ValidationDeliveryChannel.EMAIL
         );
     }
 
@@ -1120,9 +1117,8 @@ class TripServiceImplTest {
         when(bookingRepository.save(any())).thenReturn(booking);
         doThrow(new ValidationCodeDeliveryException(
                 "Unable to deliver validation code",
-                "+22507000000",
-                TripBooking.ValidationDeliveryChannel.SMS,
-                new IllegalStateException("SMS delivery is not configured")
+                TripBooking.ValidationDeliveryChannel.EMAIL,
+                new IllegalStateException("Email delivery is not configured")
         )).when(bookingValidationService).sendValidationCode(booking);
         doNothing().when(emailService).sendTripBookingAcceptedEmail(anyString(), anyString(), anyString(), anyString());
 
@@ -1131,8 +1127,7 @@ class TripServiceImplTest {
         assertThat(response.getStatus()).isEqualTo(TripBooking.BookingStatus.ACCEPTED);
         verify(bookingValidationService).markValidationCodeDeliveryFailed(
                 booking,
-                "+22507000000",
-                TripBooking.ValidationDeliveryChannel.SMS
+                TripBooking.ValidationDeliveryChannel.EMAIL
         );
     }
 

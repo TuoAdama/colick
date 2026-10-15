@@ -23,6 +23,7 @@ describe('HowItWorksPageComponent', () => {
     expect(text).toContain('Envoyer un colis');
     expect(text).toContain('Proposer un voyage');
     expect(text).toContain('sans commission Coliclic');
+    expect(text).toContain('le code de remise est envoyé par e-mail à l’adresse de votre compte');
   });
 
   it('offers calls to action for senders and travelers', () => {

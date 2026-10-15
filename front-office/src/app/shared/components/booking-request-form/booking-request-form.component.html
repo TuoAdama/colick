@@ -190,7 +190,7 @@
                        focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary
                        transition-shadow" />
               <p id="recipient-hint" class="mt-1.5 text-xs text-text-muted">
-                Le voyageur reçoit ce contact avec votre demande. Le code de remise sera envoyé après acceptation.
+                Le voyageur reçoit ce contact avec votre demande. Après acceptation, le code de remise est envoyé par e-mail à l’adresse de votre compte.
               </p>
               @if (bookingForm.get('recipientContact')?.touched && bookingForm.get('recipientContact')?.hasError('required')) {
                 <p id="recipient-error" class="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
