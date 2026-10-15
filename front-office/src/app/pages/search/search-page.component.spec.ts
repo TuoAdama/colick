@@ -476,32 +476,30 @@ describe('SearchPageComponent', () => {
     expect(component.isOwnTrip(otherTrip)).toBeFalse();
   });
 
-  it('does not open booking modal for own trip', () => {
+  it('does not navigate to booking request page for own trip', () => {
     authServiceMock.isLoggedIn.and.returnValue(true);
     authServiceMock.getUser.and.returnValue({ id: 3 });
     const ownTrip = { id: 10, travelerId: 3 } as Trip;
 
-    component.openBookingModal(ownTrip);
+    component.openBookingRequestPage(ownTrip);
 
-    expect(component.isBookingModalOpen).toBeFalse();
-    expect(component.selectedTrip).toBeNull();
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('redirects anonymous users to login with the complete search URL when booking a trip', () => {
+  it('opens the dedicated booking request page and preserves the search URL', () => {
     spyOnProperty(router, 'url', 'get').and.returnValue(
       '/search?from=Paris&to=Abidjan&date=2026-06-14&sort=rating_desc&minPrice=8&maxPrice=15',
     );
-    const trip = { id: 10, travelerId: 3 } as Trip;
+    const trip = { id: 10, reference: 'TRP-2026-000010', travelerId: 3 } as Trip;
 
-    component.openBookingModal(trip);
+    component.openBookingRequestPage(trip);
 
-    expect(router.navigate).toHaveBeenCalledWith(['/login'], {
+    expect(router.navigate).toHaveBeenCalledWith(['/trips/ref', 'TRP-2026-000010', 'request'], {
       queryParams: {
         returnUrl: '/search?from=Paris&to=Abidjan&date=2026-06-14&sort=rating_desc&minPrice=8&maxPrice=15',
+        source: 'search_results',
       },
     });
-    expect(component.isBookingModalOpen).toBeFalse();
-    expect(component.selectedTrip).toBeNull();
   });
 
   it('does not start conversation for own trip', () => {
@@ -865,7 +863,7 @@ describe('SearchPageComponent', () => {
     expect(card.textContent).toContain('Confirmation instantanée');
     expect(card.textContent).toContain(component.formatDate(trip.arrivalTime));
     expect(card.textContent).toContain('Nouveau');
-    const reserve = spyOn(component, 'openBookingModal');
+    const reserve = spyOn(component, 'openBookingRequestPage');
     card.querySelector('button')!.click();
     expect(reserve).toHaveBeenCalledWith(trip);
     trip.instantAcceptance = false;

@@ -219,14 +219,14 @@ describe('ParcelSearchPageComponent', () => {
     expect(messagingServiceMock.createConversationDraft).not.toHaveBeenCalled();
   });
 
-  it('restores the saved scroll position after asynchronous results render', async () => {
+  it('keeps the page at the top after asynchronous results render on browser back', async () => {
     const requestsSubject = new Subject<ParcelRequest[]>();
     parcelRequestServiceMock.getAvailableRequests.and.returnValue(requestsSubject);
     await router.navigateByUrl('/parcel-search?from=Paris&to=Abidjan');
     createComponent();
 
     (router.events as Subject<unknown>).next(
-      new Scroll(new NavigationEnd(2, '/login', '/parcel-search?from=Paris&to=Abidjan'), [0, 640], null),
+      new Scroll(new NavigationEnd(2, '/login', '/parcel-search?from=Paris&to=Abidjan'), [0, 0], null),
     );
 
     expect(fixture.nativeElement.querySelectorAll('article').length).toBe(3);
@@ -241,7 +241,7 @@ describe('ParcelSearchPageComponent', () => {
     await fixture.whenStable();
 
     expect(fixture.nativeElement.querySelectorAll('article').length).toBe(12);
-    expect(viewportScroller.scrollToPosition).toHaveBeenCalledOnceWith([0, 640]);
+    expect(viewportScroller.scrollToPosition).toHaveBeenCalledOnceWith([0, 0]);
   });
 
   it('shows an empty state after a search without results', async () => {

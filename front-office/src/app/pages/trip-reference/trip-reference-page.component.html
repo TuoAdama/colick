@@ -98,7 +98,7 @@
                   <button
                     type="button"
                     class="inline-flex w-full items-center justify-center rounded-xl bg-primary px-6 py-4 text-sm font-extrabold text-white shadow-sm transition hover:bg-primary/90"
-                    (click)="openBookingModal()"
+                    (click)="openBookingRequestPage()"
                     data-testid="book-reference-trip-button"
                   >
                     Envoyer une demande
@@ -154,7 +154,7 @@
               type="button"
               class="min-h-11 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               [disabled]="!canSubmitBookingWeight()"
-              (click)="openBookingModal(selectedBookingWeight)"
+              (click)="openBookingRequestPage(selectedBookingWeight)"
               data-testid="mobile-book-reference-trip-button">
               Envoyer une demande
             </button>
@@ -164,17 +164,4 @@
     }
   </div>
 
-  @if (bookingSuccessMessage) {
-    <div class="fixed bottom-6 right-6 z-50 rounded-xl bg-success px-6 py-3 text-white shadow-lg">
-      {{ bookingSuccessMessage }}
-    </div>
-  }
-
-  <app-booking-modal
-    [trip]="trip"
-    [isOpen]="isBookingModalOpen"
-    [initialWeight]="bookingModalInitialWeight"
-    (closed)="closeBookingModal()"
-    (bookingCreated)="onBookingCreated($event)"
-  />
 </main>

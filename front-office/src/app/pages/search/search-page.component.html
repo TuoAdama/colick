@@ -307,7 +307,7 @@
                 <span class="rounded-lg bg-slate-50 px-2 py-1 text-[10px] text-text-secondary">{{ trip.availableWeight }} kg libres</span>
                 @if (isOwnTrip(trip)) { <span class="text-xs font-bold text-primary">Votre trajet</span> }
                 @else if (hasActiveBookingForTrip(trip.id)) { <span class="text-xs font-bold text-primary">Demande envoyée</span> }
-                @else { <button type="button" class="min-h-10 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white" (click)="openBookingModal(trip)" [attr.aria-label]="'Réserver le trajet vers ' + trip.destination">Réserver</button> }
+                @else { <button type="button" class="min-h-10 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white" (click)="openBookingRequestPage(trip)" [attr.aria-label]="'Réserver le trajet vers ' + trip.destination">Réserver</button> }
               </div>
             </article>
             <article
@@ -387,7 +387,7 @@
                         <button
                           type="button"
                           class="rounded-lg bg-primary px-6 py-2 text-sm font-bold text-white shadow-sm transition hover:-translate-y-px hover:bg-primary/90"
-                          (click)="openBookingModal(trip)"
+                          (click)="openBookingRequestPage(trip)"
                           [attr.aria-label]="'Choisir le trajet vers ' + trip.destination"
                         >
                           Choisir
@@ -412,12 +412,6 @@
       </section>
     </div>
   </main>
-
-  @if (bookingSuccessMessage) {
-    <div class="fixed bottom-24 right-6 z-50 rounded-xl bg-success px-6 py-3 text-white shadow-lg md:bottom-6">
-      {{ bookingSuccessMessage }}
-    </div>
-  }
 
   <button type="button" class="fixed bottom-4 right-4 z-30 min-h-11 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white shadow-lg md:hidden" (click)="toggleMobileFilters()" [attr.aria-expanded]="areMobileFiltersOpen" aria-controls="mobile-search-filters" data-testid="mobile-filters-floating">☷ Filtres <span class="ml-2 rounded-full bg-accent px-1.5">{{ activeFilterCount }}</span></button>
   @if (areMobileFiltersOpen) {
@@ -476,10 +470,4 @@
     </div>
   }
 
-  <app-booking-modal
-    [trip]="selectedTrip"
-    [isOpen]="isBookingModalOpen"
-    (closed)="closeBookingModal()"
-    (bookingCreated)="onBookingCreated($event)"
-  />
 </div>

@@ -112,6 +112,14 @@ export const routes: Routes = [
       import('./pages/trust/trust-page.component').then((m) => m.TrustPageComponent),
   } satisfies Routes[number])),
   {
+    path: 'trips/ref/:reference/request',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/booking-request/booking-request-page.component').then(
+        (m) => m.BookingRequestPageComponent
+      ),
+  },
+  {
     path: 'trips/ref/:reference',
     loadComponent: () =>
       import('./pages/trip-reference/trip-reference-page.component').then(

@@ -2,13 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
 import { UserResponse } from '../../models/auth.model';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 import { TripService } from '../../services/trip.service';
-import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
 import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
 import { SeoService } from '../../services/seo.service';
 import { AnalyticsService } from '../../services/analytics.service';
@@ -16,7 +14,7 @@ import { AnalyticsService } from '../../services/analytics.service';
 @Component({
   selector: 'app-trip-reference-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, BookingModalComponent, UserAvatarComponent],
+  imports: [CommonModule, RouterLink, UserAvatarComponent],
   templateUrl: './trip-reference-page.component.html',
 })
 export class TripReferencePageComponent implements OnInit, OnDestroy {
@@ -33,11 +31,8 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
   isLoading = true;
   errorMessage = '';
   actionErrorMessage = '';
-  isBookingModalOpen = false;
   isContactingTraveler = false;
-  bookingSuccessMessage = '';
   selectedBookingWeight: number | null = 1;
-  bookingModalInitialWeight: number | null = null;
 
   ngOnInit(): void {
     this.routeSubscription = this.route.paramMap.subscribe((params) => {
@@ -55,21 +50,17 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
     this.routeSubscription?.unsubscribe();
   }
 
-  openBookingModal(initialWeight: number | null = null): void {
+  openBookingRequestPage(initialWeight: number | null = null): void {
     if (!this.trip || this.isOwnTrip()) {
       return;
     }
-
-    if (!this.authService.isLoggedIn()) {
-      void this.router.navigate(['/login'], {
-        queryParams: { returnUrl: this.router.url },
-      });
-      return;
-    }
-
-    this.bookingModalInitialWeight = initialWeight;
-    this.isBookingModalOpen = true;
-    this.analytics.track('request_started', { trip_id: this.trip.id, trip_reference: this.trip.reference, source: 'trip_reference' });
+    void this.router.navigate(['/trips/ref', this.trip.reference, 'request'], {
+      queryParams: {
+        returnUrl: this.router.url,
+        source: 'trip_reference',
+        ...(initialWeight === null ? {} : { weight: initialWeight }),
+      },
+    });
   }
 
   contactTraveler(): void {
@@ -101,11 +92,6 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
     });
   }
 
-  closeBookingModal(): void {
-    this.isBookingModalOpen = false;
-    this.bookingModalInitialWeight = null;
-  }
-
   updateSelectedBookingWeight(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.selectedBookingWeight = value === '' ? null : Number(value);
@@ -128,14 +114,6 @@ export class TripReferencePageComponent implements OnInit, OnDestroy {
       style: 'currency',
       currency: 'EUR',
     }).format(this.selectedBookingWeight! * this.trip.pricePerKilo);
-  }
-
-  onBookingCreated(booking: BookingResponse): void {
-    this.analytics.track('request_submitted', { trip_id: booking.tripId, booking_id: booking.id, status: booking.status });
-    this.bookingSuccessMessage = `Demande envoyée avec succès pour "${booking.title}" !`;
-    setTimeout(() => {
-      this.bookingSuccessMessage = '';
-    }, 5000);
   }
 
   isOwnTrip(): boolean {

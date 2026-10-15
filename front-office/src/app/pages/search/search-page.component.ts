@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AutocompleteComponent } from '../../shared/components/autocomplete/autocomplete.component';
-import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
 import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
 import { TripSearchCriteria, TripSearchSort, TripService } from '../../services/trip.service';
 import { TripAlertService } from '../../services/trip-alert.service';
@@ -27,7 +26,7 @@ import { ModalFocusDirective } from '../../shared/directives/modal-focus.directi
 @Component({
   selector: 'app-search-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AutocompleteComponent, BookingModalComponent, UserAvatarComponent, ModalFocusDirective],
+  imports: [CommonModule, FormsModule, RouterLink, AutocompleteComponent, UserAvatarComponent, ModalFocusDirective],
   templateUrl: './search-page.component.html',
 })
 export class SearchPageComponent implements OnInit, OnDestroy {
@@ -97,15 +96,6 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
   /** Error message if search fails */
   errorMessage = '';
-
-  /** The trip currently selected for booking */
-  selectedTrip: Trip | null = null;
-
-  /** Whether the booking modal is open */
-  isBookingModalOpen = false;
-
-  /** Success toast message after booking creation */
-  bookingSuccessMessage = '';
 
   /** Alert creation state for no-result searches */
   isCreatingAlert = false;
@@ -471,55 +461,14 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     };
   }
 
-  /**
-   * Open the booking modal for a specific trip.
-   * Redirects to login if the user is not authenticated.
-   */
-  openBookingModal(trip: Trip): void {
-    if (!this.authService.isLoggedIn()) {
-      void this.router.navigate(['/login'], {
-        queryParams: { returnUrl: this.router.url },
-      });
+  /** Navigate to the dedicated booking request page for this trip. */
+  openBookingRequestPage(trip: Trip): void {
+    if (this.isOwnTrip(trip) || !trip.reference) {
       return;
     }
-    if (this.isOwnTrip(trip)) {
-      return;
-    }
-    this.selectedTrip = trip;
-    this.isBookingModalOpen = true;
-    this.analytics.track('request_started', {
-      trip_id: trip.id,
-      trip_reference: trip.reference,
-      source: 'search_results',
+    void this.router.navigate(['/trips/ref', trip.reference, 'request'], {
+      queryParams: { returnUrl: this.router.url, source: 'search_results' },
     });
-  }
-
-  /**
-   * Close the booking modal and reset selected trip.
-   */
-  closeBookingModal(): void {
-    this.isBookingModalOpen = false;
-    this.selectedTrip = null;
-  }
-
-  /**
-   * Handle successful booking creation — show a success toast.
-   */
-  onBookingCreated(booking: BookingResponse): void {
-    this.myBookings = [...this.myBookings, booking];
-    this.analytics.track('request_submitted', {
-      trip_id: booking.tripId,
-      booking_id: booking.id,
-      status: booking.status,
-    });
-    this.bookingSuccessMessage = `Demande envoyée avec succès pour "${booking.title}" !`;
-    // Auto-close modal and clear message after delay
-    setTimeout(() => {
-      this.closeBookingModal();
-    }, 2000);
-    setTimeout(() => {
-      this.bookingSuccessMessage = '';
-    }, 5000);
   }
 
   /**
