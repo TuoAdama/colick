@@ -79,7 +79,7 @@ describe('RegisterPageComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/search']);
   });
 
-  it('uses the full available width for the registration card and separates Google auth', () => {
+  it('centers the registration card at the login width and separates Google auth', () => {
     fixture.detectChanges();
 
     const pageContainer = fixture.nativeElement.querySelector('section > div') as HTMLElement;
@@ -87,7 +87,8 @@ describe('RegisterPageComponent', () => {
     const googleAuth = fixture.nativeElement.querySelector('app-google-auth-button > div') as HTMLElement;
 
     expect(pageContainer.className).toContain('w-full');
-    expect(pageContainer.className).not.toContain('max-w-lg');
+    expect(pageContainer.className).toContain('max-w-md');
+    expect(pageContainer.className).toContain('mx-auto');
     expect(card.className).toContain('w-full');
     expect(googleAuth.className).toContain('mt-4');
   });
