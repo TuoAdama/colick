@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { provideRouter } from '@angular/router';
 import { BookingRequestFormComponent } from './booking-request-form.component';
 import { TripService } from '../../../services/trip.service';
 
@@ -31,10 +32,22 @@ describe('BookingRequestFormComponent', () => {
 
   beforeEach(async () => {
     tripServiceMock.createBooking.calls.reset();
+    tripServiceMock.createBooking.and.returnValue(of({
+      id: 1,
+      tripId: 10,
+      senderId: 2,
+      senderName: 'Bob Martin',
+      title: 'Documents',
+      weight: 1,
+      recipientContact: 'recipient@example.com',
+      status: 'PENDING',
+      validationCodeActive: false,
+    }));
     tripServiceMock.uploadBookingPhoto.calls.reset();
+    tripServiceMock.uploadBookingPhoto.and.stub();
     await TestBed.configureTestingModule({
       imports: [BookingRequestFormComponent],
-      providers: [{ provide: TripService, useValue: tripServiceMock }],
+      providers: [provideRouter([]), { provide: TripService, useValue: tripServiceMock }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(BookingRequestFormComponent);
@@ -115,6 +128,84 @@ describe('BookingRequestFormComponent', () => {
     expect(tripServiceMock.createBooking).not.toHaveBeenCalled();
   });
 
+  it('scrolls to the request card after a successful submission without a photo', async () => {
+    const scrollCardIntoView = spyOn(
+      (fixture.nativeElement as HTMLElement).querySelector('section[aria-labelledby="booking-page-title"]') as HTMLElement,
+      'scrollIntoView',
+    );
+    prepareValidSubmission();
+
+    component.onSubmit();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Demande envoyée avec succès !');
+    expect(scrollCardIntoView).toHaveBeenCalledOnceWith({ behavior: 'smooth', block: 'start' });
+  });
+
+  it('scrolls to the request card after the photo upload succeeds', async () => {
+    const scrollCardIntoView = spyOn(
+      (fixture.nativeElement as HTMLElement).querySelector('section[aria-labelledby="booking-page-title"]') as HTMLElement,
+      'scrollIntoView',
+    );
+    tripServiceMock.uploadBookingPhoto.and.returnValue(of({
+      id: 1,
+      tripId: 10,
+      senderId: 2,
+      senderName: 'Bob Martin',
+      title: 'Documents',
+      weight: 1,
+      recipientContact: 'recipient@example.com',
+      status: 'PENDING',
+      validationCodeActive: false,
+    }));
+    prepareValidSubmission();
+    component.selectedPhoto = new File(['image'], 'parcel.png', { type: 'image/png' });
+
+    component.onSubmit();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Demande envoyée avec succès !');
+    expect(scrollCardIntoView).toHaveBeenCalledOnceWith({ behavior: 'smooth', block: 'start' });
+  });
+
+  it('does not scroll when booking creation or photo upload fails', () => {
+    const scrollCardIntoView = spyOn(
+      (fixture.nativeElement as HTMLElement).querySelector('section[aria-labelledby="booking-page-title"]') as HTMLElement,
+      'scrollIntoView',
+    );
+    prepareValidSubmission();
+    tripServiceMock.createBooking.and.returnValue(throwError(() => new Error('network failure')));
+
+    component.onSubmit();
+    fixture.detectChanges();
+
+    expect(component.errorMessage).toContain('Erreur lors de l\'envoi');
+    expect(scrollCardIntoView).not.toHaveBeenCalled();
+
+    tripServiceMock.createBooking.and.returnValue(of({
+      id: 1,
+      tripId: 10,
+      senderId: 2,
+      senderName: 'Bob Martin',
+      title: 'Documents',
+      weight: 1,
+      recipientContact: 'recipient@example.com',
+      status: 'PENDING',
+      validationCodeActive: false,
+    }));
+    tripServiceMock.uploadBookingPhoto.and.returnValue(throwError(() => new Error('upload failure')));
+    component.selectedPhoto = new File(['image'], 'parcel.png', { type: 'image/png' });
+    component.errorMessage = '';
+
+    component.onSubmit();
+    fixture.detectChanges();
+
+    expect(component.photoUploadFailed).toBeTrue();
+    expect(scrollCardIntoView).not.toHaveBeenCalled();
+  });
+
   it('renders the request form as page content rather than a dialog', () => {
     const host = fixture.nativeElement as HTMLElement;
     const pageHeading = host.querySelector('#booking-page-title') as HTMLHeadingElement;
@@ -122,4 +213,13 @@ describe('BookingRequestFormComponent', () => {
     expect(pageHeading.tagName).toBe('H1');
     expect(host.querySelector('[role="dialog"]')).toBeNull();
   });
+
+  function prepareValidSubmission(): void {
+    component.bookingForm.patchValue({
+      title: 'Documents',
+      weight: 1,
+      recipientContact: 'recipient@example.com',
+      parcelPolicyAccepted: true,
+    });
+  }
 });

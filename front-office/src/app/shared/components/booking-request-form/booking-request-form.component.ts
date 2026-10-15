@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnChanges, OnDestroy, OnInit, SimpleChanges, inject } from '@angular/core';
+import { Component, ElementRef, Input, Output, EventEmitter, Injector, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild, afterNextRender, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AbstractControl, ReactiveFormsModule, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
@@ -34,6 +34,9 @@ function recipientContactValidator(control: AbstractControl): ValidationErrors |
 export class BookingRequestFormComponent implements OnInit, OnChanges, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly tripService = inject(TripService);
+  private readonly injector = inject(Injector);
+
+  @ViewChild('bookingRequestCard') private bookingRequestCard?: ElementRef<HTMLElement>;
 
   @Input() trip: Trip | null = null;
   @Input() initialWeight: number | null = null;
@@ -187,6 +190,9 @@ export class BookingRequestFormComponent implements OnInit, OnChanges, OnDestroy
     this.isLoading = false;
     this.errorMessage = '';
     this.successMessage = 'Demande envoyée avec succès !';
+    afterNextRender(() => {
+      this.bookingRequestCard?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, { injector: this.injector });
   }
 
   private emitCreated(booking: BookingResponse): void {
