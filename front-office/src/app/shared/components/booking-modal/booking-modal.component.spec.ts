@@ -110,4 +110,18 @@ describe('BookingModalComponent', () => {
     expect(document.activeElement).toBe(modalHeading);
     expect(modalHeading.tabIndex).toBe(-1);
   });
+
+  it('keeps the modal heading inside a sticky opaque header on both steps', () => {
+    for (const step of [1, 2] as const) {
+      component.currentStep = step;
+      fixture.detectChanges();
+
+      const modalHeading = fixture.nativeElement.querySelector('#booking-modal-title') as HTMLHeadingElement;
+      const modalHeader = modalHeading.parentElement as HTMLElement;
+      expect(modalHeader.classList).toContain('sticky');
+      expect(modalHeader.classList).toContain('top-0');
+      expect(modalHeader.classList).toContain('z-10');
+      expect(modalHeader.classList).toContain('bg-white');
+    }
+  });
 });
