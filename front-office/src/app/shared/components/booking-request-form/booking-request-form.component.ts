@@ -92,6 +92,7 @@ export class BookingRequestFormComponent implements OnInit, OnChanges, OnDestroy
     controls.recipientContact.markAsTouched();
     if (controls.title.invalid || controls.weight.invalid || controls.recipientContact.invalid) return;
     this.currentStep = 2;
+    this.scrollToRequestCard();
   }
 
   backToDetails(): void { this.currentStep = 1; }
@@ -190,6 +191,10 @@ export class BookingRequestFormComponent implements OnInit, OnChanges, OnDestroy
     this.isLoading = false;
     this.errorMessage = '';
     this.successMessage = 'Demande envoyée avec succès !';
+    this.scrollToRequestCard();
+  }
+
+  private scrollToRequestCard(): void {
     afterNextRender(() => {
       this.bookingRequestCard?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, { injector: this.injector });

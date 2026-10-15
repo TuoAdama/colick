@@ -105,6 +105,41 @@ describe('BookingRequestFormComponent', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Étape 1 sur 2');
   });
 
+  it('scrolls to the request card after valid details advance to step 2', async () => {
+    const scrollCardIntoView = spyOn(
+      (fixture.nativeElement as HTMLElement).querySelector('section[aria-labelledby="booking-page-title"]') as HTMLElement,
+      'scrollIntoView',
+    );
+    component.bookingForm.patchValue({ title: 'Documents', weight: 1, recipientContact: 'recipient@example.com' });
+
+    const continueButton = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
+      .find(button => button.textContent?.trim() === 'Continuer');
+    continueButton?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.currentStep).toBe(2);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Étape 2 sur 2');
+    expect(scrollCardIntoView).toHaveBeenCalledOnceWith({ behavior: 'smooth', block: 'start' });
+  });
+
+  it('stays on step 1 and does not scroll when required details are invalid', async () => {
+    const scrollCardIntoView = spyOn(
+      (fixture.nativeElement as HTMLElement).querySelector('section[aria-labelledby="booking-page-title"]') as HTMLElement,
+      'scrollIntoView',
+    );
+
+    const continueButton = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
+      .find(button => button.textContent?.trim() === 'Continuer');
+    continueButton?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.currentStep).toBe(1);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Étape 1 sur 2');
+    expect(scrollCardIntoView).not.toHaveBeenCalled();
+  });
+
   it('trims recipient contact before sending the booking request', () => {
     component.bookingForm.patchValue({
       title: 'Documents',
