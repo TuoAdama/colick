@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { Trip } from '../../models/trip.model';
@@ -7,7 +6,6 @@ import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
 import { TripService } from '../../services/trip.service';
 import { TripReferencePageComponent } from './trip-reference-page.component';
-import { BookingModalComponent } from '../../shared/components/booking-modal/booking-modal.component';
 
 describe('TripReferencePageComponent', () => {
   let fixture: ComponentFixture<TripReferencePageComponent>;
@@ -133,7 +131,7 @@ describe('TripReferencePageComponent', () => {
     expect(component.estimatedBookingPrice()).toBe('—');
   });
 
-  it('opens the booking modal with the weight selected in the mobile bar', () => {
+  it('opens the dedicated booking page with the weight selected in the mobile bar', () => {
     authServiceMock.isLoggedIn.and.returnValue(true);
     authServiceMock.getUser.and.returnValue({ id: 99 });
     const host = fixture.nativeElement as HTMLElement;
@@ -143,22 +141,27 @@ describe('TripReferencePageComponent', () => {
     fixture.detectChanges();
 
     (host.querySelector('[data-testid="mobile-book-reference-trip-button"]') as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    const modal = fixture.debugElement.query(By.directive(BookingModalComponent)).componentInstance as BookingModalComponent;
-    expect(modal.isOpen).toBeTrue();
-    expect(modal.bookingForm.controls.weight.value).toBe(2.5);
+    expect(router.navigate).toHaveBeenCalledWith(['/trips/ref', 'TRP-2026-000013', 'request'], {
+      queryParams: {
+        returnUrl: '/trips/ref/TRP-2026-000013',
+        source: 'trip_reference',
+        weight: 2.5,
+      },
+    });
   });
 
-  it('redirects anonymous users to login when they use the mobile booking action', () => {
+  it('navigates to the request page from the mobile booking action', () => {
     (fixture.nativeElement as HTMLElement)
       .querySelector<HTMLButtonElement>('[data-testid="mobile-book-reference-trip-button"]')!
       .click();
 
-    expect(router.navigate).toHaveBeenCalledWith(['/login'], {
-      queryParams: { returnUrl: '/trips/ref/TRP-2026-000013' },
+    expect(router.navigate).toHaveBeenCalledWith(['/trips/ref', 'TRP-2026-000013', 'request'], {
+      queryParams: {
+        returnUrl: '/trips/ref/TRP-2026-000013',
+        source: 'trip_reference',
+        weight: 1,
+      },
     });
-    expect(component.isBookingModalOpen).toBeFalse();
   });
 
   it('does not show the mobile booking bar for the traveler’s own trip', () => {
@@ -168,22 +171,29 @@ describe('TripReferencePageComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="mobile-book-reference-trip-button"]')).toBeNull();
   });
 
-  it('redirects anonymous users to login with returnUrl when booking is requested', () => {
-    component.openBookingModal();
+  it('opens the request page when booking is requested', () => {
+    component.openBookingRequestPage();
 
-    expect(router.navigate).toHaveBeenCalledWith(['/login'], {
-      queryParams: { returnUrl: '/trips/ref/TRP-2026-000013' },
+    expect(router.navigate).toHaveBeenCalledWith(['/trips/ref', 'TRP-2026-000013', 'request'], {
+      queryParams: {
+        returnUrl: '/trips/ref/TRP-2026-000013',
+        source: 'trip_reference',
+      },
     });
-    expect(component.isBookingModalOpen).toBeFalse();
   });
 
-  it('opens the booking modal for authenticated users', () => {
+  it('opens the request page for authenticated users', () => {
     authServiceMock.isLoggedIn.and.returnValue(true);
     authServiceMock.getUser.and.returnValue({ id: 99 });
 
-    component.openBookingModal();
+    component.openBookingRequestPage();
 
-    expect(component.isBookingModalOpen).toBeTrue();
+    expect(router.navigate).toHaveBeenCalledWith(['/trips/ref', 'TRP-2026-000013', 'request'], {
+      queryParams: {
+        returnUrl: '/trips/ref/TRP-2026-000013',
+        source: 'trip_reference',
+      },
+    });
   });
 
   it('redirects anonymous users to login with returnUrl when contact is requested', () => {

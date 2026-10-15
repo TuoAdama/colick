@@ -1,0 +1,30 @@
+<main class="min-h-screen bg-background-primary px-4 pb-12 pt-24 sm:px-6 sm:pt-28">
+  <div class="mx-auto max-w-4xl">
+    <button
+      type="button"
+      (click)="goBack()"
+      class="mb-5 inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-primary transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-secondary"
+      data-testid="booking-request-back-link">
+      <span aria-hidden="true">←</span>
+      Retour
+    </button>
+
+    @if (isLoading) {
+      <section class="rounded-2xl bg-white p-8 text-center shadow-sm" role="status">
+        <p class="text-sm font-medium text-text-secondary">Chargement du trajet…</p>
+      </section>
+    } @else if (errorMessage) {
+      <section class="rounded-2xl border border-error/20 bg-white p-6 text-center shadow-sm" role="alert">
+        <h1 class="text-xl font-bold text-primary">Impossible d’envoyer une demande</h1>
+        <p class="mt-2 text-sm text-text-secondary">{{ errorMessage }}</p>
+        <button type="button" class="btn-primary mt-5 !py-3 !text-sm !px-6" (click)="goBack()">Retour</button>
+      </section>
+    } @else if (trip) {
+      <app-booking-request-form
+        [trip]="trip"
+        [initialWeight]="initialWeight"
+        (cancelled)="goBack()"
+        (bookingCreated)="onBookingCreated($event)" />
+    }
+  </div>
+</main>

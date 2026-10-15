@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { BookingModalComponent } from './booking-modal.component';
+import { BookingRequestFormComponent } from './booking-request-form.component';
 import { TripService } from '../../../services/trip.service';
 
-describe('BookingModalComponent', () => {
-  let fixture: ComponentFixture<BookingModalComponent>;
-  let component: BookingModalComponent;
+describe('BookingRequestFormComponent', () => {
+  let fixture: ComponentFixture<BookingRequestFormComponent>;
+  let component: BookingRequestFormComponent;
 
   const tripServiceMock = {
     createBooking: jasmine.createSpy('createBooking').and.returnValue(of({
@@ -33,11 +33,11 @@ describe('BookingModalComponent', () => {
     tripServiceMock.createBooking.calls.reset();
     tripServiceMock.uploadBookingPhoto.calls.reset();
     await TestBed.configureTestingModule({
-      imports: [BookingModalComponent],
+      imports: [BookingRequestFormComponent],
       providers: [{ provide: TripService, useValue: tripServiceMock }],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(BookingModalComponent);
+    fixture = TestBed.createComponent(BookingRequestFormComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('trip', {
       id: 10,
@@ -54,7 +54,6 @@ describe('BookingModalComponent', () => {
       status: 'ACTIVE',
     });
     fixture.componentRef.setInput('initialWeight', 2.5);
-    fixture.componentRef.setInput('isOpen', true);
     fixture.detectChanges();
   });
 
@@ -76,7 +75,7 @@ describe('BookingModalComponent', () => {
     );
   });
 
-  it('uses the weight selected on the trip page when the modal opens', () => {
+  it('uses the weight selected on the trip page', () => {
     expect(component.bookingForm.controls.weight.value).toBe(2.5);
   });
 
@@ -103,11 +102,11 @@ describe('BookingModalComponent', () => {
     expect(tripServiceMock.createBooking).not.toHaveBeenCalled();
   });
 
-  it('focuses the modal heading when opened so the heading stays visible', async () => {
-    await fixture.whenStable();
+  it('renders the request form as page content rather than a dialog', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const pageHeading = host.querySelector('#booking-page-title') as HTMLHeadingElement;
 
-    const modalHeading = fixture.nativeElement.querySelector('#booking-modal-title') as HTMLHeadingElement;
-    expect(document.activeElement).toBe(modalHeading);
-    expect(modalHeading.tabIndex).toBe(-1);
+    expect(pageHeading.tagName).toBe('H1');
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
   });
 });

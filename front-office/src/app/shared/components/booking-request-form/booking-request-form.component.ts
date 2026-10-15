@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnChanges, OnDestroy, OnInit, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ModalFocusDirective } from '../../directives/modal-focus.directive';
+import { RouterLink } from '@angular/router';
 import { AbstractControl, ReactiveFormsModule, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { Trip } from '../../../models/trip.model';
 import { BookingResponse, ParcelGuidelines } from '../../../models/booking.model';
@@ -23,22 +23,21 @@ function recipientContactValidator(control: AbstractControl): ValidationErrors |
 }
 
 /**
- * BookingModalComponent - Modal overlay for submitting a parcel booking request.
+ * BookingRequestFormComponent - Multi-step form for requesting a parcel booking.
  */
 @Component({
-  selector: 'app-booking-modal',
+  selector: 'app-booking-request-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ModalFocusDirective],
-  templateUrl: './booking-modal.component.html',
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  templateUrl: './booking-request-form.component.html',
 })
-export class BookingModalComponent implements OnInit, OnChanges, OnDestroy {
+export class BookingRequestFormComponent implements OnInit, OnChanges, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly tripService = inject(TripService);
 
   @Input() trip: Trip | null = null;
-  @Input() isOpen = false;
   @Input() initialWeight: number | null = null;
-  @Output() closed = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
   @Output() bookingCreated = new EventEmitter<BookingResponse>();
 
   bookingForm = this.fb.group({
@@ -59,7 +58,7 @@ export class BookingModalComponent implements OnInit, OnChanges, OnDestroy {
   photoPreviewUrl: string | null = null;
   photoError = '';
   photoUploadFailed = false;
-  private createdBooking: BookingResponse | null = null;
+  createdBooking: BookingResponse | null = null;
   private bookingWasEmitted = false;
 
   ngOnInit(): void {
@@ -74,7 +73,7 @@ export class BookingModalComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (this.isOpen && (changes['isOpen'] || changes['initialWeight'])) {
+    if (changes['initialWeight']) {
       this.bookingForm.controls.weight.setValue(this.initialWeight);
     }
   }
@@ -122,18 +121,9 @@ export class BookingModalComponent implements OnInit, OnChanges, OnDestroy {
     this.photoError = '';
   }
 
-  close(): void {
+  cancel(): void {
     if (this.createdBooking && !this.bookingWasEmitted) this.emitCreated(this.createdBooking);
-    this.closed.emit();
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.bookingForm.reset();
-    this.bookingForm.controls.parcelPolicyAccepted.setValue(false);
-    this.currentStep = 1;
-    this.removePhoto();
-    this.photoUploadFailed = false;
-    this.createdBooking = null;
-    this.bookingWasEmitted = false;
+    this.cancelled.emit();
   }
 
   onSubmit(): void {
@@ -197,7 +187,6 @@ export class BookingModalComponent implements OnInit, OnChanges, OnDestroy {
     this.isLoading = false;
     this.errorMessage = '';
     this.successMessage = 'Demande envoyée avec succès !';
-    setTimeout(() => this.close(), 2000);
   }
 
   private emitCreated(booking: BookingResponse): void {
