@@ -27,7 +27,7 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
           'Le voyageur publie son trajet, la capacité disponible et son prix au kilo.',
           'L’expéditeur recherche un trajet et transmet les informations utiles sur son colis.',
           'Selon le type de réservation, la demande est acceptée immédiatement ou examinée par le voyageur.',
-          'La remise est confirmée au moyen du dispositif de validation proposé par Coliclic.',
+          'Après acceptation, le code de remise est envoyé par e-mail à l’adresse du compte de l’expéditeur, puis la remise est confirmée dans Coliclic.',
           'Après le trajet, les utilisateurs peuvent partager un avis sur leur expérience.',
         ],
       },
@@ -57,12 +57,12 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
       {
         id: 'reservation',
         title: 'Comment réserver une place ?',
-        paragraphs: ['Recherchez un trajet, ouvrez sa fiche puis indiquez le colis, son poids et le contact du destinataire. Une réservation instantanée est acceptée immédiatement ; une demande d’approbation attend la décision du voyageur.'],
+        paragraphs: ['Recherchez un trajet, ouvrez sa fiche puis indiquez le colis, son poids et le contact du destinataire. Ce contact est transmis au voyageur pour organiser la remise. Une réservation instantanée est acceptée immédiatement ; une demande d’approbation attend la décision du voyageur. Après acceptation, le code de remise est envoyé par e-mail à l’adresse du compte de l’expéditeur.'],
       },
       {
         id: 'livraison',
         title: 'Comment confirmer la livraison ?',
-        paragraphs: ['Un code à six chiffres est transmis au contact prévu pour la remise. Le voyageur le saisit dans Coliclic pour enregistrer la livraison. Ne communiquez ce code qu’au moment de la remise effective.'],
+        paragraphs: ['Après acceptation de la réservation, un code à six chiffres est envoyé par e-mail à l’adresse du compte de l’expéditeur. Le contact du destinataire saisi dans la demande est communiqué au voyageur pour organiser la remise ; il ne reçoit pas le code automatiquement. Le voyageur saisit ce code dans Coliclic pour enregistrer la livraison. Ne communiquez-le qu’au moment de la remise effective.'],
       },
       {
         id: 'probleme',

@@ -79,4 +79,12 @@ describe('TrustPageLayoutComponent', () => {
     expect(related).not.toBeNull();
     expect(related?.textContent).toContain('Sécurité');
   });
+
+  it('documents that the delivery code is emailed to the sender account', () => {
+    const helpText = TRUST_DOCUMENTS.help.sections.flatMap(section => section.paragraphs ?? []).join(' ');
+
+    expect(helpText).toContain('envoyé par e-mail à l’adresse du compte de l’expéditeur');
+    expect(helpText).toContain('Le contact du destinataire saisi dans la demande');
+    expect(helpText).toContain('ne reçoit pas le code automatiquement');
+  });
 });

@@ -84,7 +84,7 @@ describe('BookingRequestFormComponent', () => {
   it('keeps recipient contact required and explains when it is used', () => {
     expect(component.bookingForm.controls.recipientContact.hasError('required')).toBeTrue();
     expect((fixture.nativeElement as HTMLElement).textContent).toContain(
-      'Le voyageur reçoit ce contact avec votre demande. Le code de remise sera envoyé après acceptation.',
+      'Le voyageur reçoit ce contact avec votre demande. Après acceptation, le code de remise est envoyé par e-mail à l’adresse de votre compte.',
     );
   });
 
@@ -175,6 +175,7 @@ describe('BookingRequestFormComponent', () => {
     await fixture.whenStable();
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Demande envoyée avec succès !');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('l’expéditeur recevra le code par e-mail à l’adresse de son compte');
     expect(scrollCardIntoView).toHaveBeenCalledOnceWith({ behavior: 'smooth', block: 'start' });
   });
 

@@ -38,7 +38,7 @@ export class HowItWorksPageComponent {
     },
     {
       title: 'Réservez puis évaluez',
-      description: 'Réservez immédiatement ou attendez l’accord du voyageur, puis confirmez la livraison et partagez votre avis.',
+      description: 'Réservez immédiatement ou attendez l’accord du voyageur. Après acceptation, le code de remise est envoyé par e-mail à l’adresse de votre compte ; utilisez-le pour confirmer la livraison et partager votre avis.',
       icon: 'verified',
     },
   ];

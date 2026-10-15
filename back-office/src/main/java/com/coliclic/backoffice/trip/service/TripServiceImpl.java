@@ -536,7 +536,6 @@ public class TripServiceImpl implements TripService {
         } catch (ValidationCodeDeliveryException ex) {
             bookingValidationService.markValidationCodeDeliveryFailed(
                     booking,
-                    ex.getRecipientContact(),
                     ex.getDeliveryChannel()
             );
         }
