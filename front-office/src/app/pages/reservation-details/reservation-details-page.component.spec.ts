@@ -237,32 +237,21 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.potentialAmount()).toBe(105);
   });
 
-  it('renders the mobile indicators between the trip card and pending requests when the trip summary is collapsed', () => {
+  it('renders the unified capacity card before reservations with live accepted weight and potential', () => {
     tripServiceMock.getTripById.and.returnValue(of({ ...buildTrip(), maxWeight: 50 }));
     tripServiceMock.getTripBookings.and.returnValue(of([
       buildBooking({ id: 1, status: 'PENDING', weight: 4 }),
       buildBooking({ id: 2, status: 'ACCEPTED', weight: 6 }),
       buildBooking({ id: 3, status: 'REJECTED', weight: 5 }),
     ]));
-
     createComponent();
-
-    const tripCard = fixture.nativeElement.querySelector('[data-testid="trip-information-card"]') as HTMLElement;
-    const indicators = fixture.nativeElement.querySelector('[data-testid="mobile-trip-indicators"]') as HTMLElement;
-    const heading = Array.from(fixture.nativeElement.querySelectorAll('h2') as NodeListOf<HTMLElement>)
-      .find((element) => element.textContent?.trim() === 'Demandes en cours')!;
-    const loadCard = indicators.querySelector('[data-testid="mobile-load-card"]') as HTMLElement;
-    const potentialCard = indicators.querySelector('[data-testid="mobile-potential-card"]') as HTMLElement;
-
-    expect(component.tripSummaryExpanded).toBeFalse();
-    expect(tripCard.compareDocumentPosition(indicators) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(indicators.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(indicators.classList.contains('md:hidden')).toBeTrue();
-    expect(loadCard.textContent).toContain('12%');
-    expect(loadCard.textContent).toContain('6 kg');
-    expect(loadCard.textContent).toContain('max 50 kg');
-    expect(potentialCard.textContent).toContain('150 €');
-    expect(potentialCard.textContent).toContain('44 kg restants');
+    const card = fixture.nativeElement.querySelector('[data-testid="trip-capacity-card"]');
+    const gauge = card.querySelector('[role="progressbar"]');
+    expect(card.textContent).toContain('6 / 50 kg');
+    expect(card.textContent).toContain('44 kg disponibles');
+    expect(card.textContent).toContain('150 €');
+    expect(gauge.getAttribute('aria-valuenow')).toBe('12');
+    expect(card.compareDocumentPosition(fixture.nativeElement.querySelector('h2')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('bounds the load gauge and remaining weight for zero and exceeded capacity', () => {
@@ -280,56 +269,30 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.remainingWeight()).toBe(0);
   });
 
-  it('opens and closes the mobile trip actions with the pencil while keeping the share card visible', () => {
+  it('exposes editing, cancellation confirmation and image download directly', () => {
     createComponent();
-
-    const pencil = fixture.nativeElement.querySelector(
-      '[data-testid="mobile-trip-actions-toggle"]'
-    ) as HTMLButtonElement;
-
-    expect(pencil.classList.contains('md:hidden')).toBeTrue();
-    expect(pencil.getAttribute('aria-expanded')).toBe('false');
-    expect(fixture.nativeElement.querySelector('#trip-summary-panel')).toBeNull();
-
-    pencil.click();
+    const edit = fixture.nativeElement.querySelector('[data-testid="edit-trip-link"]');
+    expect(edit.getAttribute('href')).toBe('/propose/12');
+    fixture.nativeElement.querySelector('[data-testid="delete-trip-button"]').click();
     fixture.detectChanges();
-
-    expect(pencil.getAttribute('aria-expanded')).toBe('true');
-    expect(pencil.getAttribute('aria-controls')).toBe('trip-summary-panel');
-    expect(fixture.nativeElement.querySelector('#trip-summary-panel')).not.toBeNull();
-    expect(router.navigate).not.toHaveBeenCalled();
-
-    const editLink = fixture.nativeElement.querySelector(
-      '#trip-summary-panel a[aria-label="Modifier le trajet"]'
-    ) as HTMLAnchorElement | null;
-    const deleteButton = fixture.nativeElement.querySelector(
-      '#trip-summary-panel button[aria-label="Supprimer le trajet"]'
-    ) as HTMLButtonElement | null;
-    const downloadButton = fixture.nativeElement.querySelector(
-      '[data-testid="download-trip-announcement-button"]'
-    ) as HTMLButtonElement | null;
-
-    expect(editLink).not.toBeNull();
-    expect(editLink?.getAttribute('href')).toContain('/propose/12');
-    expect(deleteButton).not.toBeNull();
-    expect(downloadButton).not.toBeNull();
-    expect(downloadButton?.closest('[data-testid="mobile-trip-indicators"]')).not.toBeNull();
-    expect(downloadButton?.getAttribute('aria-label')).toBe("Télécharger l'image de l'annonce");
-    expect(downloadButton?.textContent).toContain("Télécharger l'affiche");
-    expect(downloadButton?.textContent).toContain('L’image sera téléchargée sur votre appareil');
-    expect(downloadButton?.classList.contains('bg-white')).toBeTrue();
-    expect(downloadButton?.classList.contains('border')).toBeTrue();
-
+    expect(component.isCancelTripModalOpen).toBeTrue();
+    expect(tripServiceMock.cancelTrip).not.toHaveBeenCalled();
     const download = spyOn(component, 'downloadTripAnnouncementImage');
-    downloadButton!.click();
+    fixture.nativeElement.querySelector('[data-testid="download-trip-announcement-button"]').click();
     expect(download).toHaveBeenCalledTimes(1);
+  });
 
-    pencil.click();
+  it('switches reservation tabs from the view and exposes the selected state', () => {
+    tripServiceMock.getTripBookings.and.returnValue(of([
+      buildBooking(), buildBooking({ id: 8, status: 'ACCEPTED', senderName: 'Ada Lovelace' }),
+    ]));
+    createComponent();
+    const tabs = fixture.nativeElement.querySelectorAll('.reservation-tabs button');
+    expect(tabs[0].textContent).toContain('En attente (1)');
+    tabs[1].click();
     fixture.detectChanges();
-
-    expect(pencil.getAttribute('aria-expanded')).toBe('false');
-    expect(fixture.nativeElement.querySelector('#trip-summary-panel')).toBeNull();
-    expect(fixture.nativeElement.querySelector('[data-testid="download-trip-announcement-button"]')).not.toBeNull();
+    expect(tabs[1].getAttribute('aria-pressed')).toBe('true');
+    expect(fixture.nativeElement.querySelector('app-booking-request-card').textContent).toContain('Ada Lovelace');
   });
 
   it('disables the download button and shows progress while the image is generating', () => {
@@ -372,38 +335,11 @@ describe('ReservationDetailsPageComponent', () => {
     expect(desktopRoute?.classList.contains('sm:inline')).toBeTrue();
   });
 
-  it('restricts route truncation and width constraints to mobile screens', () => {
-    createComponent();
-
-    const mobileRoute = fixture.nativeElement.querySelector(
-      '[data-testid="mobile-trip-route"]'
-    ) as HTMLElement;
-    const heading = mobileRoute.closest('h1')!;
-    const routeContainer = heading.parentElement!;
-
-    expect(heading.classList.contains('max-sm:truncate')).toBeTrue();
-    expect(heading.classList.contains('truncate')).toBeFalse();
-    expect(routeContainer.classList.contains('max-sm:min-w-0')).toBeTrue();
-    expect(routeContainer.classList.contains('min-w-0')).toBeFalse();
-  });
-
   it('keeps locations without a country unchanged in the mobile route label', () => {
     createComponent();
 
     expect(component.cityName('Nantes')).toBe('Nantes');
     expect(component.cityName(' Abidjan ')).toBe('Abidjan');
-  });
-
-  it('uses the compact mobile heading size and restores the desktop heading size', () => {
-    createComponent();
-
-    const headings = fixture.nativeElement.querySelectorAll('h2') as NodeListOf<HTMLHeadingElement>;
-    const heading = Array.from(headings).find(
-      (element) => element.textContent?.trim() === 'Demandes en cours'
-    );
-
-    expect(heading?.classList.contains('text-xl')).toBeTrue();
-    expect(heading?.classList.contains('sm:text-[2rem]')).toBeTrue();
   });
 
   for (const status of ['COMPLETED', 'CANCELLED'] as const) {
@@ -416,9 +352,6 @@ describe('ReservationDetailsPageComponent', () => {
       expect(fixture.nativeElement.querySelector('[data-testid="mobile-trip-actions-toggle"]')).toBeNull();
       expect(fixture.nativeElement.querySelector('[data-testid="download-trip-announcement-button"]')).toBeNull();
       expect(fixture.nativeElement.querySelector('[data-testid="mobile-trip-indicators"]')).not.toBeNull();
-
-      component.toggleTripSummary();
-      fixture.detectChanges();
 
       expect(fixture.nativeElement.querySelector('a[aria-label="Modifier le trajet"]')).toBeNull();
       expect(fixture.nativeElement.querySelector('button[aria-label="Supprimer le trajet"]')).toBeNull();
@@ -451,12 +384,6 @@ describe('ReservationDetailsPageComponent', () => {
 
   it('opens the cancel trip modal from the mobile delete button', () => {
     createComponent();
-
-    const pencil = fixture.nativeElement.querySelector(
-      '[data-testid="mobile-trip-actions-toggle"]'
-    ) as HTMLButtonElement;
-    pencil.click();
-    fixture.detectChanges();
 
     const deleteButton = fixture.nativeElement.querySelector(
       'button[aria-label="Supprimer le trajet"]'
@@ -612,22 +539,6 @@ describe('ReservationDetailsPageComponent', () => {
     expect(component.bookings[0].deliveredAt).toBe('2025-07-15T10:00:00');
   });
 
-  it('expands the trip card summary to reveal its details', () => {
-    createComponent();
-
-    const summaryButton = fixture.nativeElement.querySelector(
-      '[data-testid="trip-information-card"] button'
-    ) as HTMLButtonElement;
-
-    expect(summaryButton.getAttribute('aria-expanded')).toBe('false');
-
-    summaryButton.click();
-    fixture.detectChanges();
-
-    expect(summaryButton.getAttribute('aria-expanded')).toBe('true');
-    expect(fixture.nativeElement.textContent).toContain('Poids disponible');
-  });
-
   it('renders the compact trip information card with navigation and edit affordances', () => {
     createComponent();
 
@@ -668,12 +579,12 @@ describe('ReservationDetailsPageComponent', () => {
     expect(country?.classList.contains('block')).toBeTrue();
     expect(country?.classList.contains('sm:inline')).toBeTrue();
     expect(separator?.classList.contains('hidden')).toBeTrue();
-    expect(separator?.classList.contains('sm:inline')).toBeTrue();
+    expect(separator?.classList.contains('sm:inline')).toBeFalse();
     expect(departure?.classList.contains('block')).toBeTrue();
     expect(departure?.classList.contains('sm:inline')).toBeTrue();
     expect(editLink?.getAttribute('href')).toContain('/propose/12');
-    expect(editLink?.classList.contains('hidden')).toBeTrue();
-    expect(editLink?.classList.contains('md:inline-flex')).toBeTrue();
+    expect(editLink?.classList.contains('hidden')).toBeFalse();
+    expect(fixture.nativeElement.querySelector('[data-testid="delete-trip-button"]')).not.toBeNull();
   });
 });
 

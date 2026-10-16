@@ -28,6 +28,7 @@ type ReservationStatusTab = 'ALL' | BookingResponse['status'];
     RouterLink,
   ],
   templateUrl: './reservation-details-page.component.html',
+  styleUrl: './reservation-details-page.component.css',
 })
 export class ReservationDetailsPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -55,13 +56,12 @@ export class ReservationDetailsPageComponent implements OnInit {
   pendingRemoveBookingId: number | null = null;
   selectedTab: ReservationStatusTab = 'ALL';
   currentPage = 1;
-  tripSummaryExpanded = false;
   isGeneratingShareCard = false;
   shareCardData: ShareCardData | null = null;
 
   readonly pageSize = 4;
   readonly primaryStatusTabs: ReadonlyArray<{ value: ReservationStatusTab; label: string }> = [
-    { value: 'PENDING', label: 'En attentes' },
+    { value: 'PENDING', label: 'En attente' },
     { value: 'ACCEPTED', label: 'Acceptées' },
   ];
 
@@ -79,10 +79,6 @@ export class ReservationDetailsPageComponent implements OnInit {
 
       this.loadReservationDetails(tripId);
     });
-  }
-
-  toggleTripSummary(): void {
-    this.tripSummaryExpanded = !this.tripSummaryExpanded;
   }
 
   cityName(location: string): string {
@@ -447,7 +443,6 @@ export class ReservationDetailsPageComponent implements OnInit {
     this.loadError = '';
     this.actionError = '';
     this.processingBookingId = null;
-    this.tripSummaryExpanded = false;
     this.isGeneratingShareCard = false;
     this.shareCardData = null;
     this.closeRemoveBookingModal();

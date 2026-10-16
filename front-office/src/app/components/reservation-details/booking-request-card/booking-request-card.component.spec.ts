@@ -249,7 +249,7 @@ describe('BookingRequestCardComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('footer')).toBeNull();
     expect(fixture.nativeElement.querySelector('button[aria-expanded]')).not.toBeNull();
-    expect(fixture.nativeElement.querySelector('article').classList).not.toContain('border');
+    expect(fixture.nativeElement.querySelector('article').classList).toContain('border');
   });
 
   it('statusBadgeClass() returns neutral style for pending status', () => {

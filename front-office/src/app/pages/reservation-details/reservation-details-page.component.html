@@ -1,5 +1,5 @@
-<main class="pb-32">
-  <div class="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8">
+<main class="reservations-page pb-32">
+  <div class="reservations-container mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8">
     @if (isLoading && !trip) {
       <section class="rounded-2xl border border-border bg-background-secondary px-5 py-16 text-center shadow-card" role="status" aria-live="polite">
         <div class="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-border border-t-primary"></div>
@@ -36,18 +36,12 @@
 
         <div class="overflow-hidden rounded-2xl border border-border bg-background-secondary shadow-card" data-testid="trip-information-card">
           <div class="flex items-center gap-3 p-4 sm:p-5">
-            <button
-              type="button"
-              class="flex min-w-0 flex-1 items-center gap-3 text-left sm:gap-4"
-              aria-controls="trip-summary-panel"
-              [attr.aria-expanded]="tripSummaryExpanded"
-              (click)="toggleTripSummary()"
-            >
-              <div class="rounded-2xl bg-primary/10 p-3 text-primary">
+            <div class="trip-route flex min-w-0 flex-1 items-center gap-3 text-left sm:gap-4">
+              <div class="trip-icon rounded-2xl bg-primary/10 p-3 text-primary">
                 <span class="material-symbols-outlined block text-[20px] leading-none" aria-hidden="true">directions_transit</span>
               </div>
               <div class="max-sm:min-w-0">
-                <h1 class="max-sm:truncate text-base font-bold text-text-primary sm:text-lg">
+                <h1 class="break-words text-base font-bold text-text-primary sm:text-lg">
                   <span class="sm:hidden" data-testid="mobile-trip-route">
                     {{ cityName(trip.departureAddress) }} → {{ cityName(trip.destination) }}
                   </span>
@@ -55,10 +49,10 @@
                     {{ trip.departureAddress }} → {{ trip.destination }}
                   </span>
                 </h1>
-                <p class="mt-0.5 text-sm text-text-secondary sm:truncate" data-testid="trip-information-metadata">
+                <p class="trip-metadata mt-0.5 text-sm text-text-secondary" data-testid="trip-information-metadata">
                   @if (countryName(trip.destination)) {
                     <span class="block sm:inline" data-testid="trip-information-country">{{ countryName(trip.destination) }}</span>{{ ' ' }}
-                    <span class="mx-1 hidden text-text-muted sm:inline" data-testid="trip-information-separator">•</span>
+                    <span class="hidden" data-testid="trip-information-separator">•</span>
                   }
                   <span class="block sm:inline" data-testid="trip-information-departure">
                     Départ le {{ trip.departureTime | date:'dd/MM' }}
@@ -67,132 +61,42 @@
                   </span>
                 </p>
               </div>
-            </button>
-
+            </div>
             @if (trip.status === 'ACTIVE') {
-              <button
-                type="button"
-                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-text-muted transition hover:bg-primary/10 hover:text-primary md:hidden"
-                aria-controls="trip-summary-panel"
-                [attr.aria-expanded]="tripSummaryExpanded"
-                [attr.aria-label]="tripSummaryExpanded ? 'Masquer les actions du trajet' : 'Afficher les actions du trajet'"
-                (click)="toggleTripSummary()"
-                data-testid="mobile-trip-actions-toggle"
-              >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10.5-10.5a2.121 2.121 0 10-3-3L5 17v3z" />
-                </svg>
-              </button>
-
-              <a
-                [routerLink]="['/propose', trip.id]"
-                class="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl text-text-muted transition hover:bg-primary/10 hover:text-primary md:inline-flex"
-                aria-label="Modifier le trajet"
-                data-testid="edit-trip-link"
-              >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10.5-10.5a2.121 2.121 0 10-3-3L5 17v3z" />
-                </svg>
-              </a>
+              <div class="trip-actions">
+                <a [routerLink]="['/propose', trip.id]" class="trip-action edit-action" aria-label="Modifier le trajet" data-testid="edit-trip-link">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10.5-10.5a2.121 2.121 0 10-3-3L5 17v3z" /></svg>
+                </a>
+                <button type="button" class="trip-action delete-action" [disabled]="isCompletingTrip || isCancellingTrip" (click)="openCancelTripModal()" aria-label="Supprimer le trajet" data-testid="delete-trip-button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6m4-6v6" /></svg>
+                </button>
+              </div>
+            } @else {
+              <span class="rounded-full px-3 py-1 text-xs font-semibold" [class]="tripStatusClass(trip.status)">{{ tripStatusLabel(trip.status) }}</span>
             }
           </div>
-
-          @if (tripSummaryExpanded) {
-            <div id="trip-summary-panel" class="space-y-4 border-t border-border px-4 pb-4 pt-0 sm:px-5 sm:pb-5">
-              <div class="mt-2 hidden md:block">
-                <div class="mb-2 flex items-center justify-between text-sm text-text-secondary">
-                  <span>Capacité</span>
-                  <span class="font-bold text-text-primary">{{ usedWeight() | number:'1.0-2' }} / {{ trip.maxWeight | number:'1.0-2' }} kg</span>
-                </div>
-                <div class="h-2 w-full rounded-full bg-border">
-                  <div class="h-2 rounded-full bg-primary" [style.width.%]="usedWeightPercentage()"></div>
-                </div>
-              </div>
-
-              <div class="grid gap-4 md:grid-cols-2">
-                <div class="hidden rounded-2xl bg-background-primary p-3 text-center md:block">
-                  <p class="text-[11px] font-semibold uppercase tracking-[0.05em] text-text-muted">Poids disponible</p>
-                  <p class="mt-1 font-bold text-primary">{{ remainingWeight() | number:'1.0-2' }} kg</p>
-                </div>
-                <div class="rounded-2xl bg-background-primary p-3 text-center">
-                  <p class="text-[11px] font-semibold uppercase tracking-[0.05em] text-text-muted">Demandes</p>
-                  <p class="mt-1 font-bold text-text-primary">{{ bookings.length }} total</p>
-                </div>
-              </div>
-
-              @if (trip.status === 'ACTIVE') {
-                <div class="grid grid-cols-2 gap-3 md:hidden">
-                  <a
-                    [routerLink]="['/propose', trip.id]"
-                    class="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/30 bg-background-secondary px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/5"
-                    aria-label="Modifier le trajet"
-                  >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10.5-10.5a2.121 2.121 0 10-3-3L5 17v3z" />
-                    </svg>
-                    Modifier
-                  </a>
-
-                  <button
-                    type="button"
-                    class="inline-flex items-center justify-center gap-2 rounded-xl border border-error/30 bg-background-secondary px-4 py-2.5 text-sm font-semibold text-error transition hover:bg-error/5"
-                    [disabled]="isCompletingTrip || isCancellingTrip"
-                    (click)="openCancelTripModal()"
-                    aria-label="Supprimer le trajet"
-                  >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12m-10 0V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m-8 0v12a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V7m-6 0h6" />
-                    </svg>
-                    Supprimer
-                  </button>
-                </div>
-              }
-            </div>
-          }
         </div>
       </section>
 
-      <section class="mb-6 md:hidden" aria-label="Indicateurs du trajet" data-testid="mobile-trip-indicators">
-        <div class="grid grid-cols-2 gap-3">
-          <div class="min-w-0 rounded-[18px] border border-[#E6ECF1] bg-white p-3.5 shadow-[0_4px_14px_rgba(19,44,70,0.07)]" data-testid="mobile-load-card">
-            <div class="flex items-center justify-between gap-1">
-              <span class="text-[10px] font-bold uppercase tracking-[0.08em] text-[#91A1BA]">Chargé</span>
-              <span class="rounded-md bg-[#FFF2E8] px-1.5 py-1 text-[10px] font-bold text-[#F15A24]">{{ displayedWeightPercentage() }}%</span>
-            </div>
-            <div class="mx-auto mt-4 flex h-[60px] w-[60px] items-center justify-center rounded-full p-[7px]" [style.background]="'conic-gradient(#F15A24 ' + usedWeightPercentage() + '%, #F0F4F8 0)'" role="img" [attr.aria-label]="'Capacité chargée : ' + (usedWeight() | number:'1.0-2') + ' sur ' + (trip.maxWeight | number:'1.0-2') + ' kg, soit ' + displayedWeightPercentage() + ' %'">
-              <div class="flex h-full w-full flex-col items-center justify-center rounded-full bg-white leading-none">
-                <span class="text-sm font-extrabold text-[#152238]">{{ usedWeight() | number:'1.0-2' }}</span>
-                <span class="mt-1 text-[9px] font-semibold text-[#91A1BA]">kg pris</span>
-              </div>
-            </div>
-            <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-[#F0F4F8]" aria-hidden="true">
-              <div class="h-full rounded-full bg-[#F15A24]" [style.width.%]="usedWeightPercentage()"></div>
-            </div>
-            <div class="mt-1 flex justify-between text-[10px] font-medium text-[#91A1BA]">
-              <span>{{ usedWeight() | number:'1.0-2' }} kg</span>
-              <span>max {{ trip.maxWeight | number:'1.0-2' }} kg</span>
-            </div>
+      <section class="trip-indicators mb-6" aria-label="Indicateurs du trajet" data-testid="mobile-trip-indicators">
+        <div class="capacity-card" data-testid="trip-capacity-card">
+          <div class="capacity-line">
+            <p><strong>{{ usedWeight() | number:'1.0-2' }}</strong> / {{ trip.maxWeight | number:'1.0-2' }} kg</p>
+            <p class="potential">Potentiel <strong data-testid="potential-amount">{{ potentialAmount() | number:'1.0-2' }} €</strong></p>
           </div>
-
-          <div class="min-w-0 rounded-[18px] border border-[#E6ECF1] bg-white p-3.5 shadow-[0_4px_14px_rgba(19,44,70,0.07)]" data-testid="mobile-potential-card">
-            <div class="flex items-center justify-between gap-1">
-              <span class="text-[10px] font-bold uppercase tracking-[0.08em] text-[#91A1BA]">Potentiel</span>
-              <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-[#E8F9F1] text-[#00A86B]" aria-hidden="true">
-                <span class="material-symbols-outlined text-[16px] leading-none">monetization_on</span>
-              </span>
-            </div>
-            <p class="mt-5 text-[25px] font-extrabold tracking-[-0.04em] text-[#142138]" data-testid="potential-amount">{{ potentialAmount() | number:'1.0-2' }} €</p>
-            <div class="mt-4 border-t border-[#F0F4F8] pt-2">
-              <p class="text-[10px] font-bold uppercase tracking-[0.06em] text-[#91A1BA]">Dispo</p>
-              <p class="text-xs font-bold text-[#152238]">{{ remainingWeight() | number:'1.0-2' }} kg restants</p>
-            </div>
+          <div class="capacity-track" role="progressbar" aria-label="Capacité du trajet utilisée" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="displayedWeightPercentage()" [attr.aria-valuetext]="(usedWeight() | number:'1.0-2') + ' sur ' + (trip.maxWeight | number:'1.0-2') + ' kg'">
+            <div class="capacity-fill" [style.width.%]="usedWeightPercentage()"></div>
+          </div>
+          <div class="capacity-line capacity-remaining">
+            <p>{{ remainingWeight() | number:'1.0-2' }} kg disponibles</p>
+            <strong>{{ displayedWeightPercentage() }} %</strong>
           </div>
         </div>
 
         @if (trip.status === 'ACTIVE') {
           <button
             type="button"
-            class="mt-3 flex w-full items-center gap-3 rounded-[18px] border border-[#E6ECF1] bg-white px-3.5 py-3 text-left shadow-[0_4px_14px_rgba(19,44,70,0.07)] transition hover:border-[#F15A24]/40 hover:shadow-[0_6px_18px_rgba(19,44,70,0.1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F15A24] disabled:cursor-wait disabled:opacity-70"
+            class="announcement-card mt-3 flex w-full items-center gap-3 rounded-[18px] border border-[#E6ECF1] bg-white px-3.5 py-3 text-left shadow-[0_4px_14px_rgba(19,44,70,0.07)] transition hover:border-[#F15A24]/40 hover:shadow-[0_6px_18px_rgba(19,44,70,0.1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F15A24] disabled:cursor-wait disabled:opacity-70"
             [disabled]="isGeneratingShareCard"
             (click)="downloadTripAnnouncementImage()"
             aria-label="Télécharger l'image de l'annonce"
@@ -206,7 +110,7 @@
               <span class="mt-1 block text-[11px] font-medium leading-snug text-text-secondary">{{ isGeneratingShareCard ? 'Génération de l’affiche...' : 'L’image sera téléchargée sur votre appareil' }}</span>
             </span>
             <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F15A24] text-white" aria-hidden="true">
-              <span class="material-symbols-outlined text-[20px] leading-none">arrow_forward</span>
+              <span class="material-symbols-outlined text-[20px] leading-none">download</span>
             </span>
           </button>
         }
@@ -214,10 +118,10 @@
 
       <section class="mb-6">
         <div class="mb-4">
-          <h2 class="text-xl font-bold leading-[1.15] tracking-[-0.02em] text-text-primary sm:text-[2rem] sm:leading-tight">Demandes en cours</h2>
+          <h2 class="text-xl font-bold leading-[1.15] tracking-[-0.02em] text-text-primary sm:text-[2rem] sm:leading-tight">Réservations</h2>
         </div>
 
-        <div class="w-full max-w-md rounded-2xl bg-background-primary p-1">
+        <div class="reservation-tabs w-full rounded-2xl bg-background-primary p-1">
           <div class="grid grid-cols-2 gap-1">
             @for (tab of primaryStatusTabs; track tab.value) {
               <button
@@ -226,6 +130,7 @@
                 [class]="selectedTab === tab.value
                   ? 'bg-background-secondary text-primary shadow-sm'
                   : 'text-text-secondary hover:text-primary'"
+                [attr.aria-pressed]="selectedTab === tab.value"
                 (click)="selectTab(tab.value)"
               >
                 {{ tab.label }} ({{ bookingCountForStatus(tab.value) }})
@@ -260,7 +165,7 @@
         </section>
       } @else {
         <section>
-          <div [ngClass]="selectedTab === 'PENDING' ? 'space-y-3' : 'divide-y divide-border'">
+          <div class="space-y-4">
             @for (booking of paginatedBookings(); track booking.id) {
               <app-booking-request-card
                 [booking]="booking"
@@ -278,6 +183,7 @@
             }
           </div>
 
+          @if (totalPages() > 1) {
           <div class="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <p class="text-[13px] text-text-secondary sm:text-sm">
               {{ currentRangeEnd() }} sur {{ filteredBookings().length }} demandes
@@ -322,6 +228,7 @@
               </nav>
             }
           </div>
+          }
         </section>
       }
     }
@@ -357,7 +264,7 @@
     </div>
   </div>
 
-  <div class="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background-secondary/90 p-2 backdrop-blur-md md:hidden">
+  <div class="mobile-trip-footer fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background-secondary/90 p-2 backdrop-blur-md md:hidden">
     <div class="flex gap-2">
       <button
         type="button"

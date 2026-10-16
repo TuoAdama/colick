@@ -1,10 +1,10 @@
 <article
-  class="relative"
-  [ngClass]="booking.status === 'PENDING' ? 'rounded-xl border border-border bg-background-secondary' : ''"
+  class="reservation-card relative rounded-xl border border-border bg-background-secondary"
   [attr.data-trip-id]="tripId"
+  [attr.data-status]="booking.status"
   [attr.aria-busy]="isProcessing"
 >
-  <div class="flex items-start gap-3 sm:gap-4" [ngClass]="booking.status === 'PENDING' ? 'p-4 sm:p-5' : 'py-4 sm:py-5'">
+  <div class="booking-content flex items-start gap-3 p-4 sm:gap-4 sm:p-5">
     @if (senderPhotoUrl(); as photoUrl) {
       <img
         [src]="photoUrl"

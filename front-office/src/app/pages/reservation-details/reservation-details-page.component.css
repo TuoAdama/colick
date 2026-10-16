@@ -1,0 +1,51 @@
+:host { display: block; color: #080d28; font-family: 'DM Sans', sans-serif; }
+.reservations-page { min-height: calc(100dvh - 64px); background: #fafafa; }
+.reservations-container { padding-top: 24px; }
+[data-testid='trip-reference'] { font-family: inherit; color: #75788e; }
+[data-testid='trip-information-card'], .capacity-card, .announcement-card { border: 1px solid #e9edf1; border-radius: 14px; background: white; box-shadow: 0 8px 24px rgb(2 48 71 / 4%); }
+[data-testid='trip-information-card'] > div { padding: 20px 12px; gap: 10px; }
+.trip-route { gap: 12px; }
+.trip-route > div:last-child { min-width: 0; }
+.trip-route h1 { color: #080d28; font-size: 15px; line-height: 1.3; }
+.trip-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 46px; padding: 0; flex-shrink: 0; background: #edf4f6; }
+.trip-icon span { font-size: 25px; }
+.trip-metadata { color: #808398; font-size: 13px; line-height: 1.6; }
+.trip-metadata > [data-testid='trip-information-country'], .trip-metadata > [data-testid='trip-information-departure'] { display: block; }
+.trip-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.trip-action { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 44px; border-radius: 12px; border: 1px solid #e0e5ee; background: #f7f8fa; color: #080d28; }
+.trip-action svg { width: 22px; height: 22px; }
+.delete-action { color: #ff142b; border-color: #ffcbd1; background: #fff4f4; }
+.trip-action:hover { filter: brightness(.97); }
+.trip-action:focus-visible { outline: 2px solid #023047; outline-offset: 3px; }
+button:disabled { opacity: .6; }
+.capacity-card { padding: 16px; }
+.capacity-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #808398; font-size: 16px; }
+.capacity-line strong { color: #080d28; font-weight: 700; }
+.potential { font-size: 14px; }
+.capacity-track { height: 8px; overflow: hidden; border-radius: 999px; background: #eaf0f3; margin: 12px 0; }
+.capacity-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ff5a00, #ff8500); }
+.capacity-remaining { font-size: 14px; }
+.announcement-card { margin-top: 16px; padding: 12px 10px; }
+.announcement-card > span:first-child { background: #fff0e7; color: #ff142b; }
+.announcement-card > span:last-child { width: 40px; height: 40px; background: #ff610b; }
+.announcement-card > span:nth-child(2) > span:first-child { color: #080d28; font-size: 15px; }
+.announcement-card > span:nth-child(2) > span:last-child { color: #808398; font-size: 11px; }
+h2 { color: #080d28; font-size: 24px; margin-top: 26px; }
+.reservation-tabs { background: #f1f2f5; }
+.reservation-tabs button { min-height: 42px; }
+.reservation-tabs button[aria-pressed='true'] { border: 1px solid #e9edf1; }
+.mobile-trip-footer { padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); background: rgb(255 255 255 / 96%); }
+.mobile-trip-footer > div { gap: 8px; }
+.mobile-trip-footer button { min-height: 48px; border-radius: 18px; font-size: 15px; }
+.mobile-trip-footer button:first-child { color: #ff142b; border-color: #ff8191; }
+.mobile-trip-footer button:last-child { background: #00a4c4; }
+@media (max-width: 359px) { .trip-icon { display: none; } }
+@media (min-width: 640px) {
+  [data-testid='trip-information-card'] > div { padding: 22px; }
+  .trip-route h1 { font-size: 20px; }
+  .trip-metadata { font-size: 16px; }
+  .trip-action { width: 48px; height: 48px; }
+  .capacity-card { padding: 22px; }
+  .announcement-card { padding: 16px 20px; }
+  h2 { font-size: 30px; }
+}
