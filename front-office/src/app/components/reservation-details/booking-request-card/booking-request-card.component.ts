@@ -12,6 +12,7 @@ import { Trip } from '../../../models/trip.model';
     class: 'block',
   },
   templateUrl: './booking-request-card.component.html',
+  styleUrl: './booking-request-card.component.css',
 })
 export class BookingRequestCardComponent {
   private readonly router = inject(Router);

@@ -1,0 +1,21 @@
+:host { font-family: 'DM Sans', sans-serif; }
+.reservation-card { border-color: #e9edf1; border-radius: 14px; box-shadow: 0 8px 24px rgb(2 48 71 / 4%); }
+.booking-content { padding: 16px 14px; gap: 12px; }
+.booking-content > img, .booking-content > div:first-child { width: 44px; height: 44px; margin-top: 0; background: #eeeff1; }
+h3 { color: #080d28; font-size: 15px; line-height: 1.35; }
+h3 + span { border-radius: 999px; padding: 5px 9px; font-size: 10px; }
+h3 + span.bg-secondary\/10 { background: #e2f5f8; color: #00a4c4; }
+.booking-content p { color: #808398; font-size: 13px; }
+.booking-content > div:last-child > button:last-child { color: #080d28; }
+@media (min-width: 640px) {
+  .booking-content { padding: 22px; gap: 16px; }
+  .booking-content > img, .booking-content > div:first-child { width: 48px; height: 48px; }
+  h3 { font-size: 18px; }
+  .booking-content p { font-size: 15px; }
+}
+
+@media (max-width: 639px) {
+  [data-status='ACCEPTED'] .booking-content > div:last-child { width: 28px; }
+  [data-status='ACCEPTED'] .booking-content > div:last-child > button:last-child { position: absolute; right: 14px; bottom: 16px; }
+  [data-status='ACCEPTED'] .booking-content p:last-child { padding-right: 44px; }
+}
