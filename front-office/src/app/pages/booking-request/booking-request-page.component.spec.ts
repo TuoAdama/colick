@@ -78,6 +78,27 @@ describe('BookingRequestPageComponent', () => {
     }));
   });
 
+  it('renders the selected trip above the parcel step and restores the heading on return', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const requestForm = fixture.debugElement.query(By.directive(BookingRequestFormComponent)).componentInstance as BookingRequestFormComponent;
+    const header = host.querySelector('[data-testid="booking-request-header"]')!;
+
+    expect(header.querySelector('[data-testid="booking-route"]')?.textContent).toContain(trip.departureAddress);
+    expect(header.querySelector('[data-testid="booking-capacity"]')?.textContent).toContain('10 kg disponibles · 5 €/kg');
+    expect(header.querySelector('h1')?.textContent?.trim()).toBe('Votre colis');
+
+    requestForm.bookingForm.patchValue({ title: 'Documents', weight: 1, recipientContact: 'recipient@example.com' });
+    Array.from(host.querySelectorAll('button')).find(button => button.textContent?.trim() === 'Continuer')?.click();
+    fixture.detectChanges();
+    expect(header.querySelector('[data-testid="booking-step"]')?.textContent).toBe('Étape 2 sur 2');
+    expect(header.querySelector('h1')?.textContent?.trim()).toBe('Photo et sécurité');
+
+    host.querySelector<HTMLButtonElement>('[data-testid="booking-request-back-link"]')?.click();
+    fixture.detectChanges();
+    expect(header.querySelector('h1')?.textContent?.trim()).toBe('Votre colis');
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+  });
+
   it('returns to the originating search URL', () => {
     component.goBack();
 
