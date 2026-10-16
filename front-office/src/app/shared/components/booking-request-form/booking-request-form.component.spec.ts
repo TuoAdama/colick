@@ -70,6 +70,31 @@ describe('BookingRequestFormComponent', () => {
     fixture.detectChanges();
   });
 
+  it('separates cities and countries from the trip location labels', () => {
+    fixture.componentRef.setInput('trip', {
+      ...component.trip!,
+      departureAddress: ' Nantes, France ',
+      destination: 'Abidjan, Côte d’Ivoire',
+    });
+    fixture.detectChanges();
+
+    expect(component.departure).toEqual({ city: 'Nantes', country: 'France' });
+    expect(component.destination).toEqual({ city: 'Abidjan', country: 'Côte d’Ivoire' });
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('[data-testid="booking-route"]')?.textContent).toContain('Nantes');
+    expect(host.querySelector('[data-testid="booking-countries"]')?.textContent).toContain('Côte d’Ivoire');
+    expect(host.querySelector('[data-testid="booking-capacity"]')?.textContent).toContain('10 kg disponibles · 5 €/kg');
+    expect(host.querySelector('h1')?.textContent?.trim()).toBe('Votre colis');
+  });
+
+  it('omits the country line when the trip only supplies city names', () => {
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(component.departure).toEqual({ city: 'Paris', country: '' });
+    expect(host.querySelector('[data-testid="booking-countries"]')).toBeNull();
+    expect(host.querySelector('[data-testid="booking-route"]')?.textContent).toContain('Abidjan');
+  });
+
   it('marks recipient contact invalid when it is neither phone nor email', () => {
     component.bookingForm.patchValue({
       title: 'Documents',
@@ -119,6 +144,7 @@ describe('BookingRequestFormComponent', () => {
     await fixture.whenStable();
 
     expect(component.currentStep).toBe(2);
+    expect((fixture.nativeElement as HTMLElement).querySelector('h1')?.textContent?.trim()).toBe('Photo et sécurité');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Étape 2 sur 2');
     expect(scrollCardIntoView).toHaveBeenCalledOnceWith({ behavior: 'smooth', block: 'start' });
   });

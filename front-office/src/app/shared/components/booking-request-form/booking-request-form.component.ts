@@ -64,6 +64,19 @@ export class BookingRequestFormComponent implements OnInit, OnChanges, OnDestroy
   createdBooking: BookingResponse | null = null;
   private bookingWasEmitted = false;
 
+  get departure(): { city: string; country: string } {
+    return this.splitLocation(this.trip?.departureAddress ?? '');
+  }
+
+  get destination(): { city: string; country: string } {
+    return this.splitLocation(this.trip?.destination ?? '');
+  }
+
+  private splitLocation(value: string): { city: string; country: string } {
+    const [city = '', ...country] = value.split(',').map(part => part.trim()).filter(Boolean);
+    return { city, country: country.join(', ') };
+  }
+
   ngOnInit(): void {
     if (typeof this.tripService.getParcelGuidelines !== 'function') {
       this.guidelinesError = 'Les règles relatives aux colis sont indisponibles. Réessayez plus tard.';
