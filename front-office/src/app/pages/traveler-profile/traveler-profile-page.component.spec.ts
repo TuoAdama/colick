@@ -45,7 +45,7 @@ describe('TravelerProfilePageComponent', () => {
     window.history.replaceState({ navigationId: 2 }, '');
     const button = fixture.nativeElement.querySelector('button[aria-label="Retour à la page précédente"]') as HTMLButtonElement;
 
-    expect(button.textContent?.replace('←', '').trim()).toBe('Retour');
+    expect(button.textContent?.trim()).toBe('Profil voyageur');
     expect(fixture.nativeElement.textContent).not.toContain('Retour aux trajets');
     button.click();
 
@@ -83,4 +83,80 @@ describe('TravelerProfilePageComponent', () => {
       .find((link: HTMLAnchorElement) => link.textContent?.includes('Signaler'));
     expect(report?.getAttribute('href')).toContain('travelerId=7');
   });
+
+  it('navigates between profile sections and moves keyboard focus to the target', () => {
+    const reviews = fixture.nativeElement.querySelector('#traveler-reviews') as HTMLElement;
+    const activity = fixture.nativeElement.querySelector('#traveler-activity') as HTMLElement;
+    const reviewsScroll = spyOn(reviews, 'scrollIntoView');
+    const activityScroll = spyOn(activity, 'scrollIntoView');
+    const buttons = fixture.nativeElement.querySelectorAll('nav[aria-label="Sections du profil"] button');
+
+    expect(buttons[0].getAttribute('aria-pressed')).toBe('true');
+    expect(buttons[1].textContent).toContain('Avis (1)');
+    buttons[1].click();
+    fixture.detectChanges();
+
+    expect(reviewsScroll).toHaveBeenCalledWith({ block: 'start' });
+    expect(document.activeElement).toBe(reviews);
+    expect(buttons[1].getAttribute('aria-pressed')).toBe('true');
+    expect(buttons[0].getAttribute('aria-pressed')).toBe('false');
+
+    buttons[0].click();
+    fixture.detectChanges();
+    expect(activityScroll).toHaveBeenCalledWith({ block: 'start' });
+    expect(document.activeElement).toBe(activity);
+    expect(buttons[0].getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('renders the new traveler empty state without an invented rating or response rate', () => {
+    const component = fixture.componentInstance;
+    component.profile = {
+      ...component.profile!, completedTripCount: 0, reviewCount: 0,
+      averageRating: null, responseSampleSize: 0,
+      memberSince: '2026-08-01T10:00:00', memberSinceEstimated: true,
+    };
+    component.reviews = [];
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Avis (0)');
+    expect(text).toContain('Activité connue depuis août 2026');
+    expect(text).toContain('Pas assez de données');
+    expect(text).toContain('Aucun avis publié pour le moment.');
+    expect(text).not.toContain('Taux de réponse');
+    expect(fixture.nativeElement.querySelector('[aria-label="Note moyenne"]')).toBeNull();
+  });
+
+  it('preserves ratings and loads the next review page from the redesigned card', () => {
+    profileService.getReviews.calls.reset();
+    fixture.componentInstance.totalPages = 2;
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[aria-label="Note moyenne"]').textContent).toMatch(/4[.,]5\/5/);
+    const loadMore = [...fixture.nativeElement.querySelectorAll('button')]
+      .find((button: HTMLButtonElement) => button.textContent?.includes('Afficher plus'));
+    loadMore.click();
+    expect(profileService.getReviews).toHaveBeenCalledOnceWith(7, 1);
+    expect(fixture.componentInstance.reviews.length).toBe(2);
+  });
+
+  it('hides the verification badge when email is not verified and keeps support available', () => {
+    fixture.componentInstance.profile = { ...fixture.componentInstance.profile!, emailVerified: false };
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('E-mail vérifié');
+    const support = fixture.nativeElement.querySelector('nav[aria-label="Assistance pour ce profil"] a');
+    expect(support.getAttribute('href')).toBe('/contact');
+  });
+
+  it('keeps loading and error states outside the profile cards', () => {
+    fixture.componentInstance.isLoading = true;
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="status"]').textContent).toContain('Chargement du profil');
+    expect(fixture.nativeElement.querySelector('#traveler-activity')).toBeNull();
+    fixture.componentInstance.isLoading = false;
+    fixture.componentInstance.errorMessage = 'Impossible de charger ce profil pour le moment.';
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Impossible de charger');
+    expect(fixture.nativeElement.querySelector('#traveler-reviews')).toBeNull();
+  });
+
 });

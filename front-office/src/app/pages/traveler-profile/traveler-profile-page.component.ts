@@ -13,6 +13,7 @@ import { AnalyticsService } from '../../services/analytics.service';
   standalone: true,
   imports: [CommonModule, RouterLink, UserAvatarComponent],
   templateUrl: './traveler-profile-page.component.html',
+  styleUrl: './traveler-profile-page.component.css',
 })
 export class TravelerProfilePageComponent implements OnInit, OnDestroy {
   private readonly document = inject(DOCUMENT);
@@ -31,6 +32,14 @@ export class TravelerProfilePageComponent implements OnInit, OnDestroy {
   errorMessage = '';
   currentPage = 0;
   totalPages = 0;
+  activeSection: 'profile' | 'reviews' = 'profile';
+
+  navigateToSection(section: 'profile' | 'reviews'): void {
+    this.activeSection = section;
+    const target = this.document.getElementById(section === 'profile' ? 'traveler-activity' : 'traveler-reviews');
+    target?.scrollIntoView({ block: 'start' });
+    target?.focus({ preventScroll: true });
+  }
 
   ngOnInit(): void {
     this.subscription = this.route.paramMap.subscribe(params => {
@@ -81,6 +90,7 @@ export class TravelerProfilePageComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = '';
     this.reviews = [];
+    this.activeSection = 'profile';
     this.service.getProfile(id).subscribe({
       next: profile => {
         this.profile = profile;
