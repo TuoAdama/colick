@@ -15,6 +15,7 @@ import { COMMERCIAL_CONTENT, CommercialContent } from '../../services/commercial
   standalone: true,
   imports: [CommonModule, RouterLink, ConfirmModalComponent],
   templateUrl: './reservation-booking-detail-page.component.html',
+  styleUrl: './reservation-booking-detail-page.component.css',
 })
 export class ReservationBookingDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -29,6 +30,9 @@ export class ReservationBookingDetailPageComponent implements OnInit {
   loadError = '';
   actionError = '';
   deliveryCode = '';
+  contactCopyFeedback = '';
+  contactCopyFailed = false;
+  isCopyingContact = false;
   isRemoveBookingModalOpen = false;
 
   private senderPhotoLoadFailed = false;
@@ -73,6 +77,42 @@ export class ReservationBookingDetailPageComponent implements OnInit {
 
   routeLocationLabel(location: string): string {
     return location.split(',')[0]?.trim() || location;
+  }
+
+  countryName(location: string): string {
+    const segments = location.split(',').map((segment) => segment.trim()).filter(Boolean);
+    return segments.length > 1 ? segments.at(-1) ?? '' : '';
+  }
+
+  isFreeBooking(): boolean {
+    return this.booking?.commercialMode !== 'COMMISSION' && !this.hasPlatformFee();
+  }
+
+  async copyRecipientContact(): Promise<void> {
+    const booking = this.booking;
+    if (!booking?.recipientContact || this.isCopyingContact) {
+      return;
+    }
+
+    this.isCopyingContact = true;
+    this.contactCopyFeedback = '';
+    this.contactCopyFailed = false;
+    try {
+      if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
+        throw new Error('Clipboard unavailable');
+      }
+      await navigator.clipboard.writeText(booking.recipientContact);
+      if (this.booking === booking) {
+        this.contactCopyFeedback = 'Contact copié';
+      }
+    } catch {
+      if (this.booking === booking) {
+        this.contactCopyFailed = true;
+        this.contactCopyFeedback = 'Copie impossible. Sélectionnez le contact pour le copier.';
+      }
+    } finally {
+      this.isCopyingContact = false;
+    }
   }
 
   formattedDepartureDateTime(value?: string): string {
@@ -341,6 +381,8 @@ export class ReservationBookingDetailPageComponent implements OnInit {
     this.loadError = '';
     this.actionError = '';
     this.deliveryCode = '';
+    this.contactCopyFeedback = '';
+    this.contactCopyFailed = false;
     this.closeRemoveBookingModal();
 
     forkJoin({
