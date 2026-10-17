@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT, Location } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -15,6 +15,8 @@ import { AnalyticsService } from '../../services/analytics.service';
   templateUrl: './traveler-profile-page.component.html',
 })
 export class TravelerProfilePageComponent implements OnInit, OnDestroy {
+  private readonly document = inject(DOCUMENT);
+  private readonly location = inject(Location);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(TravelerProfileService);
@@ -42,6 +44,15 @@ export class TravelerProfilePageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void { this.subscription?.unsubscribe(); }
+
+  goBack(): void {
+    const navigationId = this.document.defaultView?.history.state?.navigationId;
+    if (typeof navigationId === 'number' && navigationId > 1) {
+      this.location.back();
+      return;
+    }
+    void this.router.navigate(['/search']);
+  }
 
   loadMore(): void {
     if (!this.profile || this.reviewsLoading || this.currentPage + 1 >= this.totalPages) return;

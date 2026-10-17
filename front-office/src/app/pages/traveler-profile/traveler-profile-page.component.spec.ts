@@ -1,11 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { convertToParamMap, ActivatedRoute, provideRouter } from '@angular/router';
+import { Location } from '@angular/common';
+import { convertToParamMap, ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { TravelerProfileService } from '../../services/traveler-profile.service';
 import { TravelerProfilePageComponent } from './traveler-profile-page.component';
 
 describe('TravelerProfilePageComponent', () => {
   let fixture: ComponentFixture<TravelerProfilePageComponent>;
+  let originalHistoryState: unknown;
+  let back: jasmine.Spy;
+  let navigate: jasmine.Spy;
   const profileService = {
     getProfile: jasmine.createSpy('getProfile').and.returnValue(of({
       travelerId: 7, displayName: 'Alice Martin', emailVerified: true,
@@ -20,6 +24,7 @@ describe('TravelerProfilePageComponent', () => {
   };
 
   beforeEach(async () => {
+    originalHistoryState = window.history.state;
     await TestBed.configureTestingModule({
       imports: [TravelerProfilePageComponent],
       providers: [
@@ -28,8 +33,40 @@ describe('TravelerProfilePageComponent', () => {
         { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ travelerId: '7' })) } },
       ],
     }).compileComponents();
+    back = spyOn(TestBed.inject(Location), 'back');
+    navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
     fixture = TestBed.createComponent(TravelerProfilePageComponent);
     fixture.detectChanges();
+  });
+
+  afterEach(() => window.history.replaceState(originalHistoryState, ''));
+
+  it('returns to the previous page when the Retour button is clicked', () => {
+    window.history.replaceState({ navigationId: 2 }, '');
+    const button = fixture.nativeElement.querySelector('button[aria-label="Retour à la page précédente"]') as HTMLButtonElement;
+
+    expect(button.textContent?.replace('←', '').trim()).toBe('Retour');
+    expect(fixture.nativeElement.textContent).not.toContain('Retour aux trajets');
+    button.click();
+
+    expect(back).toHaveBeenCalledTimes(1);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('falls back to search when the profile is the first in-app page', () => {
+    window.history.replaceState({ navigationId: 1 }, '');
+    fixture.nativeElement.querySelector('button[aria-label="Retour à la page précédente"]').click();
+
+    expect(back).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledOnceWith(['/search']);
+  });
+
+  it('falls back to search when no Angular navigation history is available', () => {
+    window.history.replaceState(null, '');
+    fixture.componentInstance.goBack();
+
+    expect(back).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledOnceWith(['/search']);
   });
 
   it('renders verified profile facts and detailed reviews', () => {
