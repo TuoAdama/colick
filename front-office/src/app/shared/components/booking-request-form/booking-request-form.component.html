@@ -63,7 +63,10 @@
 
         <a
           [routerLink]="['/travelers', trip.travelerId]"
-          [attr.aria-label]="'Voir le profil de ' + trip.travelerName"
+          target="_blank"
+          rel="noopener noreferrer"
+          [attr.aria-label]="'Voir le profil de ' + trip.travelerName + ' (nouvel onglet)'"
+          title="Ouvrir le profil dans un nouvel onglet pour conserver votre demande"
           class="mt-5 flex min-h-12 items-center gap-2 rounded-lg text-primary transition hover:bg-accent/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent sm:mt-6 sm:gap-4"
           data-testid="booking-traveler-profile">
           <app-user-avatar

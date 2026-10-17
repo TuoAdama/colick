@@ -105,20 +105,38 @@ describe('BookingRequestPageComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/search?from=Paris&to=Abidjan&sort=price_asc');
   });
 
-  it('opens the selected traveler profile from either request step without submitting a booking', () => {
+  it('opens the traveler profile separately and preserves the draft at either request step', () => {
     const host = fixture.nativeElement as HTMLElement;
     const requestForm = fixture.debugElement.query(By.directive(BookingRequestFormComponent)).componentInstance as BookingRequestFormComponent;
     const submissionsBefore = tripServiceMock.createBooking.calls.count();
+    requestForm.bookingForm.patchValue({
+      title: 'Documents', weight: 2, description: 'À remettre en main propre',
+      recipientContact: 'recipient@example.com', parcelPolicyAccepted: true,
+    });
+    const draft = requestForm.bookingForm.getRawValue();
+    const photo = new File(['image'], 'parcel.png', { type: 'image/png' });
+    requestForm.selectedPhoto = photo;
+    requestForm.photoPreviewUrl = URL.createObjectURL(photo);
+    const previewUrl = requestForm.photoPreviewUrl;
+    const destroy = spyOn(requestForm, 'ngOnDestroy').and.callThrough();
 
     for (const step of [1, 2] as const) {
       requestForm.currentStep = step;
       fixture.detectChanges();
       const link = host.querySelector<HTMLAnchorElement>('[data-testid="booking-traveler-profile"]')!;
       expect(link.textContent).toContain(trip.travelerName);
+      expect(link.getAttribute('href')).toBe(`/travelers/${trip.travelerId}`);
+      expect(link.target).toBe('_blank');
+      // Suppress the browser's new tab in Karma while exercising RouterLink's click handler.
+      link.addEventListener('click', event => event.preventDefault(), { once: true });
       link.click();
 
-      expect((router.navigateByUrl as jasmine.Spy).calls.mostRecent().args[0].toString()).toBe(`/travelers/${trip.travelerId}`);
+      expect(router.navigateByUrl).not.toHaveBeenCalled();
+      expect(destroy).not.toHaveBeenCalled();
       expect(requestForm.currentStep).toBe(step);
+      expect(requestForm.bookingForm.getRawValue()).toEqual(draft);
+      expect(requestForm.selectedPhoto).toBe(photo);
+      expect(requestForm.photoPreviewUrl).toBe(previewUrl);
     }
 
     expect(tripServiceMock.createBooking.calls.count()).toBe(submissionsBefore);

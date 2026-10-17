@@ -101,7 +101,10 @@ describe('BookingRequestFormComponent', () => {
     const link = host.querySelector<HTMLAnchorElement>('[data-testid="booking-traveler-profile"]')!;
 
     expect(link.getAttribute('href')).toBe('/travelers/99');
-    expect(link.getAttribute('aria-label')).toBe('Voir le profil de Alice Dupont');
+    expect(link.getAttribute('aria-label')).toBe('Voir le profil de Alice Dupont (nouvel onglet)');
+    expect(link.target).toBe('_blank');
+    expect(link.relList.contains('noopener')).toBeTrue();
+    expect(link.relList.contains('noreferrer')).toBeTrue();
     expect(link.textContent).toContain('Alice Dupont');
     expect(link.textContent).toContain('Votre voyageur');
     expect(link.textContent).toContain('Voir le profil');
