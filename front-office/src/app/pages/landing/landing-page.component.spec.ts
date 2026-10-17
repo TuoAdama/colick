@@ -16,6 +16,7 @@ describe('LandingPageComponent', () => {
 
   const authServiceMock = {
     isLoggedIn: jasmine.createSpy('isLoggedIn').and.returnValue(true),
+    getUser: jasmine.createSpy('getUser').and.returnValue(null),
   };
 
   const locationServiceMock = {
@@ -59,6 +60,7 @@ describe('LandingPageComponent', () => {
     router = TestBed.inject(Router);
     spyOn(router, 'navigate').and.resolveTo(true);
     authServiceMock.isLoggedIn.and.returnValue(true);
+    authServiceMock.getUser.and.returnValue(null);
     tripServiceMock.getLandingFeed.calls.reset();
     tripServiceMock.getLandingFeed.and.returnValue(of([]));
   });
@@ -274,6 +276,17 @@ describe('LandingPageComponent', () => {
     const card = fixture.nativeElement.querySelector('article');
     expect(card?.textContent).toContain('Paris, France');
     expect(fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]')).toBeNull();
+  });
+
+  it('does not link the signed-in traveler to their own booking request', () => {
+    authServiceMock.getUser.and.returnValue({ id: 7 });
+    fixture.detectChanges();
+    component.trips = [buildLandingTripCard({ reference: 'TRP-2026-000013' })];
+    component.isTripsLoading = false;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/travelers/7"]')).not.toBeNull();
   });
 
   it('hides the next departure section when location sharing is refused', () => {

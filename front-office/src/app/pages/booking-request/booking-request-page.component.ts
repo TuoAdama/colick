@@ -89,7 +89,11 @@ export class BookingRequestPageComponent implements OnInit {
   private getSafeReturnUrl(value: string | null): string {
     const fallback = '/search';
     const candidate = value?.trim() ?? '';
-    return candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : fallback;
+    const candidatePath = candidate.split(/[?#]/, 1)[0];
+    const isLegacyTripDetail = /^\/trips\/ref\/[^/]+\/?$/.test(candidatePath);
+    return candidate.startsWith('/') && !candidate.startsWith('//') && !isLegacyTripDetail
+      ? candidate
+      : fallback;
   }
 
   private getRequestSource(value: string | null): 'search_results' | 'landing_recommended' | 'trip_reference' {

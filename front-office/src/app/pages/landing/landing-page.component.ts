@@ -71,6 +71,10 @@ export class LandingPageComponent {
     return this.authService.isLoggedIn();
   }
 
+  isOwnTrip(trip: LandingTripCard): boolean {
+    return this.authService.getUser()?.id === trip.travelerId;
+  }
+
   ngOnInit(): void {
     this.subscriptions.add(
       this.route.queryParamMap.subscribe((params) => {
