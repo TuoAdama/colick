@@ -9,8 +9,9 @@
   />
 } @else {
   <span
-    class="inline-flex items-center justify-center rounded-full border-2 border-bg-secondary bg-primary text-white font-semibold uppercase shadow-sm shrink-0 select-none"
+    class="inline-flex items-center justify-center rounded-full font-semibold uppercase shrink-0 select-none"
     [class]="sizeClasses + ' ' + textClasses"
+    [ngClass]="tone === 'accent' ? 'bg-accent/10 text-accent' : 'border-2 border-bg-secondary bg-primary text-white shadow-sm'"
     aria-hidden="true"
     data-testid="user-avatar-fallback"
   >

@@ -61,6 +61,33 @@
           {{ trip.availableWeight }} kg disponibles · {{ trip.pricePerKilo }} €/kg
         </p>
 
+        <a
+          [routerLink]="['/travelers', trip.travelerId]"
+          target="_blank"
+          rel="noopener noreferrer"
+          [attr.aria-label]="'Voir le profil de ' + trip.travelerName + ' (nouvel onglet)'"
+          title="Ouvrir le profil dans un nouvel onglet pour conserver votre demande"
+          class="mt-5 flex min-h-12 items-center gap-2 rounded-lg text-primary transition hover:bg-accent/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent sm:mt-6 sm:gap-4"
+          data-testid="booking-traveler-profile">
+          <app-user-avatar
+            class="shrink-0"
+            [name]="trip.travelerName"
+            [photoUrl]="trip.travelerPhotoUrl"
+            sizeClasses="h-12 w-12"
+            textClasses="text-lg"
+            tone="accent" />
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-base font-bold sm:text-lg" [title]="trip.travelerName">{{ trip.travelerName }}</span>
+            <span class="block text-xs text-text-secondary sm:text-base">Votre voyageur</span>
+          </span>
+          <span class="flex shrink-0 items-center gap-2 text-sm font-semibold sm:text-base">
+            Voir le profil
+            <svg class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="m9 5 7 7-7 7" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+        </a>
+
         <div class="mt-6 border-t border-gray-200 pt-4 sm:mt-7 sm:pt-5">
           <p class="text-base font-medium text-accent" data-testid="booking-step">Étape {{ currentStep }} sur 2</p>
           <h1 id="booking-page-title" tabindex="-1" class="mt-1 text-3xl font-bold leading-tight text-primary sm:text-4xl">

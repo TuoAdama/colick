@@ -12,6 +12,7 @@ export class UserAvatarComponent implements OnChanges {
   @Input() photoUrl?: string | null;
   @Input() sizeClasses = 'w-10 h-10';
   @Input() textClasses = 'text-sm';
+  @Input() tone: 'primary' | 'accent' = 'primary';
 
   displayPhotoUrl: string | null = null;
 

@@ -96,6 +96,41 @@ describe('BookingRequestFormComponent', () => {
     expect(host.querySelector('[data-testid="booking-route"]')?.textContent).toContain('Abidjan');
   });
 
+  it('identifies the real traveler and links the entire row to their public profile', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const link = host.querySelector<HTMLAnchorElement>('[data-testid="booking-traveler-profile"]')!;
+
+    expect(link.getAttribute('href')).toBe('/travelers/99');
+    expect(link.getAttribute('aria-label')).toBe('Voir le profil de Alice Dupont (nouvel onglet)');
+    expect(link.target).toBe('_blank');
+    expect(link.relList.contains('noopener')).toBeTrue();
+    expect(link.relList.contains('noreferrer')).toBeTrue();
+    expect(link.textContent).toContain('Alice Dupont');
+    expect(link.textContent).toContain('Votre voyageur');
+    expect(link.textContent).toContain('Voir le profil');
+    expect(link.querySelector('[data-testid="user-avatar-fallback"]')?.textContent?.trim()).toBe('AD');
+    const header = host.querySelector('[data-testid="booking-request-header"]')!;
+    expect(Array.from(header.children).indexOf(link)).toBeGreaterThan(
+      Array.from(header.children).indexOf(host.querySelector('[data-testid="booking-capacity"]')!),
+    );
+    expect(link.nextElementSibling?.querySelector('[data-testid="booking-step"]')).not.toBeNull();
+  });
+
+  it('shows the traveler photo and falls back to initials if it cannot load', () => {
+    fixture.componentRef.setInput('trip', { ...component.trip!, travelerPhotoUrl: '/api/uploads/alice.png' });
+    fixture.detectChanges();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="booking-traveler-profile"]')!;
+    const image = link.querySelector('img')!;
+
+    expect(image.getAttribute('src')).toBe('/api/uploads/alice.png');
+    expect(image.alt).toBe('Photo de profil de Alice Dupont');
+    image.dispatchEvent(new Event('error'));
+    fixture.detectChanges();
+
+    expect(link.querySelector('img')).toBeNull();
+    expect(link.querySelector('[data-testid="user-avatar-fallback"]')?.textContent?.trim()).toBe('AD');
+  });
+
   it('marks recipient contact invalid when it is neither phone nor email', () => {
     component.bookingForm.patchValue({
       title: 'Documents',
