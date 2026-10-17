@@ -241,7 +241,7 @@ describe('LandingPageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Aucune demande trouvee.');
   });
 
-  it('links a landing trip card to its public reference page', () => {
+  it('links a landing trip card directly to the booking request page', () => {
     fixture.detectChanges();
     component.trips = [buildLandingTripCard({ reference: 'TRP-2026-000013' })];
     component.isTripsLoading = false;
@@ -249,8 +249,8 @@ describe('LandingPageComponent', () => {
 
     const link = fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]') as HTMLElement | null;
     expect(link).not.toBeNull();
-    expect(link?.getAttribute('href')).toBe('/trips/ref/TRP-2026-000013');
-    expect(link?.getAttribute('aria-label')).toBe('Voir le trajet de Paris, France vers Abidjan, Côte d\'Ivoire');
+    expect(link?.getAttribute('href')).toBe('/trips/ref/TRP-2026-000013/request?returnUrl=%2F&source=landing_recommended');
+    expect(link?.getAttribute('aria-label')).toBe('Réserver le trajet de Paris, France vers Abidjan, Côte d\'Ivoire');
   });
 
   it('keeps the traveler profile link above the full-card trip overlay', () => {

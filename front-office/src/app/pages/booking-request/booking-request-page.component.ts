@@ -32,7 +32,7 @@ export class BookingRequestPageComponent implements OnInit {
 
   ngOnInit(): void {
     const reference = this.route.snapshot.paramMap.get('reference')?.trim() ?? '';
-    this.returnUrl = this.getSafeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'), reference);
+    this.returnUrl = this.getSafeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
     this.resultsReturnUrl = /^\/search(?:[?#]|$)/.test(this.returnUrl) ? this.returnUrl : '/search';
     this.initialWeight = this.parseWeight(this.route.snapshot.queryParamMap.get('weight'));
 
@@ -55,9 +55,7 @@ export class BookingRequestPageComponent implements OnInit {
         this.analytics.track('request_started', {
           trip_id: trip.id,
           trip_reference: trip.reference,
-          source: this.route.snapshot.queryParamMap.get('source') === 'search_results'
-            ? 'search_results'
-            : 'trip_reference',
+          source: this.getRequestSource(this.route.snapshot.queryParamMap.get('source')),
         });
       },
       error: () => {
@@ -88,10 +86,17 @@ export class BookingRequestPageComponent implements OnInit {
     });
   }
 
-  private getSafeReturnUrl(value: string | null, reference: string): string {
-    const fallback = `/trips/ref/${encodeURIComponent(reference)}`;
+  private getSafeReturnUrl(value: string | null): string {
+    const fallback = '/search';
     const candidate = value?.trim() ?? '';
     return candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : fallback;
+  }
+
+  private getRequestSource(value: string | null): 'search_results' | 'landing_recommended' | 'trip_reference' {
+    if (value === 'search_results' || value === 'landing_recommended') {
+      return value;
+    }
+    return 'trip_reference';
   }
 
   private parseWeight(value: string | null): number | null {

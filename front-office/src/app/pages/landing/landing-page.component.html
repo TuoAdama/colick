@@ -338,8 +338,9 @@
         <article class="relative rounded-2xl border border-border bg-white p-7 transition hover:-translate-y-1 hover:shadow-card">
           @if (trip.reference) {
             <a
-              [routerLink]="['/trips/ref', trip.reference]"
-              [attr.aria-label]="'Voir le trajet de ' + trip.departure + ' vers ' + trip.arrival"
+              [routerLink]="['/trips/ref', trip.reference, 'request']"
+              [queryParams]="recommendedTripQueryParams()"
+              [attr.aria-label]="'Réserver le trajet de ' + trip.departure + ' vers ' + trip.arrival"
               class="absolute inset-0 z-10 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               data-testid="landing-trip-card-link"
             ></a>

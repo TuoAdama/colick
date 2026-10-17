@@ -39,6 +39,16 @@ describe('app routes', () => {
     expect(contactRoute?.loadComponent).toBeDefined();
   });
 
+  it('redirects legacy public trip detail URLs to the booking request page', () => {
+    const legacyTripRoute = routes.find((currentRoute) => currentRoute.path === 'trips/ref/:reference');
+
+    expect(legacyTripRoute).toEqual(jasmine.objectContaining({
+      redirectTo: '/trips/ref/:reference/request',
+      pathMatch: 'full',
+    }));
+    expect(legacyTripRoute?.loadComponent).toBeUndefined();
+  });
+
   it('defines every public trust route with lazy loading and SEO metadata', () => {
     const publicTrustPaths = [
       'a-propos',

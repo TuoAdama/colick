@@ -105,6 +105,21 @@ describe('BookingRequestPageComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/search?from=Paris&to=Abidjan&sort=price_asc');
   });
 
+  it('keeps the landing return URL and analytics source for recommended trips', () => {
+    routeSnapshot.queryParamMap = convertToParamMap({
+      returnUrl: '/?mode=transport',
+      source: 'landing_recommended',
+    });
+    fixture = TestBed.createComponent(BookingRequestPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.returnUrl).toBe('/?mode=transport');
+    expect(analyticsMock.track).toHaveBeenCalledWith('request_started', jasmine.objectContaining({
+      source: 'landing_recommended',
+    }));
+  });
+
   it('uses the page back action to return from step 2 to step 1 before leaving', () => {
     const requestForm = fixture.debugElement.query(By.directive(BookingRequestFormComponent)).componentInstance as BookingRequestFormComponent;
     requestForm.currentStep = 2;
@@ -116,14 +131,14 @@ describe('BookingRequestPageComponent', () => {
     expect(router.navigateByUrl).not.toHaveBeenCalled();
   });
 
-  it('falls back to the trip page when a return URL is external', () => {
+  it('falls back to search when a return URL is external', () => {
     routeSnapshot.queryParamMap = convertToParamMap({ returnUrl: 'https://example.com' });
     fixture = TestBed.createComponent(BookingRequestPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
     component.goBack();
 
-    expect(router.navigateByUrl).toHaveBeenCalledWith(`/trips/ref/${trip.reference}`);
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/search');
   });
 
   it('completes the two-step request and offers working tracking and filtered results links', async () => {

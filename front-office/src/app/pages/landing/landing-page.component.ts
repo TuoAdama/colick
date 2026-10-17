@@ -144,6 +144,13 @@ export class LandingPageComponent {
     void this.router.navigate(['/propose']);
   }
 
+  recommendedTripQueryParams(): { returnUrl: string; source: string } {
+    return {
+      returnUrl: this.router.url,
+      source: 'landing_recommended',
+    };
+  }
+
   onDepartureInput(): void {
     this.departure = null;
     this.activeAutocomplete = 'departure';
