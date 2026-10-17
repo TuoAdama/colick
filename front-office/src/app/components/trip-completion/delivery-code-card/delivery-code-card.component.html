@@ -1,0 +1,76 @@
+<article
+  class="border border-border bg-surface p-6 flex flex-col md:flex-row md:items-center gap-6"
+  [ngClass]="isValidated() ? 'border-l-4 border-l-primary' : ''"
+  [style.box-shadow]="'0 4px 12px rgba(24,28,34,0.04)'"
+>
+  <!-- Left: Avatar + Info -->
+  <div class="flex items-center gap-4 flex-1 min-w-0">
+    @if (booking.senderPhotoUrl) {
+      <img
+        [src]="booking.senderPhotoUrl"
+        [alt]="'Photo de ' + booking.senderName"
+        class="h-14 w-14 border border-border object-cover"
+        loading="lazy"
+      />
+    } @else {
+      <span class="inline-flex h-14 w-14 items-center justify-center bg-primary text-lg font-bold text-white">
+        {{ senderInitials() }}
+      </span>
+    }
+
+    <div class="min-w-0">
+      <p class="truncate text-base font-bold text-text-primary">{{ booking.senderName }}</p>
+      <p class="truncate text-sm text-text-secondary">{{ booking.recipientContact }}</p>
+      <div class="flex items-center gap-1 mt-1 text-primary font-medium">
+        <span class="material-symbols-outlined text-[18px]">package_2</span>
+        <span class="text-xs">{{ booking.title }} - {{ booking.weight | number:'1.0-0' }} kg</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Input + Button -->
+  <div class="flex flex-col md:flex-row gap-4 items-end md:items-bottom">
+    @if (isValidated()) {
+      <div class="w-full md:w-48">
+        <label class="block text-xs font-medium text-primary mb-1">Validé</label>
+        <div class="w-full bg-neutral/10 border border-primary/30 px-4 py-2 flex items-center justify-between">
+          <span class="font-bold tracking-widest text-text-primary">{{ codeValue || '••••••' }}</span>
+          <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1">check_circle</span>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="bg-neutral text-white px-8 py-2 font-bold h-[42px] opacity-50 cursor-not-allowed w-full md:w-auto"
+        disabled
+      >
+        Validé
+      </button>
+    } @else {
+      <div class="w-full md:w-48">
+        <label [for]="'delivery-code-' + booking.id" class="block text-xs font-medium text-text-secondary mb-1">
+          Code (6 chiffres)
+        </label>
+        <input
+          [id]="'delivery-code-' + booking.id"
+          [value]="codeValue"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          maxlength="6"
+          placeholder="000 000"
+          class="w-full bg-background-primary border border-border px-4 py-2 text-sm text-text-primary outline-none transition placeholder:text-neutral focus:border-primary focus:ring-1 focus:ring-primary/20"
+          [attr.aria-label]="'Code de validation pour ' + booking.senderName"
+          (input)="onCodeInput($any($event.target).value ?? '')"
+        />
+      </div>
+
+      <button
+        type="button"
+        class="bg-primary text-white px-8 py-2 font-bold h-[42px] hover:opacity-90 active:scale-95 transition-all w-full md:w-auto disabled:cursor-not-allowed disabled:opacity-50"
+        [disabled]="codeValue.length !== 6 || isSubmitting"
+        (click)="validate.emit()"
+      >
+        {{ isSubmitting ? 'Validation...' : 'Valider' }}
+      </button>
+    }
+  </div>
+</article>

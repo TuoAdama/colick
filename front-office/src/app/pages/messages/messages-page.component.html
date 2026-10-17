@@ -1,0 +1,60 @@
+<div class="min-h-screen bg-background-primary pt-20">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="flex items-center gap-3 mb-6">
+      <button type="button" (click)="goToPreviousPage()" class="text-text-secondary hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
+      <h1 class="text-2xl font-bold text-text-primary">Messages</h1>
+    </div>
+    @if (errorMessage) { <div class="bg-error/10 border border-error/20 text-error rounded-lg p-3 mb-4 text-sm" role="alert">{{ errorMessage }} <button type="button" class="ml-2 underline" (click)="errorMessage = ''">Fermer</button></div> }
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex" style="height: calc(100vh - 180px);">
+      <div class="w-full md:w-96 border-r border-gray-100 flex flex-col" [class.hidden]="selectedConversation && isMobile">
+        <div class="px-5 py-4 border-b border-gray-100"><h2 class="font-semibold text-text-primary">Conversations</h2></div>
+        @if (isLoadingConversations) { <div class="flex items-center justify-center flex-1"><svg class="animate-spin h-8 w-8 text-secondary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></div> }
+        @if (!isLoadingConversations && conversations.length === 0) { <div class="flex flex-col items-center justify-center flex-1 px-6 text-center"><span class="text-text-secondary text-sm">Aucune conversation.</span></div> }
+        @if (!isLoadingConversations && conversations.length > 0) {
+          <div class="overflow-y-auto flex-1">
+            @for (conv of conversations; track conv.id) {
+              <button type="button" class="w-full text-left px-5 py-4 hover:bg-background-secondary transition-colors border-b border-gray-50 flex items-start gap-3" [ngClass]="selectedConversation?.id === conv.id ? 'bg-blue-50' : ''" (click)="selectConversation(conv)">
+                <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">{{ conv.otherParticipantName.charAt(0).toUpperCase() }}</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between mb-1"><span class="font-semibold text-sm text-text-primary truncate">{{ conv.otherParticipantName }}</span>@if (conv.unreadCount > 0) { <span class="bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">{{ conv.unreadCount }}</span> }</div>
+                  <span class="block text-xs text-secondary font-medium truncate mb-0.5">{{ conv.contextRoute || conv.tripRoute }}</span>
+                  @if (conv.lastMessage) { <span class="block text-xs text-text-muted truncate">{{ conv.lastMessage }}</span> }
+                </div>
+              </button>
+            }
+          </div>
+        }
+      </div>
+      <div class="flex-1 flex flex-col" [class.hidden]="!selectedConversation">
+        @if (!selectedConversation) { <div class="hidden md:flex flex-col items-center justify-center flex-1 text-center px-6"><span class="text-text-secondary font-medium block">Selectionnez une conversation</span></div> }
+        @if (selectedConversation) {
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3 bg-white">
+            <button type="button" class="md:hidden p-1 text-text-secondary hover:text-primary" (click)="goBack()"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
+            <div class="w-9 h-9 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">{{ selectedConversation.otherParticipantName.charAt(0).toUpperCase() }}</div>
+            <div class="min-w-0"><span class="font-semibold text-text-primary text-sm truncate block">{{ selectedConversation.otherParticipantName }}</span><span class="text-xs text-secondary truncate block">{{ selectedConversation.contextRoute || selectedConversation.tripRoute }}</span></div>
+          </div>
+          <div class="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-background-secondary">
+            @if (isLoadingMessages) { <div class="flex items-center justify-center py-12"><svg class="animate-spin h-8 w-8 text-secondary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></div> }
+            @for (msg of messages; track msg.id) {
+              <div class="flex" [class.justify-end]="isOwnMessage(msg)" [class.justify-start]="!isOwnMessage(msg)">
+                <div class="max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm" [ngClass]="isOwnMessage(msg) ? 'bg-secondary text-white rounded-br-sm' : 'bg-white text-text-primary rounded-bl-sm'">
+                  <span class="text-sm whitespace-pre-wrap break-words block">{{ msg.content }}</span>
+                  <span class="text-[10px] mt-1 text-right block" [ngClass]="isOwnMessage(msg) ? 'text-white opacity-60' : 'text-text-muted'">{{ formatTime(msg.sentAt) }}</span>
+                </div>
+              </div>
+            }
+            @if (!isLoadingMessages && messages.length === 0) { <div class="flex items-center justify-center py-12"><span class="text-text-muted text-sm">Aucun message. Envoyez le premier !</span></div> }
+          </div>
+          <div class="px-4 py-3 border-t border-gray-100 bg-white">
+            <div class="flex items-end gap-2">
+              <textarea class="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary max-h-32" rows="1" placeholder="Ecrivez votre message..." [(ngModel)]="newMessage" (keydown.enter)="sendMessage()" [disabled]="isSending"></textarea>
+              <button type="button" class="bg-secondary text-white rounded-xl p-2.5 hover:bg-secondary/90 transition-colors disabled:opacity-50 shrink-0" [disabled]="!newMessage.trim() || isSending" (click)="sendMessage()" aria-label="Envoyer">
+                @if (isSending) { <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> } @else { <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg> }
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

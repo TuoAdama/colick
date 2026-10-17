@@ -1,0 +1,111 @@
+<!-- How it works Section -->
+<section id="comment-ca-marche" class="py-20 lg:py-28 bg-white" aria-labelledby="how-it-works-title">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Section Header -->
+    <div class="text-center mb-16">
+      <span class="inline-block bg-secondary/10 text-secondary text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+        Simple et rapide
+      </span>
+      <h2 id="how-it-works-title" class="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary mb-4">
+        Comment ça marche ?
+      </h2>
+      <p class="text-text-secondary text-lg max-w-2xl mx-auto">
+        Que vous soyez voyageur ou expéditeur, notre plateforme simplifie la mise en relation.
+      </p>
+    </div>
+
+    <!-- For Senders -->
+    <div class="mb-20">
+      <h3 class="text-xl font-bold text-primary mb-8 flex items-center gap-3">
+        <span class="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
+          <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        </span>
+        Pour envoyer un colis
+      </h3>
+      <div class="grid md:grid-cols-4 gap-6">
+        @for (step of senderSteps; track step.number) {
+          <div class="relative card-hover bg-bg-secondary rounded-2xl p-6">
+            <span class="absolute -top-3 -left-3 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center font-bold text-sm">
+              {{ step.number }}
+            </span>
+            <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-4">
+              @switch (step.icon) {
+                @case ('search') {
+                  <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                }
+                @case ('compare') {
+                  <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                }
+                @case ('book') {
+                  <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                }
+                @case ('check') {
+                  <svg class="w-7 h-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                }
+              }
+            </div>
+            <h4 class="font-semibold text-primary mb-2">{{ step.title }}</h4>
+            <p class="text-text-secondary text-sm">{{ step.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- For Travelers -->
+    <div>
+      <h3 class="text-xl font-bold text-primary mb-8 flex items-center gap-3">
+        <span class="w-10 h-10 bg-secondary/10 rounded-full flex items-center justify-center">
+          <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        </span>
+        Pour proposer un voyage
+      </h3>
+      <div class="grid md:grid-cols-4 gap-6">
+        @for (step of travelerSteps; track step.number) {
+          <div class="relative card-hover bg-bg-secondary rounded-2xl p-6">
+            <span class="absolute -top-3 -left-3 w-8 h-8 bg-secondary text-white rounded-full flex items-center justify-center font-bold text-sm">
+              {{ step.number }}
+            </span>
+            <div class="w-14 h-14 bg-secondary/10 rounded-xl flex items-center justify-center mb-4">
+              @switch (step.icon) {
+                @case ('publish') {
+                  <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                }
+                @case ('notification') {
+                  <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                }
+                @case ('accept') {
+                  <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                }
+                @case ('earn') {
+                  <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                }
+              }
+            </div>
+            <h4 class="font-semibold text-primary mb-2">{{ step.title }}</h4>
+            <p class="text-text-secondary text-sm">{{ step.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

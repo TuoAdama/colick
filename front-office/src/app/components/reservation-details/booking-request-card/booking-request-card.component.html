@@ -1,0 +1,99 @@
+<article
+  class="reservation-card relative rounded-xl border border-border bg-background-secondary"
+  [attr.data-trip-id]="tripId"
+  [attr.data-status]="booking.status"
+  [attr.aria-busy]="isProcessing"
+>
+  <div class="booking-content flex items-start gap-3 p-4 sm:gap-4 sm:p-5">
+    @if (senderPhotoUrl(); as photoUrl) {
+      <img
+        [src]="photoUrl"
+        [alt]="'Photo de profil de ' + booking.senderName"
+        class="mt-1 h-10 w-10 shrink-0 rounded-full object-cover sm:h-12 sm:w-12"
+        loading="lazy"
+        decoding="async"
+        (error)="onSenderPhotoError()"
+      />
+    } @else {
+      <div class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary sm:h-12 sm:w-12" aria-hidden="true">
+        {{ senderInitial() }}
+      </div>
+    }
+
+    <div class="min-w-0 flex-1 pt-1">
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <h3 class="break-words text-[15px] font-bold text-primary sm:text-base">{{ booking.senderName }}</h3>
+        <span class="shrink-0 rounded-lg px-2 py-1 text-[11px] font-bold" [class]="statusBadgeClass(booking.status)">
+          {{ statusLabel(booking.status) }}
+        </span>
+      </div>
+      <p class="mt-1 break-words text-sm text-text-primary sm:text-base">{{ booking.title }}</p>
+      <p class="mt-1 break-words text-[13px] text-text-secondary sm:text-sm">
+        @if (destination) { {{ destination }} <span aria-hidden="true">·</span> }
+        {{ booking.weight | number:'1.0-2' }} kg
+      </p>
+    </div>
+
+    <div class="flex shrink-0 flex-col items-end">
+      @if (booking.status === 'ACCEPTED') {
+        <button
+          #optionsButton
+          type="button"
+          class="flex h-11 w-11 items-center justify-center rounded-lg text-text-secondary hover:bg-primary/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"
+          [ngClass]="isOptionsOpen ? 'bg-primary/5' : ''"
+          [attr.aria-label]="'Actions pour la demande de ' + booking.senderName"
+          [attr.aria-expanded]="isOptionsOpen"
+          [attr.aria-controls]="'booking-options-' + booking.id"
+          [disabled]="isProcessing"
+          (click)="toggleOptions()"
+          (keydown.arrowdown)="focusCancel($event)"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+        </button>
+        @if (isOptionsOpen) {
+          <div class="absolute right-0 top-16 z-20 max-w-full rounded-xl border border-border bg-background-secondary p-1 shadow-card" [id]="'booking-options-' + booking.id">
+            <button #cancelButton type="button" class="flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-error hover:bg-error/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-error disabled:opacity-50" [disabled]="isProcessing" (click)="onRemove()">
+              <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6m4-6v6"/></svg>
+              Annuler la demande
+            </button>
+          </div>
+        }
+      }
+      @if (booking.status === 'PENDING') {
+        <p class="pt-1 whitespace-nowrap text-lg font-bold text-primary sm:text-xl">
+          @if (reservationAmount() !== null) { {{ reservationAmount()! | number:'1.0-2' }} € } @else { — }
+        </p>
+      } @else {
+        <button
+          type="button"
+          class="flex min-h-11 items-center gap-1 rounded-lg pl-2 text-primary hover:bg-primary/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50 sm:gap-3"
+          [attr.aria-label]="'Détails de la demande de ' + booking.senderName"
+          [disabled]="isProcessing"
+          (click)="goToDetails()"
+        >
+          <span class="whitespace-nowrap text-lg font-bold sm:text-xl">
+            @if (reservationAmount() !== null) { {{ reservationAmount()! | number:'1.0-2' }} € } @else { — }
+          </span>
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7"/></svg>
+        </button>
+      }
+    </div>
+  </div>
+  @if (booking.status === 'PENDING') {
+    <footer class="grid grid-cols-2 gap-2 border-t border-border p-3 sm:gap-3">
+      <button
+        type="button"
+        class="min-h-11 rounded-lg border border-primary/40 px-3 py-2 text-sm font-bold text-primary transition hover:bg-primary/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"
+        [attr.aria-label]="'Détails de la demande de ' + booking.senderName"
+        [disabled]="isProcessing"
+        (click)="goToDetails()"
+      >Détails</button>
+      <button
+        type="button"
+        class="min-h-11 rounded-lg bg-secondary px-3 py-2 text-sm font-bold text-white transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary disabled:opacity-50"
+        [disabled]="isProcessing"
+        (click)="onAccept()"
+      >{{ isProcessing ? '...' : 'Accepter' }}</button>
+    </footer>
+  }
+</article>

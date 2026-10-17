@@ -1,0 +1,25 @@
+export interface ShareCardData {
+  departureCity?: string | null;
+  departureCountry?: string | null;
+  destinationCity?: string | null;
+  destinationCountry?: string | null;
+  routeLabel?: string | null;
+  formattedDateTime?: string | null;
+  formattedDate?: string | null;
+  formattedTime?: string | null;
+  formattedArrivalDateTime?: string | null;
+  formattedArrivalDate?: string | null;
+  formattedArrivalTime?: string | null;
+  travelerName?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  travelerPhotoUrl?: string | null;
+  travelerRatingAverageLabel?: string | null;
+  travelerRatingCountLabel?: string | null;
+  availableWeightLabel?: string | null;
+  pricePerKiloLabel?: string | null;
+  shareUrl?: string | null;
+  shareUrlLabel?: string | null;
+  qrCodeDataUrl?: string | null;
+  tripReference?: string | null;
+}

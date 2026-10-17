@@ -1,0 +1,5 @@
+:host { display: block; }
+.profile-section { scroll-margin-top: 5rem; }
+.profile-section-button { color: #023047; }
+.profile-section-button[aria-pressed='true'] { background: #023047; color: white; }
+.profile-section-button[aria-pressed='false']:hover { background: rgb(2 48 71 / 6%); }

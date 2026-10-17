@@ -1,0 +1,10 @@
+.idea/
+.env
+.env.local
+.env.prod
+.env.preprod
+client_secret_754147278568-fgimn84p8s3h83765qvg8oafv6n1bhc9.apps.googleusercontent.com.json
+
+### Logs ###
+logs/
+dev.log
