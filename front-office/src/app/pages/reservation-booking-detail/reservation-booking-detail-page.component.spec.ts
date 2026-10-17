@@ -13,6 +13,19 @@ describe('ReservationBookingDetailPageComponent', () => {
   let fixture: ComponentFixture<ReservationBookingDetailPageComponent>;
   let component: ReservationBookingDetailPageComponent;
   let router: Router;
+  let clipboardDescriptor: PropertyDescriptor | undefined;
+
+  function mockClipboard(clipboard: Partial<Clipboard> | undefined): void {
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: clipboard });
+  }
+
+  afterEach(() => {
+    if (clipboardDescriptor) {
+      Object.defineProperty(navigator, 'clipboard', clipboardDescriptor);
+    } else {
+      Reflect.deleteProperty(navigator, 'clipboard');
+    }
+  });
 
   const tripParamMap$ = new BehaviorSubject(convertToParamMap({ tripId: '12', bookingId: '7' }));
 
@@ -43,6 +56,7 @@ describe('ReservationBookingDetailPageComponent', () => {
   };
 
   beforeEach(async () => {
+    clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
     tripParamMap$.next(convertToParamMap({ tripId: '12', bookingId: '7' }));
     tripServiceMock.getTripById.calls.reset();
     tripServiceMock.getTripBookingById.calls.reset();
@@ -129,18 +143,104 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(component.netAmount()).toBe(30);
   });
 
-  it('keeps the net earnings summary on one line on small screens', () => {
+  it('renders the vertical itinerary with cities, countries and the departure date', () => {
     createComponent();
+    const stops = fixture.nativeElement.querySelectorAll('.journey-stop');
+    expect(stops.length).toBe(2);
+    expect(stops[0].querySelector('.journey-city').textContent).toContain('Paris');
+    expect(stops[0].querySelector('.journey-country').textContent).toContain('France');
+    expect(stops[1].querySelector('.journey-city').textContent).toContain('Abidjan');
+    expect(stops[1].querySelector('.journey-country').textContent).toContain("Côte d'Ivoire");
+    expect(fixture.nativeElement.querySelector('.journey-date').textContent).toContain('08:00');
+    expect(fixture.nativeElement.querySelector('h1').textContent).toContain('Paris vers Abidjan');
+  });
 
-    const summaryRows = Array.from(fixture.nativeElement.querySelectorAll('aside section:first-child .flex.items-center')) as HTMLElement[];
-    const netEarningsRow = summaryRows[2];
-    const label = netEarningsRow.querySelector('span:first-child') as HTMLElement;
-    const amount = netEarningsRow.querySelector('span:last-child') as HTMLElement;
+  it('hides countries when addresses contain only a city', () => {
+    tripServiceMock.getTripById.and.returnValue(of({ ...buildTrip(), departureAddress: 'Paris', destination: 'Abidjan' }));
+    createComponent();
+    expect(fixture.nativeElement.querySelectorAll('.journey-country').length).toBe(0);
+    expect(component.countryName(' Paris, Île-de-France, France ')).toBe('France');
+  });
 
-    expect(label.classList).toContain('text-xs');
-    expect(label.classList).toContain('whitespace-nowrap');
-    expect(amount.classList).toContain('text-lg');
-    expect(amount.classList).toContain('whitespace-nowrap');
+  it('renders the package and financial summary with the real booking values', () => {
+    createComponent();
+    const page = fixture.nativeElement;
+    expect(page.querySelector('.package-title').textContent).toContain('Documents');
+    expect(page.querySelector('.weight-badge').textContent).toContain('2 kg');
+    expect(page.querySelector('.contact-value').textContent).toContain('+22501020304');
+    expect(page.querySelector('.package-description').textContent).toContain('Dossier important');
+    expect(page.querySelector('.financial-total').textContent).toContain('Montant pour le voyageur');
+    expect(page.querySelector('.financial-total strong').textContent).toContain('30 €');
+    expect(page.querySelector('.settlement-note').textContent).toContain('Règlement direct entre utilisateurs');
+  });
+
+  it('keeps long values and the missing-description fallback available', () => {
+    const longValue = 'Longue information sans troncature '.repeat(8);
+    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking({ title: longValue, senderName: longValue, recipientContact: longValue, description: undefined })));
+    createComponent();
+    expect(fixture.nativeElement.querySelector('.package-title').textContent).toContain(longValue);
+    expect(fixture.nativeElement.querySelector('.contact-value').textContent).toContain(longValue);
+    expect(fixture.nativeElement.querySelector('.sender-name').textContent).toContain(longValue);
+    expect(fixture.nativeElement.querySelector('.package-description').textContent).toContain('Aucune description fournie.');
+  });
+
+  it('copies the recipient contact from the button and announces success', async () => {
+    const writeText = jasmine.createSpy('writeText').and.resolveTo();
+    mockClipboard({ writeText });
+    createComponent();
+    fixture.nativeElement.querySelector('.copy-contact').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(writeText).toHaveBeenCalledOnceWith('+22501020304');
+    const feedback = fixture.nativeElement.querySelector('[role="status"]');
+    expect(feedback.textContent).toContain('Contact copié');
+    expect(feedback.getAttribute('aria-live')).toBe('polite');
+  });
+
+  it('shows a local error when clipboard permission is denied', async () => {
+    const writeText = jasmine.createSpy('writeText').and.rejectWith(new Error('Denied'));
+    mockClipboard({ writeText });
+    createComponent();
+    await component.copyRecipientContact();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.copy-feedback').textContent).toContain('Copie impossible');
+    expect(component.actionError).toBe('');
+    expect(component.isCopyingContact).toBeFalse();
+  });
+
+  it('handles browsers without a clipboard API', async () => {
+    mockClipboard(undefined);
+    createComponent();
+    await component.copyRecipientContact();
+    expect(component.contactCopyFailed).toBeTrue();
+    expect(component.contactCopyFeedback).toContain('Sélectionnez le contact');
+  });
+
+  it('retains the optional package photo and falls back to the initial for a broken sender photo', () => {
+    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking({ packagePhotoUrl: '/parcel.jpg', senderPhotoUrl: '/sender.jpg' })));
+    createComponent();
+    const photo = fixture.nativeElement.querySelector('img[alt="Photo du colis Documents"]');
+    expect(photo.getAttribute('src')).toBe('/parcel.jpg');
+    fixture.nativeElement.querySelector('.sender-card img').dispatchEvent(new Event('error'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sender-card img')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.sender-card').textContent).toContain('G');
+  });
+
+  it('opens messages from the visible Message button', () => {
+    createComponent();
+    fixture.nativeElement.querySelector('.message-button').click();
+    expect(messagingServiceMock.createConversationDraft).toHaveBeenCalledWith({ tripId: 12, recipientId: 55 });
+  });
+
+  it('refuses a pending booking from the action button', () => {
+    createComponent();
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    buttons.find((button) => button.textContent?.includes('Refuser la demande'))!.click();
+    fixture.detectChanges();
+    expect(tripServiceMock.rejectBooking).toHaveBeenCalledWith(12, 7);
+    expect(component.booking?.status).toBe('REJECTED');
+    expect(fixture.nativeElement.textContent).toContain('lecture seule');
   });
 
   it('provides a link to the sender profile page', () => {
@@ -166,6 +266,14 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(component.bookingFeeLabel()).toContain('7');
     expect(component.bookingGrossLabel()).toBe('Prix total payé');
     expect(component.bookingNetLabel()).toBe('Votre gain net');
+    expect(fixture.nativeElement.querySelector('.settlement-note')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.financial-total').textContent).toMatch(/27[.,]9 €/);
+  });
+
+  it('does not show direct settlement for a commission booking with a zero fee', () => {
+    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking({ commercialMode: 'COMMISSION', platformFeeRate: 0 })));
+    createComponent();
+    expect(fixture.nativeElement.querySelector('.settlement-note')).toBeNull();
   });
 
   it('displays zero reviews when the sender has no reviews', () => {

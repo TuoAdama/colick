@@ -1,4 +1,4 @@
-<main class="pb-12">
+<main class="booking-detail-page pb-12">
   <div class="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8">
     @if (isLoading && !booking) {
       <section class="rounded-2xl border border-border bg-background-secondary px-5 py-16 text-center shadow-card" role="status" aria-live="polite">
@@ -22,77 +22,45 @@
         </div>
       }
 
-      <section class="mb-8 border-b border-border pb-6">
-        <div class="flex flex-col gap-5">
-          <nav aria-label="Fil d’Ariane">
-            <a
-              [routerLink]="['/trips', trip.id, 'reservations']"
-              class="inline-flex items-center gap-2 text-sm font-medium text-text-secondary transition hover:text-primary"
-            >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6" />
-              </svg>
-              Retour aux demandes du trajet
-            </a>
-          </nav>
+      <nav class="booking-back mb-6" aria-label="Fil d’Ariane">
+        <a [routerLink]="['/trips', trip.id, 'reservations']">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6" /></svg>
+          Retour aux demandes du trajet
+        </a>
+      </nav>
 
-          <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div class="min-w-0">
-              <span
-                class="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em]"
-                [class]="bookingStatusClass(booking.status)"
-              >
-                {{ bookingStatusLabel(booking.status) }}
-              </span>
+      <div class="booking-layout">
+        <div class="booking-main flex min-w-0 flex-col gap-5">
+          <section class="journey" aria-label="Trajet de la réservation">
+            <span class="booking-status inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.06em]" [class]="bookingStatusClass(booking.status)">{{ bookingStatusLabel(booking.status) }}</span>
+            <h1 class="sr-only">Réservation : {{ routeLocationLabel(trip.departureAddress) }} vers {{ routeLocationLabel(trip.destination) }}</h1>
+            <ol class="journey-stops" aria-label="Itinéraire">
+              <li class="journey-stop departure">
+                <span class="journey-dot" aria-hidden="true"></span>
+                <div>
+                  <p class="journey-city">{{ routeLocationLabel(trip.departureAddress) }}</p>
+                  @if (countryName(trip.departureAddress); as country) {
+                    <p class="journey-country mt-1 text-base text-text-secondary">{{ country }}</p>
+                  }
+                </div>
+              </li>
+              <li class="journey-stop arrival">
+                <span class="journey-dot" aria-hidden="true"></span>
+                <div>
+                  <p class="journey-city">{{ routeLocationLabel(trip.destination) }}</p>
+                  @if (countryName(trip.destination); as country) {
+                    <p class="journey-country mt-1 text-base text-text-secondary">{{ country }}</p>
+                  }
+                </div>
+              </li>
+            </ol>
+            <p class="journey-date flex items-start gap-3 text-sm leading-relaxed text-text-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" /></svg>
+              <span>Départ le {{ formattedDepartureDateTime(trip.departureTime) }}</span>
+            </p>
+          </section>
 
-              <h1 class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-2xl font-bold tracking-[-0.02em] text-text-primary sm:text-3xl">
-                {{ routeLocationLabel(trip.departureAddress) }}
-                <svg
-                  class="h-7 w-7 shrink-0 text-primary sm:h-8 sm:w-8"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2.25"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M4 12h14" />
-                  <path d="m13 6 6 6-6 6" />
-                </svg>
-                {{ routeLocationLabel(trip.destination) }}
-              </h1>
-
-              <p class="mt-2 text-sm text-text-secondary">
-                {{ trip.departureAddress }} → {{ trip.destination }}
-              </p>
-
-              <p class="mt-2 inline-flex items-center gap-2 text-sm text-text-secondary">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" />
-                </svg>
-                Départ le {{ formattedDepartureDateTime(trip.departureTime) }}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background-secondary px-4 py-3 text-sm font-semibold text-text-primary transition hover:-translate-y-px hover:bg-background-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 sm:w-auto lg:self-end"
-              [disabled]="isProcessing"
-              (click)="messageSender()"
-            >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z" />
-              </svg>
-              Message
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.9fr)]">
-        <div class="space-y-6">
-          <section class="rounded-xl border border-border bg-background-secondary p-5 sm:p-6">
+          <section class="sender-card detail-card mt-2">
             <div class="flex items-center gap-4 sm:gap-5">
               @if (senderPhotoUrl(); as photoUrl) {
                 <img
@@ -110,7 +78,7 @@
               }
 
               <div class="min-w-0 flex-1">
-                <p class="text-base font-bold text-text-primary">{{ booking.senderName }}</p>
+                <p class="sender-name text-base font-bold">{{ booking.senderName }}</p>
                 <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-text-secondary">
                   <svg class="h-4 w-4 shrink-0 text-[#F4B740]" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.291c.3.922-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 0 0-1.176 0l-2.8 2.034c-.783.57-1.838-.196-1.539-1.118l1.07-3.291a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 0 0 .95-.69l1.07-3.292Z" />
@@ -126,41 +94,41 @@
 
               <a
                 [routerLink]="['/trips', trip.id, 'reservations', booking.id, 'profile']"
-                class="shrink-0 text-sm font-bold text-primary transition hover:underline sm:inline-flex"
+                class="profile-link"
               >
                 Voir le profil
               </a>
             </div>
           </section>
 
-          <section>
-            <h2 class="text-[1.75rem] font-bold tracking-[-0.02em] text-text-primary">Détails du colis</h2>
+          <button type="button" class="message-button" [disabled]="isProcessing" (click)="messageSender()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z" /></svg>
+            Message
+          </button>
 
-            <div class="mt-4 rounded-2xl border border-border bg-background-secondary p-5 sm:p-6">
-              <div>
-                <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">Titre</p>
-                <p class="mt-1 text-base font-semibold text-text-primary">{{ booking.title }}</p>
-              </div>
-
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div class="rounded-xl bg-background-primary p-4">
-                  <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">Poids</p>
-                  <p class="mt-1 text-base font-semibold text-text-primary">{{ booking.weight | number:'1.0-2' }} kg</p>
-                </div>
-
-                <div class="rounded-xl bg-background-primary p-4">
-                  <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">Contact destinataire</p>
-                  <p class="mt-1 break-words text-sm font-medium text-text-primary">{{ booking.recipientContact }}</p>
+          <section class="package-section" aria-labelledby="package-heading">
+            <h2 id="package-heading" class="section-heading">Détails du colis</h2>
+            <div class="detail-card package-card">
+              <div class="package-overview">
+                <h3 class="package-title">{{ booking.title }}</h3>
+                <div class="package-weight">
+                  <p class="detail-label text-sm text-text-secondary">Poids</p>
+                  <p class="weight-badge">{{ booking.weight | number:'1.0-2' }} kg</p>
                 </div>
               </div>
-
-              <div>
-                <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-text-muted">Description</p>
-                @if (booking.description) {
-                  <p class="mt-1 text-sm leading-6 text-text-secondary">{{ booking.description }}</p>
-                } @else {
-                  <p class="mt-1 text-sm text-text-muted">Aucune description fournie.</p>
-                }
+              <div class="package-contact">
+                <div class="contact-content min-w-0 flex-1">
+                  <p class="detail-label text-sm text-text-secondary">Contact destinataire</p>
+                  <p class="contact-value">{{ booking.recipientContact }}</p>
+                </div>
+                <button type="button" class="copy-contact" aria-label="Copier le contact destinataire" [disabled]="isCopyingContact || !booking.recipientContact" (click)="copyRecipientContact()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="8" width="12" height="13" rx="3" /><path stroke-linecap="round" d="M9 8V6a3 3 0 0 1 3-3h5a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-1" /></svg>
+                </button>
+              </div>
+              <p class="copy-feedback" role="status" aria-live="polite" [class.copy-error]="contactCopyFailed">{{ contactCopyFeedback }}</p>
+              <div class="package-description">
+                <p class="detail-label text-sm text-text-secondary">Description</p>
+                <p>{{ booking.description || 'Aucune description fournie.' }}</p>
               </div>
             </div>
           </section>
@@ -182,31 +150,32 @@
           }
         </div>
 
-        <aside class="space-y-6 xl:sticky xl:top-20 xl:self-start">
-          <section class="overflow-hidden rounded-2xl border border-border bg-background-secondary">
-            <div class="border-b border-border px-5 py-4 sm:px-6">
-              <h2 class="text-lg font-bold text-text-primary">Récapitulatif financier</h2>
-            </div>
-
-            <div class="space-y-4 px-5 py-5 sm:px-6">
-              <div class="flex items-center justify-between gap-4">
-                <span class="text-sm text-text-secondary">{{ bookingGrossLabel() }}</span>
-                <span class="text-base font-semibold text-text-primary">{{ grossAmount() | number:'1.0-2' }} €</span>
+        <aside class="booking-aside space-y-6">
+          <section class="financial-section" aria-labelledby="financial-heading">
+            <h2 id="financial-heading" class="section-heading">Récapitulatif financier</h2>
+            <div class="detail-card financial-card">
+              <div class="financial-row">
+                <span>{{ bookingGrossLabel() }}</span>
+                <strong>{{ grossAmount() | number:'1.0-2' }} €</strong>
               </div>
-
-              <div class="flex items-center justify-between gap-4">
-                <span class="text-sm text-text-secondary">{{ bookingFeeLabel() }}</span>
+              <div class="financial-row">
+                <span>{{ bookingFeeLabel() }}</span>
                 @if (hasPlatformFee()) {
-                  <span class="text-sm font-semibold text-error">-{{ platformCommission() | number:'1.0-2' }} €</span>
+                  <strong class="text-error">-{{ platformCommission() | number:'1.0-2' }} €</strong>
                 } @else {
-                  <span class="text-sm font-semibold text-success">0 €</span>
+                  <strong>0 €</strong>
                 }
               </div>
-
-              <div class="flex items-center justify-between gap-4 rounded-xl bg-background-primary px-4 py-4">
-                <span class="whitespace-nowrap text-xs font-semibold text-text-primary sm:text-sm">{{ bookingNetLabel() }}</span>
-                <span class="whitespace-nowrap text-lg font-bold text-primary sm:text-xl">{{ netAmount() | number:'1.0-2' }} €</span>
+              <div class="financial-total">
+                <span>{{ bookingNetLabel() }}</span>
+                <strong>{{ netAmount() | number:'1.0-2' }} €</strong>
               </div>
+              @if (isFreeBooking()) {
+                <p class="settlement-note">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path stroke-linecap="round" d="M12 11v6m0-10h.01" /></svg>
+                  <span>Règlement direct entre utilisateurs</span>
+                </p>
+              }
             </div>
           </section>
 
