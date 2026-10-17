@@ -27,10 +27,13 @@ export class BookingRequestPageComponent implements OnInit {
   isLoading = true;
   errorMessage = '';
   returnUrl = '/search';
+  resultsReturnUrl = '/search';
+  bookingSubmitted = false;
 
   ngOnInit(): void {
     const reference = this.route.snapshot.paramMap.get('reference')?.trim() ?? '';
     this.returnUrl = this.getSafeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'), reference);
+    this.resultsReturnUrl = /^\/search(?:[?#]|$)/.test(this.returnUrl) ? this.returnUrl : '/search';
     this.initialWeight = this.parseWeight(this.route.snapshot.queryParamMap.get('weight'));
 
     if (!reference) {
@@ -77,6 +80,7 @@ export class BookingRequestPageComponent implements OnInit {
   }
 
   onBookingCreated(booking: BookingResponse): void {
+    this.bookingSubmitted = true;
     this.analytics.track('request_submitted', {
       trip_id: booking.tripId,
       booking_id: booking.id,
