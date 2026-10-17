@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { BookingRequestFormComponent } from './booking-request-form.component';
+import { BookingResponse } from '../../../models/booking.model';
 import { TripService } from '../../../services/trip.service';
 
 describe('BookingRequestFormComponent', () => {
@@ -200,9 +201,10 @@ describe('BookingRequestFormComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Demande envoyée avec succès !');
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('l’expéditeur recevra le code par e-mail à l’adresse de son compte');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Demande envoyée');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Envoyé après acceptation.');
     expect(scrollCardIntoView).toHaveBeenCalledOnceWith({ behavior: 'smooth', block: 'start' });
+    expect(document.activeElement).toBe((fixture.nativeElement as HTMLElement).querySelector('h1'));
   });
 
   it('scrolls to the request card after the photo upload succeeds', async () => {
@@ -228,7 +230,7 @@ describe('BookingRequestFormComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Demande envoyée avec succès !');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Demande envoyée');
     expect(scrollCardIntoView).toHaveBeenCalledOnceWith({ behavior: 'smooth', block: 'start' });
   });
 
@@ -274,6 +276,86 @@ describe('BookingRequestFormComponent', () => {
 
     expect(pageHeading.tagName).toBe('H1');
     expect(host.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('replaces the form with the pending timeline and real trip details', () => {
+    prepareValidSubmission();
+    component.onSubmit();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('form')).toBeNull();
+    expect(host.querySelector('[data-testid="booking-request-header"]')).toBeNull();
+    expect(host.querySelector('h1')?.textContent).toBe('Demande envoyée');
+    expect(host.querySelector('[role="status"]')?.textContent).toContain('Votre demande est en cours de traitement.');
+    expect(host.querySelector('[data-testid="confirmation-route"]')?.textContent).toContain('Paris');
+    expect(host.querySelector('[data-testid="confirmation-route"]')?.textContent).toContain('Abidjan');
+    expect(host.querySelector('[data-testid="confirmation-route"]')?.textContent).toContain('5 €/kg');
+    expect(host.querySelectorAll('ol li').length).toBe(3);
+    expect(host.textContent).toContain('Le voyageur a reçu votre demande.');
+    expect(host.textContent).toContain('En attente de son acceptation.');
+    expect(host.querySelector('a[data-testid="booking-follow-link"]')?.getAttribute('href')).toBe('/sent-bookings/10/1');
+    expect(host.querySelector('a[data-testid="booking-results-link"]')?.getAttribute('href')).toBe('/search');
+  });
+
+  for (const delivery of [
+    { status: 'DELIVERED', channel: 'EMAIL', text: 'Le code a été envoyé à l’adresse e-mail de votre compte.' },
+    { status: 'FAILED', channel: 'EMAIL', text: 'L’envoi du code a échoué.' },
+    { status: 'INVALIDATED', channel: 'EMAIL', text: 'Le code a été invalidé.' },
+    { status: undefined, channel: undefined, text: 'Consultez le suivi de votre demande pour connaître l’état du code.' },
+    { status: 'DELIVERED', channel: 'SMS', text: 'Consultez le suivi de votre demande pour connaître l’état du code.' },
+  ]) {
+    it(`shows accepted bookings with truthful code delivery information (${delivery.status}/${delivery.channel})`, () => {
+      const booking = { id: 1, tripId: 10, status: 'ACCEPTED', validationDeliveryStatus: delivery.status, validationDeliveryChannel: delivery.channel };
+      tripServiceMock.createBooking.and.returnValue(of(booking));
+      prepareValidSubmission();
+      component.onSubmit();
+      fixture.detectChanges();
+      const host = fixture.nativeElement as HTMLElement;
+
+      expect(host.querySelector('[role="status"]')?.textContent).toContain('Votre demande a été acceptée.');
+      expect(host.textContent).not.toContain('En attente de son acceptation.');
+      expect(host.textContent).toContain(delivery.text);
+      if (delivery.status !== 'DELIVERED' || delivery.channel !== 'EMAIL') {
+        expect(host.textContent).not.toContain('Le code a été envoyé');
+      }
+    });
+  }
+
+  it('keeps photo failures recoverable without creating a duplicate booking', () => {
+    prepareValidSubmission();
+    component.currentStep = 2;
+    component.selectedPhoto = new File(['image'], 'parcel.png', { type: 'image/png' });
+    tripServiceMock.uploadBookingPhoto.and.returnValue(throwError(() => new Error('upload failure')));
+    const created = spyOn(component.bookingCreated, 'emit');
+    component.onSubmit();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('[data-testid="booking-confirmation"]')).toBeNull();
+    expect(created).not.toHaveBeenCalled();
+    component.onSubmit();
+    expect(tripServiceMock.createBooking).toHaveBeenCalledTimes(1);
+
+    tripServiceMock.uploadBookingPhoto.and.returnValue(of(component.createdBooking!));
+    Array.from(host.querySelectorAll('button')).find(button => button.textContent?.trim() === 'Réessayer la photo')?.click();
+    fixture.detectChanges();
+    expect(host.querySelector('[data-testid="booking-confirmation"]')).not.toBeNull();
+    expect(created).toHaveBeenCalledTimes(1);
+    expect(tripServiceMock.createBooking).toHaveBeenCalledTimes(1);
+  });
+
+  it('prevents repeated submissions while creating a booking', () => {
+    const pending = new Subject<BookingResponse>();
+    tripServiceMock.createBooking.and.returnValue(pending);
+    prepareValidSubmission();
+    component.onSubmit();
+    component.onSubmit();
+    expect(tripServiceMock.createBooking).toHaveBeenCalledTimes(1);
+    expect(component.successMessage).toBe('');
+    pending.error(new Error('network failure'));
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="booking-confirmation"]')).toBeNull();
+    expect(component.isLoading).toBeFalse();
   });
 
   function prepareValidSubmission(): void {

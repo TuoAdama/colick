@@ -126,6 +126,49 @@ describe('BookingRequestPageComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith(`/trips/ref/${trip.reference}`);
   });
 
+  it('completes the two-step request and offers working tracking and filtered results links', async () => {
+    tripServiceMock.createBooking.and.returnValue(of({ id: 71, tripId: trip.id, status: 'PENDING' }));
+    const host = fixture.nativeElement as HTMLElement;
+    for (const [selector, value] of [
+      ['#booking-title', 'Documents'],
+      ['#booking-weight', '2'],
+      ['#booking-recipient', 'recipient@example.com'],
+    ]) {
+      const input = host.querySelector<HTMLInputElement>(selector)!;
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+    }
+    Array.from(host.querySelectorAll('button')).find(button => button.textContent?.trim() === 'Continuer')!.click();
+    fixture.detectChanges();
+    host.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click();
+    fixture.detectChanges();
+    host.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(tripServiceMock.createBooking).toHaveBeenCalledWith(trip.id, jasmine.objectContaining({ title: 'Documents', weight: 2 }));
+    expect(host.querySelector('[data-testid="booking-request-back-link"]')).toBeNull();
+    expect(host.querySelector('form')).toBeNull();
+    expect(host.querySelector('h1')?.textContent).toBe('Demande envoyée');
+    expect(document.activeElement).toBe(host.querySelector('h1'));
+    expect(analyticsMock.track).toHaveBeenCalledWith('request_submitted', jasmine.objectContaining({ booking_id: 71 }));
+    host.querySelector<HTMLAnchorElement>('[data-testid="booking-follow-link"]')!.click();
+    expect((router.navigateByUrl as jasmine.Spy).calls.mostRecent().args[0].toString()).toBe(`/sent-bookings/${trip.id}/71`);
+    host.querySelector<HTMLAnchorElement>('[data-testid="booking-results-link"]')!.click();
+    expect((router.navigateByUrl as jasmine.Spy).calls.mostRecent().args[0].toString()).toBe('/search?from=Paris&to=Abidjan&sort=price_asc');
+  });
+
+  for (const returnUrl of ['/trips/ref/TRP-2026-000013', 'https://example.com', '//example.com', '/search-other']) {
+    it(`uses search as the results fallback for ${returnUrl}`, () => {
+      routeSnapshot.queryParamMap = convertToParamMap({ returnUrl });
+      fixture = TestBed.createComponent(BookingRequestPageComponent);
+      fixture.detectChanges();
+      expect(fixture.componentInstance.resultsReturnUrl).toBe('/search');
+      const requestForm = fixture.debugElement.query(By.directive(BookingRequestFormComponent)).componentInstance as BookingRequestFormComponent;
+      expect(requestForm.resultsReturnUrl).toBe('/search');
+    });
+  }
+
   it('does not allow booking the current user’s own trip', () => {
     authServiceMock.getUser.and.returnValue({ id: trip.travelerId });
     fixture = TestBed.createComponent(BookingRequestPageComponent);

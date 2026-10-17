@@ -1,6 +1,6 @@
 import { Component, ElementRef, Input, Output, EventEmitter, Injector, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild, afterNextRender, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AbstractControl, ReactiveFormsModule, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { Trip } from '../../../models/trip.model';
 import { BookingResponse, ParcelGuidelines } from '../../../models/booking.model';
@@ -32,14 +32,17 @@ function recipientContactValidator(control: AbstractControl): ValidationErrors |
   templateUrl: './booking-request-form.component.html',
 })
 export class BookingRequestFormComponent implements OnInit, OnChanges, OnDestroy {
+  private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly tripService = inject(TripService);
   private readonly injector = inject(Injector);
 
+  @ViewChild('confirmationTitle') private confirmationTitle?: ElementRef<HTMLHeadingElement>;
   @ViewChild('bookingRequestCard') private bookingRequestCard?: ElementRef<HTMLElement>;
 
   @Input() trip: Trip | null = null;
   @Input() initialWeight: number | null = null;
+  @Input() resultsReturnUrl = '/search';
   @Output() cancelled = new EventEmitter<void>();
   @Output() bookingCreated = new EventEmitter<BookingResponse>();
 
@@ -75,6 +78,25 @@ export class BookingRequestFormComponent implements OnInit, OnChanges, OnDestroy
   private splitLocation(value: string): { city: string; country: string } {
     const [city = '', ...country] = value.split(',').map(part => part.trim()).filter(Boolean);
     return { city, country: country.join(', ') };
+  }
+
+  get resultsLink() {
+    return this.router.parseUrl(this.resultsReturnUrl);
+  }
+
+  get codeDeliveryMessage(): string {
+    const booking = this.createdBooking;
+    if (booking?.status !== 'ACCEPTED') return 'Envoyé après acceptation.';
+    if (booking.validationDeliveryStatus === 'FAILED') {
+      return 'L’envoi du code a échoué. Consultez le suivi de votre demande.';
+    }
+    if (booking.validationDeliveryStatus === 'INVALIDATED') {
+      return 'Le code a été invalidé. Consultez le suivi de votre demande.';
+    }
+    if (booking.validationDeliveryStatus === 'DELIVERED' && booking.validationDeliveryChannel === 'EMAIL') {
+      return 'Le code a été envoyé à l’adresse e-mail de votre compte.';
+    }
+    return 'Consultez le suivi de votre demande pour connaître l’état du code.';
   }
 
   ngOnInit(): void {
@@ -144,7 +166,7 @@ export class BookingRequestFormComponent implements OnInit, OnChanges, OnDestroy
   }
 
   onSubmit(): void {
-    if (!this.trip || this.bookingForm.invalid) return;
+    if (!this.trip || this.bookingForm.invalid || this.isLoading || this.createdBooking) return;
 
     const weight = this.bookingForm.value.weight!;
     if (weight > this.trip.availableWeight) {
@@ -188,7 +210,6 @@ export class BookingRequestFormComponent implements OnInit, OnChanges, OnDestroy
     this.tripService.uploadBookingPhoto(booking.tripId, booking.id, this.selectedPhoto!).subscribe({
       next: updated => {
         this.createdBooking = updated;
-        this.emitCreated(updated);
         this.completeSuccess();
       },
       error: () => {
@@ -200,15 +221,16 @@ export class BookingRequestFormComponent implements OnInit, OnChanges, OnDestroy
   }
 
   private completeSuccess(): void {
-    if (this.createdBooking) this.emitCreated(this.createdBooking);
     this.isLoading = false;
     this.errorMessage = '';
-    this.successMessage = 'Demande envoyée avec succès !';
+    this.successMessage = 'Demande envoyée';
+    if (this.createdBooking) this.emitCreated(this.createdBooking);
     this.scrollToRequestCard();
   }
 
   private scrollToRequestCard(): void {
     afterNextRender(() => {
+      if (this.successMessage) this.confirmationTitle?.nativeElement.focus({ preventScroll: true });
       this.bookingRequestCard?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, { injector: this.injector });
   }

@@ -1,5 +1,6 @@
-<main class="min-h-screen bg-background-primary px-4 pb-12 pt-20 sm:px-6 sm:pt-24">
+<main [class.bg-white]="bookingSubmitted" [class.bg-background-primary]="!bookingSubmitted" class="min-h-screen px-4 pb-12 pt-20 sm:px-6 sm:pt-24">
   <div class="mx-auto max-w-4xl">
+    @if (!bookingSubmitted) {
     <button
       type="button"
       (click)="trip ? goBackFromRequest() : goBack()"
@@ -8,6 +9,7 @@
       <span aria-hidden="true">←</span>
       Retour
     </button>
+    }
 
     @if (isLoading) {
       <section class="rounded-2xl bg-white p-8 text-center shadow-sm" role="status">
@@ -23,6 +25,7 @@
       <app-booking-request-form
         [trip]="trip"
         [initialWeight]="initialWeight"
+        [resultsReturnUrl]="resultsReturnUrl"
         (cancelled)="goBack()"
         (bookingCreated)="onBookingCreated($event)" />
     }
