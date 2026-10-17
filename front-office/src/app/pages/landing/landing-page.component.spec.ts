@@ -16,6 +16,7 @@ describe('LandingPageComponent', () => {
 
   const authServiceMock = {
     isLoggedIn: jasmine.createSpy('isLoggedIn').and.returnValue(true),
+    getUser: jasmine.createSpy('getUser').and.returnValue(null),
   };
 
   const locationServiceMock = {
@@ -59,6 +60,7 @@ describe('LandingPageComponent', () => {
     router = TestBed.inject(Router);
     spyOn(router, 'navigate').and.resolveTo(true);
     authServiceMock.isLoggedIn.and.returnValue(true);
+    authServiceMock.getUser.and.returnValue(null);
     tripServiceMock.getLandingFeed.calls.reset();
     tripServiceMock.getLandingFeed.and.returnValue(of([]));
   });
@@ -241,7 +243,7 @@ describe('LandingPageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Aucune demande trouvee.');
   });
 
-  it('links a landing trip card to its public reference page', () => {
+  it('links a landing trip card directly to the booking request page', () => {
     fixture.detectChanges();
     component.trips = [buildLandingTripCard({ reference: 'TRP-2026-000013' })];
     component.isTripsLoading = false;
@@ -249,8 +251,8 @@ describe('LandingPageComponent', () => {
 
     const link = fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]') as HTMLElement | null;
     expect(link).not.toBeNull();
-    expect(link?.getAttribute('href')).toBe('/trips/ref/TRP-2026-000013');
-    expect(link?.getAttribute('aria-label')).toBe('Voir le trajet de Paris, France vers Abidjan, Côte d\'Ivoire');
+    expect(link?.getAttribute('href')).toBe('/trips/ref/TRP-2026-000013/request?returnUrl=%2F&source=landing_recommended');
+    expect(link?.getAttribute('aria-label')).toBe('Réserver le trajet de Paris, France vers Abidjan, Côte d\'Ivoire');
   });
 
   it('keeps the traveler profile link above the full-card trip overlay', () => {
@@ -274,6 +276,17 @@ describe('LandingPageComponent', () => {
     const card = fixture.nativeElement.querySelector('article');
     expect(card?.textContent).toContain('Paris, France');
     expect(fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]')).toBeNull();
+  });
+
+  it('does not link the signed-in traveler to their own booking request', () => {
+    authServiceMock.getUser.and.returnValue({ id: 7 });
+    fixture.detectChanges();
+    component.trips = [buildLandingTripCard({ reference: 'TRP-2026-000013' })];
+    component.isTripsLoading = false;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/travelers/7"]')).not.toBeNull();
   });
 
   it('hides the next departure section when location sharing is refused', () => {

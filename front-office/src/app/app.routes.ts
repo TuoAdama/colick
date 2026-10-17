@@ -121,10 +121,8 @@ export const routes: Routes = [
   },
   {
     path: 'trips/ref/:reference',
-    loadComponent: () =>
-      import('./pages/trip-reference/trip-reference-page.component').then(
-        (m) => m.TripReferencePageComponent
-      ),
+    redirectTo: '/trips/ref/:reference/request',
+    pathMatch: 'full',
   },
   {
     path: 'traveler-review',
