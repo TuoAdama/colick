@@ -5,6 +5,7 @@ import { AbstractControl, ReactiveFormsModule, FormBuilder, ValidationErrors, Va
 import { Trip } from '../../../models/trip.model';
 import { BookingResponse, ParcelGuidelines } from '../../../models/booking.model';
 import { TripService } from '../../../services/trip.service';
+import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
 
 const EMAIL_PATTERN = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
@@ -28,7 +29,7 @@ function recipientContactValidator(control: AbstractControl): ValidationErrors |
 @Component({
   selector: 'app-booking-request-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, UserAvatarComponent],
   templateUrl: './booking-request-form.component.html',
 })
 export class BookingRequestFormComponent implements OnInit, OnChanges, OnDestroy {

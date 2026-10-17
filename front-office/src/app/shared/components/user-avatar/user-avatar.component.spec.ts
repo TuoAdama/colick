@@ -45,4 +45,21 @@ describe('UserAvatarComponent', () => {
     const fallback = fixture.nativeElement.querySelector('[data-testid="user-avatar-fallback"]');
     expect(fallback?.textContent?.trim()).toBe('AM');
   });
+
+  it('uses the accent tone only when requested', () => {
+    fixture.componentRef.setInput('name', 'Alice Martin');
+    fixture.detectChanges();
+    const fallback = fixture.nativeElement.querySelector('[data-testid="user-avatar-fallback"]') as HTMLElement;
+    expect(fallback.classList.contains('bg-primary')).toBeTrue();
+    expect(fallback.classList.contains('text-white')).toBeTrue();
+
+    fixture.componentRef.setInput('tone', 'accent');
+    fixture.detectChanges();
+
+    expect(fallback.classList.contains('bg-accent/10')).toBeTrue();
+    expect(fallback.classList.contains('text-accent')).toBeTrue();
+    expect(fallback.classList.contains('bg-primary')).toBeFalse();
+    expect(fallback.classList.contains('text-white')).toBeFalse();
+    expect(fallback.classList.contains('shadow-sm')).toBeFalse();
+  });
 });

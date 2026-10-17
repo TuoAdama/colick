@@ -105,6 +105,26 @@ describe('BookingRequestPageComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/search?from=Paris&to=Abidjan&sort=price_asc');
   });
 
+  it('opens the selected traveler profile from either request step without submitting a booking', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const requestForm = fixture.debugElement.query(By.directive(BookingRequestFormComponent)).componentInstance as BookingRequestFormComponent;
+    const submissionsBefore = tripServiceMock.createBooking.calls.count();
+
+    for (const step of [1, 2] as const) {
+      requestForm.currentStep = step;
+      fixture.detectChanges();
+      const link = host.querySelector<HTMLAnchorElement>('[data-testid="booking-traveler-profile"]')!;
+      expect(link.textContent).toContain(trip.travelerName);
+      link.click();
+
+      expect((router.navigateByUrl as jasmine.Spy).calls.mostRecent().args[0].toString()).toBe(`/travelers/${trip.travelerId}`);
+      expect(requestForm.currentStep).toBe(step);
+    }
+
+    expect(tripServiceMock.createBooking.calls.count()).toBe(submissionsBefore);
+    expect(component.returnUrl).toBe('/search?from=Paris&to=Abidjan&sort=price_asc');
+  });
+
   it('keeps the landing return URL and analytics source for recommended trips', () => {
     routeSnapshot.queryParamMap = convertToParamMap({
       returnUrl: '/?mode=transport',
