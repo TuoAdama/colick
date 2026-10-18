@@ -185,4 +185,68 @@ describe('MessagesPageComponent', () => {
     component.isMobile = false; fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.message-day')).toBeNull();
   });
+  describe('mobile conversation list', () => {
+    const entries = (): ConversationResponse[] => [
+      { ...conversation, id: 10, otherParticipantName: 'Dèmsi Demsi', lastMessage: 'Colis déposé', unreadCount: 2 },
+      { ...conversation, id: 11, otherParticipantName: 'Marie', contextRoute: '', tripRoute: 'Nantes → Rome', lastMessage: null, unreadCount: 0 },
+      { ...conversation, id: 12, otherParticipantName: 'Tuo Barah Ramatou', contextRoute: 'Lyon → Dakar', lastMessage: 'Merci !!!', unreadCount: 0 },
+    ];
+    const showList = (): HTMLElement => {
+      messaging.getConversations.and.returnValue(of(entries()));
+      fixture.detectChanges(); component.isMobile = true; fixture.detectChanges();
+      return fixture.nativeElement;
+    };
+
+    it('searches names, effective routes and messages without case or accents', () => {
+      showList();
+      for (const [query, ids] of [['DEMSI', [10]], ['depose', [10]], ['rome', [11]], ['  LYON ', [12]], ['absent', []], ['  ', [10, 11, 12]]] as [string, number[]][]) {
+        component.conversationSearch = query;
+        expect(component.filteredConversations.map(c => c.id)).withContext(query).toEqual(ids);
+      }
+      component.conversationSearch = 'Paris';
+      expect(component.filteredConversations).toEqual([]);
+      component.isMobile = false;
+      expect(component.filteredConversations.length).toBe(3);
+    });
+
+    it('filters through the search input, keeps the total count and renders an empty search state', fakeAsync(() => {
+      const host = showList();
+      const input = host.querySelector('input[type="search"]') as HTMLInputElement;
+      input.value = 'rome'; input.dispatchEvent(new Event('input')); tick(); fixture.detectChanges();
+      expect(host.querySelectorAll('.conversation-row').length).toBe(1);
+      expect(host.querySelector('.conversation-count')?.textContent?.trim()).toBe('3');
+      input.value = 'absent'; input.dispatchEvent(new Event('input')); tick(); fixture.detectChanges();
+      expect(host.querySelectorAll('.conversation-row').length).toBe(0);
+      expect(host.querySelector('[role="status"]')?.textContent).toContain('Aucune conversation ne correspond');
+    }));
+
+    it('renders previews, routes, unread markers and opens a row then returns to the search', () => {
+      const host = showList();
+      expect(host.querySelectorAll('.conversation-unread').length).toBe(1);
+      expect(host.querySelector('.conversation-unread')?.getAttribute('aria-label')).toBe('2 messages non lus');
+      expect(host.querySelector('.conversation-start')?.textContent).toContain('Démarrer la conversation');
+      expect(host.querySelectorAll('.conversation-route')[1].textContent).toContain('Nantes → Rome');
+      expect(host.querySelector('.conversation-row time')).toBeNull();
+      (host.querySelector('.conversation-row') as HTMLButtonElement).click(); fixture.detectChanges();
+      expect(component.selectedConversation?.id).toBe(10);
+      expect(host.querySelector('.conversation-search')).toBeNull();
+      expect(host.querySelector('.messages-title .list-back')).toBeNull();
+      component.goBack(); fixture.detectChanges();
+      expect(component.selectedConversation).toBeNull();
+      expect(host.querySelector('.conversation-search')).not.toBeNull();
+    });
+
+    it('distinguishes loading, empty and failed conversation states', () => {
+      const response = new Subject<ConversationResponse[]>();
+      messaging.getConversations.and.returnValue(response);
+      fixture.detectChanges(); component.isMobile = true; fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.conversation-list .animate-spin')).not.toBeNull();
+      response.next([]); fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('Aucune conversation.');
+      response.error(new Error('offline')); fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Impossible de charger les conversations.');
+      expect(fixture.nativeElement.textContent).not.toContain('Aucune conversation.');
+    });
+  });
+
 });
