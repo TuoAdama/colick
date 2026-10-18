@@ -1,6 +1,6 @@
 <div class="booking-page" aria-labelledby="booking-title">
   <div class="booking-column">
-    <a routerLink="/sent-bookings" class="booking-link back-link"><span aria-hidden="true">←</span> Demandes envoyées</a>
+    <a routerLink="/sent-bookings" class="booking-link back-link"><span aria-hidden="true">←</span><span class="back-link-label">Demandes envoyées</span></a>
 
     @if (isLoading && !booking) {
       <div class="booking-notice" role="status">Chargement de la demande…</div>
@@ -15,7 +15,12 @@
           <h1 id="booking-title">{{ booking.title }}</h1>
           <span class="booking-status" [attr.data-status]="booking.status">{{ statusLabel(booking.status) }}</span>
         </div>
-        <p class="detail-reference">{{ bookingReference() }}@if (createdAtLabel(booking.createdAt); as date) { · {{ date }} }</p>
+        <p class="detail-reference">
+          @if (trip.reference?.trim(); as reference) { Référence trajet : {{ reference }} }
+          @if (createdAtLabel(booking.createdAt); as date) {
+            @if (trip.reference?.trim()) { · }{{ date }}
+          }
+        </p>
       </header>
 
       @if (actionError) { <div class="booking-notice booking-error action-notice" role="alert">{{ actionError }}</div> }

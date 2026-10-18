@@ -1,4 +1,5 @@
-.back-link { gap: 8px; margin-bottom: 16px; }
+.back-link { gap: 8px; margin-bottom: 16px; text-decoration: none; }
+.back-link-label { text-decoration: underline; text-underline-offset: 3px; }
 .detail-heading { margin-bottom: 20px; }
 .detail-title-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .detail-reference { margin-top: 8px; color: #6b6b6b; font-size: 12px; overflow-wrap: anywhere; }

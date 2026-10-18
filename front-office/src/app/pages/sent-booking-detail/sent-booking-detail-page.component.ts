@@ -55,11 +55,6 @@ export class SentBookingDetailPageComponent implements OnInit {
   contactCopyFailed = false;
   isCopyingContact = false;
 
-  bookingReference(): string {
-    if (!this.booking) return '';
-    return `TRK-${String(this.booking.tripId).padStart(2, '0')}-${String(this.booking.id).padStart(2, '0')}`;
-  }
-
   isFreeBooking(): boolean {
     return this.booking?.commercialMode !== 'COMMISSION' && !(this.booking?.platformFeeRate && this.booking.platformFeeRate > 0);
   }

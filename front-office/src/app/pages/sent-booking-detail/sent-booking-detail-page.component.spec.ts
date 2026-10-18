@@ -131,11 +131,29 @@ describe('SentBookingDetailPageComponent', () => {
     createComponent();
     const root = fixture.nativeElement as HTMLElement;
     expect(Array.from(root.querySelectorAll('section h2')).map(el => el.textContent)).toEqual(['Trajet', 'Votre colis', 'Voyageur et tarif']);
-    expect(root.textContent).toContain('TRK-12-07');
+    expect(root.querySelector('.detail-reference')!.textContent).toContain('Référence trajet : TRP-2026-000013');
+    expect(root.textContent).not.toContain('TRK-');
     expect(root.textContent).toContain('4,8 · 24 avis');
     expect(root.querySelector('.price-total')!.textContent).toContain('30 €');
     expect(root.querySelectorAll('.message-button').length).toBe(1);
     expect(root.querySelector('a[href="/sent-bookings"]')).not.toBeNull();
+  });
+
+  it('does not fabricate a reference or leave a separator when the trip has no reference', () => {
+    tripServiceMock.getTripById.and.returnValue(of({ ...buildTrip(), reference: undefined }));
+    createComponent();
+    const metadata = fixture.nativeElement.querySelector('.detail-reference').textContent.trim();
+    expect(metadata).toContain('2025');
+    expect(metadata).not.toContain('Référence trajet');
+    expect(metadata).not.toContain('TRK-');
+    expect(metadata).not.toContain('·');
+  });
+
+  it('shows the persisted reference without an empty date separator', () => {
+    tripServiceMock.getMyTripBookingById.and.returnValue(of(buildBooking({ createdAt: undefined })));
+    createComponent();
+    const metadata = fixture.nativeElement.querySelector('.detail-reference').textContent.trim();
+    expect(metadata).toBe('Référence trajet : TRP-2026-000013');
   });
 
   it('renders safe fallbacks when optional information is missing', () => {
@@ -320,6 +338,7 @@ describe('SentBookingDetailPageComponent', () => {
 function buildTrip(): Trip {
   return {
     id: 12,
+    reference: 'TRP-2026-000013',
     travelerId: 1,
     travelerName: 'Ada Lovelace',
     travelerRatingAverage: 4.8,
