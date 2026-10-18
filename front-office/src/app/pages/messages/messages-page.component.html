@@ -1,24 +1,40 @@
-<div class="messages-page min-h-screen bg-background-primary pt-20">
+<div class="messages-page min-h-screen bg-background-primary pt-20" [class.messages-list-view]="!selectedConversation">
   <div class="messages-layout max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="messages-title flex items-center gap-3 mb-6">
-      <button type="button" (click)="isMobile && selectedConversation ? goBack() : goToPreviousPage()" aria-label="Retour" class="text-text-secondary hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
+      <button type="button" (click)="isMobile && selectedConversation ? goBack() : goToPreviousPage()" aria-label="Retour" [class.list-back]="!selectedConversation" class="text-text-secondary hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
       <h1 class="text-2xl font-bold text-text-primary">Messages</h1>
+      @if (isMobile && !selectedConversation) { <span class="conversation-count inline-flex items-center justify-center min-w-[26px] h-[26px] px-[7px] rounded-full bg-accent text-white text-base font-bold" aria-label="Nombre total de conversations">{{ conversations.length }}</span> }
     </div>
     @if (errorMessage) { <div class="bg-error/10 border border-error/20 text-error rounded-lg p-3 mb-4 text-sm" role="alert">{{ errorMessage }} <button type="button" class="ml-2 underline" (click)="errorMessage = ''">Fermer</button></div> }
+    @if (isMobile && !selectedConversation) {
+      <div class="conversation-search">
+        <svg class="w-[22px] h-[22px] shrink-0" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="7.5"/><path stroke-linecap="round" d="m16 16 5 5"/></svg>
+        <input type="search" aria-label="Rechercher une conversation" placeholder="Rechercher une conversation" [(ngModel)]="conversationSearch" />
+      </div>
+    }
     <div class="messages-panel bg-white rounded-2xl shadow-lg overflow-hidden flex">
-      <div class="w-full md:w-96 border-r border-gray-100 flex flex-col" [class.hidden]="selectedConversation && isMobile">
-        <div class="px-5 py-4 border-b border-gray-100"><h2 class="font-semibold text-text-primary">Conversations</h2></div>
+      <div class="conversation-list w-full md:w-96 border-r border-gray-100 flex flex-col" [class.hidden]="selectedConversation && isMobile">
+        <div class="conversation-list-heading px-5 py-4 border-b border-gray-100"><h2 class="font-semibold text-text-primary">Conversations</h2></div>
         @if (isLoadingConversations) { <div class="flex items-center justify-center flex-1"><svg class="animate-spin h-8 w-8 text-secondary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></div> }
-        @if (!isLoadingConversations && conversations.length === 0) { <div class="flex flex-col items-center justify-center flex-1 px-6 text-center"><span class="text-text-secondary text-sm">Aucune conversation.</span></div> }
+        @if (!isLoadingConversations && !errorMessage && conversations.length === 0) { <div class="flex flex-col items-center justify-center flex-1 px-6 text-center"><span class="text-text-secondary text-sm">Aucune conversation.</span></div> }
         @if (!isLoadingConversations && conversations.length > 0) {
-          <div class="overflow-y-auto flex-1">
-            @for (conv of conversations; track conv.id) {
-              <button type="button" class="w-full text-left px-5 py-4 hover:bg-background-secondary transition-colors border-b border-gray-50 flex items-start gap-3" [ngClass]="selectedConversation?.id === conv.id ? 'bg-blue-50' : ''" (click)="selectConversation(conv)">
-                <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">{{ conv.otherParticipantName.charAt(0).toUpperCase() }}</div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between mb-1"><span class="font-semibold text-sm text-text-primary truncate">{{ conv.otherParticipantName }}</span>@if (conv.unreadCount > 0) { <span class="bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">{{ conv.unreadCount }}</span> }</div>
-                  <span class="block text-xs text-secondary font-medium truncate mb-0.5">{{ conv.contextRoute || conv.tripRoute }}</span>
-                  @if (conv.lastMessage) { <span class="block text-xs text-text-muted truncate">{{ conv.lastMessage }}</span> }
+          @if (filteredConversations.length === 0) { <p class="conversation-no-results px-6 py-8 text-center text-text-secondary" role="status">Aucune conversation ne correspond à votre recherche.</p> }
+          <div class="conversation-rows overflow-y-auto flex-1">
+            @for (conv of filteredConversations; track conv.id) {
+              <button type="button" class="conversation-row w-full text-left px-5 py-4 hover:bg-background-secondary transition-colors border-b border-gray-50 flex items-start gap-3" [ngClass]="selectedConversation?.id === conv.id ? 'bg-blue-50' : ''" (click)="selectConversation(conv)">
+                <div class="conversation-avatar w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">{{ conv.otherParticipantName.charAt(0).toUpperCase() }}</div>
+                <div class="conversation-summary flex-1 min-w-0">
+                  <div class="flex items-center justify-between mb-1"><span class="conversation-name font-semibold text-sm text-text-primary truncate">{{ conv.otherParticipantName }}</span>@if (conv.unreadCount > 0) { <span class="hidden md:flex bg-accent text-white text-xs font-bold rounded-full w-5 h-5 items-center justify-center shrink-0">{{ conv.unreadCount }}</span> }</div>
+                  <span class="conversation-route block text-xs text-secondary font-medium truncate mb-0.5">
+                    @if (conv.contextRoute || conv.tripRoute) { <svg class="md:hidden" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 10a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></svg> }
+                    <span>{{ conv.contextRoute || conv.tripRoute }}</span>
+                  </span>
+                  @if (conv.lastMessage) { <span class="conversation-preview block text-xs text-text-muted truncate">{{ conv.lastMessage }}</span> }
+                  @else { <span class="conversation-preview conversation-start md:hidden">Démarrer la conversation</span> }
+                </div>
+                <div class="conversation-indicators md:hidden">
+                  @if (conv.unreadCount > 0) { <span class="conversation-unread w-2.5 h-2.5 rounded-full bg-accent" [attr.aria-label]="conv.unreadCount + ' messages non lus'"></span> }
+                  <svg class="w-[18px] h-[18px] text-text-secondary" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7"/></svg>
                 </div>
               </button>
             }

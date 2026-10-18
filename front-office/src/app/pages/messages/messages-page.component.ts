@@ -21,6 +21,19 @@ export class MessagesPageComponent implements OnInit, OnDestroy, AfterViewChecke
   private readonly location = inject(Location);
   private readonly platformId = inject(PLATFORM_ID);
   conversations: ConversationResponse[] = [];
+  conversationSearch = '';
+
+  get filteredConversations(): ConversationResponse[] {
+    const normalize = (value: string): string => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('fr-FR');
+    const query = normalize(this.conversationSearch.trim());
+    if (!this.isMobile || !query) return this.conversations;
+    return this.conversations.filter(conversation => normalize([
+      conversation.otherParticipantName,
+      conversation.contextRoute || conversation.tripRoute || '',
+      conversation.lastMessage || '',
+    ].join(' ')).includes(query));
+  }
+
   selectedConversation: ConversationResponse | null = null;
   messages: MessageResponse[] = [];
   newMessage = '';

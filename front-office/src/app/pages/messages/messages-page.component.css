@@ -31,3 +31,30 @@
   .message-send { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 50%; }
   .message-send svg { width: 22px; height: 22px; }
 }
+
+@media (max-width: 767px) {
+  .messages-list-view .messages-title { border: 0; padding: 24px 20px 16px; }
+  .messages-list-view .messages-title h1 { font-size: 28px; }
+  .messages-title .list-back { display: none; }
+  .conversation-search { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin: 0 20px 8px; padding: 12px; border-radius: 12px; background: #f4f5f7; color: #6b6b6b; }
+  .conversation-search input { width: 100%; min-width: 0; border: 0; background: transparent; color: #023047; font-size: 16px; }
+  .conversation-search:focus-within { outline: 2px solid #219ebc; outline-offset: 2px; }
+  .conversation-search input:focus { outline: none; }
+  .conversation-search input::placeholder { color: #6b6b6b; opacity: 1; }
+  .conversation-list { min-height: 0; border: 0; }
+  .conversation-list-heading { display: none; }
+  .conversation-rows { padding: 0 20px; }
+  .conversation-row { align-items: center; gap: 12px; padding: 18px 0; border-color: #e8e8ec; background: #fff; }
+  .conversation-row:last-child { border-bottom: 0; }
+  .conversation-row:focus-visible { outline: 2px solid #219ebc; outline-offset: -2px; }
+  .conversation-avatar { width: 40px; height: 40px; font-size: 20px; align-self: flex-start; }
+  .conversation-summary { display: flex; flex-direction: column; gap: 5px; }
+  .conversation-summary > div { margin: 0; }
+  .conversation-name { color: #023047; font-size: 16px; overflow-wrap: anywhere; white-space: normal; }
+  .conversation-preview { order: 1; color: #6b6b6b; font-size: 14px; }
+  .conversation-start { color: #219ebc; }
+  .conversation-route { display: flex; align-items: flex-start; gap: 5px; order: 2; margin: 0; color: #219ebc; font-size: 13px; white-space: normal; overflow-wrap: anywhere; }
+  .conversation-route svg { flex-shrink: 0; width: 16px; height: 16px; margin-top: 1px; }
+  .conversation-route span { min-width: 0; }
+  .conversation-indicators { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
+}

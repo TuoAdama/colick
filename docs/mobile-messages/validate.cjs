@@ -47,7 +47,7 @@ const server = http.createServer((req,res)=> {
  assert(await page.locator('.message-composer').evaluate(el=>el.getBoundingClientRect().bottom<=481));
  await page.screenshot({path:out+'/messages-reduced-viewport-320.png',fullPage:true});
  await page.getByRole('button',{name:'Retour',exact:true}).click();
- await page.getByRole('heading',{name:'Conversations',exact:true}).waitFor();
+ await page.getByRole('searchbox', {name:'Rechercher une conversation'}).waitFor();
  assert(errors.length===0,errors.join('\n'));
  console.log('PASS: long route/history, polling scroll retention, reduced viewport, back navigation, no browser errors.');
  } finally {await browser.close();server.close();}
