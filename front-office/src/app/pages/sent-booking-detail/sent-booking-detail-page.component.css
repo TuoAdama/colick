@@ -1,0 +1,48 @@
+.back-link { gap: 8px; margin-bottom: 16px; text-decoration: none; }
+.back-link-label { text-decoration: underline; text-underline-offset: 3px; }
+.detail-heading { margin-bottom: 20px; }
+.detail-title-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.detail-reference { margin-top: 8px; color: #6b6b6b; font-size: 12px; overflow-wrap: anywhere; }
+.detail-sections { display: grid; gap: 12px; }
+.detail-card { min-width: 0; border: 1px solid #e8e8ec; border-radius: 12px; padding: 18px 16px; background: white; }
+.route-cities { display: grid; grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1fr); gap: 8px; align-items: center; margin-top: 18px; }
+.city { font-size: 17px; font-weight: 600; overflow-wrap: anywhere; }
+.country { color: #6b6b6b; font-size: 12px; margin-top: 2px; overflow-wrap: anywhere; }
+.destination { text-align: right; }
+.route-connector { display: flex; align-items: center; gap: 4px; color: #023047; }
+.route-connector span { height: 1px; background: #a6bac4; flex: 1; }
+.route-connector svg { width: 24px; height: 24px; flex: none; }
+.route-dates { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin: 18px 0 0; border-top: 1px solid #e8e8ec; padding-top: 14px; }
+.route-dates > div + div { border-left: 1px solid #e8e8ec; padding-left: 12px; }
+dt { color: #6b6b6b; font-size: 12px; }
+dd { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
+.route-dates dd { font-weight: 600; margin-top: 4px; }
+.parcel-fields { display: grid; gap: 12px; margin: 16px 0 0; }
+.parcel-fields > div { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; }
+.description { white-space: pre-line; }
+.contact-actions { display: flex; flex-wrap: wrap; gap: 0 12px; }
+.contact-actions .booking-link { font-size: 11px; min-height: 44px; }
+.contact-feedback { color: #087c53; font-size: 12px; }
+.copy-error { color: #b91c1c; }
+.parcel-photo { display: block; width: 100%; max-height: 320px; object-fit: contain; margin-top: 16px; border-radius: 8px; }
+.photo-upload { border-top: 1px solid #e8e8ec; margin-top: 12px; padding-top: 8px; }
+.photo-upload svg { height: 22px; width: 22px; margin-right: 10px; }
+.photo-help { color: #6b6b6b; font-size: 11px; }
+.photo-feedback { margin-top: 12px; color: #087c53; font-size: 12px; }
+.traveler { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 12px; }
+.traveler > div { min-width: 0; overflow-wrap: anywhere; }
+.traveler-name { font-weight: 600; font-size: 16px; margin-bottom: 3px; }
+.price-calculation { margin-top: 18px; border-top: 1px solid #e8e8ec; padding-top: 14px; color: #6b6b6b; font-size: 13px; }
+.price-total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-top: 8px; font-size: 14px; font-weight: 600; }
+.price-total strong { font-size: 22px; }
+.settlement { margin-top: 5px; color: #6b6b6b; font-size: 11px; }
+.detail-actions { display: grid; justify-items: center; gap: 8px; margin-top: 16px; }
+.message-button { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 48px; border-radius: 10px; padding: 12px; background: #197f98; color: #fff; font-size: 14px; font-weight: 600; }
+.message-button svg { width: 22px; height: 22px; flex: none; }
+.message-button:hover { background: #16778e; }
+.cancel-button { color: #b91c1c; min-height: 44px; padding: 8px 12px; font-size: 13px; }
+.cancel-button:hover { text-decoration: underline; }
+button:disabled { opacity: .6; cursor: wait; }
+.processing-status { font-size: 12px; }
+.action-notice { margin-bottom: 16px; }
+@media (min-width: 640px) { .detail-card { padding: 24px; } .city { font-size: 22px; } dd { font-size: 14px; } .detail-reference { font-size: 14px; } }

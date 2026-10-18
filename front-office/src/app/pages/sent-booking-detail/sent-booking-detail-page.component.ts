@@ -7,6 +7,7 @@ import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
 import { MessagingService } from '../../services/messaging.service';
 import { TripService } from '../../services/trip.service';
+import { routeCity, routeCountry, sentBookingStatusLabel } from '../../shared/utils/sent-booking-presentation';
 import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
 
 @Component({
@@ -14,6 +15,7 @@ import { UserAvatarComponent } from '../../shared/components/user-avatar/user-av
   standalone: true,
   imports: [CommonModule, RouterLink, UserAvatarComponent],
   templateUrl: './sent-booking-detail-page.component.html',
+  styleUrls: ['../sent-bookings/sent-booking-layout.css', './sent-booking-detail-page.component.css'],
 })
 export class SentBookingDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -46,24 +48,42 @@ export class SentBookingDetailPageComponent implements OnInit {
     });
   }
 
-  statusLabel(status: BookingResponse['status']): string {
-    return ({
-      PENDING: 'En attente',
-      ACCEPTED: 'Acceptée',
-      REJECTED: 'Refusée',
-      CANCELLED: 'Annulée',
-      REMOVED: 'Retirée',
-    } as Record<BookingResponse['status'], string>)[status];
+  readonly statusLabel = sentBookingStatusLabel;
+  readonly routeCity = routeCity;
+  readonly routeCountry = routeCountry;
+  contactCopyFeedback = '';
+  contactCopyFailed = false;
+  isCopyingContact = false;
+
+  isFreeBooking(): boolean {
+    return this.booking?.commercialMode !== 'COMMISSION' && !(this.booking?.platformFeeRate && this.booking.platformFeeRate > 0);
   }
 
-  statusClass(status: BookingResponse['status']): string {
-    return ({
-      PENDING: 'bg-warning/10 text-warning',
-      ACCEPTED: 'bg-success/10 text-success',
-      REJECTED: 'bg-error/10 text-error',
-      CANCELLED: 'bg-neutral/10 text-neutral',
-      REMOVED: 'bg-neutral/10 text-text-secondary',
-    } as Record<BookingResponse['status'], string>)[status];
+  phoneHref(contact: string): string | null {
+    if (!/^\+?[0-9().\s-]{6,}$/.test(contact.trim())) return null;
+    return `tel:${contact.replace(/[^0-9+]/g, '')}`;
+  }
+
+  async copyRecipientContact(): Promise<void> {
+    const booking = this.booking;
+    if (!booking?.recipientContact || this.isCopyingContact) return;
+    this.isCopyingContact = true;
+    this.contactCopyFeedback = '';
+    this.contactCopyFailed = false;
+    try {
+      if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
+        throw new Error('Clipboard unavailable');
+      }
+      await navigator.clipboard.writeText(booking.recipientContact);
+      if (this.booking === booking) this.contactCopyFeedback = 'Contact copié.';
+    } catch {
+      if (this.booking === booking) {
+        this.contactCopyFailed = true;
+        this.contactCopyFeedback = 'Impossible de copier le contact. Vous pouvez le sélectionner manuellement.';
+      }
+    } finally {
+      this.isCopyingContact = false;
+    }
   }
 
   canCancelBooking(): boolean {
@@ -82,7 +102,7 @@ export class SentBookingDetailPageComponent implements OnInit {
 
     return date.toLocaleString('fr-FR', {
       day: '2-digit',
-      month: 'long',
+      month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
@@ -101,7 +121,7 @@ export class SentBookingDetailPageComponent implements OnInit {
 
     return date.toLocaleString('fr-FR', {
       day: '2-digit',
-      month: 'long',
+      month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
@@ -118,7 +138,7 @@ export class SentBookingDetailPageComponent implements OnInit {
       maximumFractionDigits: 1,
     }).format(this.trip.travelerRatingAverage);
 
-    return `${average} (${this.trip.travelerRatingCount} avis)`;
+    return `${average} · ${this.trip.travelerRatingCount} avis`;
   }
 
   grossAmount(): number {
@@ -175,7 +195,9 @@ export class SentBookingDetailPageComponent implements OnInit {
   }
 
   retryPhotoUpload(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
     if (!file || !this.trip || !this.booking || !this.canCancelBooking() || this.isProcessing) return;
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
       this.actionError = 'Choisissez une image JPEG, PNG ou WebP de 5 Mo maximum.';
@@ -202,6 +224,8 @@ export class SentBookingDetailPageComponent implements OnInit {
     this.isProcessing = false;
     this.loadError = '';
     this.actionError = '';
+    this.photoMessage = '';
+    this.contactCopyFeedback = '';
 
     forkJoin({
       trip: this.tripService.getTripById(tripId),
