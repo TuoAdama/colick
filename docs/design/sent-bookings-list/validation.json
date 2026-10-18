@@ -1,0 +1,61 @@
+{
+  "mode": "built-in image_gen",
+  "files": [
+    {
+      "file": "01-liste-separateurs.png",
+      "width": 948,
+      "height": 1659,
+      "visually_reviewed": true,
+      "complete_visible_requests": 6,
+      "same_order_and_data": true,
+      "full_city_names": true,
+      "text_status_and_chevron": true,
+      "no_detail_actions_or_contact": true
+    },
+    {
+      "file": "02-cartes-compactes.png",
+      "width": 948,
+      "height": 1659,
+      "visually_reviewed": true,
+      "complete_visible_requests": 6,
+      "same_order_and_data": true,
+      "full_city_names": true,
+      "text_status_and_chevron": true,
+      "no_detail_actions_or_contact": true
+    },
+    {
+      "file": "03-liste-onglets.png",
+      "width": 948,
+      "height": 1659,
+      "visually_reviewed": true,
+      "complete_visible_requests": 6,
+      "same_order_and_data": true,
+      "full_city_names": true,
+      "text_status_and_chevron": true,
+      "no_detail_actions_or_contact": true
+    },
+    {
+      "file": "04-liste-chronologique.png",
+      "width": 948,
+      "height": 1659,
+      "visually_reviewed": true,
+      "complete_visible_requests": 6,
+      "same_order_and_data": true,
+      "full_city_names": true,
+      "text_status_and_chevron": true,
+      "no_detail_actions_or_contact": true
+    },
+    {
+      "file": "05-boite-reception.png",
+      "width": 948,
+      "height": 1659,
+      "visually_reviewed": true,
+      "complete_visible_requests": 6,
+      "same_order_and_data": true,
+      "full_city_names": true,
+      "text_status_and_chevron": true,
+      "no_detail_actions_or_contact": true
+    }
+  ],
+  "application_tests": "Not applicable: PNG and design documentation only"
+}
