@@ -1,11 +1,11 @@
-<div class="min-h-screen bg-background-primary pt-20">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <div class="flex items-center gap-3 mb-6">
-      <button type="button" (click)="goToPreviousPage()" class="text-text-secondary hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
+<div class="messages-page min-h-screen bg-background-primary pt-20">
+  <div class="messages-layout max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="messages-title flex items-center gap-3 mb-6">
+      <button type="button" (click)="isMobile && selectedConversation ? goBack() : goToPreviousPage()" aria-label="Retour" class="text-text-secondary hover:text-primary transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
       <h1 class="text-2xl font-bold text-text-primary">Messages</h1>
     </div>
     @if (errorMessage) { <div class="bg-error/10 border border-error/20 text-error rounded-lg p-3 mb-4 text-sm" role="alert">{{ errorMessage }} <button type="button" class="ml-2 underline" (click)="errorMessage = ''">Fermer</button></div> }
-    <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex" style="height: calc(100vh - 180px);">
+    <div class="messages-panel bg-white rounded-2xl shadow-lg overflow-hidden flex">
       <div class="w-full md:w-96 border-r border-gray-100 flex flex-col" [class.hidden]="selectedConversation && isMobile">
         <div class="px-5 py-4 border-b border-gray-100"><h2 class="font-semibold text-text-primary">Conversations</h2></div>
         @if (isLoadingConversations) { <div class="flex items-center justify-center flex-1"><svg class="animate-spin h-8 w-8 text-secondary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></div> }
@@ -25,30 +25,44 @@
           </div>
         }
       </div>
-      <div class="flex-1 flex flex-col" [class.hidden]="!selectedConversation">
+      <div class="conversation flex-1 flex flex-col min-w-0" [class.hidden]="!selectedConversation">
         @if (!selectedConversation) { <div class="hidden md:flex flex-col items-center justify-center flex-1 text-center px-6"><span class="text-text-secondary font-medium block">Selectionnez une conversation</span></div> }
         @if (selectedConversation) {
-          <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3 bg-white">
-            <button type="button" class="md:hidden p-1 text-text-secondary hover:text-primary" (click)="goBack()"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button>
-            <div class="w-9 h-9 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">{{ selectedConversation.otherParticipantName.charAt(0).toUpperCase() }}</div>
-            <div class="min-w-0"><span class="font-semibold text-text-primary text-sm truncate block">{{ selectedConversation.otherParticipantName }}</span><span class="text-xs text-secondary truncate block">{{ selectedConversation.contextRoute || selectedConversation.tripRoute }}</span></div>
+          <div class="conversation-contact px-5 py-4 border-b border-gray-100 flex items-center gap-3 bg-white">
+            <div class="contact-avatar w-9 h-9 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">{{ selectedConversation.otherParticipantName.charAt(0).toUpperCase() }}</div>
+            <div class="contact-details min-w-0"><span class="contact-name font-semibold text-text-primary text-sm truncate block">{{ selectedConversation.otherParticipantName }}</span>
+              @if (selectedConversation.contextRoute || selectedConversation.tripRoute) {
+                <span class="contact-route text-xs text-secondary md:truncate md:block">
+                  <svg class="md:hidden h-4 w-4 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 10a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></svg>
+                  <span>{{ selectedConversation.contextRoute || selectedConversation.tripRoute }}</span>
+                </span>
+              }
+            </div>
           </div>
-          <div class="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-background-secondary">
+          <div #messageHistory (scroll)="onHistoryScroll()" class="message-history flex-1 min-h-0 overflow-y-auto px-5 py-4 bg-background-secondary">
+            <div class="message-history-content space-y-3">
             @if (isLoadingMessages) { <div class="flex items-center justify-center py-12"><svg class="animate-spin h-8 w-8 text-secondary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></div> }
-            @for (msg of messages; track msg.id) {
+            @for (msg of messages; track msg.id; let index = $index) {
+              @if (isMobile && startsMessageDay(index)) {
+                <div class="message-day"><span>{{ formatMessageDay(msg.sentAt) }}</span></div>
+              }
               <div class="flex" [class.justify-end]="isOwnMessage(msg)" [class.justify-start]="!isOwnMessage(msg)">
-                <div class="max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm" [ngClass]="isOwnMessage(msg) ? 'bg-secondary text-white rounded-br-sm' : 'bg-white text-text-primary rounded-bl-sm'">
+                <div class="message-item max-w-[75%]" [class.own-message]="isOwnMessage(msg)">
+                <div class="message-bubble rounded-2xl px-4 py-2.5 shadow-sm" [ngClass]="isOwnMessage(msg) ? 'bg-secondary text-white rounded-br-sm' : 'bg-white text-text-primary rounded-bl-sm'">
                   <span class="text-sm whitespace-pre-wrap break-words block">{{ msg.content }}</span>
-                  <span class="text-[10px] mt-1 text-right block" [ngClass]="isOwnMessage(msg) ? 'text-white opacity-60' : 'text-text-muted'">{{ formatTime(msg.sentAt) }}</span>
+                  <span class="hidden md:block text-[10px] mt-1 text-right" [ngClass]="isOwnMessage(msg) ? 'text-white opacity-60' : 'text-text-muted'">{{ formatTime(msg.sentAt) }}</span>
+                </div>
+                <time class="message-time md:hidden" [attr.datetime]="msg.sentAt">{{ formatTime(msg.sentAt) }}</time>
                 </div>
               </div>
             }
             @if (!isLoadingMessages && messages.length === 0) { <div class="flex items-center justify-center py-12"><span class="text-text-muted text-sm">Aucun message. Envoyez le premier !</span></div> }
+            </div>
           </div>
-          <div class="px-4 py-3 border-t border-gray-100 bg-white">
+          <div class="message-composer px-4 py-3 border-t border-gray-100 bg-white">
             <div class="flex items-end gap-2">
-              <textarea class="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary max-h-32" rows="1" placeholder="Ecrivez votre message..." [(ngModel)]="newMessage" (keydown.enter)="sendMessage()" [disabled]="isSending"></textarea>
-              <button type="button" class="bg-secondary text-white rounded-xl p-2.5 hover:bg-secondary/90 transition-colors disabled:opacity-50 shrink-0" [disabled]="!newMessage.trim() || isSending" (click)="sendMessage()" aria-label="Envoyer">
+              <textarea class="message-input min-w-0 flex-1 resize-none border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary max-h-32" rows="1" aria-label="Votre message" placeholder="Écrivez votre message…" [(ngModel)]="newMessage" (keydown.enter)="onComposerEnter($event)" [disabled]="isSending"></textarea>
+              <button type="button" class="message-send bg-secondary text-white rounded-xl p-2.5 hover:bg-secondary/90 transition-colors disabled:opacity-50 shrink-0" [disabled]="!newMessage.trim() || isSending" (click)="sendMessage()" aria-label="Envoyer">
                 @if (isSending) { <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> } @else { <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg> }
               </button>
             </div>

@@ -184,4 +184,13 @@ describe('DashboardShellComponent', () => {
     expect(links.map((link) => link.getAttribute('href'))).toContain('/messages');
     expect(links.map((link) => link.getAttribute('href'))).toContain('/settings');
   });
+  it('hides the messages footer only on mobile including conversation deep links', () => {
+    const router = TestBed.inject(Router);
+    spyOnProperty(router, 'url', 'get').and.returnValue('/messages?conversationId=10');
+    fixture.detectChanges();
+    const footer: HTMLElement = fixture.nativeElement.querySelector('footer');
+    expect(footer.classList.contains('hidden')).toBeTrue();
+    expect(footer.classList.contains('md:block')).toBeTrue();
+  });
+
 });

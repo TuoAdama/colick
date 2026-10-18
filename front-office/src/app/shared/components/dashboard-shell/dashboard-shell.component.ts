@@ -81,6 +81,10 @@ export class DashboardShellComponent {
     this.isMobileMenuOpen = false;
   }
 
+  isMessagesPage(): boolean {
+    return /^\/messages(?:[?#].*)?$/.test(this.router.url);
+  }
+
   shouldShowFooter(): boolean {
     return !/^\/trips\/\d+\/reservations(?:[?#].*)?$/.test(this.router.url);
   }
