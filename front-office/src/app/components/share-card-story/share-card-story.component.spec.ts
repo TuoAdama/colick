@@ -1,143 +1,102 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ShareCardStoryComponent } from './share-card-story.component';
+import { ShareCardMapperService } from '../../services/share-card-mapper.service';
+import { ShareCardExportService } from '../../services/share-card-export.service';
+import { Trip } from '../../models/trip.model';
 
 describe('ShareCardStoryComponent', () => {
   let fixture: ComponentFixture<ShareCardStoryComponent>;
-  let component: ShareCardStoryComponent;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [ShareCardStoryComponent],
-    }).compileComponents();
-
+    await TestBed.configureTestingModule({ imports: [ShareCardStoryComponent] }).compileComponents();
     fixture = TestBed.createComponent(ShareCardStoryComponent);
-    component = fixture.componentInstance;
   });
 
-  it('renders provided fields', () => {
-    component.data = {
-      departureCity: 'Paris',
-      departureCountry: 'France',
-      destinationCity: 'Abidjan',
-      destinationCountry: "Côte d'Ivoire",
-      routeLabel: 'Paris → Abidjan',
-      formattedDateTime: '14 mars 2024 • 10:30',
-      formattedDate: '14 Mars 2024',
-      formattedTime: '10:30',
-      formattedArrivalDate: '15 Mars 2024',
-      formattedArrivalTime: '18:00',
-      travelerName: 'Jean Dupont',
-      phone: '+33 6 00 00 00 00',
-      email: 'ada@example.com',
-      availableWeightLabel: '12 kg',
-      pricePerKiloLabel: '10,00 € / kg',
-      shareUrlLabel: 'coliclic.test/trips/ref/TRP-2026-000001',
+  it('shows the essential trip data and omits the previous secondary copy', () => {
+    fixture.componentRef.setInput('data', {
+      departureCity: 'Nantes', destinationCity: 'Abidjan',
+      formattedShortDate: '21 déc. 2026', formattedShortArrivalDate: '15 janv. 2027',
+      formattedDate: '21 Décembre 2026', formattedTime: '10:30',
+      travelerName: 'Adama Tuo', availableWeightLabel: '30 kg', pricePerKiloLabel: '30€ / kg',
+      departureCountry: 'France', phone: '+33600000000', email: 'adama@example.com',
+      tripReference: 'TRP-2026-000001', shareUrlLabel: 'https://example.com/trips/ref/TRP-2026-000001',
       qrCodeDataUrl: 'data:image/png;base64,qr',
-      tripReference: 'TRP-2026-000001',
-    };
+    });
     fixture.detectChanges();
-
-    const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Trajet');
-    expect(text).toContain('Disponible');
-    expect(text).toContain('Paris');
-    expect(text).toContain('France');
-    expect(text).toContain('14 Mars 2024');
-    expect(text).toContain('10:30');
-    expect(text).toContain('15 Mars 2024');
-    expect(text).toContain('18:00');
-    expect(text).toContain('Jean Dupont');
-    expect(text).toContain('12 kg');
-    expect(text).toContain('10,00 € / kg');
-    expect(text).toContain('Abidjan');
-    expect(text).toContain("Côte d'Ivoire");
-    expect(text).toContain('Lien direct');
-    expect(text).toContain('coliclic.test/trips/ref/TRP-2026-000001');
-    expect(text).toContain('TRP-2026-000001');
-    expect(text).toContain('Coliclic');
-    const logo = Array.from(fixture.nativeElement.querySelectorAll('p') as NodeListOf<HTMLElement>)
-      .find((element) => element.classList.contains('text-[4.2rem]')) as HTMLElement | undefined;
-    const accentPart = logo?.querySelector('.text-accent') as HTMLElement | null;
-    expect(logo?.textContent?.trim()).toBe('Coliclic');
-    expect(accentPart?.textContent).toBe('Coli');
-    expect(accentPart?.classList.contains('text-accent')).toBeTrue();
-    expect(text).not.toContain('Transaction sécurisée');
-    expect(text).not.toContain('Prélèvement de 7%');
-  });
-
-  it('uses a fixed 9:16 export surface', () => {
-    fixture.detectChanges();
-
-    const root = fixture.nativeElement.querySelector('section') as HTMLElement | null;
-
-    expect(root?.className).toContain('h-[1920px]');
-    expect(root?.className).toContain('w-[1080px]');
-  });
-
-  it('keeps the QR code block inside the fixed CTA panel', () => {
-    component.data = {
-      qrCodeDataUrl: 'data:image/png;base64,qr',
-    };
-    fixture.detectChanges();
-
-    const qrImage = fixture.nativeElement.querySelector('img[alt="QR code de réservation"]') as HTMLImageElement | null;
-    const qrBox = qrImage?.parentElement as HTMLElement | null;
-    const ctaPanel = qrBox?.closest('section') as HTMLElement | null;
-
-    expect(ctaPanel?.className).toContain('h-[360px]');
-    expect(qrBox?.className).toContain('h-[200px]');
-    expect(qrBox?.className).toContain('w-[200px]');
-  });
-
-  it('renders the full share URL without truncation styling', () => {
-    component.data = {
-      shareUrlLabel: 'https://coliclic.com/trips/ref/TRP-2026-000013',
-      tripReference: 'TRP-2026-000013',
-    };
-    fixture.detectChanges();
-
     const host = fixture.nativeElement as HTMLElement;
-    const urlElement = Array.from(host.querySelectorAll('p'))
-      .find((element) => element.textContent?.includes('https://coliclic.com/trips/ref/TRP-2026-000013')) as HTMLElement | undefined;
-
-    expect(host.textContent).toContain('https://coliclic.com/trips/ref/TRP-2026-000013');
-    expect(host.textContent).toContain('TRP-2026-000013');
-    expect(urlElement?.closest('section')?.textContent).toContain('Référence du trajet');
-    expect(urlElement?.className).toContain('break-all');
-    expect(urlElement?.className).not.toContain('truncate');
+    const text = host.textContent!;
+    for (const value of ['Coliclic', 'Nantes', 'Abidjan', '21 déc. 2026', '15 janv. 2027', 'Adama Tuo', '30 kg', '30€ / kg', 'Voir l’annonce']) {
+      expect(text).toContain(value);
+    }
+    for (const value of ['J’ai de la place', 'Voyageur vérifié', 'Support Coliclic', 'Référence du trajet', 'TRP-2026-000001', 'France', '10:30', 'adama@example.com', '+33600000000']) {
+      expect(text).not.toContain(value);
+    }
+    expect(host.querySelector<HTMLImageElement>('.qr-code')?.getAttribute('src')).toBe('data:image/png;base64,qr');
   });
 
-  it('shows safe fallback values when optional fields are missing', () => {
-    component.data = {
-      departureCity: null,
-      departureCountry: null,
-      destinationCity: null,
-      destinationCountry: null,
-      routeLabel: null,
-      formattedDateTime: null,
-      formattedDate: null,
-      formattedTime: null,
-      formattedArrivalDate: null,
-      formattedArrivalTime: null,
-      travelerName: null,
-      phone: null,
-      email: null,
-      availableWeightLabel: null,
-      pricePerKiloLabel: null,
-    };
+  it('keeps safe fallbacks and does not invent a QR code', () => {
     fixture.detectChanges();
-
     const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Trajet');
-    expect(text).toContain('Disponible');
-    expect(text).toContain('Départ');
-    expect(text).toContain('Destination');
-    expect(text).toContain('Date à confirmer');
-    expect(text).toContain('--:--');
-    expect(text).toContain('N/A kg');
-    expect(text).toContain('N/A€ / kg');
-    expect(text).toContain('Voyageur Coliclic');
-    expect(text).not.toContain('ada@example.com');
-    expect(text).not.toContain('+33 6 00 00 00 00');
+    for (const value of ['Départ', 'Destination', 'Date à confirmer', 'N/A kg', 'N/A € / kg', 'Voyageur Coliclic', 'QR code indisponible']) {
+      expect(text).toContain(value);
+    }
+    expect(fixture.nativeElement.querySelector('.qr-code')).toBeNull();
   });
+
+  it('supports existing full dates when compact dates are absent', () => {
+    fixture.componentRef.setInput('data', { formattedDate: '21 Décembre 2026', formattedArrivalDate: '15 Janvier 2027' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('21 Décembre 2026');
+    expect(fixture.nativeElement.textContent).toContain('15 Janvier 2027');
+  });
+
+  it('keeps long city names, prices and traveler names inside the poster', () => {
+    fixture.componentRef.setInput('data', {
+      departureCity: 'Saint-Germain-en-Laye', destinationCity: 'Clermont-Ferrand',
+      formattedShortDate: '21 sept. 2026', formattedShortArrivalDate: '15 janv. 2027',
+      travelerName: 'Alexandra Dupont de la Vallière', availableWeightLabel: '1 234,56 kg', pricePerKiloLabel: '1 234,56€ / kg',
+    });
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    const root = host.querySelector<HTMLElement>('[data-share-card-root]')!;
+    expect(root.getBoundingClientRect().width).toBe(1080);
+    expect(root.getBoundingClientRect().height).toBe(1920);
+    for (const element of Array.from(host.querySelectorAll<HTMLElement>('.city, .metric-value, .traveler, .announcement-cta, .qr-block'))) {
+      expect(element.scrollWidth).withContext(element.className).toBeLessThanOrEqual(element.clientWidth + 1);
+      expect(element.getBoundingClientRect().bottom).toBeLessThan(root.getBoundingClientRect().bottom);
+    }
+    const footer = host.querySelector<HTMLElement>('.ticket-footer')!;
+    const ticket = host.querySelector<HTMLElement>('.ticket')!;
+    expect(footer.scrollHeight).toBeLessThanOrEqual(footer.clientHeight + 1);
+    expect(footer.getBoundingClientRect().bottom).toBeLessThan(ticket.getBoundingClientRect().bottom);
+    expect(host.textContent).toContain('Saint-Germain-en-Laye');
+    expect(host.textContent).toContain('Clermont-Ferrand');
+  });
+
+  it('exports a mapped announcement with a real QR code as a 1080 × 1920 PNG', async () => {
+    const mapper = TestBed.inject(ShareCardMapperService);
+    const exporter = TestBed.inject(ShareCardExportService);
+    const data = mapper.mapActiveTripToShareCard({
+      id: 1, reference: 'TRP-2026-000001', departureAddress: 'Nantes, France',
+      destination: 'Abidjan, Côte d’Ivoire', departureTime: '2026-12-21T10:30:00',
+      arrivalTime: '2027-01-15T10:30:00', availableWeight: 30, pricePerKilo: 30,
+    } as Trip, { firstName: 'Adama', lastName: 'Tuo', email: 'adama@example.com' }, { shareOrigin: 'https://coliclic.com' });
+    data.qrCodeDataUrl = await exporter.generateQrCodeDataUrl(data.shareUrl!);
+    fixture.componentRef.setInput('data', data);
+    fixture.detectChanges();
+    const file = await exporter.captureElementAsPngFile(fixture.nativeElement, 'annonce.png');
+    expect(file.type).toBe('image/png');
+    expect(file.size).toBeGreaterThan(10000);
+    const bitmap = await createImageBitmap(file);
+    expect(bitmap.width).toBe(1080);
+    expect(bitmap.height).toBe(1920);
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const context = canvas.getContext('2d')!;
+    context.drawImage(bitmap, 0, 0);
+    expect(Array.from(context.getImageData(0, 0, 1, 1).data)).toEqual([248, 245, 237, 255]);
+    bitmap.close();
+    expect(fixture.nativeElement.querySelector('.qr-code').src).toMatch(/^data:image\/png;base64,/);
+  }, 30000);
 });

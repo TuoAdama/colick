@@ -95,6 +95,8 @@ describe('ShareCardMapperService', () => {
     expect(result.destinationCountry).toBeNull();
     expect(result.routeLabel).toBeNull();
     expect(result.formattedDate).toBeNull();
+    expect(result.formattedShortDate).toBeNull();
+    expect(result.formattedShortArrivalDate).toBeNull();
     expect(result.formattedTime).toBeNull();
     expect(result.formattedDateTime).toBeNull();
     expect(result.formattedArrivalDate).toBeNull();
@@ -144,6 +146,15 @@ describe('ShareCardMapperService', () => {
     });
 
     expect(result.availableWeightLabel).toBe('9 kg');
+  });
+
+  it('formats compact poster dates across a year boundary', () => {
+    const result = service.mapActiveTripToShareCard(buildTrip({
+      departureTime: '2026-12-21T10:30:00', arrivalTime: '2027-01-15T10:30:00',
+    }), { firstName: 'Adama', lastName: 'Tuo', email: 'adama@example.com' });
+    expect(result.formattedShortDate).toBe('21 déc. 2026');
+    expect(result.formattedShortArrivalDate).toBe('15 janv. 2027');
+    expect(result.formattedDate).toBe('21 Décembre 2026');
   });
 
   it('builds a file date from the trip date', () => {

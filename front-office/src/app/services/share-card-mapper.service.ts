@@ -29,6 +29,8 @@ export class ShareCardMapperService {
       routeLabel,
       formattedDateTime: formattedDepartureDate?.dateTime ?? null,
       formattedDate: formattedDepartureDate?.date ?? null,
+      formattedShortDate: formattedDepartureDate?.shortDate ?? null,
+      formattedShortArrivalDate: formattedArrivalDate?.shortDate ?? null,
       formattedTime: formattedDepartureDate?.time ?? null,
       formattedArrivalDateTime: formattedArrivalDate?.dateTime ?? null,
       formattedArrivalDate: formattedArrivalDate?.date ?? null,
@@ -107,7 +109,7 @@ export class ShareCardMapperService {
     return departureCity ?? destinationCity ?? null;
   }
 
-  private formatDateAndTimeFr(value?: string | null): { date: string; time: string; dateTime: string } | null {
+  private formatDateAndTimeFr(value?: string | null): { date: string; shortDate: string; time: string; dateTime: string } | null {
     if (!value) {
       return null;
     }
@@ -133,6 +135,9 @@ export class ShareCardMapperService {
 
     return {
       date: normalizedDate,
+      shortDate: new Intl.DateTimeFormat('fr-FR', {
+        day: 'numeric', month: 'short', year: 'numeric',
+      }).format(parsedDate),
       time,
       dateTime: `${normalizedDate} • ${time}`,
     };

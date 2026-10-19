@@ -31,11 +31,12 @@ export class ShareCardExportService {
 
     await this.waitForRenderableAssets(captureTarget);
 
+    const backgroundColor = getComputedStyle(captureTarget).backgroundColor;
     const htmlToImage = await import('html-to-image');
     const pngDataUrl = await htmlToImage.toPng(captureTarget, {
       cacheBust: true,
       pixelRatio: 1,
-      backgroundColor: '#ffffff',
+      backgroundColor: backgroundColor === 'rgba(0, 0, 0, 0)' ? '#ffffff' : backgroundColor,
       width: Math.ceil(rect.width),
       height: Math.ceil(rect.height),
       style: {
