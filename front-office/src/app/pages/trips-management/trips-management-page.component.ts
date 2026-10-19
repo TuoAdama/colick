@@ -22,6 +22,7 @@ export type TripStatusFilter = 'ALL' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, ShareCardStoryComponent, TripOptionsMenuComponent],
   templateUrl: './trips-management-page.component.html',
+  styleUrl: './trips-management-page.component.css',
 })
 export class TripsManagementPageComponent implements OnInit {
   private readonly tripService = inject(TripService);
@@ -43,10 +44,11 @@ export class TripsManagementPageComponent implements OnInit {
   // ── Filters ───────────────────────────────────────────────────────────────
   activeFilter: TripStatusFilter = 'ALL';
   searchQuery = '';
+  expandedActionsTripId: number | null = null;
 
   /** Filter tab definitions. */
   filterTabs: { id: TripStatusFilter; label: string }[] = [
-    { id: 'ALL', label: 'Tous les trajets' },
+    { id: 'ALL', label: 'Tous' },
     { id: 'ACTIVE', label: 'Actifs' },
     { id: 'COMPLETED', label: 'Terminés' },
     { id: 'CANCELLED', label: 'Annulés' },
@@ -158,17 +160,24 @@ export class TripsManagementPageComponent implements OnInit {
 
   // ── Filter actions ────────────────────────────────────────────────────────
 
+  toggleMobileActions(tripId: number): void {
+    this.expandedActionsTripId = this.expandedActionsTripId === tripId ? null : tripId;
+  }
+
   setFilter(filter: TripStatusFilter): void {
+    this.expandedActionsTripId = null;
     this.activeFilter = filter;
     this.currentPage = 1;
   }
 
   onSearchChange(): void {
+    this.expandedActionsTripId = null;
     this.currentPage = 1;
   }
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
+      this.expandedActionsTripId = null;
       this.currentPage = page;
     }
   }
@@ -267,6 +276,12 @@ export class TripsManagementPageComponent implements OnInit {
       COMPLETED: 'text-success',
       CANCELLED: 'text-text-muted',
     } as Record<Trip['status'], string>)[status];
+  }
+
+  /** French abbreviated month, using the same local date as the date pipe. */
+  tripMonth(dateStr: string): string {
+    return ['JANV.', 'FÉVR.', 'MARS', 'AVR.', 'MAI', 'JUIN',
+      'JUIL.', 'AOÛT', 'SEPT.', 'OCT.', 'NOV.', 'DÉC.'][new Date(dateStr).getMonth()];
   }
 
   /** Format a date string into "DD Mois YYYY • HH:MM". */
