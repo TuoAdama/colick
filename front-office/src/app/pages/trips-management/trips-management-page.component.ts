@@ -44,6 +44,7 @@ export class TripsManagementPageComponent implements OnInit {
   // ── Filters ───────────────────────────────────────────────────────────────
   activeFilter: TripStatusFilter = 'ALL';
   searchQuery = '';
+  expandedActionsTripId: number | null = null;
 
   /** Filter tab definitions. */
   filterTabs: { id: TripStatusFilter; label: string }[] = [
@@ -159,17 +160,24 @@ export class TripsManagementPageComponent implements OnInit {
 
   // ── Filter actions ────────────────────────────────────────────────────────
 
+  toggleMobileActions(tripId: number): void {
+    this.expandedActionsTripId = this.expandedActionsTripId === tripId ? null : tripId;
+  }
+
   setFilter(filter: TripStatusFilter): void {
+    this.expandedActionsTripId = null;
     this.activeFilter = filter;
     this.currentPage = 1;
   }
 
   onSearchChange(): void {
+    this.expandedActionsTripId = null;
     this.currentPage = 1;
   }
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
+      this.expandedActionsTripId = null;
       this.currentPage = page;
     }
   }

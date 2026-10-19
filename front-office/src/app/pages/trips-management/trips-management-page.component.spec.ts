@@ -456,6 +456,34 @@ describe('TripsManagementPageComponent', () => {
       expect(navigate).not.toHaveBeenCalled();
     });
 
+    it('toggles the mobile management controls separately from navigation', () => {
+      const navigate = spyOn(router, 'navigate').and.resolveTo(true);
+      const ticket = fixture.nativeElement.querySelector('[data-testid="trip-ticket"]');
+      const toggle = ticket.querySelector('.mobile-actions-toggle') as HTMLButtonElement;
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      toggle.click();
+      fixture.detectChanges();
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+      expect(toggle.getAttribute('aria-controls')).toBe(ticket.querySelector('.ticket-actions').id);
+      expect(ticket.querySelector('.ticket-actions').classList.contains('mobile-expanded')).toBeTrue();
+      expect(navigate).not.toHaveBeenCalled();
+      toggle.click();
+      fixture.detectChanges();
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('closes mobile controls when changing the list', () => {
+      component.toggleMobileActions(6);
+      component.setFilter('ACTIVE');
+      expect(component.expandedActionsTripId).toBeNull();
+      component.toggleMobileActions(6);
+      component.onSearchChange();
+      expect(component.expandedActionsTripId).toBeNull();
+      component.toggleMobileActions(6);
+      component.goToPage(1);
+      expect(component.expandedActionsTripId).toBeNull();
+    });
+
     it('shows loading, error and empty states without tickets', () => {
       component.isLoading = true;
       fixture.detectChanges();

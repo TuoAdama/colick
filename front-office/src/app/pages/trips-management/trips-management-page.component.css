@@ -5,7 +5,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round
 .status-filter { min-height: 44px; padding: 10px 2px; border: 1px solid #E8E8EC; border-radius: 12px; color: #6B6B6B; font-size: 12px; font-weight: 500; background: white; transition: background-color .15s; }
 .status-filter:hover { background: #219ebc0d; }
 .status-filter.selected { border-color: transparent; background: #219ebc1a; color: #023047; font-weight: 700; }
-.trip-ticket { min-width: 0; border: 1px solid #E8E8EC; border-radius: 12px; background: white; }
+.trip-ticket { position: relative; min-width: 0; border: 1px solid #E8E8EC; border-radius: 12px; background: white; }
 .ticket-main { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; width: 100%; padding: 16px 12px; border-radius: 12px; text-align: left; color: #023047; transition: background-color .15s; }
 .ticket-main:hover { background: #219ebc05; }
 .ticket-date { display: flex; flex-direction: column; align-items: flex-start; border-right: 1px dashed #E8E8EC; padding-right: 8px; }
@@ -43,4 +43,49 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round
   .ticket-metadata { gap: 24px; }
   .capacity-item { border-left: 1px solid #E8E8EC; padding-left: 24px; }
   .ticket-actions { padding-inline: 24px; }
+}
+
+.mobile-actions-toggle { display: none; }
+@media (max-width: 767px) {
+  .trips-page { padding: 20px 16px 48px; }
+  .trips-heading { margin-bottom: 14px; }
+  .trips-heading h1 { font-size: 32px; line-height: 1.15; }
+  .trips-heading p { margin-top: 6px; font-size: 14px; line-height: 1.5; }
+  .back-link { display: none; }
+  .propose-link { margin-top: 16px; min-height: 44px; padding: 10px 12px; border-radius: 9px; font-size: 15px; line-height: 22px; }
+  .status-filter { min-height: 38px; padding: 8px 2px; border-radius: 12px; font-size: 13px; }
+  .status-filter.selected { color: #219ebc; }
+  .trips-filters { margin-bottom: 14px; }
+  .trips-filters > :last-child { margin-top: 14px; }
+  .trips-filters input { min-height: 42px; padding-top: 10px; padding-bottom: 10px; font-size: 15px; line-height: 20px; }
+  .ticket-main { grid-template-columns: 60px minmax(0, 1fr); gap: 10px; padding: 10px 12px; }
+  .ticket-day { font-size: 30px; }
+  .ticket-month { margin-top: 3px; font-size: 12px; }
+  .ticket-year { margin-top: 0; font-size: 12px; }
+  .active-dot { width: 7px; height: 7px; top: 4px; right: -10px; }
+  .route-stops { gap: 8px; padding-left: 10px; }
+  .route-city { padding-left: 20px; font-size: 14px; line-height: 20px; }
+  .route-city:first-child::after { bottom: calc(-8px - .45em - 4px); }
+  .ticket-chevron { align-self: flex-start; margin-top: 8px; width: 16px; height: 16px; }
+  .ticket-metadata { margin-top: 8px; padding-top: 6px; padding-right: 22px; gap: 6px 12px; min-height: 30px; }
+  .metadata-item { gap: 6px; font-size: 13px; }
+  .metadata-item svg { width: 16px; height: 16px; }
+  .capacity-item { border-left: 1px solid #E8E8EC; padding-left: 12px; }
+  .capacity-badge { padding: 2px 8px; color: #219ebc; }
+  .trip-ticket { display: grid; }
+  .ticket-main { grid-area: 1 / 1; }
+  .ticket-actions { display: none; grid-area: 2 / 1; }
+  .ticket-actions.mobile-expanded { display: flex; }
+  .mobile-actions-toggle { display: flex; position: relative; grid-area: 1 / 1; align-self: end; justify-self: end; right: 2px; bottom: 10px; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; color: #6B6B6B; }
+  .mobile-actions-toggle svg { width: 14px; height: 14px; }
+}
+@media (max-width: 359px) {
+  .ticket-main { grid-template-columns: 48px minmax(0, 1fr); gap: 10px; padding: 12px 10px; }
+  .ticket-day { font-size: 28px; }
+  .ticket-month, .ticket-year { font-size: 11px; }
+  .route-city { padding-left: 16px; font-size: 12px; }
+  .ticket-metadata { column-gap: 6px; }
+  .metadata-item { font-size: 12px; gap: 4px; }
+  .capacity-item { padding-left: 6px; }
+  .capacity-badge { padding-inline: 6px; }
 }

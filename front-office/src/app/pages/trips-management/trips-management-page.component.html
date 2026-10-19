@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-bg-primary px-4 pb-12 pt-8 font-sans sm:px-6 md:pt-12">
+<div class="trips-page min-h-screen bg-bg-primary px-4 pb-12 pt-8 font-sans sm:px-6 md:pt-12">
   <div class="mx-auto max-w-4xl">
     @if (creationSuccessMessage) {
       <div class="mb-6 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success"
@@ -6,7 +6,7 @@
         {{ creationSuccessMessage }}
       </div>
     }
-    <header class="mb-6 sm:mb-8">
+    <header class="trips-heading mb-6 sm:mb-8">
       <div class="flex items-start justify-between gap-3">
         <div>
           <h1 class="text-3xl font-bold tracking-tight text-primary sm:text-4xl">Mes trajets</h1>
@@ -17,13 +17,13 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 19-7-7 7-7" /></svg>
         </a>
       </div>
-      <a routerLink="/propose" class="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-3 text-base font-bold text-white transition hover:bg-secondary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:py-4">
+      <a routerLink="/propose" class="propose-link mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-3 text-base font-bold text-white transition hover:bg-secondary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:py-4">
         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16m8-8H4" /></svg>
         Proposer un voyage
       </a>
     </header>
 
-    <div class="mb-6 space-y-4 sm:space-y-6">
+    <div class="trips-filters mb-6 space-y-4 sm:space-y-6">
       <div class="grid grid-cols-4 gap-2 sm:gap-3" role="group" aria-label="Filtrer par état du trajet">
         @for (tab of filterTabs; track tab.id) {
           <button type="button" (click)="setFilter(tab.id)" class="status-filter"
@@ -82,7 +82,13 @@
                 </span>
               </span>
             </button>
-            <div class="ticket-actions" role="group" [attr.aria-label]="'Actions pour ' + trip.departureAddress + ' vers ' + trip.destination">
+            <button type="button" class="mobile-actions-toggle" (click)="toggleMobileActions(trip.id)"
+              [attr.aria-expanded]="expandedActionsTripId === trip.id" [attr.aria-controls]="'trip-actions-' + trip.id"
+              [attr.aria-label]="'Actions pour ' + trip.departureAddress + ' vers ' + trip.destination">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" /></svg>
+            </button>
+            <div class="ticket-actions" [class.mobile-expanded]="expandedActionsTripId === trip.id"
+              [id]="'trip-actions-' + trip.id" role="group" [attr.aria-label]="'Actions pour ' + trip.departureAddress + ' vers ' + trip.destination">
               <span class="ticket-status" [ngClass]="tripStatusTextClass(trip.status)">{{ tripStatusLabel(trip.status) }}</span>
               <span class="mr-auto text-xs text-text-secondary">{{ trip.pricePerKilo }} € / kg</span>
               <!-- Eye icon - View details -->
