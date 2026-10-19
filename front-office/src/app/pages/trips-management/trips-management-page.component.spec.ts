@@ -297,17 +297,19 @@ describe('TripsManagementPageComponent', () => {
       expect(proposeLink?.getAttribute('href')).toContain('/propose');
     });
 
-    it('should render trips in the compact mobile list with route, date and capacity', () => {
-      const mobileRows = fixture.nativeElement.querySelectorAll(
-        '[data-testid="mobile-trip-row"]'
+    it('should render trips in the responsive ticket list with route, date and capacity', () => {
+      const ticketButtons = fixture.nativeElement.querySelectorAll(
+        '[data-testid="trip-details-link"]'
       ) as NodeListOf<HTMLButtonElement>;
 
-      expect(mobileRows.length).toBe(5);
-      expect(mobileRows[0].textContent).toContain('Dijon');
-      expect(mobileRows[0].textContent).toContain('Grenoble');
-      expect(mobileRows[0].textContent).toContain('12 Avril 2024');
-      expect(mobileRows[0].textContent).toContain('18 kg');
-      expect(mobileRows[0].getAttribute('aria-label')).toContain('Voir les demandes');
+      expect(ticketButtons.length).toBe(5);
+      expect(ticketButtons[0].textContent).toContain('Dijon');
+      expect(ticketButtons[0].textContent).toContain('Grenoble');
+      expect(ticketButtons[0].textContent).toContain('12');
+      expect(ticketButtons[0].textContent).toContain('AVR.');
+      expect(ticketButtons[0].textContent).toContain('2024');
+      expect(ticketButtons[0].textContent).toContain('18 kg');
+      expect(ticketButtons[0].getAttribute('aria-label')).toContain('Voir les demandes');
     });
 
     it('should render the total booking count badge on the view button', () => {
@@ -343,14 +345,14 @@ describe('TripsManagementPageComponent', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/trips', 6, 'reservations']);
     });
 
-    it('should navigate to trip reservations when clicking a mobile row', () => {
+    it('should navigate to trip reservations when clicking a ticket', () => {
       spyOn(router, 'navigate').and.resolveTo(true);
 
-      const mobileRow = fixture.nativeElement.querySelector(
-        '[data-testid="mobile-trip-row"]'
+      const ticketButton = fixture.nativeElement.querySelector(
+        '[data-testid="trip-details-link"]'
       ) as HTMLButtonElement;
 
-      mobileRow.click();
+      ticketButton.click();
 
       expect(router.navigate).toHaveBeenCalledWith(['/trips', 6, 'reservations']);
     });
@@ -379,6 +381,101 @@ describe('TripsManagementPageComponent', () => {
       expect(component.tripStatusTextClass('ACTIVE')).toBe('text-accent');
       expect(component.tripStatusTextClass('COMPLETED')).toBe('text-success');
       expect(component.tripStatusTextClass('CANCELLED')).toBe('text-text-muted');
+    });
+  });
+
+  describe('Ticket presentation and interactions', () => {
+    it('renders one responsive ticket per trip without a duplicate table', () => {
+      expect(fixture.nativeElement.querySelectorAll('[data-testid="trip-ticket"]').length).toBe(5);
+      expect(fixture.nativeElement.querySelector('table')).toBeNull();
+      expect(fixture.nativeElement.querySelector('h1').textContent).toBe('Mes trajets');
+    });
+
+    it('shows an orange dot only for active trips and accessible status labels for all', () => {
+      expect(fixture.nativeElement.querySelectorAll('[data-testid="active-trip-dot"]').length).toBe(3);
+      const tickets = fixture.nativeElement.querySelectorAll('[data-testid="trip-ticket"]');
+      expect(tickets[0].querySelector('.ticket-status').textContent).toBe('Actif');
+      expect(tickets[3].querySelector('.ticket-status').textContent).toBe('Annulé');
+      expect(tickets[4].querySelector('.ticket-status').textContent).toBe('Terminé');
+      expect(tickets[0].querySelector('.ticket-main').getAttribute('aria-label')).toContain('Actif');
+    });
+
+    it('keeps full long addresses and displays maxWeight rather than availableWeight', () => {
+      component.trips = [{ ...mockTrips[0], departureAddress: 'Nantes, France',
+        destination: 'Abidjan, Côte d’Ivoire — une adresse particulièrement longue', maxWeight: 30, availableWeight: 4 }];
+      fixture.detectChanges();
+      const ticket = fixture.nativeElement.querySelector('[data-testid="trip-ticket"]');
+      expect(ticket.querySelectorAll('.route-city')[1].textContent).toBe(component.trips[0].destination);
+      expect(ticket.querySelector('.capacity-badge').textContent).toContain('30 kg');
+      expect(ticket.querySelector('time').getAttribute('datetime')).toBe(mockTrips[0].departureTime);
+    });
+
+    it('combines filter and search through the rendered controls and resets pagination', () => {
+      component.currentPage = 2;
+      const filters = fixture.nativeElement.querySelectorAll('.status-filter');
+      filters[1].click();
+      fixture.detectChanges();
+      expect(component.currentPage).toBe(1);
+      expect(filters[1].getAttribute('aria-pressed')).toBe('true');
+      const input = fixture.nativeElement.querySelector('input[type="search"]');
+      input.value = 'Lille';
+      input.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelectorAll('[data-testid="trip-ticket"]').length).toBe(1);
+      expect(fixture.nativeElement.querySelector('.route-city').textContent).toBe('Lille');
+    });
+
+    it('keeps edit actions outside the trip navigation button', () => {
+      const navigate = spyOn(router, 'navigate').and.resolveTo(true);
+      const ticket = fixture.nativeElement.querySelector('[data-testid="trip-ticket"]');
+      expect(ticket.querySelector('.ticket-main button')).toBeNull();
+      ticket.querySelector('button[aria-label="Modifier le trajet"]').click();
+      expect(navigate).toHaveBeenCalledOnceWith(['/propose', 6]);
+      expect(ticket.querySelector('.ticket-actions').textContent).toContain('5 € / kg');
+    });
+
+    it('completes an active trip from the ticket options menu', () => {
+      const firstTicket = fixture.nativeElement.querySelector('[data-testid="trip-ticket"]');
+      firstTicket.querySelector('app-trip-options-menu button').click();
+      fixture.detectChanges();
+      const items = Array.from(firstTicket.querySelectorAll('[role="menuitem"]')) as HTMLButtonElement[];
+      items.find(item => item.textContent?.includes('Marquer comme terminé'))!.click();
+      fixture.detectChanges();
+      expect(tripServiceSpy.completeTrip).toHaveBeenCalledWith(6);
+    });
+
+    it('downloads the share card from the ticket options without opening reservations', () => {
+      const download = spyOn(component, 'downloadShareCardPng').and.resolveTo();
+      const navigate = spyOn(router, 'navigate').and.resolveTo(true);
+      const firstTicket = fixture.nativeElement.querySelector('[data-testid="trip-ticket"]');
+      firstTicket.querySelector('app-trip-options-menu button').click();
+      fixture.detectChanges();
+      const item = firstTicket.querySelector('[role="menuitem"]') as HTMLButtonElement;
+      item.click();
+      expect(download).toHaveBeenCalledOnceWith(6);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('shows loading, error and empty states without tickets', () => {
+      component.isLoading = true;
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('[data-testid="trips-loading"]')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-testid="trip-ticket"]')).toBeNull();
+      component.isLoading = false;
+      component.loadError = 'Impossible de charger vos trajets.';
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(component.loadError);
+      component.loadError = '';
+      component.searchQuery = 'introuvable';
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('Aucun trajet trouvé.');
+      expect(fixture.nativeElement.querySelector('[data-testid="trip-ticket"]')).toBeNull();
+    });
+
+    it('formats French abbreviated months independently of browser locale', () => {
+      expect(component.tripMonth('2026-02-01T10:30:00')).toBe('FÉVR.');
+      expect(component.tripMonth('2026-08-21T10:30:00')).toBe('AOÛT');
+      expect(component.tripMonth('2026-12-21T10:30:00')).toBe('DÉC.');
     });
   });
 

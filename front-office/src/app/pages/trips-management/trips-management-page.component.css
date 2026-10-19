@@ -1,0 +1,46 @@
+:host { display: block; }
+svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.back-link { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid #E8E8EC; border-radius: 50%; color: #023047; background: white; }
+.back-link svg { width: 20px; height: 20px; }
+.status-filter { min-height: 44px; padding: 10px 2px; border: 1px solid #E8E8EC; border-radius: 12px; color: #6B6B6B; font-size: 12px; font-weight: 500; background: white; transition: background-color .15s; }
+.status-filter:hover { background: #219ebc0d; }
+.status-filter.selected { border-color: transparent; background: #219ebc1a; color: #023047; font-weight: 700; }
+.trip-ticket { min-width: 0; border: 1px solid #E8E8EC; border-radius: 12px; background: white; }
+.ticket-main { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; width: 100%; padding: 16px 12px; border-radius: 12px; text-align: left; color: #023047; transition: background-color .15s; }
+.ticket-main:hover { background: #219ebc05; }
+.ticket-date { display: flex; flex-direction: column; align-items: flex-start; border-right: 1px dashed #E8E8EC; padding-right: 8px; }
+.ticket-day { position: relative; font-size: 32px; font-weight: 700; line-height: 1.15; letter-spacing: -.06em; }
+.active-dot { position: absolute; top: 3px; right: -11px; width: 7px; height: 7px; border-radius: 50%; background: #FB8500; }
+.ticket-month { margin-top: 4px; font-size: 12px; font-weight: 700; color: #6B6B6B; }
+.ticket-year { margin-top: 2px; font-size: 12px; color: #6B6B6B; }
+.ticket-body { min-width: 0; }
+.ticket-route { display: flex; align-items: center; gap: 4px; }
+.route-stops { display: grid; gap: 12px; min-width: 0; flex: 1; }
+.route-city { position: relative; padding-left: 20px; font-size: 14px; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
+.route-city::before { position: absolute; left: 0; top: .45em; width: 8px; height: 8px; border-radius: 50%; background: #219ebc; content: ''; }
+.route-city:first-child::after { position: absolute; top: calc(.45em + 4px); bottom: calc(-12px - .45em - 4px); left: 3px; width: 2px; background: #219ebc; content: ''; }
+.ticket-chevron { flex-shrink: 0; width: 18px; height: 18px; color: #6B6B6B; }
+.ticket-metadata { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 14px; padding-top: 10px; border-top: 1px solid #E8E8EC; }
+.metadata-item { display: inline-flex; align-items: center; gap: 6px; color: #6B6B6B; font-size: 12px; }
+.metadata-item svg { width: 17px; height: 17px; flex-shrink: 0; }
+.capacity-badge { border-radius: 8px; padding: 3px 8px; color: #023047; background: #219ebc1a; font-weight: 700; white-space: nowrap; }
+.ticket-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border-top: 1px solid #E8E8EC; padding: 6px 12px; }
+.ticket-status { font-size: 11px; font-weight: 700; }
+:host a:focus-visible, :host button:focus-visible { outline: 2px solid #023047; outline-offset: 3px; }
+@media (min-width: 390px) {
+  .ticket-main { grid-template-columns: 64px minmax(0, 1fr); gap: 16px; padding: 18px 16px; }
+  .status-filter { font-size: 14px; }
+  .ticket-day { font-size: 38px; }
+  .route-city { font-size: 16px; }
+}
+@media (min-width: 768px) {
+  .ticket-main { grid-template-columns: 90px minmax(0, 1fr); gap: 24px; padding: 24px; }
+  .ticket-day { font-size: 48px; }
+  .ticket-month, .ticket-year, .metadata-item { font-size: 16px; }
+  .route-city { font-size: 20px; padding-left: 28px; }
+  .route-city::before { width: 10px; height: 10px; }
+  .route-city:first-child::after { left: 4px; }
+  .ticket-metadata { gap: 24px; }
+  .capacity-item { border-left: 1px solid #E8E8EC; padding-left: 24px; }
+  .ticket-actions { padding-inline: 24px; }
+}

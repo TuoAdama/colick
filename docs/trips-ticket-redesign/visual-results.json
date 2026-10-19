@@ -1,0 +1,32 @@
+{
+  "results": [
+    {
+      "width": 320,
+      "overflow": false,
+      "tickets": 5
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "tickets": 5
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "tickets": 5
+    },
+    {
+      "width": 1440,
+      "overflow": false,
+      "tickets": 5
+    }
+  ],
+  "checks": [
+    "filters + search",
+    "empty result",
+    "pagination",
+    "visible keyboard focus",
+    "Enter navigation"
+  ],
+  "pageErrors": []
+}
