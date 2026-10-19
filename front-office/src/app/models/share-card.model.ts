@@ -5,6 +5,8 @@ export interface ShareCardData {
   destinationCountry?: string | null;
   routeLabel?: string | null;
   formattedDateTime?: string | null;
+  formattedShortDate?: string | null;
+  formattedShortArrivalDate?: string | null;
   formattedDate?: string | null;
   formattedTime?: string | null;
   formattedArrivalDateTime?: string | null;
