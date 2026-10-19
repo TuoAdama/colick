@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter, Router, UrlTree } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
@@ -278,16 +278,50 @@ describe('LandingPageComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]')).toBeNull();
   });
 
-  it('does not link the signed-in traveler to their own booking request', () => {
-    authServiceMock.getUser.and.returnValue({ id: 7 });
-    fixture.detectChanges();
-    component.trips = [buildLandingTripCard({ reference: 'TRP-2026-000013' })];
-    component.isTripsLoading = false;
-    fixture.detectChanges();
+  for (const reference of ['TRP-2026-000013', undefined]) {
+    it(`opens the owner's reservations on click ${reference ? 'with' : 'without'} a public reference`, () => {
+      authServiceMock.getUser.and.returnValue({ id: 7 });
+      fixture.detectChanges();
+      component.trips = [buildLandingTripCard({ reference })];
+      component.isTripsLoading = false;
+      fixture.detectChanges();
+      const navigateByUrl = spyOn(router, 'navigateByUrl').and.resolveTo(true);
 
-    expect(fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]')).toBeNull();
-    expect(fixture.nativeElement.querySelector('a[href="/travelers/7"]')).not.toBeNull();
-  });
+      const link = fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]') as HTMLAnchorElement;
+      expect(link.getAttribute('href')).toBe('/trips/13/reservations');
+      expect(link.getAttribute('aria-label')).toBe('Voir les détails du trajet de Paris, France vers Abidjan, Côte d\'Ivoire');
+
+      link.click();
+
+      expect(navigateByUrl).toHaveBeenCalledTimes(1);
+      expect(router.serializeUrl(navigateByUrl.calls.mostRecent().args[0] as UrlTree))
+        .toBe('/trips/13/reservations');
+      const travelerLink = fixture.nativeElement.querySelector('a[href="/travelers/7"]') as HTMLAnchorElement;
+      expect(travelerLink.classList.contains('z-20')).toBeTrue();
+      travelerLink.click();
+      expect(router.serializeUrl(navigateByUrl.calls.mostRecent().args[0] as UrlTree))
+        .toBe('/travelers/7');
+    });
+  }
+
+  for (const signedIn of [true, false]) {
+    it(`opens another traveler's booking request on click when ${signedIn ? 'signed in' : 'anonymous'}`, () => {
+      authServiceMock.isLoggedIn.and.returnValue(signedIn);
+      authServiceMock.getUser.and.returnValue(signedIn ? { id: 42 } : null);
+      fixture.detectChanges();
+      component.trips = [buildLandingTripCard({ reference: 'TRP-2026-000013' })];
+      component.isTripsLoading = false;
+      fixture.detectChanges();
+      const navigateByUrl = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+
+      const link = fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]') as HTMLAnchorElement;
+      link.click();
+
+      expect(navigateByUrl).toHaveBeenCalledTimes(1);
+      expect(router.serializeUrl(navigateByUrl.calls.mostRecent().args[0] as UrlTree))
+        .toBe('/trips/ref/TRP-2026-000013/request?returnUrl=%2F&source=landing_recommended');
+    });
+  }
 
   it('hides the next departure section when location sharing is refused', () => {
     geolocationMock.getCurrentPosition.and.callFake((_success: PositionCallback, error: PositionErrorCallback) => {
