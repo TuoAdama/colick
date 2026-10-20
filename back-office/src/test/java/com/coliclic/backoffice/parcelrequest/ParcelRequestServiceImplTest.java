@@ -159,6 +159,76 @@ class ParcelRequestServiceImplTest {
                 .hasMessageContaining("99");
     }
 
+    @Test
+    void updateRequest_preservesPhotoStatusAndCreationTime() {
+        ParcelRequest parcel = parcelRequest(10L, sender, "Paris", "Abidjan", null);
+        parcel.setPackagePhotoUrl("/uploads/existing.png");
+        LocalDateTime createdAt = parcel.getCreatedAt();
+        when(parcelRequestRepository.findById(10L)).thenReturn(Optional.of(parcel));
+        when(parcelRequestRepository.save(parcel)).thenReturn(parcel);
+        CreateParcelRequestRequest update = request(" Lyon ", " Dakar ");
+        update.setDescription(" ");
+        update.setDesiredDate(null);
+        ParcelRequestResponse response = service.updateRequest(10L, update, sender);
+        assertThat(response.getDeparture()).isEqualTo("Lyon");
+        assertThat(parcel.getNormalizedDeparture()).isEqualTo("lyon");
+        assertThat(parcel.getNormalizedDestination()).isEqualTo("dakar");
+        assertThat(response.getPackagePhotoUrl()).isEqualTo("/uploads/existing.png");
+        assertThat(response.getStatus()).isEqualTo(ParcelRequest.ParcelRequestStatus.ACTIVE);
+        assertThat(response.getCreatedAt()).isEqualTo(createdAt);
+        assertThat(response.getDescription()).isNull();
+        assertThat(response.getDesiredDate()).isNull();
+        verifyNoInteractions(fileStorageService);
+    }
+
+    @Test
+    void ownerOnlyOperations_rejectOtherUsers() {
+        ParcelRequest parcel = parcelRequest(10L, sender, "Paris", "Abidjan", null);
+        when(parcelRequestRepository.findById(10L)).thenReturn(Optional.of(parcel));
+        assertThatThrownBy(() -> service.getRequest(10L, traveler)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> service.updateRequest(10L, request("Paris", "Dakar"), traveler)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> service.removeRequest(10L, traveler)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> service.cancelRequest(10L, traveler)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> service.uploadPhoto(10L, null, traveler)).isInstanceOf(AccessDeniedException.class);
+        verify(parcelRequestRepository, never()).save(any());
+    }
+
+    @Test
+    void inactiveRequests_rejectMutationsButAllowRemoval() {
+        for (ParcelRequest.ParcelRequestStatus status : List.of(ParcelRequest.ParcelRequestStatus.CLOSED, ParcelRequest.ParcelRequestStatus.CANCELLED)) {
+            ParcelRequest parcel = parcelRequest(10L, sender, "Paris", "Abidjan", null);
+            parcel.setStatus(status);
+            when(parcelRequestRepository.findById(10L)).thenReturn(Optional.of(parcel));
+            assertThatThrownBy(() -> service.updateRequest(10L, request("Paris", "Dakar"), sender)).isInstanceOf(com.coliclic.backoffice.exception.ConflictException.class);
+            assertThatThrownBy(() -> service.closeRequest(10L, sender)).isInstanceOf(com.coliclic.backoffice.exception.ConflictException.class);
+            assertThatThrownBy(() -> service.cancelRequest(10L, sender)).isInstanceOf(com.coliclic.backoffice.exception.ConflictException.class);
+            assertThatThrownBy(() -> service.uploadPhoto(10L, null, sender)).isInstanceOf(com.coliclic.backoffice.exception.ConflictException.class);
+            service.removeRequest(10L, sender);
+            assertThat(parcel.getDeletedAt()).isNotNull();
+            assertThat(parcel.getStatus()).isEqualTo(status);
+        }
+        verifyNoInteractions(fileStorageService);
+        verify(parcelRequestRepository, never()).delete(any());
+    }
+
+    @Test
+    void removedRequest_isHiddenFromListsAndCannotBeAccessedOrMutated() {
+        ParcelRequest visible = parcelRequest(11L, sender, "Paris", "Abidjan", null);
+        ParcelRequest removed = parcelRequest(10L, sender, "Paris", "Abidjan", null);
+        removed.setDeletedAt(LocalDateTime.now());
+        when(parcelRequestRepository.findById(10L)).thenReturn(Optional.of(removed));
+        when(parcelRequestRepository.findBySenderOrderByCreatedAtDesc(sender)).thenReturn(List.of(removed, visible));
+        when(parcelRequestRepository.findByStatusOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE)).thenReturn(List.of(removed, visible));
+        assertThat(service.getMyRequests(sender)).extracting(ParcelRequestResponse::getId).containsExactly(11L);
+        assertThat(service.getAvailableRequests(null, null, null, null)).extracting(ParcelRequestResponse::getId).containsExactly(11L);
+        assertThatThrownBy(() -> service.getRequest(10L, sender)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.updateRequest(10L, request("Paris", "Dakar"), sender)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.closeRequest(10L, sender)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.cancelRequest(10L, sender)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.uploadPhoto(10L, null, sender)).isInstanceOf(ResourceNotFoundException.class);
+        verifyNoInteractions(fileStorageService);
+    }
+
     private CreateParcelRequestRequest request(String departure, String destination) {
         CreateParcelRequestRequest request = new CreateParcelRequestRequest();
         request.setDeparture(departure);

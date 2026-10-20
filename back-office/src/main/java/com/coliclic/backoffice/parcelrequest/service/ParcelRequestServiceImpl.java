@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import com.coliclic.backoffice.exception.ConflictException;
 import java.util.List;
 
 @Service
@@ -65,6 +67,7 @@ public class ParcelRequestServiceImpl implements ParcelRequestService {
 
         return parcelRequestRepository.findByStatusOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE)
                 .stream()
+                .filter(request -> request.getDeletedAt() == null)
                 .filter(request -> currentUser == null
                         || !request.getSender().getId().equals(currentUser.getId()))
                 .filter(request -> matches(request.getNormalizedDeparture(), normalizedDeparture))
@@ -78,6 +81,7 @@ public class ParcelRequestServiceImpl implements ParcelRequestService {
     @Transactional(readOnly = true)
     public List<ParcelRequestResponse> getMyRequests(User sender) {
         return parcelRequestRepository.findBySenderOrderByCreatedAtDesc(sender).stream()
+                .filter(request -> request.getDeletedAt() == null)
                 .map(ParcelRequestResponse::from)
                 .toList();
     }
@@ -85,6 +89,7 @@ public class ParcelRequestServiceImpl implements ParcelRequestService {
     @Override
     public ParcelRequestResponse closeRequest(Long requestId, User sender) {
         ParcelRequest request = findOwnedRequest(requestId, sender);
+        requireActive(request);
         request.setStatus(ParcelRequest.ParcelRequestStatus.CLOSED);
         return ParcelRequestResponse.from(parcelRequestRepository.save(request));
     }
@@ -92,6 +97,7 @@ public class ParcelRequestServiceImpl implements ParcelRequestService {
     @Override
     public void cancelRequest(Long requestId, User sender) {
         ParcelRequest request = findOwnedRequest(requestId, sender);
+        requireActive(request);
         request.setStatus(ParcelRequest.ParcelRequestStatus.CANCELLED);
         parcelRequestRepository.save(request);
     }
@@ -99,12 +105,50 @@ public class ParcelRequestServiceImpl implements ParcelRequestService {
     @Override
     public ParcelRequestResponse uploadPhoto(Long requestId, MultipartFile file, User sender) {
         ParcelRequest request = findOwnedRequest(requestId, sender);
+        requireActive(request);
         request.setPackagePhotoUrl(fileStorageService.store(file));
         return ParcelRequestResponse.from(parcelRequestRepository.save(request));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ParcelRequestResponse getRequest(Long requestId, User sender) {
+        return ParcelRequestResponse.from(findOwnedRequest(requestId, sender));
+    }
+
+    @Override
+    public ParcelRequestResponse updateRequest(Long requestId, CreateParcelRequestRequest body, User sender) {
+        ParcelRequest request = findOwnedRequest(requestId, sender);
+        requireActive(request);
+        String departure = normalizeDisplayValue(body.getDeparture());
+        String destination = normalizeDisplayValue(body.getDestination());
+        request.setDeparture(departure);
+        request.setNormalizedDeparture(normalizeSearchValue(departure));
+        request.setDestination(destination);
+        request.setNormalizedDestination(normalizeSearchValue(destination));
+        request.setDesiredDate(body.getDesiredDate());
+        request.setPackageTitle(normalizeDisplayValue(body.getPackageTitle()));
+        request.setWeight(body.getWeight());
+        request.setDescription(normalizeOptionalText(body.getDescription()));
+        return ParcelRequestResponse.from(parcelRequestRepository.save(request));
+    }
+
+    @Override
+    public void removeRequest(Long requestId, User sender) {
+        ParcelRequest request = findOwnedRequest(requestId, sender);
+        request.setDeletedAt(LocalDateTime.now());
+        parcelRequestRepository.save(request);
+    }
+
+    private void requireActive(ParcelRequest request) {
+        if (request.getStatus() != ParcelRequest.ParcelRequestStatus.ACTIVE) {
+            throw new ConflictException(localizedMessages.get("error.parcelRequest.inactive"));
+        }
+    }
+
     private ParcelRequest findOwnedRequest(Long requestId, User sender) {
         ParcelRequest request = parcelRequestRepository.findById(requestId)
+                .filter(found -> found.getDeletedAt() == null)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         localizedMessages.get("error.parcelRequest.notFound", requestId)));
         if (!request.getSender().getId().equals(sender.getId())) {

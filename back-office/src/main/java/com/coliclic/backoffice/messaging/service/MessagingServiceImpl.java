@@ -313,6 +313,7 @@ public class MessagingServiceImpl implements MessagingService {
             return ConversationContext.forTrip(trip);
         }
         ParcelRequest parcelRequest = parcelRequestRepository.findById(parcelRequestId)
+                .filter(request -> request.getDeletedAt() == null)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         localizedMessages.get("error.parcelRequest.notFound", parcelRequestId)));
         return ConversationContext.forParcelRequest(parcelRequest);

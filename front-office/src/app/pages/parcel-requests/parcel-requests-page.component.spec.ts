@@ -53,6 +53,7 @@ describe('ParcelRequestsPageComponent', () => {
 
     expect(parcelRequestServiceMock.getMyRequests).toHaveBeenCalled();
     expect(component.myRequests.length).toBe(1);
+    expect(fixture.nativeElement.querySelector('a[href="/parcel-requests/1"]')?.textContent).toContain('Voir le détail');
     expect(fixture.nativeElement.textContent).toContain('Paris → Abidjan');
     expect(fixture.nativeElement.textContent).toContain('Documents');
     expect(fixture.nativeElement.textContent).not.toContain('Demandes disponibles');

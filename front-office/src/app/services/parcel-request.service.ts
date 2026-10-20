@@ -47,6 +47,22 @@ export class ParcelRequestService {
     );
   }
 
+  getRequest(requestId: number): Observable<ParcelRequest> {
+    return this.http.get<ParcelRequest>(`${this.baseUrl}/${requestId}`).pipe(
+      map((request) => this.normalizeParcelRequest(request))
+    );
+  }
+
+  updateRequest(requestId: number, body: CreateParcelRequestRequest): Observable<ParcelRequest> {
+    return this.http.put<ParcelRequest>(`${this.baseUrl}/${requestId}`, body).pipe(
+      map((request) => this.normalizeParcelRequest(request))
+    );
+  }
+
+  removeRequest(requestId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${requestId}/remove`);
+  }
+
   closeRequest(requestId: number): Observable<ParcelRequest> {
     return this.http.put<ParcelRequest>(`${this.baseUrl}/${requestId}/close`, {}).pipe(
       map((request) => this.normalizeParcelRequest(request))
