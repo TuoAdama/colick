@@ -256,6 +256,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'parcel-requests/:id',
+        loadComponent: () =>
+          import('./pages/parcel-request-detail/parcel-request-detail-page.component').then(
+            (m) => m.ParcelRequestDetailPageComponent
+          ),
+      },
+      {
         path: 'parcel-requests',
         loadComponent: () =>
           import('./pages/parcel-requests/parcel-requests-page.component').then(

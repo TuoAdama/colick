@@ -21,6 +21,8 @@ public interface ParcelRequestService {
 
     List<ParcelRequestResponse> getMyRequests(User sender);
 
+    ParcelRequestResponse getMyRequest(Long requestId, User sender);
+
     ParcelRequestResponse closeRequest(Long requestId, User sender);
 
     void cancelRequest(Long requestId, User sender);

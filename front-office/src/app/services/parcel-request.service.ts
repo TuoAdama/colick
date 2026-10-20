@@ -47,6 +47,12 @@ export class ParcelRequestService {
     );
   }
 
+  getMyRequest(requestId: number): Observable<ParcelRequest> {
+    return this.http.get<ParcelRequest>(`${this.baseUrl}/${requestId}`).pipe(
+      map((request) => this.normalizeParcelRequest(request))
+    );
+  }
+
   closeRequest(requestId: number): Observable<ParcelRequest> {
     return this.http.put<ParcelRequest>(`${this.baseUrl}/${requestId}/close`, {}).pipe(
       map((request) => this.normalizeParcelRequest(request))

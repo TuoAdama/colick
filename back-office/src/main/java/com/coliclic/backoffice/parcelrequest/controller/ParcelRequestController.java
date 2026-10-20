@@ -50,6 +50,14 @@ public class ParcelRequestController {
         return ResponseEntity.ok(parcelRequestService.getMyRequests(currentUser));
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ParcelRequestResponse> getMyRequest(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(parcelRequestService.getMyRequest(id, currentUser));
+    }
+
     @PutMapping("/{id}/close")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ParcelRequestResponse> closeRequest(
