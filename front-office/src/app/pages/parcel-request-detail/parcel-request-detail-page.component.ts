@@ -1,5 +1,7 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, takeUntil } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ParcelRequest } from '../../models/parcel-request.model';
@@ -19,12 +21,15 @@ export class ParcelRequestDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly loadCancelled = new Subject<void>();
   private readonly changeDetector = inject(ChangeDetectorRef);
   @ViewChild('menuTrigger') menuTrigger?: ElementRef<HTMLButtonElement>;
   @ViewChild('menuArea') menuArea?: ElementRef<HTMLElement>;
   request: ParcelRequest | null = null;
   isLoading = false;
   loadError = '';
+  accessDenied = false;
   actionError = '';
   busy = false;
   menuOpen = false;
@@ -33,20 +38,31 @@ export class ParcelRequestDetailPageComponent implements OnInit {
   readonly routeCountry = routeCountry;
   get active(): boolean { return this.request?.status === 'ACTIVE'; }
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => this.load(params.get('id')));
+  }
 
-  load(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+  load(value = this.route.snapshot.paramMap.get('id')): void {
+    this.loadCancelled.next();
+    this.request = null;
+    this.menuOpen = false;
+    this.confirmation = null;
+    this.busy = false;
+    this.actionError = '';
+    this.accessDenied = false;
+    this.isLoading = false;
+    const id = Number(value);
     this.loadError = '';
-    if (!Number.isSafeInteger(id) || id <= 0) {
+    if (!/^[1-9]\d*$/.test(value ?? '') || !Number.isSafeInteger(id)) {
       this.loadError = 'Ce besoin est introuvable.';
       return;
     }
     this.isLoading = true;
-    this.service.getRequest(id).subscribe({
+    this.service.getMyRequest(id).pipe(takeUntil(this.loadCancelled), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (request) => { this.request = request; this.isLoading = false; },
       error: (error: HttpErrorResponse) => {
         this.isLoading = false;
+        this.accessDenied = error.status === 403;
         this.loadError = error.status === 404 ? 'Ce besoin est introuvable.'
           : error.status === 403 ? 'Vous ne pouvez pas consulter ce besoin.'
           : 'Impossible de charger ce besoin.';
@@ -105,7 +121,7 @@ export class ParcelRequestDetailPageComponent implements OnInit {
     this.busy = true;
     this.actionError = '';
     const operation = action === 'remove' ? this.service.removeRequest(this.request.id) : this.service.cancelRequest(this.request.id);
-    operation.subscribe({
+    operation.pipe(takeUntil(this.loadCancelled), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.busy = false;
         this.confirmation = null;
@@ -120,7 +136,7 @@ export class ParcelRequestDetailPageComponent implements OnInit {
     if (!this.request || !this.active || this.busy) return;
     this.busy = true;
     this.actionError = '';
-    this.service.closeRequest(this.request.id).subscribe({
+    this.service.closeRequest(this.request.id).pipe(takeUntil(this.loadCancelled), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (request) => { this.request = request; this.busy = false; },
       error: () => { this.busy = false; this.actionError = 'Impossible de fermer ce besoin. Veuillez réessayer.'; },
     });

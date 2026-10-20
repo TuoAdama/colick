@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { NEVER, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, NEVER, of, throwError } from 'rxjs';
 import { ParcelRequestDetailPageComponent } from './parcel-request-detail-page.component';
 import { ParcelRequestService } from '../../services/parcel-request.service';
 import { ParcelRequest } from '../../models/parcel-request.model';
@@ -9,14 +9,16 @@ describe('ParcelRequestDetailPageComponent', () => {
   let fixture: ComponentFixture<ParcelRequestDetailPageComponent>;
   let component: ParcelRequestDetailPageComponent;
   let service: jasmine.SpyObj<ParcelRequestService>;
+  let params: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
   const request: ParcelRequest = { id: 5, senderId: 1, senderName: 'Alice', departure: 'Paris, France', destination: 'Abidjan, Côte d’Ivoire', packageTitle: 'Vêtements et livres', weight: 5, status: 'ACTIVE', createdAt: '2026-10-20T12:00:00' };
   beforeEach(async () => {
-    service = jasmine.createSpyObj('ParcelRequestService', ['getRequest', 'closeRequest', 'cancelRequest', 'removeRequest']);
-    service.getRequest.and.returnValue(of(request));
+    params = new BehaviorSubject(convertToParamMap({ id: '5' }));
+    service = jasmine.createSpyObj('ParcelRequestService', ['getMyRequest', 'closeRequest', 'cancelRequest', 'removeRequest']);
+    service.getMyRequest.and.returnValue(of(request));
     service.closeRequest.and.returnValue(of({ ...request, status: 'CLOSED' }));
     service.cancelRequest.and.returnValue(of(void 0));
     service.removeRequest.and.returnValue(of(void 0));
-    await TestBed.configureTestingModule({ imports: [ParcelRequestDetailPageComponent], providers: [provideRouter([]), { provide: ParcelRequestService, useValue: service }, { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: '5' }) } } }] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [ParcelRequestDetailPageComponent], providers: [provideRouter([]), { provide: ParcelRequestService, useValue: service }, { provide: ActivatedRoute, useValue: { paramMap: params, snapshot: { paramMap: convertToParamMap({ id: '5' }) } } }] }).compileComponents();
     fixture = TestBed.createComponent(ParcelRequestDetailPageComponent);
     component = fixture.componentInstance;
   });
@@ -24,7 +26,7 @@ describe('ParcelRequestDetailPageComponent', () => {
   it('renders the owner detail without a Trajet heading and handles optional fields', () => {
     fixture.detectChanges();
     const host: HTMLElement = fixture.nativeElement;
-    expect(service.getRequest).toHaveBeenCalledWith(5);
+    expect(service.getMyRequest).toHaveBeenCalledWith(5);
     expect(host.querySelector('h1')?.textContent).toContain(request.packageTitle);
     expect(host.textContent).toContain('Date flexible');
     expect(host.textContent).toContain('Aucune description fournie.');
@@ -114,14 +116,52 @@ describe('ParcelRequestDetailPageComponent', () => {
     expect(service.closeRequest).toHaveBeenCalledTimes(1);
   });
 
+  it('reloads a reused route and ignores the previous pending response', () => {
+    const oldResponse = new Subject<ParcelRequest>();
+    service.getMyRequest.and.returnValue(oldResponse);
+    fixture.detectChanges();
+    service.getMyRequest.and.returnValue(of({ ...request, id: 6, packageTitle: 'Nouveau besoin' }));
+    params.next(convertToParamMap({ id: '6' }));
+    oldResponse.next(request);
+    expect(service.getMyRequest).toHaveBeenCalledWith(6);
+    expect(component.request?.id).toBe(6);
+    expect(component.request?.packageTitle).toBe('Nouveau besoin');
+  });
+
+  it('ignores an action response after navigating to another need', () => {
+    const closeResponse = new Subject<ParcelRequest>();
+    service.closeRequest.and.returnValue(closeResponse);
+    fixture.detectChanges();
+    component.closeRequest();
+    service.getMyRequest.and.returnValue(of({ ...request, id: 6 }));
+    params.next(convertToParamMap({ id: '6' }));
+    closeResponse.next({ ...request, status: 'CLOSED' });
+    expect(component.request?.id).toBe(6);
+    expect(component.request?.status).toBe('ACTIVE');
+    expect(component.busy).toBeFalse();
+  });
+
+  it('rejects malformed identifiers and does not offer retry for denied access', () => {
+    fixture.detectChanges();
+    service.getMyRequest.calls.reset();
+    params.next(convertToParamMap({ id: '5abc' }));
+    expect(service.getMyRequest).not.toHaveBeenCalled();
+    expect(component.request).toBeNull();
+    service.getMyRequest.and.returnValue(throwError(() => ({ status: 403 })));
+    params.next(convertToParamMap({ id: '6' }));
+    fixture.detectChanges();
+    expect(component.accessDenied).toBeTrue();
+    expect(fixture.nativeElement.textContent).not.toContain('Réessayer');
+  });
+
   it('shows loading, a missing request, and a successful retry', () => {
-    service.getRequest.and.returnValue(NEVER);
+    service.getMyRequest.and.returnValue(NEVER);
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Chargement');
-    service.getRequest.and.returnValue(throwError(() => ({ status: 404 })));
+    service.getMyRequest.and.returnValue(throwError(() => ({ status: 404 })));
     component.load(); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('introuvable');
-    service.getRequest.and.returnValue(of(request));
+    service.getMyRequest.and.returnValue(of(request));
     component.load(); fixture.detectChanges();
     expect(component.loadError).toBe('');
     expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain(request.packageTitle);

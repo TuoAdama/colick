@@ -21,7 +21,7 @@ public interface ParcelRequestService {
 
     List<ParcelRequestResponse> getMyRequests(User sender);
 
-    ParcelRequestResponse getRequest(Long requestId, User sender);
+    ParcelRequestResponse getMyRequest(Long requestId, User sender);
 
     ParcelRequestResponse updateRequest(Long requestId, CreateParcelRequestRequest request, User sender);
 

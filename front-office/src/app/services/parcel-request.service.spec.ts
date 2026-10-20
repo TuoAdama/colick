@@ -60,7 +60,7 @@ describe('ParcelRequestService', () => {
   });
 
   it('fetches and updates an owner request and normalizes its photo', () => {
-    service.getRequest(5).subscribe(request => expect(request.packagePhotoUrl).toBe('/api/uploads/box.png'));
+    service.getMyRequest(5).subscribe(request => expect(request.packagePhotoUrl).toBe('/api/uploads/box.png'));
     const get = httpMock.expectOne('/api/parcel-requests/5');
     expect(get.request.method).toBe('GET');
     get.flush({ id: 5, packagePhotoUrl: '/uploads/box.png' });

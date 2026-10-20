@@ -47,7 +47,7 @@ export class ParcelRequestService {
     );
   }
 
-  getRequest(requestId: number): Observable<ParcelRequest> {
+  getMyRequest(requestId: number): Observable<ParcelRequest> {
     return this.http.get<ParcelRequest>(`${this.baseUrl}/${requestId}`).pipe(
       map((request) => this.normalizeParcelRequest(request))
     );

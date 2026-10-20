@@ -1,81 +1,49 @@
-<div class="min-h-screen bg-background-primary pt-20 pb-12">
+<div class="min-h-screen bg-background-primary pb-12 pt-20">
   <main class="mx-auto max-w-6xl px-4 sm:px-6">
-    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-primary">Mes besoins d’envoi</h1>
-        <p class="mt-2 text-sm text-text-secondary">Publiez un besoin d’envoi pour trouver un voyageur qui effectue le même trajet, puis suivez ici l’état de votre recherche.</p>
+    <div class="mb-6 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold text-primary sm:text-3xl">Mes besoins d’envoi</h1>
+        <p class="mt-3 text-sm leading-6 text-text-secondary sm:text-base">Retrouvez et suivez vos demandes d’envoi.</p>
       </div>
-      <a
-        routerLink="/parcel-requests/new"
-        class="inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-accent px-5 text-sm font-bold text-white transition hover:bg-accent/90"
-      >
+      <a routerLink="/parcel-requests/new" class="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-accent px-5 text-sm font-bold text-white transition hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14M5 12h14" /></svg>
         Publier un besoin
       </a>
     </div>
 
-    @if (actionError) {
-      <div class="mb-5 rounded-lg border border-error/20 bg-error/10 px-4 py-3 text-sm font-medium text-error" role="alert">
-        {{ actionError }}
-      </div>
-    }
-
-    <section aria-label="Mes publications">
+    <section aria-label="Mes publications" [attr.aria-busy]="isLoadingMine">
       @if (isLoadingMine) {
-        <div class="flex justify-center py-12">
-          <div class="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent"></div>
+        <div class="flex justify-center py-12" role="status">
+          <div class="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" aria-hidden="true"></div>
+          <span class="sr-only">Chargement de vos besoins d’envoi…</span>
+        </div>
+      } @else if (actionError) {
+        <div class="rounded-xl border border-error/20 bg-error/10 p-5" role="alert">
+          <p class="text-sm text-error">{{ actionError }}</p>
+          <button type="button" (click)="loadMyRequests()" class="mt-3 min-h-[44px] rounded-lg border border-primary px-4 text-sm font-semibold text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Réessayer</button>
         </div>
       } @else if (myRequests.length === 0) {
-        <div class="rounded-xl bg-white px-6 py-12 text-center shadow-sm">
+        <div class="rounded-xl border border-border bg-white px-6 py-12 text-center">
           <p class="text-sm text-text-secondary">Vous n’avez encore créé aucun besoin d’envoi.</p>
-          <a routerLink="/parcel-requests/new" class="mt-5 inline-flex min-h-[44px] items-center rounded-lg bg-accent px-5 text-sm font-bold text-white">
-            Créer mon premier besoin
-          </a>
+          <a routerLink="/parcel-requests/new" class="mt-5 inline-flex min-h-[44px] items-center rounded-lg bg-accent px-5 text-sm font-bold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">Créer mon premier besoin</a>
         </div>
       } @else {
         <div class="grid gap-4">
           @for (request of myRequests; track request.id) {
-            <article class="rounded-xl border border-border bg-white p-5 shadow-sm">
-              <div class="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-3">
-                    <h2 class="text-lg font-bold text-primary">{{ request.departure }} → {{ request.destination }}</h2>
-                    <span class="rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="statusClass(request.status)">{{ statusLabel(request.status) }}</span>
-                  </div>
-                  <p class="mt-3 text-sm font-semibold text-text-primary">{{ request.packageTitle }} · {{ request.weight }} kg</p>
-                  <div class="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-secondary">
-                    <span>{{ dateLabel(request.desiredDate) }}</span>
-                    @if (createdAtLabel(request.createdAt); as createdAt) {
-                      <span>Publiee le {{ createdAt }}</span>
-                    }
-                  </div>
-                  @if (request.description) {
-                    <p class="mt-3 max-w-3xl text-sm leading-6 text-text-secondary">{{ request.description }}</p>
-                  }
-                </div>
-                @if (request.packagePhotoUrl) {
-                  <img [src]="request.packagePhotoUrl" [alt]="request.packageTitle" class="h-24 w-24 rounded-lg object-cover" />
-                }
-                <div class="flex flex-col gap-2 md:min-w-40">
-                  <a [routerLink]="['/parcel-requests', request.id]" class="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white">Voir le détail</a>
-                  <button
-                    type="button"
-                    class="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-primary px-4 text-sm font-semibold text-primary transition hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
-                    [disabled]="request.status !== 'ACTIVE' || closingRequestId === request.id"
-                    (click)="closeRequest(request)"
-                  >
-                    {{ closingRequestId === request.id ? 'Fermeture...' : 'Marquer trouvée' }}
-                  </button>
-                  <button
-                    type="button"
-                    class="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-error px-4 text-sm font-semibold text-error transition hover:bg-error/5 disabled:cursor-not-allowed disabled:opacity-50"
-                    [disabled]="request.status !== 'ACTIVE' || cancellingRequestId === request.id"
-                    (click)="cancelRequest(request)"
-                  >
-                    {{ cancellingRequestId === request.id ? 'Annulation...' : 'Annuler' }}
-                  </button>
-                </div>
+            <a [routerLink]="['/parcel-requests', request.id]" class="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-3 rounded-xl border border-border bg-white p-5 transition hover:border-primary/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:gap-x-6 sm:p-6">
+              <div class="min-w-0">
+                <h2 class="break-words text-lg font-bold leading-7 text-primary sm:text-xl">{{ request.departure }} → {{ request.destination }}</h2>
+                <p class="mt-1 break-words text-sm leading-6 text-text-primary sm:text-base">{{ request.packageTitle }} · {{ request.weight }} kg</p>
+                <p class="mt-3 flex items-center gap-2 text-sm text-text-secondary">
+                  <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v4m8-4v4M4 10h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" /></svg>
+                  {{ dateLabel(request.desiredDate) }}
+                </p>
               </div>
-            </article>
+              <div class="flex shrink-0 flex-col items-end gap-4">
+                <span class="rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="statusClass(request.status)">{{ statusLabel(request.status) }}</span>
+                <svg class="h-6 w-6 text-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7" /></svg>
+              </div>
+            </a>
           }
         </div>
       }

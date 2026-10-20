@@ -1,105 +1,86 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { NEVER, of } from 'rxjs';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { NEVER, of, throwError } from 'rxjs';
 import { ParcelRequestService } from '../../services/parcel-request.service';
+import { ParcelRequestDetailPageComponent } from '../parcel-request-detail/parcel-request-detail-page.component';
 import { ParcelRequestsPageComponent } from './parcel-requests-page.component';
 
 describe('ParcelRequestsPageComponent', () => {
   let fixture: ComponentFixture<ParcelRequestsPageComponent>;
-  let component: ParcelRequestsPageComponent;
-
-  const myRequest = {
-    id: 1,
-    senderId: 10,
-    senderName: 'Alice Sender',
-    departure: 'Paris',
-    destination: 'Abidjan',
-    desiredDate: '2026-07-01',
-    packageTitle: 'Documents',
-    weight: 2,
-    status: 'ACTIVE' as const,
-  };
-
-  const parcelRequestServiceMock = {
-    getMyRequests: jasmine.createSpy('getMyRequests').and.returnValue(of([])),
-    closeRequest: jasmine.createSpy('closeRequest').and.returnValue(of({ ...myRequest, status: 'CLOSED' })),
-    cancelRequest: jasmine.createSpy('cancelRequest').and.returnValue(of(void 0)),
-  };
+  const request = { id: 1, senderId: 10, senderName: 'Alice', departure: 'Paris', destination: 'Abidjan', desiredDate: '2026-07-01', packageTitle: 'Documents', weight: 2, status: 'ACTIVE' as const, description: 'Fragile', packagePhotoUrl: '/photo.png', createdAt: '2026-06-01T12:00:00' };
+  let service: jasmine.SpyObj<ParcelRequestService>;
 
   beforeEach(async () => {
+    service = jasmine.createSpyObj('ParcelRequestService', ['getMyRequests', 'getMyRequest', 'closeRequest']);
+    service.getMyRequests.and.returnValue(of([]));
+    service.getMyRequest.and.returnValue(of(request));
+    service.closeRequest.and.returnValue(of({ ...request, status: 'CLOSED' }));
     await TestBed.configureTestingModule({
       imports: [ParcelRequestsPageComponent],
-      providers: [
-        provideRouter([]),
-        { provide: ParcelRequestService, useValue: parcelRequestServiceMock },
-      ],
+      providers: [provideRouter([
+        { path: 'parcel-requests', component: ParcelRequestsPageComponent },
+        { path: 'parcel-requests/:id', component: ParcelRequestDetailPageComponent },
+      ]), { provide: ParcelRequestService, useValue: service }],
     }).compileComponents();
-
     fixture = TestBed.createComponent(ParcelRequestsPageComponent);
-    component = fixture.componentInstance;
-    spyOn(window, 'confirm').and.returnValue(true);
-    parcelRequestServiceMock.getMyRequests.calls.reset();
-    parcelRequestServiceMock.getMyRequests.and.returnValue(of([]));
-    parcelRequestServiceMock.closeRequest.calls.reset();
-    parcelRequestServiceMock.closeRequest.and.returnValue(of({ ...myRequest, status: 'CLOSED' }));
-    parcelRequestServiceMock.cancelRequest.calls.reset();
-    parcelRequestServiceMock.cancelRequest.and.returnValue(of(void 0));
   });
 
-  it('loads my requests on init', () => {
-    parcelRequestServiceMock.getMyRequests.and.returnValue(of([myRequest]));
-
+  it('renders ordered, linked summaries without management controls or tabs', () => {
+    service.getMyRequests.and.returnValue(of([request, { ...request, id: 2, status: 'CLOSED' }, { ...request, id: 3, status: 'CANCELLED', desiredDate: undefined }]));
     fixture.detectChanges();
-
-    expect(parcelRequestServiceMock.getMyRequests).toHaveBeenCalled();
-    expect(component.myRequests.length).toBe(1);
-    expect(fixture.nativeElement.querySelector('a[href="/parcel-requests/1"]')?.textContent).toContain('Voir le détail');
-    expect(fixture.nativeElement.textContent).toContain('Paris → Abidjan');
-    expect(fixture.nativeElement.textContent).toContain('Documents');
-    expect(fixture.nativeElement.textContent).not.toContain('Demandes disponibles');
+    const host: HTMLElement = fixture.nativeElement;
+    expect(Array.from(host.querySelectorAll('section a')).map(a => a.getAttribute('href'))).toEqual(['/parcel-requests/1', '/parcel-requests/2', '/parcel-requests/3']);
+    for (const text of ['Paris → Abidjan', 'Documents · 2 kg', 'Active', 'Trouvée', 'Annulée', 'Date flexible']) expect(host.textContent).toContain(text);
+    for (const text of ['Marquer trouvée', 'Annuler', 'Publiée le', 'Fragile']) expect(host.textContent).not.toContain(text);
+    expect(host.querySelector('[role="tablist"]')).toBeNull();
+    expect(host.querySelector('section button')).toBeNull();
+    expect(host.querySelector('img')).toBeNull();
+    expect(host.querySelector('section a')?.className).toContain('focus-visible:outline');
   });
 
-  it('shows an empty state when the user has no publications', () => {
+  it('shows an empty state and creation links', () => {
     fixture.detectChanges();
-
-    const host = fixture.nativeElement as HTMLElement;
-    const links = Array.from(host.querySelectorAll<HTMLAnchorElement>('a[href="/parcel-requests/new"]'));
-
-    expect(host.textContent).toContain('Mes besoins d’envoi');
-    expect(host.textContent).toContain('Publiez un besoin d’envoi pour trouver un voyageur qui effectue le même trajet, puis suivez ici l’état de votre recherche.');
+    const host: HTMLElement = fixture.nativeElement;
+    expect(host.textContent).toContain('Retrouvez et suivez vos demandes d’envoi.');
     expect(host.textContent).toContain('Vous n’avez encore créé aucun besoin d’envoi.');
-    expect(links.map((link) => link.textContent?.trim())).toEqual([
-      'Publier un besoin',
-      'Créer mon premier besoin',
-    ]);
-    expect(links[0].classList).toContain('shrink-0');
-    expect(links[0].classList).toContain('whitespace-nowrap');
+    expect(host.querySelectorAll('a[href="/parcel-requests/new"]').length).toBe(2);
   });
 
-  it('shows a loading indicator while publications are loading', () => {
-    parcelRequestServiceMock.getMyRequests.and.returnValue(NEVER);
-
+  it('shows loading without a premature empty state', () => {
+    service.getMyRequests.and.returnValue(NEVER);
     fixture.detectChanges();
-
-    expect(fixture.nativeElement.querySelector('.animate-spin')).not.toBeNull();
-    expect(fixture.nativeElement.textContent).not.toContain('Vous n’avez encore créé aucun besoin d’envoi.');
+    expect(fixture.nativeElement.querySelector('[role="status"]')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('aucun besoin');
   });
 
-  it('closes one of my active requests', () => {
-    component.myRequests = [myRequest];
-
-    component.closeRequest(myRequest);
-
-    expect(parcelRequestServiceMock.closeRequest).toHaveBeenCalledWith(1);
-    expect(component.myRequests[0].status).toBe('CLOSED');
+  it('retries a load failure without showing an empty state', () => {
+    service.getMyRequests.and.returnValue(throwError(() => new Error('offline')));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="alert"]')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('aucun besoin');
+    service.getMyRequests.and.returnValue(of([request]));
+    fixture.nativeElement.querySelector('button').click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Paris → Abidjan');
   });
 
-  it('cancels one of my active requests', () => {
-    component.myRequests = [myRequest];
-
-    component.cancelRequest(myRequest);
-
-    expect(parcelRequestServiceMock.cancelRequest).toHaveBeenCalledWith(1);
-    expect(component.myRequests[0].status).toBe('CANCELLED');
+  it('navigates from a card to its detail, closes it and reloads the list on return', async () => {
+    service.getMyRequests.and.returnValue(of([request]));
+    const harness = await RouterTestingHarness.create('/parcel-requests');
+    (harness.routeNativeElement!.querySelector('a[href="/parcel-requests/1"]') as HTMLAnchorElement).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(service.getMyRequest).toHaveBeenCalledWith(1);
+    const close = Array.from(harness.routeNativeElement!.querySelectorAll('button')).find(b => b.textContent?.includes('Marquer trouvée'))!;
+    close.click();
+    harness.detectChanges();
+    expect(harness.routeNativeElement!.textContent).toContain('Fermée');
+    service.getMyRequests.and.returnValue(of([{ ...request, status: 'CLOSED' }]));
+    (harness.routeNativeElement!.querySelector('a[href="/parcel-requests"]') as HTMLAnchorElement).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(service.getMyRequests).toHaveBeenCalledTimes(2);
+    expect(harness.routeNativeElement!.textContent).toContain('Trouvée');
   });
 });

@@ -52,9 +52,9 @@ public class ParcelRequestController {
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ParcelRequestResponse> getRequest(@PathVariable Long id,
+    public ResponseEntity<ParcelRequestResponse> getMyRequest(@PathVariable Long id,
             @AuthenticationPrincipal User currentUser) {
-        return ResponseEntity.ok(parcelRequestService.getRequest(id, currentUser));
+        return ResponseEntity.ok(parcelRequestService.getMyRequest(id, currentUser));
     }
 
     @PutMapping("/{id}")

@@ -4,7 +4,7 @@
     @if (isLoading) {
       <p role="status" class="notice">Chargement du besoin…</p>
     } @else if (loadError) {
-      <div class="notice" role="alert"><h1 id="request-title">{{ loadError }}</h1><button type="button" (click)="load()">Réessayer</button></div>
+      <div class="notice" role="alert"><h1 id="request-title">{{ loadError }}</h1>@if (!accessDenied) { <button type="button" (click)="load()">Réessayer</button> }</div>
     } @else {
     @if (request; as item) {
       <header class="request-heading">

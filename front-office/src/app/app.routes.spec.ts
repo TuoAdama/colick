@@ -16,6 +16,16 @@ describe('app routes', () => {
     expect(childRoute?.loadComponent).toBeDefined();
   });
 
+  it('places the authenticated parcel detail route after creation', () => {
+    const layout = routes.find(route => route.children?.some(child => child.path === 'parcel-requests'))!;
+    const children = layout.children!;
+    const creationIndex = children.findIndex(route => route.path === 'parcel-requests/new');
+    const detailIndex = children.findIndex(route => route.path === 'parcel-requests/:id');
+    expect(layout.canActivate?.length).toBeGreaterThan(0);
+    expect(detailIndex).toBeGreaterThan(creationIndex);
+    expect(children[detailIndex].loadComponent).toBeDefined();
+  });
+
   it('defines a public 404 route and a wildcard redirect', () => {
     const notFoundRoute = routes.find((currentRoute) => currentRoute.path === '404');
     const wildcardRoute = routes.find((currentRoute) => currentRoute.path === '**');

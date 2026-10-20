@@ -11,7 +11,7 @@ describe('ParcelRequestFormPageComponent', () => {
   let router: Router;
 
   const parcelRequestServiceMock = {
-    getRequest: jasmine.createSpy('getRequest'),
+    getMyRequest: jasmine.createSpy('getMyRequest'),
     updateRequest: jasmine.createSpy('updateRequest'),
     createRequest: jasmine.createSpy('createRequest').and.returnValue(of({ id: 1 })),
     uploadPhoto: jasmine.createSpy('uploadPhoto').and.returnValue(of({ id: 1 })),
@@ -47,9 +47,9 @@ describe('ParcelRequestFormPageComponent', () => {
     component = fixture.componentInstance;
     router = TestBed.inject(Router);
     spyOn(router, 'navigate').and.resolveTo(true);
-    parcelRequestServiceMock.getRequest.calls.reset();
+    parcelRequestServiceMock.getMyRequest.calls.reset();
     parcelRequestServiceMock.updateRequest.calls.reset();
-    parcelRequestServiceMock.getRequest.and.returnValue(of({ id: 5, departure: 'Lyon, France', destination: 'Dakar, Sénégal', packageTitle: 'Livres', weight: 3, status: 'ACTIVE', packagePhotoUrl: '/api/uploads/box.png' }));
+    parcelRequestServiceMock.getMyRequest.and.returnValue(of({ id: 5, departure: 'Lyon, France', destination: 'Dakar, Sénégal', packageTitle: 'Livres', weight: 3, status: 'ACTIVE', packagePhotoUrl: '/api/uploads/box.png' }));
     parcelRequestServiceMock.updateRequest.and.returnValue(of({ id: 5 }));
     parcelRequestServiceMock.createRequest.calls.reset();
     parcelRequestServiceMock.createRequest.and.returnValue(of({ id: 1 }));
@@ -150,12 +150,12 @@ describe('ParcelRequestFormPageComponent', () => {
 
   it('blocks editing an inactive need and handles a failed load', () => {
     component.requestId = 5;
-    parcelRequestServiceMock.getRequest.and.returnValue(of({ id: 5, status: 'CLOSED', departure: 'Paris', destination: 'Dakar' }));
+    parcelRequestServiceMock.getMyRequest.and.returnValue(of({ id: 5, status: 'CLOSED', departure: 'Paris', destination: 'Dakar' }));
     component.loadRequest();
     expect(component.isFormValid).toBeFalse();
     component.submit();
     expect(parcelRequestServiceMock.updateRequest).not.toHaveBeenCalled();
-    parcelRequestServiceMock.getRequest.and.returnValue(throwError(() => ({ status: 404 })));
+    parcelRequestServiceMock.getMyRequest.and.returnValue(throwError(() => ({ status: 404 })));
     component.loadRequest();
     expect(component.loadError).toContain('introuvable');
   });

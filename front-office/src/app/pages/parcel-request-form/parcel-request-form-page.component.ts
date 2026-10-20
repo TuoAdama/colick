@@ -89,7 +89,7 @@ export class ParcelRequestFormPageComponent implements OnInit {
     }
     this.isLoading = true;
     this.loadError = '';
-    this.parcelRequestService.getRequest(this.requestId).subscribe({
+    this.parcelRequestService.getMyRequest(this.requestId).subscribe({
       next: (request) => {
         this.isLoading = false;
         this.editable = request.status === 'ACTIVE';
