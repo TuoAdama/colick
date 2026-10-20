@@ -256,11 +256,16 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'parcel-requests/:id/edit',
+        loadComponent: () => import('./pages/parcel-request-form/parcel-request-form-page.component').then(
+          (m) => m.ParcelRequestFormPageComponent
+        ),
+      },
+      {
         path: 'parcel-requests/:id',
-        loadComponent: () =>
-          import('./pages/parcel-request-detail/parcel-request-detail-page.component').then(
-            (m) => m.ParcelRequestDetailPageComponent
-          ),
+        loadComponent: () => import('./pages/parcel-request-detail/parcel-request-detail-page.component').then(
+          (m) => m.ParcelRequestDetailPageComponent
+        ),
       },
       {
         path: 'parcel-requests',

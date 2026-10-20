@@ -23,6 +23,10 @@ public interface ParcelRequestService {
 
     ParcelRequestResponse getMyRequest(Long requestId, User sender);
 
+    ParcelRequestResponse updateRequest(Long requestId, CreateParcelRequestRequest request, User sender);
+
+    void removeRequest(Long requestId, User sender);
+
     ParcelRequestResponse closeRequest(Long requestId, User sender);
 
     void cancelRequest(Long requestId, User sender);

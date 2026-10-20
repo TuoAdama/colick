@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface ParcelRequestRepository extends JpaRepository<ParcelRequest, Long> {
 
-    List<ParcelRequest> findBySenderOrderByCreatedAtDesc(User sender);
+    List<ParcelRequest> findBySenderAndDeletedAtIsNullOrderByCreatedAtDesc(User sender);
 
-    List<ParcelRequest> findByStatusOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus status);
+    List<ParcelRequest> findByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus status);
 }

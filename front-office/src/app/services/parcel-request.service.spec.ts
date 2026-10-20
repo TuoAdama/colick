@@ -59,14 +59,28 @@ describe('ParcelRequestService', () => {
     req.flush([]);
   });
 
-  it('loads one owned request and normalizes its photos', () => {
-    service.getMyRequest(5).subscribe(request => {
-      expect(request.packagePhotoUrl).toBe('/api/uploads/box.png');
-      expect(request.senderPhotoUrl).toBe('/api/uploads/alice.png');
-    });
-    const req = httpMock.expectOne('/api/parcel-requests/5');
-    expect(req.request.method).toBe('GET');
-    req.flush({ id: 5, packagePhotoUrl: '/uploads/box.png', senderPhotoUrl: '/uploads/alice.png' });
+  it('fetches and updates an owner request and normalizes its photo', () => {
+    service.getMyRequest(5).subscribe(request => expect(request.packagePhotoUrl).toBe('/api/uploads/box.png'));
+    const get = httpMock.expectOne('/api/parcel-requests/5');
+    expect(get.request.method).toBe('GET');
+    get.flush({ id: 5, packagePhotoUrl: '/uploads/box.png' });
+    const body = { departure: 'Paris', destination: 'Abidjan', packageTitle: 'Livres', weight: 3 };
+    service.updateRequest(5, body).subscribe();
+    const put = httpMock.expectOne('/api/parcel-requests/5');
+    expect(put.request.method).toBe('PUT');
+    expect(put.request.body).toEqual(body);
+    put.flush({ id: 5 });
+  });
+
+  it('uses distinct endpoints for cancellation and removal', () => {
+    service.cancelRequest(5).subscribe();
+    const cancel = httpMock.expectOne('/api/parcel-requests/5');
+    expect(cancel.request.method).toBe('DELETE');
+    cancel.flush(null);
+    service.removeRequest(5).subscribe();
+    const remove = httpMock.expectOne('/api/parcel-requests/5/remove');
+    expect(remove.request.method).toBe('DELETE');
+    remove.flush(null);
   });
 
   it('uploads a package photo', () => {

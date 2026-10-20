@@ -75,7 +75,7 @@ describe('ParcelRequestsPageComponent', () => {
     const close = Array.from(harness.routeNativeElement!.querySelectorAll('button')).find(b => b.textContent?.includes('Marquer trouvée'))!;
     close.click();
     harness.detectChanges();
-    expect(harness.routeNativeElement!.textContent).toContain('Trouvée');
+    expect(harness.routeNativeElement!.textContent).toContain('Fermée');
     service.getMyRequests.and.returnValue(of([{ ...request, status: 'CLOSED' }]));
     (harness.routeNativeElement!.querySelector('a[href="/parcel-requests"]') as HTMLAnchorElement).click();
     await harness.fixture.whenStable();

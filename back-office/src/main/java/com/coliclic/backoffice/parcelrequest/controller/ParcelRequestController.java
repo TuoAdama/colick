@@ -52,10 +52,25 @@ public class ParcelRequestController {
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ParcelRequestResponse> getMyRequest(
-            @PathVariable Long id,
+    public ResponseEntity<ParcelRequestResponse> getMyRequest(@PathVariable Long id,
             @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(parcelRequestService.getMyRequest(id, currentUser));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ParcelRequestResponse> updateRequest(@PathVariable Long id,
+            @Valid @RequestBody CreateParcelRequestRequest request,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(parcelRequestService.updateRequest(id, request, currentUser));
+    }
+
+    @DeleteMapping("/{id}/remove")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> removeRequest(@PathVariable Long id,
+            @AuthenticationPrincipal User currentUser) {
+        parcelRequestService.removeRequest(id, currentUser);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/close")

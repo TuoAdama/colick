@@ -63,6 +63,9 @@ public class ParcelRequest {
     @Column
     private LocalDateTime updatedAt;
 
+    @Column
+    private LocalDateTime deletedAt;
+
     @PrePersist
     void onCreate() {
         LocalDateTime now = LocalDateTime.now();
