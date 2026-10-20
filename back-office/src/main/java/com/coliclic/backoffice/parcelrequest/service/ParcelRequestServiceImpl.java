@@ -65,9 +65,8 @@ public class ParcelRequestServiceImpl implements ParcelRequestService {
         String normalizedDeparture = normalizeOptionalSearchValue(departure);
         String normalizedDestination = normalizeOptionalSearchValue(destination);
 
-        return parcelRequestRepository.findByStatusOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE)
+        return parcelRequestRepository.findByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE)
                 .stream()
-                .filter(request -> request.getDeletedAt() == null)
                 .filter(request -> currentUser == null
                         || !request.getSender().getId().equals(currentUser.getId()))
                 .filter(request -> matches(request.getNormalizedDeparture(), normalizedDeparture))
@@ -80,8 +79,7 @@ public class ParcelRequestServiceImpl implements ParcelRequestService {
     @Override
     @Transactional(readOnly = true)
     public List<ParcelRequestResponse> getMyRequests(User sender) {
-        return parcelRequestRepository.findBySenderOrderByCreatedAtDesc(sender).stream()
-                .filter(request -> request.getDeletedAt() == null)
+        return parcelRequestRepository.findBySenderAndDeletedAtIsNullOrderByCreatedAtDesc(sender).stream()
                 .map(ParcelRequestResponse::from)
                 .toList();
     }

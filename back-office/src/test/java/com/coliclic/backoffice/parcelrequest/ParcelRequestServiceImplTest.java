@@ -84,7 +84,7 @@ class ParcelRequestServiceImplTest {
         ParcelRequest own = parcelRequest(11L, traveler, "Paris", "Abidjan", LocalDate.of(2026, 7, 1));
         ParcelRequest wrongDestination = parcelRequest(12L, sender, "Paris", "Dakar", LocalDate.of(2026, 7, 1));
         ParcelRequest wrongDate = parcelRequest(13L, sender, "Paris", "Abidjan", LocalDate.of(2026, 7, 2));
-        when(parcelRequestRepository.findByStatusOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE))
+        when(parcelRequestRepository.findByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE))
                 .thenReturn(List.of(matching, own, wrongDestination, wrongDate));
 
         List<ParcelRequestResponse> responses = service.getAvailableRequests(
@@ -97,7 +97,7 @@ class ParcelRequestServiceImplTest {
     void getAvailableRequests_shouldAllowAnonymousSearch() {
         ParcelRequest first = parcelRequest(10L, sender, "Paris", "Abidjan", LocalDate.of(2026, 7, 1));
         ParcelRequest second = parcelRequest(11L, traveler, "Paris", "Abidjan", LocalDate.of(2026, 7, 1));
-        when(parcelRequestRepository.findByStatusOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE))
+        when(parcelRequestRepository.findByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE))
                 .thenReturn(List.of(first, second));
 
         List<ParcelRequestResponse> responses = service.getAvailableRequests(
@@ -217,8 +217,8 @@ class ParcelRequestServiceImplTest {
         ParcelRequest removed = parcelRequest(10L, sender, "Paris", "Abidjan", null);
         removed.setDeletedAt(LocalDateTime.now());
         when(parcelRequestRepository.findById(10L)).thenReturn(Optional.of(removed));
-        when(parcelRequestRepository.findBySenderOrderByCreatedAtDesc(sender)).thenReturn(List.of(removed, visible));
-        when(parcelRequestRepository.findByStatusOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE)).thenReturn(List.of(removed, visible));
+        when(parcelRequestRepository.findBySenderAndDeletedAtIsNullOrderByCreatedAtDesc(sender)).thenReturn(List.of(visible));
+        when(parcelRequestRepository.findByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE)).thenReturn(List.of(visible));
         assertThat(service.getMyRequests(sender)).extracting(ParcelRequestResponse::getId).containsExactly(11L);
         assertThat(service.getAvailableRequests(null, null, null, null)).extracting(ParcelRequestResponse::getId).containsExactly(11L);
         assertThatThrownBy(() -> service.getRequest(10L, sender)).isInstanceOf(ResourceNotFoundException.class);

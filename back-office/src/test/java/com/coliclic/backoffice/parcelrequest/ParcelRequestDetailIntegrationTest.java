@@ -77,6 +77,28 @@ class ParcelRequestDetailIntegrationTest {
         assertThat(parcel.getPackagePhotoUrl()).isEqualTo("/uploads/box.png");
     }
 
+    @Test void repositoryQueries_excludeRemovedRowsAndKeepVisibleHistory() {
+        ParcelRequest removed = saveRequest(owner, ParcelRequest.ParcelRequestStatus.ACTIVE);
+        removed.setDeletedAt(java.time.LocalDateTime.now());
+        requests.saveAndFlush(removed);
+        ParcelRequest closed = saveRequest(owner, ParcelRequest.ParcelRequestStatus.CLOSED);
+        ParcelRequest cancelled = saveRequest(owner, ParcelRequest.ParcelRequestStatus.CANCELLED);
+        ParcelRequest otherActive = saveRequest(other, ParcelRequest.ParcelRequestStatus.ACTIVE);
+
+        assertThat(requests.findByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(ParcelRequest.ParcelRequestStatus.ACTIVE))
+                .extracting(ParcelRequest::getId)
+                .containsExactlyInAnyOrder(parcel.getId(), otherActive.getId());
+        assertThat(requests.findBySenderAndDeletedAtIsNullOrderByCreatedAtDesc(owner))
+                .extracting(ParcelRequest::getId)
+                .containsExactlyInAnyOrder(parcel.getId(), closed.getId(), cancelled.getId());
+    }
+
+    private ParcelRequest saveRequest(User sender, ParcelRequest.ParcelRequestStatus status) {
+        return requests.saveAndFlush(ParcelRequest.builder().sender(sender).departure("Paris")
+                .normalizedDeparture("paris").destination("Abidjan").normalizedDestination("abidjan")
+                .packageTitle("Livres").weight(BigDecimal.ONE).status(status).build());
+    }
+
     @Test void removedActiveRequest_isExcludedFromPublicSearch() throws Exception {
         mvc.perform(delete("/api" + path + "/remove").contextPath("/api").servletPath(path + "/remove").with(as(owner)).with(csrf())).andExpect(status().isNoContent());
         mvc.perform(get("/api/parcel-requests").contextPath("/api").servletPath("/parcel-requests")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
