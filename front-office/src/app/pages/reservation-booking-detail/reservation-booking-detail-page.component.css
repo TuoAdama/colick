@@ -1,0 +1,49 @@
+:host { display: block; color: #023047; font-family: 'DM Sans', sans-serif; }
+.booking-detail-page { min-height: 100dvh; background: #fafafa; }
+.booking-back a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px; color: #6b6b6b; }
+.booking-back svg { width: 16px; height: 16px; }
+.booking-layout { display: grid; gap: 28px; }
+.journey-stops { margin: 24px 0; padding: 0; list-style: none; }
+.journey-stop { position: relative; display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 20px; }
+.journey-stop.departure { padding-bottom: 28px; }
+.departure::after { content: ''; position: absolute; width: 2px; background: #d5d9dd; top: 25px; bottom: 8px; left: 7px; }
+.journey-dot { width: 16px; height: 16px; margin-top: 8px; border: 2px solid #219ebc; border-radius: 50%; }
+.arrival .journey-dot { background: #219ebc; }
+.journey-city { font-size: 26px; line-height: 1.25; font-weight: 700; }
+.journey-date svg, .settlement-note svg { flex-shrink: 0; width: 22px; height: 22px; }
+.detail-card { border: 1px solid #e8e8ec; border-radius: 16px; background: white; padding: 20px; }
+.profile-link { display: inline-flex; align-items: center; min-height: 44px; flex-shrink: 0; color: #087e98; font-size: 14px; font-weight: 700; }
+.message-button { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 12px 20px; border-radius: 12px; background: #023047; color: white; font-weight: 700; }
+.message-button svg { width: 22px; height: 22px; }
+.message-button:hover { background: #06445e; }
+.message-button:disabled, .copy-contact:disabled { opacity: .6; cursor: default; }
+a:focus-visible, button:focus-visible { outline: 2px solid #219ebc; outline-offset: 4px; }
+.package-section { border-top: 1px solid #e8e8ec; padding-top: 28px; margin-top: 4px; }
+.section-heading { margin-bottom: 16px; font-size: 22px; line-height: 1.3; font-weight: 700; letter-spacing: -.02em; }
+.package-overview { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 20px; }
+.package-title { min-width: 0; font-size: 24px; line-height: 1.3; font-weight: 700; }
+.package-weight { flex-shrink: 0; text-align: center; }
+.weight-badge { margin-top: 6px; padding: 6px 12px; border: 1px solid #d5d9dd; border-radius: 10px; font-weight: 700; white-space: nowrap; }
+.package-contact { display: flex; align-items: center; gap: 12px; border-top: 1px solid #e8e8ec; padding: 20px 0; }
+.contact-value { margin-top: 8px; font-size: 15px; user-select: text; }
+.copy-contact { flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; color: #087e98; }
+.copy-contact:hover { background: #edf9fb; }
+.copy-contact svg { width: 26px; height: 26px; }
+.copy-feedback { color: #023047; font-size: 14px; }
+.copy-feedback:not(:empty) { padding-bottom: 16px; }
+.copy-error { color: #b91c1c; }
+.package-description { border-top: 1px solid #e8e8ec; padding-top: 20px; }
+.package-description p:last-child { margin-top: 8px; font-size: 15px; line-height: 1.6; white-space: pre-line; }
+.booking-aside { min-width: 0; }
+.financial-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; color: #6b6b6b; border-bottom: 1px solid #e8e8ec; font-size: 14px; }
+.financial-row:first-child { padding-top: 0; }
+.financial-row strong { color: #023047; white-space: nowrap; font-size: 16px; }
+.financial-row strong.text-error { color: #b91c1c; }
+.financial-total { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 16px; padding: 16px; background: #edf9fb; border-radius: 12px; font-size: 14px; font-weight: 700; }
+.financial-total span { flex: 1 1 150px; }
+.financial-total strong { white-space: nowrap; font-size: 22px; }
+.settlement-note { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; color: #6b6b6b; font-size: 14px; line-height: 1.6; }
+.settlement-note svg { color: #087e98; }
+.journey-city, .journey-country, .sender-name, .package-title, .contact-value, .package-description, .financial-row span { overflow-wrap: anywhere; }
+@media (max-width: 389px) { .sender-card { padding: 16px; } .sender-card > div { gap: 10px; } .profile-link { font-size: 13px; } }
+@media (min-width: 1280px) { .booking-layout { grid-template-columns: minmax(0, 1.45fr) minmax(320px, .9fr); gap: 32px; } .booking-aside { position: sticky; top: 80px; align-self: start; } .detail-card { padding: 24px; } }
