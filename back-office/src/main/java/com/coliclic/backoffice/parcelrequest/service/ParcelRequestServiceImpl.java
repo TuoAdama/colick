@@ -83,6 +83,12 @@ public class ParcelRequestServiceImpl implements ParcelRequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ParcelRequestResponse getMyRequest(Long requestId, User sender) {
+        return ParcelRequestResponse.from(findOwnedRequest(requestId, sender));
+    }
+
+    @Override
     public ParcelRequestResponse closeRequest(Long requestId, User sender) {
         ParcelRequest request = findOwnedRequest(requestId, sender);
         request.setStatus(ParcelRequest.ParcelRequestStatus.CLOSED);

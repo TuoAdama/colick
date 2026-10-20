@@ -12,6 +12,8 @@ import com.coliclic.backoffice.support.TestLocalizedMessages;
 import com.coliclic.backoffice.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -104,6 +106,33 @@ class ParcelRequestServiceImplTest {
                 "par", "abidjan", LocalDate.of(2026, 7, 1), null);
 
         assertThat(responses).extracting(ParcelRequestResponse::getId).containsExactly(10L, 11L);
+    }
+
+    @ParameterizedTest
+    @EnumSource(ParcelRequest.ParcelRequestStatus.class)
+    void getMyRequest_shouldReadOwnerRequestInEveryStatus(ParcelRequest.ParcelRequestStatus status) {
+        ParcelRequest request = parcelRequest(10L, sender, "Paris", "Abidjan", null);
+        request.setStatus(status);
+        when(parcelRequestRepository.findById(10L)).thenReturn(Optional.of(request));
+        ParcelRequestResponse response = service.getMyRequest(10L, sender);
+        assertThat(response.getId()).isEqualTo(10L);
+        assertThat(response.getStatus()).isEqualTo(status);
+        verify(parcelRequestRepository, never()).save(any());
+    }
+
+    @Test
+    void getMyRequest_shouldRejectOtherOwner() {
+        when(parcelRequestRepository.findById(10L)).thenReturn(Optional.of(
+                parcelRequest(10L, sender, "Paris", "Abidjan", null)));
+        assertThatThrownBy(() -> service.getMyRequest(10L, traveler))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void getMyRequest_shouldRejectMissingRequest() {
+        when(parcelRequestRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.getMyRequest(99L, sender))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

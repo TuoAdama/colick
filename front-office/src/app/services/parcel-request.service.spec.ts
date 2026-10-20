@@ -59,6 +59,16 @@ describe('ParcelRequestService', () => {
     req.flush([]);
   });
 
+  it('loads one owned request and normalizes its photos', () => {
+    service.getMyRequest(5).subscribe(request => {
+      expect(request.packagePhotoUrl).toBe('/api/uploads/box.png');
+      expect(request.senderPhotoUrl).toBe('/api/uploads/alice.png');
+    });
+    const req = httpMock.expectOne('/api/parcel-requests/5');
+    expect(req.request.method).toBe('GET');
+    req.flush({ id: 5, packagePhotoUrl: '/uploads/box.png', senderPhotoUrl: '/uploads/alice.png' });
+  });
+
   it('uploads a package photo', () => {
     const file = new File(['x'], 'box.png', { type: 'image/png' });
     service.uploadPhoto(5, file).subscribe();
