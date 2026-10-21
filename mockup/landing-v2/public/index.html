@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="De main en main. Trouvez un voyageur pour envoyer votre colis avec Coliclic.">
+  <title>Coliclic — De main en main</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FB8500'/%3E%3Ctext x='7' y='25' font-size='25' font-family='Arial' font-weight='700' fill='%23023047'%3EC%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@500,600,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body class="bg-white font-sans text-ink antialiased">
+  <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+      <symbol id="i-route" viewBox="0 0 24 24"><path d="m3 10 18-7-7 18-3-8-8-3Z"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 11h18"/></symbol>
+      <symbol id="i-box" viewBox="0 0 24 24"><path d="m12 2 10 5.5v9L12 22 2 16.5v-9L12 2Zm0 20V11.5M2 7.5l10 4 10-4M7 4.75l10 5v5"/></symbol>
+      <symbol id="i-plane" viewBox="0 0 24 24"><path d="m22 2-6 20-4-9-10-4 20-7ZM12 13 22 2"/></symbol>
+      <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h16m-4-4 4 4-4 4M20 16H4m4-4-4 4 4 4"/></symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    </defs>
+  </svg>
+  <a href="#main" class="skip-link">Aller au contenu</a>
+  <header class="site-header shell relative flex items-center justify-between">
+    <a href="/" class="wordmark" aria-label="Coliclic — Accueil"><span class="text-orange">Coli</span>clic</a>
+    <nav class="hidden items-center gap-9 text-sm font-medium lg:flex" aria-label="Navigation principale">
+      <a data-app-path="/comment-ca-marche" href="http://localhost:4200/comment-ca-marche">Comment ça marche</a>
+      <a data-app-path="/?mode=transport" href="http://localhost:4200/?mode=transport">Je voyage</a>
+      <a data-app-path="/login" href="http://localhost:4200/login" class="login-link">Connexion <svg class="icon h-4 w-4"><use href="#i-arrow"/></svg></a>
+    </nav>
+    <button id="menu-toggle" type="button" class="menu-toggle lg:hidden" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mobile-menu"><svg class="icon h-7 w-7"><use href="#i-menu"/></svg></button>
+    <nav id="mobile-menu" class="mobile-menu" aria-label="Navigation mobile" hidden>
+      <a data-app-path="/comment-ca-marche" href="http://localhost:4200/comment-ca-marche">Comment ça marche</a>
+      <a data-app-path="/?mode=transport" href="http://localhost:4200/?mode=transport">Je voyage</a>
+      <a data-app-path="/login" href="http://localhost:4200/login">Connexion</a>
+    </nav>
+  </header>
+  <main id="main">
+    <div class="hero-clip">
+      <section class="hero shell relative" aria-labelledby="hero-title">
+        <h1 id="hero-title" class="hero-title entrance">De main<br>en <span class="text-orange">main</span><span class="sr-only"> — envoyez vos colis avec des voyageurs</span></h1>
+        <div class="hero-photo entrance" style="--delay:100ms">
+          <img src="/assets/handoff.webp" alt="Deux voyageurs souriants échangent un colis dans une gare lumineuse." width="1024" height="1024" fetchpriority="high">
+          <svg class="photo-ring" viewBox="0 0 600 600" aria-hidden="true"><path d="M42 138A290 290 0 0 1 322 10M10 310A290 290 0 0 0 260 590"/></svg>
+        </div>
+        <svg class="hero-route" viewBox="0 0 1000 560" fill="none" aria-hidden="true">
+          <path class="route-track" d="M290 465C322 383 443 450 492 329S538 174 637 168 763 159 801 85 879 36 915 36"/>
+          <g class="route-pin" transform="translate(263 412)"><path d="M32 18c0 12-16 28-16 28S0 30 0 18a16 16 0 1 1 32 0Z" fill="currentColor"/><circle cx="16" cy="17" r="6" fill="white"/></g>
+          <g class="flying-plane"><path d="m0-17 5 12 17 9-2 5-16-3-4 12-4-12-16 3-2-5 17-9Z" fill="currentColor" transform="rotate(48)"/></g>
+        </svg>
+      </section>
+    </div>
+    <section class="search-section shell entrance" style="--delay:200ms" aria-label="Rechercher un trajet">
+      <div class="mode-tabs" role="tablist" aria-label="Que souhaitez-vous faire ?">
+        <button id="mode-send" class="mode-tab" type="button" role="tab" aria-selected="true" aria-controls="search-panel" tabindex="0" data-mode="send"><svg class="icon"><use href="#i-box"/></svg>Envoyer</button>
+        <button id="mode-transport" class="mode-tab" type="button" role="tab" aria-selected="false" aria-controls="search-panel" tabindex="-1" data-mode="transport"><svg class="icon"><use href="#i-plane"/></svg>Voyager</button>
+      </div>
+      <div id="search-panel" role="tabpanel" aria-labelledby="mode-send">
+        <form id="search-form" class="search-form" novalidate>
+          <div class="route-fields">
+            <div class="field-wrap">
+              <label class="search-field" for="departure"><svg class="icon field-icon text-orange"><use href="#i-pin"/></svg><span class="field-copy"><span class="field-label">Départ</span><input id="departure" name="departure" type="text" placeholder="Ville de départ" autocomplete="off" required aria-required="true" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="departure-list" aria-describedby="departure-status form-error"></span><svg class="icon chevron"><use href="#i-chevron"/></svg></label>
+              <ul id="departure-list" class="suggestions" role="listbox" aria-label="Villes de départ" hidden></ul>
+              <span id="departure-status" class="field-status" role="status"></span>
+            </div>
+            <button id="swap" type="button" class="swap-button" aria-label="Inverser le départ et la destination"><svg class="icon h-5 w-5"><use href="#i-swap"/></svg></button>
+            <div class="field-wrap">
+              <label class="search-field" for="destination"><svg class="icon field-icon text-orange"><use href="#i-route"/></svg><span class="field-copy"><span class="field-label">Destination</span><input id="destination" name="destination" type="text" placeholder="Ville d’arrivée" autocomplete="off" required aria-required="true" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="destination-list" aria-describedby="destination-status form-error"></span><svg class="icon chevron"><use href="#i-chevron"/></svg></label>
+              <ul id="destination-list" class="suggestions" role="listbox" aria-label="Villes d’arrivée" hidden></ul>
+              <span id="destination-status" class="field-status" role="status"></span>
+            </div>
+          </div>
+          <label class="search-field date-field" for="date"><svg class="icon field-icon"><use href="#i-calendar"/></svg><span class="field-copy"><span class="field-label" id="date-label">À partir du</span><input id="date" name="date" type="date" aria-label="À partir du — date facultative"></span></label>
+          <button type="submit" class="search-submit"><span id="submit-label">Trouver un voyageur</span><svg class="icon h-6 w-6"><use href="#i-arrow"/></svg></button>
+        </form>
+        <p id="form-error" class="form-error" role="alert"></p>
+        <a id="publish-trip" class="publish-link" data-app-path="/propose" href="http://localhost:4200/propose" hidden>Vous partez bientôt ? Publier un trajet <svg class="icon h-4 w-4"><use href="#i-arrow"/></svg></a>
+      </div>
+    </section>
+    <section class="recommendations shell" aria-labelledby="trips-title">
+      <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div><p class="eyebrow">Les prochains départs</p><h2 id="trips-title" class="section-title">Un voyage, <span class="text-orange">des possibilités.</span></h2></div>
+        <a data-app-path="/search" href="http://localhost:4200/search" class="all-trips">Voir tous les trajets <svg class="icon h-5 w-5"><use href="#i-arrow"/></svg></a>
+      </div>
+      <div id="feed-status" role="status" class="sr-only" aria-live="polite"></div>
+      <div id="trip-feed" class="trip-grid" aria-busy="true"></div>
+      <noscript><p class="feed-message">Activez JavaScript pour rechercher et afficher les trajets disponibles.</p></noscript>
+    </section>
+  </main>
+  <footer class="shell flex items-center justify-between gap-4 border-t border-ink/10 py-7 text-xs text-muted"><a href="/" class="font-semibold text-ink">Coliclic<span class="text-orange">.</span></a><span>De main en main.</span></footer>
+</body>
+</html>
