@@ -31,7 +31,8 @@ Le serveur écoute uniquement sur `127.0.0.1`. Il sert les fichiers de `public/`
 - Suggestions après deux caractères et 250 ms, sélection à la souris ou avec les flèches/Entrée ; Échap ferme la liste. Les anciennes réponses sont invalidées dès une nouvelle saisie ou une inversion.
 - Jusqu’à trois trajets réels sont chargés sans demander la géolocalisation. Le pays est déduit du fuseau horaire selon la correspondance existante de l’application ; sans correspondance, le pays est omis. Aucun exemple ne remplace les résultats de l’API.
 - Le flux présente chargement, vide, erreur et Réessayer ; délai maximum de 8 secondes. Sans référence publique, la carte reste visible sans lien de réservation ; le profil reste accessible.
-- Animation d’entrée de 600 ms, trajet/avion sur 1,5 seconde une seule fois, cartes révélées au défilement. `prefers-reduced-motion: reduce` désactive les animations et conserve tout le contenu visible.
+- Animations au défilement : titre et photo entrent de côtés opposés, formulaire et titre des recommandations remontent progressivement ; les cartes apparaissent avec un décalage de 90 ms. Les éléments sortis par le bas se réaniment lorsqu’ils reviennent dans le cadre. Un léger effet de parallaxe et de zoom accompagne le défilement de la photo et du titre. Le trajet/avion reste animé sur 1,5 seconde à l’ouverture.
+- `prefers-reduced-motion: reduce` désactive aussi la parallaxe, y compris lorsque la préférence change pendant la visite. Le contenu reste visible sans JavaScript ou sans IntersectionObserver. Une prise de focus au clavier révèle immédiatement le formulaire ou la carte.
 
 ## Vérifications
 
@@ -40,7 +41,7 @@ npm test
 npm run build
 ```
 
-15 tests Jasmine couvrent la logique du formulaire, les réponses obsolètes, le formatage, les liens, les flux vide/erreur et le proxy HTTP (routes autorisées, suppression des cookies, interdiction des écritures, délai d’attente).
+20 tests Jasmine couvrent la logique du formulaire, les réponses obsolètes, le formatage, les liens, les flux vide/erreur et le proxy HTTP (routes autorisées, suppression des cookies, interdiction des écritures, délai d’attente), ainsi que les animations au scroll : entrée/sortie, focus clavier, changement de préférence de mouvement, absence d’observateur et regroupement des événements dans une frame.
 
 Contrôles fonctionnels effectués dans le navigateur Codex :
 
