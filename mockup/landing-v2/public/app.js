@@ -1,4 +1,5 @@
 import { DEFAULT_APP_ORIGIN, changeMode, createAutocomplete, feedUrl, fetchJson, loadFeed, searchUrl, swapRoute, tripPresentation } from './model.js';
+import { createScrollMotion } from './motion.js';
 
 const $ = selector => document.querySelector(selector);
 const icon = name => {
@@ -169,10 +170,8 @@ $('#search-form').addEventListener('submit', event => {
 
 const feed = $('#trip-feed');
 const feedStatus = $('#feed-status');
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const observer = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
-  for (const entry of entries) if (entry.isIntersecting) { entry.target.classList.add('reveal'); observer.unobserve(entry.target); }
-}, { threshold: .08 }) : null;
+const motion = createScrollMotion();
+document.querySelectorAll('[data-scroll-reveal]').forEach(target => motion.observe(target));
 
 function tripCard(data, index) {
   const trip = tripPresentation(data, appOrigin);
@@ -201,12 +200,12 @@ function tripCard(data, index) {
   traveler.append(element('span', 'avatar', trip.initials), identity);
   bottom.append(traveler, element('span', 'capacity', trip.capacity));
   card.append(top, route, date, bottom);
-  if (observer && !reducedMotion.matches) observer.observe(card);
+  motion.observe(card);
   return card;
 }
 
 async function refreshFeed() {
-  observer?.disconnect();
+  feed.querySelectorAll('.trip-card').forEach(card => motion.unobserve(card));
   feed.replaceChildren();
   feed.setAttribute('aria-busy', 'true');
   feedStatus.textContent = 'Chargement des trajets recommandés.';

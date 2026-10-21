@@ -46,9 +46,9 @@
   <main id="main">
     <div class="hero-clip">
       <section class="hero shell relative" aria-labelledby="hero-title">
-        <h1 id="hero-title" class="hero-title entrance">De main<br>en <span class="text-orange">main</span><span class="sr-only"> — envoyez vos colis avec des voyageurs</span></h1>
-        <div class="hero-photo entrance" style="--delay:100ms">
-          <img src="/assets/handoff.webp" alt="Deux voyageurs souriants échangent un colis dans une gare lumineuse." width="1024" height="1024" fetchpriority="high">
+        <h1 id="hero-title" class="hero-title" data-scroll-reveal data-reveal-direction="left">De main<br>en <span class="text-orange">main</span><span class="sr-only"> — envoyez vos colis avec des voyageurs</span></h1>
+        <div class="hero-photo" data-scroll-reveal data-reveal-direction="right" style="--delay:100ms">
+          <div class="photo-window"><img src="/assets/handoff.webp" alt="Deux voyageurs souriants échangent un colis dans une gare lumineuse." width="1024" height="1024" fetchpriority="high"></div>
           <svg class="photo-ring" viewBox="0 0 600 600" aria-hidden="true"><path d="M42 138A290 290 0 0 1 322 10M10 310A290 290 0 0 0 260 590"/></svg>
         </div>
         <svg class="hero-route" viewBox="0 0 1000 560" fill="none" aria-hidden="true">
@@ -58,7 +58,7 @@
         </svg>
       </section>
     </div>
-    <section class="search-section shell entrance" style="--delay:200ms" aria-label="Rechercher un trajet">
+    <section class="search-section shell" data-scroll-reveal style="--delay:100ms" aria-label="Rechercher un trajet">
       <div class="mode-tabs" role="tablist" aria-label="Que souhaitez-vous faire ?">
         <button id="mode-send" class="mode-tab" type="button" role="tab" aria-selected="true" aria-controls="search-panel" tabindex="0" data-mode="send"><svg class="icon"><use href="#i-box"/></svg>Envoyer</button>
         <button id="mode-transport" class="mode-tab" type="button" role="tab" aria-selected="false" aria-controls="search-panel" tabindex="-1" data-mode="transport"><svg class="icon"><use href="#i-plane"/></svg>Voyager</button>
@@ -86,7 +86,7 @@
       </div>
     </section>
     <section class="recommendations shell" aria-labelledby="trips-title">
-      <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end" data-scroll-reveal>
         <div><p class="eyebrow">Les prochains départs</p><h2 id="trips-title" class="section-title">Un voyage, <span class="text-orange">des possibilités.</span></h2></div>
         <a data-app-path="/search" href="http://localhost:4200/search" class="all-trips">Voir tous les trajets <svg class="icon h-5 w-5"><use href="#i-arrow"/></svg></a>
       </div>
