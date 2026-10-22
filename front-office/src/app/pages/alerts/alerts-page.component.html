@@ -1,93 +1,97 @@
-<div class="min-h-screen bg-background-primary pt-6 pb-12 font-['Poppins']">
-  <div class="mx-auto max-w-5xl px-4 sm:px-6">
-    <div class="rounded-2xl bg-white p-6 shadow-sm">
-      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 class="text-lg font-semibold text-text-primary">Mes alertes</h2>
-          <p class="mt-1 text-sm text-text-secondary">
-            Retrouvez vos recherches sauvegardees et supprimez celles qui ne sont plus utiles.
-          </p>
-        </div>
-        <a
-          routerLink="/search"
-          class="inline-flex items-center justify-center gap-2 rounded-lg bg-secondary px-6 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-opacity-90"
-        >
-          Nouvelle recherche
-        </a>
-      </div>
+<div class="min-h-screen bg-background-primary pb-12 pt-20">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <header class="mb-6">
+      <h1 class="text-2xl font-bold text-primary sm:text-3xl">Mes alertes</h1>
+      <p class="mt-3 text-sm leading-6 text-text-secondary sm:text-base">Retrouvez vos recherches sauvegardées.</p>
+      <a
+        routerLink="/search"
+        class="mt-6 flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-accent px-5 text-sm font-bold text-white transition hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:text-base"
+      >
+        <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14M5 12h14" /></svg>
+        Nouvelle recherche
+      </a>
+    </header>
 
+    <section aria-label="Mes recherches sauvegardées" [attr.aria-busy]="isLoadingAlerts">
       @if (actionError) {
-        <div class="mb-4 rounded-lg bg-error/10 px-4 py-3 text-sm text-error" role="alert">
+        <div class="mb-4 rounded-xl border border-error/20 bg-error/10 px-5 py-4 text-sm text-error" role="alert">
           {{ actionError }}
         </div>
       }
 
       @if (isLoadingAlerts) {
-        <div class="flex justify-center py-8" aria-label="Chargement en cours">
-          <div class="h-6 w-6 animate-spin rounded-full border-2 border-secondary border-t-transparent"></div>
+        <div class="flex justify-center py-12" role="status">
+          <div class="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" aria-hidden="true"></div>
+          <span class="sr-only">Chargement de vos alertes…</span>
         </div>
-      } @else if (alerts.length === 0) {
-        <div class="py-10 text-center text-sm text-text-secondary">
+      } @else if (alerts.length > 0) {
+        <div class="grid gap-4">
+          @for (alert of alerts; track alert.id) {
+            <article class="min-w-0 rounded-xl border border-border bg-white p-5 sm:p-6">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <h2 class="min-w-0 break-words text-lg font-bold leading-7 text-primary sm:text-xl">
+                  {{ alert.departure }} → {{ alert.destination }}
+                </h2>
+                <span class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-success/10 px-3 py-1.5 text-xs font-semibold text-success">
+                  <span class="h-2 w-2 rounded-full bg-success" aria-hidden="true"></span>
+                  Active
+                </span>
+              </div>
+
+              <div class="mt-4 flex flex-wrap gap-3 text-sm text-text-secondary">
+                <p class="inline-flex min-w-0 max-w-full items-center gap-2 rounded-2xl bg-border/40 px-3 py-2.5">
+                  <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v4m8-4v4M4 10h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" /></svg>
+                  <span class="min-w-0 break-words">{{ dateLabel(alert.date) }}</span>
+                </p>
+                <p class="inline-flex min-w-0 max-w-full items-center gap-2 rounded-2xl bg-border/40 px-3 py-2.5">
+                  <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 4H11L3 12a2 2 0 0 0 0 3l6 6a2 2 0 0 0 3 0l8-8V4Z" /><circle cx="16" cy="8" r="1" /></svg>
+                  <span class="min-w-0 break-words">{{ priceLabel(alert) }}</span>
+                </p>
+              </div>
+
+              @if (createdAtLabel(alert.createdAt); as createdAtText) {
+                <p class="mt-4 text-sm leading-6 text-text-secondary">Créée le {{ createdAtText }}</p>
+              }
+
+              <div class="mt-6 flex items-center justify-between gap-3 border-t border-border pt-3">
+                <a
+                  [routerLink]="['/search']"
+                  [queryParams]="alertSearchQueryParams(alert)"
+                  class="inline-flex min-h-[44px] min-w-0 items-center gap-2 rounded-lg text-sm font-bold text-primary transition hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:text-base"
+                >
+                  Voir les trajets
+                  <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16m-6-6 6 6-6 6" /></svg>
+                </a>
+                <button
+                  type="button"
+                  class="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg text-error transition hover:bg-error/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error disabled:cursor-not-allowed disabled:opacity-50"
+                  [attr.aria-label]="(deletingAlertId === alert.id ? 'Suppression en cours de l’alerte ' : 'Supprimer l’alerte ') + alert.departure + ' vers ' + alert.destination"
+                  [attr.aria-busy]="deletingAlertId === alert.id"
+                  [disabled]="deletingAlertId !== null"
+                  (click)="deleteAlert(alert)"
+                >
+                  @if (deletingAlertId === alert.id) {
+                    <span class="h-5 w-5 animate-spin rounded-full border-2 border-error border-t-transparent" aria-hidden="true"></span>
+                  } @else {
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 15h12l1-15M10 10v7m4-7v7" /></svg>
+                  }
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      } @else if (!actionError) {
+        <div class="rounded-xl border border-border bg-white px-6 py-12 text-center text-sm text-text-secondary">
           <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10" aria-hidden="true">
             <svg class="h-7 w-7 text-accent" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M18 8.5A6 6 0 0 0 6 8.5c0 7-3 7-3 9h18c0-2-3-2-3-9Z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M14.2 20a2.4 2.4 0 0 1-4.4 0" />
             </svg>
           </div>
-          <p class="mb-5">Vous n'avez aucune alerte active pour le moment.</p>
-          <a
-            routerLink="/search"
-            class="inline-flex items-center gap-2 rounded-lg bg-secondary px-6 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-opacity-90"
-          >
-            Explorer les trajets
-          </a>
-        </div>
-      } @else {
-        <div class="space-y-4">
-          @for (alert of alerts; track alert.id) {
-            <article class="rounded-2xl border border-border bg-surface p-5">
-              <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-3">
-                    <h3 class="text-base font-semibold text-text-primary">
-                      {{ alert.departure }} -> {{ alert.destination }}
-                    </h3>
-                    <span class="inline-flex rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
-                      Active
-                    </span>
-                  </div>
-
-                  <div class="mt-3 grid gap-3 text-sm text-text-secondary sm:grid-cols-2">
-                    <p><span class="font-medium text-text-primary">Date :</span> {{ dateLabel(alert.date) }}</p>
-                    <p><span class="font-medium text-text-primary">Prix :</span> {{ priceLabel(alert) }}</p>
-                    @if (createdAtLabel(alert.createdAt); as createdAtText) {
-                      <p><span class="font-medium text-text-primary">Creee le :</span> {{ createdAtText }}</p>
-                    }
-                  </div>
-                </div>
-
-                <div class="flex flex-col gap-2 md:pl-6">
-                  <a
-                    [routerLink]="['/search']"
-                    [queryParams]="alertSearchQueryParams(alert)"
-                    class="inline-flex min-w-32 items-center justify-center rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/5"
-                  >
-                    Voir
-                  </a>
-                  <button
-                    type="button"
-                    class="inline-flex min-w-32 items-center justify-center rounded-lg border border-error px-4 py-2 text-sm font-semibold text-error transition hover:bg-error/5 disabled:cursor-not-allowed disabled:opacity-50"
-                    [disabled]="deletingAlertId === alert.id"
-                    (click)="deleteAlert(alert)"
-                  >
-                    {{ deletingAlertId === alert.id ? 'Suppression...' : 'Supprimer' }}
-                  </button>
-                </div>
-              </div>
-            </article>
-          }
+          <p>Vous n’avez aucune alerte active pour le moment.</p>
+          <a routerLink="/search" class="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-accent px-5 font-bold text-white transition hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">Explorer les trajets</a>
         </div>
       }
-    </div>
+    </section>
   </div>
 </div>

@@ -49,7 +49,7 @@ export class AlertsPageComponent implements OnInit {
     if (this.deletingAlertId !== null) {
       return;
     }
-    if (!confirm('Etes-vous sur de vouloir supprimer cette alerte ?')) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette alerte ?')) {
       return;
     }
 
@@ -115,10 +115,10 @@ export class AlertsPageComponent implements OnInit {
       return `${alert.minPrice} - ${alert.maxPrice} €/kg`;
     }
     if (alert.minPrice !== null && alert.minPrice !== undefined) {
-      return `Des ${alert.minPrice} €/kg`;
+      return `Dès ${alert.minPrice} €/kg`;
     }
     if (alert.maxPrice !== null && alert.maxPrice !== undefined) {
-      return `Jusqu'a ${alert.maxPrice} €/kg`;
+      return `Jusqu’à ${alert.maxPrice} €/kg`;
     }
     return 'Tous prix';
   }
