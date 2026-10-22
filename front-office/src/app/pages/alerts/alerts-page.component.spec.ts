@@ -101,6 +101,15 @@ describe('AlertsPageComponent', () => {
     fixture.detectChanges();
   }
 
+  it('leaves the main landmark to the application shell', () => {
+    renderAlerts([{ id: 1, departure: 'Nantes', destination: 'Abidjan' }]);
+
+    const page: HTMLElement = fixture.nativeElement;
+    expect(page.querySelector('main, [role="main"]')).toBeNull();
+    expect(page.querySelector('h1')?.textContent).toBe('Mes alertes');
+    expect(page.querySelector('section[aria-label="Mes recherches sauvegardées"]')).not.toBeNull();
+  });
+
   it('renders the chosen layout and default criteria without missing creation metadata', () => {
     renderAlerts([{ id: 1, departure: 'Nantes', destination: 'Abidjan' }]);
 
