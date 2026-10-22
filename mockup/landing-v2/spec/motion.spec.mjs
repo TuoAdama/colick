@@ -12,15 +12,16 @@ function target() {
 }
 
 describe('Scroll motion accessibility and lifecycle', () => {
-  let callback, observe, unobserve, disconnect, preference, root, view, title, photo, events, frameCallback;
+  let callback, observe, unobserve, disconnect, preference, desktop, root, view, title, photo, events, frameCallback;
   beforeEach(() => {
     events = {};
     title = target(); photo = target();
     preference = { matches: false, addEventListener: (_event, fn) => { events.preference = fn; }, removeEventListener: jasmine.createSpy() };
+    desktop = { matches: true, addEventListener: (_event, fn) => { events.desktop = fn; }, removeEventListener: jasmine.createSpy() };
     observe = jasmine.createSpy('observe'); unobserve = jasmine.createSpy('unobserve'); disconnect = jasmine.createSpy('disconnect');
     view = {
       innerHeight: 800,
-      matchMedia: () => preference,
+      matchMedia: query => query === '(prefers-reduced-motion: reduce)' ? preference : desktop,
       IntersectionObserver: class { constructor(fn) { callback = fn; } observe = observe; unobserve = unobserve; disconnect = disconnect; },
       addEventListener: (event, fn) => { events[event] = fn; },
       removeEventListener: jasmine.createSpy(),
@@ -85,12 +86,33 @@ describe('Scroll motion accessibility and lifecycle', () => {
     events.scroll(); events.scroll();
     expect(view.requestAnimationFrame.calls.count()).toBe(1);
     frameCallback();
-    expect(title.properties.get('--title-shift')).toBe('-14px');
+    expect(title.properties.size).toBe(0);
     expect(photo.properties.get('--photo-shift')).toBe('-11px');
     expect(Number(photo.properties.get('--photo-zoom'))).toBeCloseTo(1.06);
     motion.destroy();
     expect(title.properties.size).toBe(0);
     expect(photo.properties.size).toBe(0);
     expect(disconnect).toHaveBeenCalled();
+  });
+  it('never hides the primary title, form or any field even if registered', () => {
+    const motion = createScrollMotion({ root, view });
+    const form = target(); form.matches = () => true;
+    const heading = target(); heading.matches = () => true;
+    const input = target(); input.closest = () => form;
+    [form, heading, input].forEach(node => motion.observe(node));
+    expect(observe).not.toHaveBeenCalled();
+    expect(form.classes.size + heading.classes.size + input.classes.size).toBe(0);
+    motion.destroy();
+  });
+  it('removes desktop parallax when switching to the mobile thumbnail', () => {
+    const motion = createScrollMotion({ root, view });
+    frameCallback();
+    expect(photo.properties.has('--photo-zoom')).toBeTrue();
+    desktop.matches = false;
+    events.desktop();
+    frameCallback();
+    expect(photo.properties.size).toBe(0);
+    expect(title.properties.size).toBe(0);
+    motion.destroy();
   });
 });
