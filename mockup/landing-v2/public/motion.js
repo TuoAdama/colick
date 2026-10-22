@@ -1,9 +1,9 @@
 /** Progressive enhancement: everything remains visible without JavaScript/observer support. */
 export function createScrollMotion({ root = document, view = window } = {}) {
   const preference = view.matchMedia('(prefers-reduced-motion: reduce)');
+  const desktop = view.matchMedia('(min-width: 1024px)');
   const targets = new Set();
   const hero = root.querySelector('.hero');
-  const title = root.querySelector('.hero-title');
   const photo = root.querySelector('.hero-photo img');
   let frame = null;
   const observer = view.IntersectionObserver ? new view.IntersectionObserver(entries => {
@@ -19,9 +19,13 @@ export function createScrollMotion({ root = document, view = window } = {}) {
 
   function updateParallax() {
     frame = null;
+    if (!desktop.matches) {
+      photo?.style.removeProperty('--photo-shift');
+      photo?.style.removeProperty('--photo-zoom');
+      return;
+    }
     const bounds = hero?.getBoundingClientRect();
     const progress = bounds ? Math.max(0, Math.min(1, -bounds.top / Math.max(bounds.height, 1))) : 0;
-    title?.style.setProperty('--title-shift', `${-progress * 28}px`);
     photo?.style.setProperty('--photo-shift', `${-progress * 22}px`);
     photo?.style.setProperty('--photo-zoom', String(1.02 + progress * .08));
   }
@@ -39,7 +43,6 @@ export function createScrollMotion({ root = document, view = window } = {}) {
   function preferenceChanged() {
     if (frame !== null) view.cancelAnimationFrame(frame);
     frame = null;
-    title?.style.removeProperty('--title-shift');
     photo?.style.removeProperty('--photo-shift');
     photo?.style.removeProperty('--photo-zoom');
     targets.forEach(configure);
@@ -52,20 +55,25 @@ export function createScrollMotion({ root = document, view = window } = {}) {
   view.addEventListener('scroll', scroll, { passive: true });
   view.addEventListener('resize', scroll);
   preference.addEventListener('change', preferenceChanged);
+  desktop.addEventListener('change', preferenceChanged);
   root.addEventListener('focusin', focus);
   scroll();
   return {
-    observe(target) { targets.add(target); configure(target); },
+    observe(target) {
+      // Primary tasks are immediately visible, even if accidentally registered.
+      if (target.matches?.('.hero-title, .search-section') || target.closest?.('.search-section')) return;
+      targets.add(target); configure(target);
+    },
     unobserve(target) { targets.delete(target); observer?.unobserve(target); },
     destroy() {
       observer?.disconnect();
       view.removeEventListener('scroll', scroll);
       view.removeEventListener('resize', scroll);
       preference.removeEventListener('change', preferenceChanged);
+      desktop.removeEventListener('change', preferenceChanged);
       root.removeEventListener('focusin', focus);
       if (frame !== null) view.cancelAnimationFrame(frame);
       targets.forEach(target => target.classList.remove('scroll-reveal', 'is-revealed'));
-      title?.style.removeProperty('--title-shift');
       photo?.style.removeProperty('--photo-shift');
       photo?.style.removeProperty('--photo-zoom');
     },

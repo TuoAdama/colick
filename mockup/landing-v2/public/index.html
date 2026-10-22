@@ -44,46 +44,46 @@
     </nav>
   </header>
   <main id="main">
-    <div class="hero-clip">
-      <section class="hero shell relative" aria-labelledby="hero-title">
-        <h1 id="hero-title" class="hero-title" data-scroll-reveal data-reveal-direction="left">De main<br>en <span class="text-orange">main</span><span class="sr-only"> — envoyez vos colis avec des voyageurs</span></h1>
-        <div class="hero-photo" data-scroll-reveal data-reveal-direction="right" style="--delay:100ms">
+    <section class="hero shell" aria-labelledby="hero-title">
+      <h1 id="hero-title" class="hero-title">De main<br>en <span class="text-orange">main</span><span class="sr-only"> — envoyez vos colis avec des voyageurs</span></h1>
+      <div class="hero-visual">
+        <div class="hero-photo">
           <div class="photo-window"><img src="/assets/handoff.webp" alt="Deux voyageurs souriants échangent un colis dans une gare lumineuse." width="1024" height="1024" fetchpriority="high"></div>
           <svg class="photo-ring" viewBox="0 0 600 600" aria-hidden="true"><path d="M42 138A290 290 0 0 1 322 10M10 310A290 290 0 0 0 260 590"/></svg>
         </div>
-        <svg class="hero-route" viewBox="0 0 1000 560" fill="none" aria-hidden="true">
-          <path class="route-track" d="M290 465C322 383 443 450 492 329S538 174 637 168 763 159 801 85 879 36 915 36"/>
-          <g class="route-pin" transform="translate(263 412)"><path d="M32 18c0 12-16 28-16 28S0 30 0 18a16 16 0 1 1 32 0Z" fill="currentColor"/><circle cx="16" cy="17" r="6" fill="white"/></g>
+        <svg class="hero-route" viewBox="0 0 600 600" fill="none" aria-hidden="true">
+          <path class="route-track" d="M44 475C30 414 50 355 66 290S84 126 198 110 310 132 395 60 480 38 542 43"/>
+          <g class="route-pin" transform="translate(20 445)"><path d="M32 18c0 12-16 28-16 28S0 30 0 18a16 16 0 1 1 32 0Z" fill="currentColor"/><circle cx="16" cy="17" r="6" fill="white"/></g>
           <g class="flying-plane"><path d="m0-17 5 12 17 9-2 5-16-3-4 12-4-12-16 3-2-5 17-9Z" fill="currentColor" transform="rotate(48)"/></g>
         </svg>
+      </div>
+      <section class="search-section" aria-label="Rechercher un trajet">
+        <div class="mode-tabs" role="tablist" aria-label="Que souhaitez-vous faire ?">
+          <button id="mode-send" class="mode-tab" type="button" role="tab" aria-selected="true" aria-controls="search-panel" tabindex="0" data-mode="send"><svg class="icon"><use href="#i-box"/></svg>Envoyer</button>
+          <button id="mode-transport" class="mode-tab" type="button" role="tab" aria-selected="false" aria-controls="search-panel" tabindex="-1" data-mode="transport"><svg class="icon"><use href="#i-plane"/></svg>Voyager</button>
+        </div>
+        <div id="search-panel" role="tabpanel" aria-labelledby="mode-send">
+          <form id="search-form" class="search-form" novalidate>
+            <div class="route-fields">
+              <div class="field-wrap">
+                <label class="search-field" for="departure"><svg class="icon field-icon text-orange"><use href="#i-pin"/></svg><span class="field-copy"><span class="field-label">Départ</span><input id="departure" name="departure" type="text" placeholder="Ville de départ" autocomplete="off" required aria-required="true" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="departure-list" aria-describedby="departure-status form-error"></span><svg class="icon chevron"><use href="#i-chevron"/></svg></label>
+                <ul id="departure-list" class="suggestions" role="listbox" aria-label="Villes de départ" hidden></ul>
+                <span id="departure-status" class="field-status" role="status"></span>
+              </div>
+              <button id="swap" type="button" class="swap-button" aria-label="Inverser le départ et la destination"><svg class="icon h-5 w-5"><use href="#i-swap"/></svg></button>
+              <div class="field-wrap">
+                <label class="search-field" for="destination"><svg class="icon field-icon text-orange"><use href="#i-route"/></svg><span class="field-copy"><span class="field-label">Destination</span><input id="destination" name="destination" type="text" placeholder="Ville d’arrivée" autocomplete="off" required aria-required="true" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="destination-list" aria-describedby="destination-status form-error"></span><svg class="icon chevron"><use href="#i-chevron"/></svg></label>
+                <ul id="destination-list" class="suggestions" role="listbox" aria-label="Villes d’arrivée" hidden></ul>
+                <span id="destination-status" class="field-status" role="status"></span>
+              </div>
+            </div>
+            <label class="search-field date-field" for="date"><svg class="icon field-icon"><use href="#i-calendar"/></svg><span class="field-copy"><span class="field-label" id="date-label">À partir du</span><input id="date" name="date" type="date" aria-label="À partir du — date facultative"></span></label>
+            <button type="submit" class="search-submit"><span id="submit-label">Trouver un voyageur</span><svg class="icon h-6 w-6"><use href="#i-arrow"/></svg></button>
+          </form>
+          <p id="form-error" class="form-error" role="alert"></p>
+          <a id="publish-trip" class="publish-link" data-app-path="/propose" href="http://localhost:4200/propose" hidden>Vous partez bientôt ? Publier un trajet <svg class="icon h-4 w-4"><use href="#i-arrow"/></svg></a>
+        </div>
       </section>
-    </div>
-    <section class="search-section shell" data-scroll-reveal style="--delay:100ms" aria-label="Rechercher un trajet">
-      <div class="mode-tabs" role="tablist" aria-label="Que souhaitez-vous faire ?">
-        <button id="mode-send" class="mode-tab" type="button" role="tab" aria-selected="true" aria-controls="search-panel" tabindex="0" data-mode="send"><svg class="icon"><use href="#i-box"/></svg>Envoyer</button>
-        <button id="mode-transport" class="mode-tab" type="button" role="tab" aria-selected="false" aria-controls="search-panel" tabindex="-1" data-mode="transport"><svg class="icon"><use href="#i-plane"/></svg>Voyager</button>
-      </div>
-      <div id="search-panel" role="tabpanel" aria-labelledby="mode-send">
-        <form id="search-form" class="search-form" novalidate>
-          <div class="route-fields">
-            <div class="field-wrap">
-              <label class="search-field" for="departure"><svg class="icon field-icon text-orange"><use href="#i-pin"/></svg><span class="field-copy"><span class="field-label">Départ</span><input id="departure" name="departure" type="text" placeholder="Ville de départ" autocomplete="off" required aria-required="true" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="departure-list" aria-describedby="departure-status form-error"></span><svg class="icon chevron"><use href="#i-chevron"/></svg></label>
-              <ul id="departure-list" class="suggestions" role="listbox" aria-label="Villes de départ" hidden></ul>
-              <span id="departure-status" class="field-status" role="status"></span>
-            </div>
-            <button id="swap" type="button" class="swap-button" aria-label="Inverser le départ et la destination"><svg class="icon h-5 w-5"><use href="#i-swap"/></svg></button>
-            <div class="field-wrap">
-              <label class="search-field" for="destination"><svg class="icon field-icon text-orange"><use href="#i-route"/></svg><span class="field-copy"><span class="field-label">Destination</span><input id="destination" name="destination" type="text" placeholder="Ville d’arrivée" autocomplete="off" required aria-required="true" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="destination-list" aria-describedby="destination-status form-error"></span><svg class="icon chevron"><use href="#i-chevron"/></svg></label>
-              <ul id="destination-list" class="suggestions" role="listbox" aria-label="Villes d’arrivée" hidden></ul>
-              <span id="destination-status" class="field-status" role="status"></span>
-            </div>
-          </div>
-          <label class="search-field date-field" for="date"><svg class="icon field-icon"><use href="#i-calendar"/></svg><span class="field-copy"><span class="field-label" id="date-label">À partir du</span><input id="date" name="date" type="date" aria-label="À partir du — date facultative"></span></label>
-          <button type="submit" class="search-submit"><span id="submit-label">Trouver un voyageur</span><svg class="icon h-6 w-6"><use href="#i-arrow"/></svg></button>
-        </form>
-        <p id="form-error" class="form-error" role="alert"></p>
-        <a id="publish-trip" class="publish-link" data-app-path="/propose" href="http://localhost:4200/propose" hidden>Vous partez bientôt ? Publier un trajet <svg class="icon h-4 w-4"><use href="#i-arrow"/></svg></a>
-      </div>
     </section>
     <section class="recommendations shell" aria-labelledby="trips-title">
       <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end" data-scroll-reveal>
