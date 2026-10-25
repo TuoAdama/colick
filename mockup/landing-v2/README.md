@@ -1,4 +1,4 @@
-# Coliclic — De main en main
+# Coliclic — Expédiez vos colis avec des voyageurs de confiance
 
 Prototype indépendant en HTML, Tailwind CSS 3 et JavaScript natif. La landing Angular n’est pas modifiée. Aucun déploiement n’est effectué.
 
@@ -27,7 +27,7 @@ Le serveur écoute uniquement sur `127.0.0.1`. Il sert les fichiers de `public/`
 ## Comportement
 
 - Desktop : titre et formulaire dans la colonne de gauche, photo circulaire limitée à 440 px à droite. Départ et destination sont côte à côte, suivis de la date et du bouton pleine largeur. Tablette : titre et petite photo au-dessus du formulaire, avec les villes côte à côte dès 768 px. Mobile : bandeau compact avec miniature, menu déroulant et formulaire vertical ; une variante compacte s’applique aux écrans de 640 px de haut ou moins.
-- Le titre tient sur une ligne dès 768 px (44–56 px sur tablette, 44–60 px sur desktop), suivi de « Expediez vos colis avec des voyageurs de confiance. ». Sous 768 px, le titre reste sur deux lignes et le sous-titre occupe toute la largeur avant les onglets. À l’ouverture, le titre se déplace légèrement sur 500 ms et le sous-titre apparaît sur 400 ms après 100 ms ; ces effets sont désactivés avec la réduction des mouvements.
+- Le texte principal est « Expédiez vos colis avec des voyageurs de confiance », avec « confiance » en orange. Il se répartit naturellement sur plusieurs lignes selon la largeur, sans sous-titre répété. Le titre conserve son entrée légère de 500 ms, désactivée avec la réduction des mouvements.
 - Le titre, les onglets, les champs et le bouton sont visibles dès le rendu HTML : aucune animation au scroll ne peut les masquer. Le formulaire n’est pas déplacé par JavaScript et la page ne défile ni ne prend le focus automatiquement à l’ouverture.
 - Les modes Envoyer et Voyager partagent villes et date ; le mode est reflété dans `?mode=transport`. La recherche utilise les noms des villes sélectionnées ou la saisie libre. En mode Envoyer, la date représente une borne de départ minimum ; en mode Voyager, une date souhaitée.
 - Suggestions après deux caractères et 250 ms, sélection à la souris ou avec les flèches/Entrée ; Échap ferme la liste. Les anciennes réponses sont invalidées dès une nouvelle saisie ou une inversion.
@@ -55,7 +55,7 @@ Contrôles fonctionnels effectués dans le navigateur Codex :
 - États vide et erreur/Réessayer via des serveurs de test temporaires, arrêtés après vérification.
 - Règles de réduction du mouvement activées dans une feuille de style de test : `animation-name: none`, opacité 1 et trajet visible. La préférence du système de l’utilisateur n’a pas été modifiée.
 
-Vérification du titre et du sous-titre : 375×667, 768×1024, 1024×768, 1204×695, 1440×900 et 1920×1080 pixels CSS, sans débordement horizontal. Le bouton reste visible sur les six formats ; le titre tient sur une ligne dès 768 px.
+Vérification du titre et du sous-titre : 375×667, 768×1024, 1024×768, 1204×695, 1440×900 et 1920×1080 pixels CSS, sans débordement horizontal. Le bouton reste visible sur les six formats ; le titre se répartit sur plusieurs lignes selon la largeur.
 
 ## Photo
 

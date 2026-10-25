@@ -23,7 +23,7 @@ describe('Read-only preview server', () => {
   it('serves the independent page and app configuration', async () => {
     const page = await fetch(origin);
     expect(page.status).toBe(200);
-    expect(await page.text()).toContain('De main');
+    expect(await page.text()).toContain('Expédiez vos colis avec des voyageurs de');
     expect(await (await fetch(origin + '/config.json')).json()).toEqual({ appOrigin: 'http://localhost:4200' });
     expect((await fetch(origin + '/server.mjs')).status).toBe(404);
   });
