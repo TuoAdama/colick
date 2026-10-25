@@ -1,0 +1,29 @@
+:host { display: block; }
+.hero-photo { width: 100%; height: 100%; animation: photo-enter .6s ease-out both; }
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.photo-window { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; }
+.photo-window img { transform: translateY(var(--photo-shift, 0px)) scale(var(--photo-zoom, 1.02)); }
+.photo-ring { position: absolute; inset: -12px; width: calc(100% + 24px); height: calc(100% + 24px); fill: none; stroke: #FB8500; stroke-width: 3; stroke-linecap: round; }
+.hero-route { pointer-events: none; position: absolute; inset: 0; width: 100%; height: 100%; color: #FB8500; z-index: 3; overflow: visible; }
+.route-track { stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 7 10; }
+.route-track { clip-path: inset(0 100% 0 0); animation: draw-route 1.5s .3s ease-in-out forwards; }
+.flying-plane { offset-path: path('M44 475C30 414 50 355 66 290S84 126 198 110 310 132 395 60 480 38 542 43'); offset-rotate: auto; offset-distance: 100%; animation: fly-route 1.5s .3s ease-in-out both; }
+.route-pin { animation: fade-in .6s .2s both; }
+@keyframes photo-enter { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes draw-route { to { clip-path: inset(0); } }
+@keyframes fly-route { from { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } to { offset-distance: 100%; opacity: 1; } }
+@media (max-width: 1023px) {
+.hero-photo { animation: fade-in .35s ease-out both; }
+.hero-route { display: none; }
+}
+@media (max-width: 767px) {
+.hero-photo img { object-position: 42% center; }
+.photo-ring { inset: -7px; width: calc(100% + 14px); height: calc(100% + 14px); }
+}
+@media (prefers-reduced-motion: reduce) {
+.photo-window img { transform: none; }
+.route-track { clip-path: none; }
+.flying-plane { offset-distance: 100%; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

@@ -1,5 +1,5 @@
 <!-- Header - Fixed navigation -->
-<header class="fixed top-0 left-0 right-0 z-40 border-b border-border/70 bg-white/85 font-body backdrop-blur-xl" role="banner">
+<header [class.landing-header]="landing" class="fixed top-0 left-0 right-0 z-40 border-b border-border/70 bg-white/85 font-body backdrop-blur-xl" role="banner">
   <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between" aria-label="Navigation principale">
     <!-- Logo -->
     <a routerLink="/" class="text-[2rem] font-bold leading-none tracking-[-0.02em] text-primary shrink-0" aria-label="Coliclic - Accueil">
@@ -13,8 +13,11 @@
         [routerLinkActiveOptions]="{ exact: true }"
         class="transition hover:text-secondary"
       >
-        Comment ca marche
+        Comment ça marche
       </a>
+      @if (landing) {
+        <a routerLink="/" [queryParams]="{mode: 'transport'}" (click)="closeMenus()" class="transition hover:text-accent">Je voyage</a>
+      } @else {
       <a
         routerLink="/search"
         routerLinkActive="text-primary underline decoration-accent decoration-2 underline-offset-8"
@@ -34,6 +37,7 @@
       >
         Transporter un colis
       </a>
+      }
     </div>
 
     <!-- Right actions -->
@@ -155,6 +159,7 @@
           Connexion
         </a>
       }
+      @if (!landing || (authService.currentUser$ | async)) {
       <a
         routerLink="/propose"
         class="inline-flex items-center justify-center rounded-full bg-accent px-5 py-2 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-primary"
@@ -162,6 +167,7 @@
       >
         Publier un trajet
       </a>
+      }
     </div>
 
     <!-- Mobile Menu Button -->
@@ -248,7 +254,7 @@
               class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-background-primary transition-colors duration-200 text-sm"
               (click)="closeMenus()"
             >
-              Comment ca marche
+              Comment ça marche
             </a>
           </li>
           <li>
@@ -276,7 +282,7 @@
               class="block text-text-primary font-medium py-3 px-2 rounded-lg hover:bg-background-primary transition-colors duration-200 text-sm"
               (click)="closeMenus()"
             >
-              Comment ca marche
+              Comment ça marche
             </a>
           </li>
           <li>
