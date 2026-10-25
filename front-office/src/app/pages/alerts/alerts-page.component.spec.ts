@@ -81,6 +81,7 @@ describe('AlertsPageComponent', () => {
     component.alerts = [{ id: 7, departure: 'Paris', destination: 'Abidjan' }];
 
     component.deleteAlert(component.alerts[0]);
+    component.confirmDeleteAlert();
 
     expect(tripAlertServiceMock.deleteAlert).toHaveBeenCalledOnceWith(7);
     expect(component.alerts).toEqual([]);
@@ -91,8 +92,9 @@ describe('AlertsPageComponent', () => {
     component.alerts = [{ id: 7, departure: 'Paris', destination: 'Abidjan' }];
 
     component.deleteAlert(component.alerts[0]);
+    component.confirmDeleteAlert();
 
-    expect(component.actionError).toContain('Impossible de supprimer');
+    expect(component.deleteError).toContain('Impossible de supprimer');
     expect(component.deletingAlertId).toBeNull();
   });
 
@@ -195,49 +197,134 @@ describe('AlertsPageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('aucune alerte');
   });
 
-  it('allows cancelling deletion from the trash button', () => {
-    (window.confirm as jasmine.Spy).and.returnValue(false);
+  function openDeleteModal(): HTMLButtonElement {
+    const trigger: HTMLButtonElement = fixture.nativeElement.querySelector('article button');
+    trigger.focus();
+    trigger.click();
+    fixture.detectChanges();
+    return trigger;
+  }
+
+  function modalConfirmButton(): HTMLButtonElement {
+    return fixture.nativeElement.querySelector('[role="dialog"] button:not([data-testid])');
+  }
+
+  it('asks for confirmation without sending a delete request', async () => {
     renderAlerts([{ id: 7, departure: 'Nantes', destination: 'Abidjan' }]);
+    openDeleteModal();
+    await fixture.whenStable();
 
-    fixture.nativeElement.querySelector('article button').click();
-
-    expect(window.confirm).toHaveBeenCalledWith('Êtes-vous sûr de vouloir supprimer cette alerte ?');
+    const dialog: HTMLElement = fixture.nativeElement.querySelector('[role="dialog"]');
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(dialog.textContent).toContain('Supprimer cette alerte ?');
+    expect(dialog.textContent).toContain('Nantes → Abidjan');
+    expect(modalConfirmButton().textContent).toContain('Supprimer');
+    expect(document.activeElement).toBe(dialog.querySelector('[data-testid="confirm-modal-cancel"]'));
+    expect(window.confirm).not.toHaveBeenCalled();
     expect(tripAlertServiceMock.deleteAlert).not.toHaveBeenCalled();
     expect(component.alerts.length).toBe(1);
   });
+
+  it('cancels deletion and restores focus to the trash button', async () => {
+    renderAlerts([{ id: 7, departure: 'Nantes', destination: 'Abidjan' }]);
+    const trigger = openDeleteModal();
+    await fixture.whenStable();
+
+    fixture.nativeElement.querySelector('[data-testid="confirm-modal-cancel"]').click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+    expect(component.alertToDelete).toBeNull();
+    expect(tripAlertServiceMock.deleteAlert).not.toHaveBeenCalled();
+    expect(component.alerts.length).toBe(1);
+  });
+
+  for (const dismissal of ['Escape', 'backdrop']) {
+    it('dismisses confirmation through ' + dismissal + ' without deleting', () => {
+      renderAlerts([{ id: 7, departure: 'Nantes', destination: 'Abidjan' }]);
+      openDeleteModal();
+      const dialog: HTMLElement = fixture.nativeElement.querySelector('[role="dialog"]');
+      if (dismissal === 'Escape') {
+        dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      } else {
+        dialog.click();
+      }
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
+      expect(tripAlertServiceMock.deleteAlert).not.toHaveBeenCalled();
+    });
+  }
 
   it('shows deletion progress, prevents duplicate requests and renders empty state after deletion', () => {
     const response = new Subject<void>();
     tripAlertServiceMock.deleteAlert.and.returnValue(response);
     renderAlerts([{ id: 7, departure: 'Nantes', destination: 'Abidjan' }]);
-    const button: HTMLButtonElement = fixture.nativeElement.querySelector('article button');
-
-    button.click();
+    const trigger = openDeleteModal();
+    modalConfirmButton().click();
     fixture.detectChanges();
-    expect(button.disabled).toBeTrue();
-    expect(button.getAttribute('aria-busy')).toBe('true');
-    expect(button.getAttribute('aria-label')).toContain('Suppression en cours');
-    component.deleteAlert(component.alerts[0]);
+
+    expect(trigger.disabled).toBeTrue();
+    expect(trigger.getAttribute('aria-busy')).toBe('true');
+    expect(modalConfirmButton().disabled).toBeTrue();
+    expect(modalConfirmButton().textContent).toContain('Suppression…');
+    expect(fixture.nativeElement.querySelector('[data-testid="confirm-modal-cancel"]').disabled).toBeTrue();
+    component.confirmDeleteAlert();
+    component.deleteAlert({ id: 8, departure: 'Paris', destination: 'Dakar' });
+    component.cancelDeleteAlert();
+    const dialog: HTMLElement = fixture.nativeElement.querySelector('[role="dialog"]');
+    dialog.click();
+    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+    expect(component.alertToDelete?.id).toBe(7);
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')).not.toBeNull();
     expect(tripAlertServiceMock.deleteAlert).toHaveBeenCalledOnceWith(7);
 
     response.next();
     response.complete();
     fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
     expect(fixture.nativeElement.querySelector('article')).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('aucune alerte');
   });
 
-  it('keeps the card and enables retrying deletion when it fails', () => {
+  it('keeps the selected alert and allows retrying inside the modal when deletion fails', () => {
     tripAlertServiceMock.deleteAlert.and.returnValue(throwError(() => new Error('failed')));
     renderAlerts([{ id: 7, departure: 'Nantes', destination: 'Abidjan' }]);
-
-    fixture.nativeElement.querySelector('article button').click();
+    openDeleteModal();
+    modalConfirmButton().click();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent)
+    expect(fixture.nativeElement.querySelector('[role="dialog"] [role="alert"]').textContent)
       .toContain('Impossible de supprimer');
-    expect(fixture.nativeElement.querySelector('article button').disabled).toBeFalse();
+    expect(modalConfirmButton().disabled).toBeFalse();
     expect(component.alerts.length).toBe(1);
+    tripAlertServiceMock.deleteAlert.and.returnValue(of(void 0));
+    modalConfirmButton().click();
+    fixture.detectChanges();
+    expect(tripAlertServiceMock.deleteAlert).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
+    expect(component.alerts).toEqual([]);
   });
 
+  it('deletes only the selected alert and clears an old modal error on reopening', () => {
+    renderAlerts([
+      { id: 7, departure: 'Nantes', destination: 'Abidjan' },
+      { id: 8, departure: 'Paris', destination: 'Dakar' },
+    ]);
+    component.deleteAlert(component.alerts[0]);
+    component.deleteError = 'Previous failure';
+    component.cancelDeleteAlert();
+    component.confirmDeleteAlert();
+    expect(tripAlertServiceMock.deleteAlert).not.toHaveBeenCalled();
+    component.deleteAlert(component.alerts[1]);
+    fixture.detectChanges();
+    expect(component.deleteError).toBe('');
+    expect(fixture.nativeElement.querySelector('[role="dialog"]').textContent).toContain('Paris → Dakar');
+    modalConfirmButton().click();
+    fixture.detectChanges();
+    expect(tripAlertServiceMock.deleteAlert).toHaveBeenCalledOnceWith(8);
+    expect(component.alerts.map(alert => alert.id)).toEqual([7]);
+  });
 });

@@ -4,11 +4,12 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { TripAlertService } from '../../services/trip-alert.service';
 import { TripAlert } from '../../models/trip-alert.model';
+import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
 
 @Component({
   selector: 'app-alerts-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ConfirmModalComponent],
   templateUrl: './alerts-page.component.html',
 })
 export class AlertsPageComponent implements OnInit {
@@ -20,6 +21,8 @@ export class AlertsPageComponent implements OnInit {
   isLoadingAlerts = false;
   actionError = '';
   deletingAlertId: number | null = null;
+  alertToDelete: TripAlert | null = null;
+  deleteError = '';
 
   ngOnInit(): void {
     if (!this.authService.isLoggedIn()) {
@@ -49,19 +52,34 @@ export class AlertsPageComponent implements OnInit {
     if (this.deletingAlertId !== null) {
       return;
     }
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette alerte ?')) {
+    this.deleteError = '';
+    this.alertToDelete = alert;
+  }
+
+  cancelDeleteAlert(): void {
+    if (this.deletingAlertId !== null) {
+      return;
+    }
+    this.alertToDelete = null;
+    this.deleteError = '';
+  }
+
+  confirmDeleteAlert(): void {
+    const alert = this.alertToDelete;
+    if (!alert || this.deletingAlertId !== null) {
       return;
     }
 
-    this.actionError = '';
+    this.deleteError = '';
     this.deletingAlertId = alert.id;
     this.tripAlertService.deleteAlert(alert.id).subscribe({
       next: () => {
         this.alerts = this.alerts.filter((currentAlert) => currentAlert.id !== alert.id);
         this.deletingAlertId = null;
+        this.alertToDelete = null;
       },
       error: () => {
-        this.actionError = "Impossible de supprimer cette alerte pour le moment.";
+        this.deleteError = 'Impossible de supprimer cette alerte pour le moment. Veuillez réessayer.';
         this.deletingAlertId = null;
       },
     });

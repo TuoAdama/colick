@@ -95,3 +95,15 @@
     </section>
   </div>
 </div>
+
+<app-confirm-modal
+  [isOpen]="alertToDelete !== null"
+  title="Supprimer cette alerte ?"
+  [message]="'Souhaitez-vous supprimer l’alerte ' + (alertToDelete?.departure ?? '') + ' → ' + (alertToDelete?.destination ?? '') + ' ? Cette action est définitive.'"
+  [confirmLabel]="deletingAlertId !== null ? 'Suppression…' : 'Supprimer'"
+  variant="danger"
+  [isLoading]="deletingAlertId !== null"
+  [errorMessage]="deleteError"
+  (confirmed)="confirmDeleteAlert()"
+  (cancelled)="cancelDeleteAlert()"
+/>
