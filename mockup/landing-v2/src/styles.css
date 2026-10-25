@@ -142,7 +142,7 @@ a:hover { color: #cb6400; }
   .site-header { height: 64px; }
   .wordmark { font-size: 35px; letter-spacing: -1.7px; }
   .hero { grid-template-columns: minmax(0, 1fr) 96px; gap: 16px; padding-block: 12px 16px; }
-  .hero-title { font-size: clamp(36px, 10.6vw, 48px); line-height: 1.02; white-space: normal; }
+  .hero-title { font-size: clamp(30px, 8vw, 36px); line-height: 1.02; white-space: normal; }
   .hero-title-break { display: inline; }
   .hero-visual { width: 96px; }
   .hero-photo img { object-position: 42% center; }
@@ -178,7 +178,7 @@ a:hover { color: #cb6400; }
 @media (max-width: 767px) and (max-height: 640px) {
   .site-header { height: 56px; }
   .hero { grid-template-columns: minmax(0, 1fr) 80px; gap: 12px; padding-top: 8px; }
-  .hero-title { font-size: 36px; }
+  .hero-title { font-size: 30px; }
   .hero-visual { width: 80px; }
   .mode-tab { min-height: 44px; padding-block: 6px 10px; }
   .search-form { gap: 8px; margin-top: 8px; }
