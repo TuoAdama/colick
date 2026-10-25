@@ -129,8 +129,7 @@ a:hover { color: #cb6400; }
   .site-header { height: 72px; }
   .wordmark { font-size: 40px; }
   .hero { grid-template-columns: minmax(0, 1fr) 120px; grid-template-areas: 'title visual' 'subtitle subtitle' 'search search'; gap: 20px; padding-block: 16px; }
-  .hero-title { font-size: 56px; white-space: normal; }
-  .hero-title-break { display: inline; }
+  .hero-title { font-size: clamp(44px, 5.6vw, 56px); align-self: center; }
   .hero-visual { width: 120px; }
   .hero-photo { animation: fade-in .35s ease-out both; }
   .hero-route { display: none; }
@@ -143,7 +142,8 @@ a:hover { color: #cb6400; }
   .site-header { height: 64px; }
   .wordmark { font-size: 35px; letter-spacing: -1.7px; }
   .hero { grid-template-columns: minmax(0, 1fr) 96px; gap: 16px; padding-block: 12px 16px; }
-  .hero-title { font-size: clamp(36px, 10.6vw, 48px); line-height: 1.02; align-self: center; }
+  .hero-title { font-size: clamp(36px, 10.6vw, 48px); line-height: 1.02; white-space: normal; }
+  .hero-title-break { display: inline; }
   .hero-visual { width: 96px; }
   .hero-photo img { object-position: 42% center; }
   .photo-ring { inset: -7px; width: calc(100% + 14px); height: calc(100% + 14px); }
