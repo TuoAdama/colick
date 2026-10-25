@@ -327,7 +327,15 @@ describe('LandingPageComponent', () => {
     fixture.detectChanges();
     expect(geolocationMock.getCurrentPosition).not.toHaveBeenCalled();
     expect(fixture.nativeElement.textContent).toContain('Un voyage,');
-    expect(tripServiceMock.getLandingFeed).toHaveBeenCalledWith(jasmine.anything(), 3);
+    expect(tripServiceMock.getLandingFeed).toHaveBeenCalledTimes(1);
+    expect(tripServiceMock.getLandingFeed.calls.mostRecent().args[1]).toBe(3);
+  });
+
+  it('deduces France explicitly from the Paris timezone', () => {
+    spyOn(Intl, 'DateTimeFormat').and.returnValue({ resolvedOptions: () => ({ timeZone: 'Europe/Paris' }) } as Intl.DateTimeFormat);
+    fixture.detectChanges();
+    expect(tripServiceMock.getLandingFeed).toHaveBeenCalledWith('France', 3);
+    expect(geolocationMock.getCurrentPosition).not.toHaveBeenCalled();
   });
 
   it('shows the validated headline, local image and a single shared form', () => {
