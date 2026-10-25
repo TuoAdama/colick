@@ -22,8 +22,10 @@ a:hover { color: #cb6400; }
 .mobile-menu { position: absolute; top: calc(100% - 4px); left: 0; right: 0; padding: 16px; border-radius: 16px; border: 1px solid #ede7df; background: white; box-shadow: 0 12px 40px #02304712; }
 .mobile-menu a { display: block; padding: 14px; border-radius: 8px; }
 .mobile-menu a:hover { background: #FFF5E9; }
-.hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); grid-template-areas: 'title visual' 'search visual'; column-gap: 60px; row-gap: 20px; align-items: start; padding-block: 20px 28px; }
-.hero-title { grid-area: title; font-family: 'General Sans', Arial, sans-serif; font-size: clamp(64px, 5.6vw, 80px); font-weight: 700; letter-spacing: -.06em; line-height: 1; }
+.hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); grid-template-areas: 'title visual' 'subtitle visual' 'search visual'; column-gap: 60px; row-gap: 20px; align-items: start; padding-block: 20px 28px; }
+.hero-title { grid-area: title; font-family: 'General Sans', Arial, sans-serif; font-size: clamp(44px, 4.4vw, 60px); font-weight: 700; letter-spacing: -.06em; line-height: 1; white-space: nowrap; animation: title-enter .5s ease-out both; }
+.hero-title-break { display: none; }
+.hero-subtitle { grid-area: subtitle; min-width: 0; color: #023047; font-size: clamp(16px, 1.4vw, 18px); line-height: 1.5; animation: fade-in .4s .1s ease-out both; }
 .hero-visual { grid-area: visual; position: relative; width: min(100%, 440px); aspect-ratio: 1; align-self: center; justify-self: center; pointer-events: none; }
 .hero-photo { width: 100%; height: 100%; animation: photo-enter .6s ease-out both; }
 .hero-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
@@ -108,6 +110,7 @@ a:hover { color: #cb6400; }
 .scroll-reveal[data-reveal-direction="right"] { --reveal-x: 32px; --reveal-y: 0px; }
 .scroll-reveal.is-revealed { --reveal-x: 0px; --reveal-y: 0px; opacity: 1; scale: 1; }
 .scroll-reveal:focus-within { opacity: 1; translate: 0 0; scale: 1; }
+@keyframes title-enter { from { transform: translateY(8px); } to { transform: none; } }
 @keyframes photo-enter { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes draw-route { to { clip-path: inset(0); } }
@@ -125,8 +128,9 @@ a:hover { color: #cb6400; }
   .shell { width: calc(100% - 48px); }
   .site-header { height: 72px; }
   .wordmark { font-size: 40px; }
-  .hero { grid-template-columns: minmax(0, 1fr) 120px; grid-template-areas: 'title visual' 'search search'; gap: 20px; padding-block: 16px; }
-  .hero-title { font-size: 56px; }
+  .hero { grid-template-columns: minmax(0, 1fr) 120px; grid-template-areas: 'title visual' 'subtitle subtitle' 'search search'; gap: 20px; padding-block: 16px; }
+  .hero-title { font-size: 56px; white-space: normal; }
+  .hero-title-break { display: inline; }
   .hero-visual { width: 120px; }
   .hero-photo { animation: fade-in .35s ease-out both; }
   .hero-route { display: none; }

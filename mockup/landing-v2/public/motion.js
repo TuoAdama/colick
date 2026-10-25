@@ -61,7 +61,7 @@ export function createScrollMotion({ root = document, view = window } = {}) {
   return {
     observe(target) {
       // Primary tasks are immediately visible, even if accidentally registered.
-      if (target.matches?.('.hero-title, .search-section') || target.closest?.('.search-section')) return;
+      if (target.matches?.('.hero-title, .hero-subtitle, .search-section') || target.closest?.('.search-section')) return;
       targets.add(target); configure(target);
     },
     unobserve(target) { targets.delete(target); observer?.unobserve(target); },

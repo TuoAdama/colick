@@ -94,12 +94,13 @@ describe('Scroll motion accessibility and lifecycle', () => {
     expect(photo.properties.size).toBe(0);
     expect(disconnect).toHaveBeenCalled();
   });
-  it('never hides the primary title, form or any field even if registered', () => {
+  it('never hides the title, subtitle, form or any field even if registered', () => {
     const motion = createScrollMotion({ root, view });
     const form = target(); form.matches = () => true;
     const heading = target(); heading.matches = () => true;
+    const subtitle = target(); subtitle.matches = selector => selector.includes('.hero-subtitle');
     const input = target(); input.closest = () => form;
-    [form, heading, input].forEach(node => motion.observe(node));
+    [form, heading, subtitle, input].forEach(node => motion.observe(node));
     expect(observe).not.toHaveBeenCalled();
     expect(form.classes.size + heading.classes.size + input.classes.size).toBe(0);
     motion.destroy();
