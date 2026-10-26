@@ -1,0 +1,6 @@
+{
+  "mode": "imagegen intégré",
+  "reference": "09-desktop-deux-colonnes.png",
+  "output": "09-desktop-deux-colonnes-v2.png",
+  "prompt": "Use case: precise-object-edit. Asset: desktop Coliclic UI screenshot. Input image is the edit target. Make exactly one layout correction: the top edge of the right white booking card (12 €/kg, 15 kg disponibles, Réserver button) must align PERFECTLY with the top edge of the left white itinerary card containing Départ and Arrivée. In the 1505x1045 reference, left itinerary card top is about y=265, while right card currently begins y=181. Move the entire right booking card DOWN approximately 84 pixels, preserving its width, height, inner spacing, all contents, and its x position. Its new top must be on the same horizontal baseline as the itinerary card top. Keep the left itinerary card and ALL remaining screenshot elements exactly in their original positions: title, header, traveler row, conditions, text, portrait, colors. Do not align booking card to title. Do not resize either card. No red annotation outlines. Output full landscape screenshot with the same proportions and framing."
+}

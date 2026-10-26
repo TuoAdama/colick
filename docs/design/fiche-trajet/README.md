@@ -42,12 +42,14 @@ Adaptations de la version mobile Blanc 1 (06-blanc-bordure.png) avec imagegen in
 
 | Version | Composition | Image |
 | --- | --- | --- |
-| Desktop 1 | Deux colonnes : trajet, profil et modalités à gauche, réservation à droite. | [Maquette](09-desktop-deux-colonnes.png) |
+| Desktop 1 | Deux colonnes : trajet, profil et modalités à gauche, réservation à droite ; bords supérieurs des cartes trajet et réservation alignés. | [Maquette corrigée](09-desktop-deux-colonnes-v2.png) |
 | Desktop 2 (recommandée) | Itinéraire horizontal en haut, profil et modalités dessous, réservation à droite. | [Maquette](10-desktop-itineraire-horizontal.png) |
 | Desktop 3 | Trois colonnes : voyageuse, trajet et réservation. | [Maquette](11-desktop-trois-colonnes.png) |
 | Desktop 4 | Grande fiche unifiée avec séparateurs, panneau de réservation distinct. | [Maquette](12-desktop-fiche-unifiee.png) |
 | Desktop 5 | Composition horizontale et barre de réservation fixe en bas. | [Maquette](13-desktop-pleine-largeur.png) |
 
 La version 2 utilise la largeur desktop pour une lecture immédiate du parcours, tout en maintenant une réservation visible. La version 1 est la plus proche de la structure mobile ; la version 4 réduit le nombre de cartes.
+
+Correction de Desktop 1 : le bloc de réservation a été descendu pour aligner son bord supérieur avec celui du bloc trajet, sous le titre. Alignement et conservation des informations vérifiés visuellement. La première image reste conservée ; [prompt de correction](prompt-alignement-desktop.json).
 
 Validation visuelle : présence et lisibilité du trajet Paris → Abidjan, des dates du 12 novembre 2026, des horaires 10:30 et 17:00, d’Aminata K., de la note 4,9 et des 24 avis, des 15 kg disponibles, du prix de 12 €/kg, des modalités et du bouton Réserver. Le libellé Voyageuse de la version 4 a fait l’objet d’une correction ciblée. Les images restent des intentions visuelles : réutiliser le logo existant et ses couleurs exactes à l’implémentation. Aucun changement de code, d’API ou de comportement ; pas de tests applicatifs pour ces livrables statiques. [Prompts complets et correction](prompts-desktop.json).
