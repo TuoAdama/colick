@@ -143,7 +143,7 @@ describe('HeaderComponent', () => {
     expect(Array.from(mobileMenu?.querySelectorAll('a') ?? []).map((link) => link.textContent?.trim())).toEqual([
       'Trouver un trajet',
       'Nous contacter',
-      'Comment ca marche',
+      'Comment ça marche',
       'Connexion',
       'Publier un trajet',
     ]);
@@ -178,7 +178,7 @@ describe('HeaderComponent', () => {
       'Mes demandes envoyées',
       'Messages',
       'Nous contacter',
-      'Comment ca marche',
+      'Comment ça marche',
       'Déconnexion',
       'Publier un trajet',
     ]);
@@ -219,7 +219,7 @@ describe('HeaderComponent', () => {
     fixture.detectChanges();
 
     const links = Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[];
-    const howItWorksLink = links.find((link) => link.textContent?.trim() === 'Comment ca marche');
+    const howItWorksLink = links.find((link) => link.textContent?.trim() === 'Comment ça marche');
 
     expect(howItWorksLink?.getAttribute('href')).toBe('/comment-ca-marche');
   });
@@ -394,4 +394,21 @@ describe('HeaderComponent', () => {
     link?.click();
     expect(component.isMobileMenuOpen).toBeFalse();
   });
+  it('uses the simplified anonymous landing navigation and preserves login', () => {
+    component.landing = true;
+    fixture.detectChanges();
+    const header = fixture.nativeElement.querySelector('header') as HTMLElement;
+    expect(header.classList.contains('landing-header')).toBeTrue();
+    expect(header.querySelector('a[href="/?mode=transport"]')?.textContent).toContain('Je voyage');
+    expect(header.querySelector('a[href="/login"]')).not.toBeNull();
+    expect(header.querySelector('nav a[aria-label="Publier un trajet"]')).toBeNull();
+  });
+
+  it('closes the mobile menu with Escape', () => {
+    fixture.detectChanges();
+    component.toggleMobileMenu();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(component.isMobileMenuOpen).toBeFalse();
+  });
+
 });

@@ -1,15 +1,18 @@
-import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, ElementRef, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Subject, Subscription, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, map, switchMap, tap } from 'rxjs/operators';
+import { Subject, Subscription, of, timer } from 'rxjs';
+import { catchError, map, switchMap, timeout } from 'rxjs/operators';
 import { Location } from '../../models/location.model';
 import { Trip } from '../../models/trip.model';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
 import { TripService } from '../../services/trip.service';
 import { CommercialContentService } from '../../services/commercial-content.service';
+
+import { LandingParallaxDirective, LandingRevealDirective } from './landing-motion.directive';
+import { LandingVisualComponent } from './landing-visual.component';
 
 type AutocompleteField = 'departure' | 'destination';
 type LandingMode = 'send' | 'transport';
@@ -37,10 +40,14 @@ interface LandingTripCard {
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, LandingVisualComponent, LandingRevealDirective, LandingParallaxDirective],
   templateUrl: './landing-page.component.html',
+  styleUrl: './landing-page.component.css',
 })
-export class LandingPageComponent {
+export class LandingPageComponent implements OnInit, OnDestroy {
+  private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
+  private feedSubscription?: Subscription;
+  private blurTimer?: ReturnType<typeof setTimeout>;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
@@ -63,7 +70,9 @@ export class LandingPageComponent {
   isDepartureLoading = false;
   isDestinationLoading = false;
   isTripsLoading = true;
-  hasLocationPermission = false;
+  tripsError = false;
+  formError = '';
+  activeSuggestionIndex = -1;
   activeMode: LandingMode = 'send';
   trips: LandingTripCard[] = [];
 
@@ -82,11 +91,13 @@ export class LandingPageComponent {
       })
     );
     this.setupAutocomplete();
-    this.loadTripsFromApproximatePosition();
+    if (isPlatformBrowser(this.platformId)) this.reloadTrips();
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+    this.feedSubscription?.unsubscribe();
+    if (this.blurTimer) clearTimeout(this.blurTimer);
   }
 
   searchTrips(): void {
@@ -95,8 +106,11 @@ export class LandingPageComponent {
     const date = this.travelDate.trim();
 
     if (!from || !to) {
+      this.formError = 'Renseignez votre ville de départ et votre destination.';
+      this.element.nativeElement.querySelector<HTMLInputElement>(!from ? '#landing-departure' : '#landing-destination')?.focus();
       return;
     }
+    this.formError = '';
 
     void this.router.navigate(['/search'], {
       queryParams: {
@@ -128,8 +142,11 @@ export class LandingPageComponent {
     const date = this.travelDate.trim();
 
     if (!from || !to) {
+      this.formError = 'Renseignez votre ville de départ et votre destination.';
+      this.element.nativeElement.querySelector<HTMLInputElement>(!from ? '#landing-departure' : '#landing-destination')?.focus();
       return;
     }
+    this.formError = '';
 
     void this.router.navigate(['/parcel-search'], {
       queryParams: {
@@ -157,22 +174,32 @@ export class LandingPageComponent {
 
   onDepartureInput(): void {
     this.departure = null;
+    this.departureSuggestions = [];
+    this.isDepartureLoading = this.departureQuery.trim().length >= 2;
+    this.activeSuggestionIndex = -1;
+    this.formError = '';
     this.activeAutocomplete = 'departure';
     this.departureSearchSubject.next(this.departureQuery.trim());
   }
 
   onDestinationInput(): void {
     this.destination = null;
+    this.destinationSuggestions = [];
+    this.isDestinationLoading = this.destinationQuery.trim().length >= 2;
+    this.activeSuggestionIndex = -1;
+    this.formError = '';
     this.activeAutocomplete = 'destination';
     this.destinationSearchSubject.next(this.destinationQuery.trim());
   }
 
   showAutocomplete(field: AutocompleteField): void {
+    if (this.blurTimer) clearTimeout(this.blurTimer);
+    this.activeSuggestionIndex = -1;
     this.activeAutocomplete = field;
   }
 
   closeAutocompleteSoon(): void {
-    setTimeout(() => {
+    this.blurTimer = setTimeout(() => {
       this.activeAutocomplete = null;
     }, 150);
   }
@@ -189,9 +216,31 @@ export class LandingPageComponent {
       this.destinationSuggestions = [];
     }
     this.activeAutocomplete = null;
+    this.activeSuggestionIndex = -1;
+    if (field === 'departure') this.isDepartureLoading = false;
+    else this.isDestinationLoading = false;
+  }
+
+  onAutocompleteKeydown(field: AutocompleteField, event: KeyboardEvent): void {
+    const suggestions = field === 'departure' ? this.departureSuggestions : this.destinationSuggestions;
+    if (event.key === 'Escape') { this.activeAutocomplete = null; this.activeSuggestionIndex = -1; return; }
+    if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && suggestions.length) {
+      event.preventDefault();
+      this.activeAutocomplete = field;
+      this.activeSuggestionIndex = this.activeSuggestionIndex < 0
+        ? (event.key === 'ArrowDown' ? 0 : suggestions.length - 1)
+        : (this.activeSuggestionIndex + (event.key === 'ArrowDown' ? 1 : -1) + suggestions.length) % suggestions.length;
+    } else if (event.key === 'Enter' && this.activeAutocomplete === field && this.activeSuggestionIndex >= 0) {
+      event.preventDefault();
+      const location = suggestions[this.activeSuggestionIndex];
+      if (location) this.selectLocation(field, location);
+    }
   }
 
   swapRoute(): void {
+    this.departureSearchSubject.next('');
+    this.destinationSearchSubject.next('');
+    this.activeSuggestionIndex = -1;
     [this.departureQuery, this.destinationQuery] = [this.destinationQuery, this.departureQuery];
     [this.departure, this.destination] = [this.destination, this.departure];
     this.departureSuggestions = [];
@@ -202,43 +251,22 @@ export class LandingPageComponent {
   }
 
   private setupAutocomplete(): void {
-    this.subscriptions.add(
-      this.departureSearchSubject.pipe(
-        debounceTime(250),
-        distinctUntilChanged(),
-        tap((query) => {
-          if (query === this.departureQuery.trim()) {
-            this.isDepartureLoading = query.length >= 2;
-          }
-        }),
-        switchMap((query) => this.searchLocations(query).pipe(map((suggestions) => ({ query, suggestions }))))
+    for (const field of ['departure', 'destination'] as const) {
+      const subject = field === 'departure' ? this.departureSearchSubject : this.destinationSearchSubject;
+      this.subscriptions.add(subject.pipe(
+        // Cancel immediately on each keystroke, including during the debounce window.
+        switchMap(query => timer(250).pipe(
+          switchMap(() => this.searchLocations(query)),
+          map(suggestions => ({ query, suggestions }))
+        ))
       ).subscribe(({ query, suggestions }) => {
-        if (query !== this.departureQuery.trim()) {
-          return;
-        }
-        this.departureSuggestions = suggestions;
-        this.isDepartureLoading = false;
-      })
-    );
-
-    this.subscriptions.add(
-      this.destinationSearchSubject.pipe(
-        debounceTime(250),
-        distinctUntilChanged(),
-        tap((query) => {
-          if (query === this.destinationQuery.trim()) {
-            this.isDestinationLoading = query.length >= 2;
-          }
-        }),
-        switchMap((query) => this.searchLocations(query).pipe(map((suggestions) => ({ query, suggestions }))))
-      ).subscribe(({ query, suggestions }) => {
-        if (query !== this.destinationQuery.trim()) {
-          return;
-        }
-        this.destinationSuggestions = suggestions;
-        this.isDestinationLoading = false;
-      })
-    );
+        const currentQuery = field === 'departure' ? this.departureQuery : this.destinationQuery;
+        const selected = field === 'departure' ? this.departure : this.destination;
+        if (query !== currentQuery.trim() || selected) return;
+        if (field === 'departure') { this.departureSuggestions = suggestions; this.isDepartureLoading = false; }
+        else { this.destinationSuggestions = suggestions; this.isDestinationLoading = false; }
+      }));
+    }
   }
 
   private searchLocations(query: string) {
@@ -247,26 +275,6 @@ export class LandingPageComponent {
     }
     return this.locationService.searchLocations(query).pipe(
       catchError(() => of([]))
-    );
-  }
-
-  private loadTripsFromApproximatePosition(): void {
-    if (!isPlatformBrowser(this.platformId) || !('geolocation' in navigator)) {
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      () => {
-        this.hasLocationPermission = true;
-        this.loadLandingTrips(this.deriveCountryFromBrowser());
-      },
-      (error) => {
-        this.hasLocationPermission = error.code !== 1;
-        if (this.hasLocationPermission) {
-          this.loadLandingTrips(this.deriveCountryFromBrowser());
-        }
-      },
-      { enableHighAccuracy: false, timeout: 2000, maximumAge: 300000 }
     );
   }
 
@@ -296,15 +304,21 @@ export class LandingPageComponent {
     return countryByTimeZone[timeZone];
   }
 
-  private loadLandingTrips(country?: string): void {
+  reloadTrips(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.feedSubscription?.unsubscribe();
     this.isTripsLoading = true;
-    this.tripService.getLandingFeed(country, 3).subscribe({
-      next: (trips) => {
-        this.trips = trips.map((trip, index) => this.toLandingTripCard(trip, index));
+    this.tripsError = false;
+    this.feedSubscription = this.tripService.getLandingFeed(this.deriveCountryFromBrowser(), 3).pipe(
+      timeout(8000)
+    ).subscribe({
+      next: trips => {
+        this.trips = trips.slice(0, 3).map((trip, index) => this.toLandingTripCard(trip, index));
         this.isTripsLoading = false;
       },
       error: () => {
         this.trips = [];
+        this.tripsError = true;
         this.isTripsLoading = false;
       },
     });
@@ -322,8 +336,8 @@ export class LandingPageComponent {
       arrival: trip.destination,
       date: this.formatDate(trip.departureTime),
       traveler: trip.travelerName,
-      rating: trip.travelerRatingAverage?.toFixed(1) ?? 'Nouveau',
-      capacity: `${this.formatWeight(trip.availableWeight)}kg libres`,
+      rating: trip.travelerRatingCount === 0 ? 'Nouveau' : trip.travelerRatingAverage?.toFixed(1) ?? 'Nouveau',
+      capacity: `${this.formatWeight(trip.availableWeight)} kg libres`,
       avatar: this.getInitials(trip.travelerName),
       avatarTone: avatarTones[index % avatarTones.length],
     };
@@ -331,7 +345,7 @@ export class LandingPageComponent {
 
   private formatPrice(value: number): string {
     return new Intl.NumberFormat('fr-FR', {
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(value) + '€';
   }
 

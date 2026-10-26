@@ -54,6 +54,7 @@ describe('LandingPageComponent', () => {
       ],
     }).compileComponents();
 
+    locationServiceMock.searchLocations.and.returnValue(of([]));
     installGeolocationMock();
     fixture = TestBed.createComponent(LandingPageComponent);
     component = fixture.componentInstance;
@@ -71,7 +72,7 @@ describe('LandingPageComponent', () => {
     component.selectMode('transport');
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Date souhaitee');
+    expect(fixture.nativeElement.textContent).toContain('Date souhaitée');
     expect(fixture.nativeElement.textContent).toContain('Voir les demandes');
     expect(fixture.nativeElement.textContent).toContain('Publier un trajet');
   });
@@ -97,8 +98,8 @@ describe('LandingPageComponent', () => {
     fixture.detectChanges();
 
     const transportFormInputs = Array.from(fixture.nativeElement.querySelectorAll('form input')) as HTMLInputElement[];
-    expect(transportFormInputs.find((input) => input.name === 'transportDeparture')?.required).toBeTrue();
-    expect(transportFormInputs.find((input) => input.name === 'transportDestination')?.required).toBeTrue();
+    expect(transportFormInputs.find((input) => input.name === 'departure')?.required).toBeTrue();
+    expect(transportFormInputs.find((input) => input.name === 'destination')?.required).toBeTrue();
   });
 
   it('swaps the route values and selected locations without changing the date in both modes', () => {
@@ -117,7 +118,7 @@ describe('LandingPageComponent', () => {
     const host = fixture.nativeElement as HTMLElement;
     const sendSwapButton = host.querySelector('[data-testid="landing-route-swap"]') as HTMLButtonElement;
     expect(sendSwapButton.getAttribute('aria-label')).toBe('Inverser le départ et la destination');
-    expectResponsiveSwapIcons(sendSwapButton);
+    expect(sendSwapButton.querySelector('svg use')?.getAttribute('href')).toBe('#landing-i-swap');
     sendSwapButton.click();
 
     expect(component.departure).toBe(destination);
@@ -133,7 +134,7 @@ describe('LandingPageComponent', () => {
     fixture.detectChanges();
     const transportSwapButton = host.querySelector('[data-testid="landing-route-swap"]') as HTMLButtonElement;
     expect(transportSwapButton).not.toBeNull();
-    expectResponsiveSwapIcons(transportSwapButton);
+    expect(transportSwapButton.querySelector('svg')).not.toBeNull();
   });
 
   it('ignores an autocomplete response started before the route is swapped', fakeAsync(() => {
@@ -185,12 +186,11 @@ describe('LandingPageComponent', () => {
   it('uses clear sender and traveler labels for the landing mode selector', () => {
     fixture.detectChanges();
 
-    const modeButtons = Array.from(fixture.nativeElement.querySelectorAll('button'))
-      .slice(0, 2) as HTMLButtonElement[];
+    const modeButtons = Array.from(fixture.nativeElement.querySelectorAll('[role=tab]')) as HTMLButtonElement[];
 
     expect(modeButtons.map((button) => button.textContent?.trim())).toEqual([
-      'Je veux envoyer',
-      'Je voyage',
+      'Envoyer',
+      'Voyager',
     ]);
   });
 
@@ -323,55 +323,117 @@ describe('LandingPageComponent', () => {
     });
   }
 
-  it('hides the next departure section when location sharing is refused', () => {
-    geolocationMock.getCurrentPosition.and.callFake((_success: PositionCallback, error: PositionErrorCallback) => {
-      error({ code: 1, message: 'Permission denied' } as GeolocationPositionError);
-    });
-
+  it('loads recommendations without requesting location permission', () => {
     fixture.detectChanges();
-
-    expect(fixture.nativeElement.textContent).not.toContain('Ne ratez pas le prochain depart.');
-    expect(fixture.nativeElement.textContent).not.toContain('Voir tous les trajets');
-    expect(tripServiceMock.getLandingFeed).not.toHaveBeenCalled();
-  });
-
-  it('shows the next departure section after location sharing is accepted', () => {
-    geolocationMock.getCurrentPosition.and.callFake((success: PositionCallback) => {
-      success({
-        coords: { latitude: 48.8566, longitude: 2.3522, accuracy: 10 },
-        timestamp: Date.now(),
-      } as GeolocationPosition);
-    });
-
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.textContent).toContain('Ne ratez pas le prochain depart.');
-    expect(fixture.nativeElement.textContent).toContain('Voir tous les trajets');
-    expect(tripServiceMock.getLandingFeed).toHaveBeenCalled();
+    expect(geolocationMock.getCurrentPosition).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('Un voyage,');
+    expect(tripServiceMock.getLandingFeed).toHaveBeenCalledTimes(1);
     expect(tripServiceMock.getLandingFeed.calls.mostRecent().args[1]).toBe(3);
   });
 
-  it('shows the next departure section when the position is temporarily unavailable', () => {
-    geolocationMock.getCurrentPosition.and.callFake((_success: PositionCallback, error: PositionErrorCallback) => {
-      error({ code: 2, message: 'Position unavailable' } as GeolocationPositionError);
-    });
-
+  it('deduces France explicitly from the Paris timezone', () => {
+    spyOn(Intl, 'DateTimeFormat').and.returnValue({ resolvedOptions: () => ({ timeZone: 'Europe/Paris' }) } as Intl.DateTimeFormat);
     fixture.detectChanges();
-
-    expect(fixture.nativeElement.textContent).toContain('Ne ratez pas le prochain depart.');
-    expect(tripServiceMock.getLandingFeed).toHaveBeenCalled();
+    expect(tripServiceMock.getLandingFeed).toHaveBeenCalledWith('France', 3);
+    expect(geolocationMock.getCurrentPosition).not.toHaveBeenCalled();
   });
-});
 
-function expectResponsiveSwapIcons(button: HTMLButtonElement): void {
-  const icons = button.querySelectorAll<HTMLElement>('.material-symbols-outlined');
-  expect(icons.length).toBe(2);
-  expect(icons[0].textContent?.trim()).toBe('swap_vert');
-  expect(icons[0].classList.contains('md:hidden')).toBeTrue();
-  expect(icons[1].textContent?.trim()).toBe('swap_horiz');
-  expect(icons[1].classList.contains('hidden')).toBeTrue();
-  expect(icons[1].classList.contains('md:inline')).toBeTrue();
-}
+  it('shows the validated headline, local image and a single shared form', () => {
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('Expédiez vos colis avec des voyageurs de confiance');
+    expect(fixture.nativeElement.querySelector('.hero-photo img').getAttribute('src')).toBe('/images/landing-handoff.webp');
+    expect(fixture.nativeElement.querySelectorAll('form').length).toBe(1);
+  });
+
+  it('shows an empty state and no invented trips', () => {
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Aucun trajet disponible');
+    expect(fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]')).toBeNull();
+  });
+
+  it('times out the feed after eight seconds and retries', fakeAsync(() => {
+    const feed = new Subject<any[]>();
+    tripServiceMock.getLandingFeed.and.returnValue(feed);
+    fixture.detectChanges();
+    expect(component.isTripsLoading).toBeTrue();
+    tick(8000);
+    fixture.detectChanges();
+    expect(component.tripsError).toBeTrue();
+    expect(component.isTripsLoading).toBeFalse();
+    tripServiceMock.getLandingFeed.and.returnValue(of([]));
+    const retry = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button: any) => button.textContent.trim() === 'Réessayer') as HTMLButtonElement;
+    retry.click();
+    expect(component.tripsError).toBeFalse();
+    expect(component.trips).toEqual([]);
+  }));
+
+  it('announces validation and focuses the missing departure', () => {
+    fixture.detectChanges();
+    component.searchTrips();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role=alert]').textContent).toContain('Renseignez');
+  });
+
+  it('selects autocomplete suggestions with the keyboard', fakeAsync(() => {
+    locationServiceMock.searchLocations.and.returnValue(of([{ id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' }]));
+    fixture.detectChanges();
+    component.departureQuery = 'Par';
+    component.onDepartureInput();
+    tick(250);
+    component.onAutocompleteKeydown('departure', new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    component.onAutocompleteKeydown('departure', new KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(component.departureQuery).toBe('Paris, France');
+    expect(component.activeAutocomplete).toBeNull();
+  }));
+
+  it('cancels stale suggestions as soon as the query changes', fakeAsync(() => {
+    const response = new Subject<any[]>();
+    locationServiceMock.searchLocations.and.returnValue(response);
+    fixture.detectChanges();
+    component.departureQuery = 'Par'; component.onDepartureInput(); tick(250);
+    component.departureQuery = 'Nan'; component.onDepartureInput();
+    response.next([{ id: 1, name: 'Paris', country: 'France', type: 'CITY' }]);
+    expect(component.departureSuggestions).toEqual([]);
+    response.complete(); tick(250);
+  }));
+
+  it('starts at the last suggestion with ArrowUp and closes with Escape', () => {
+    fixture.detectChanges();
+    component.departureSuggestions = [
+      { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' },
+      { id: 2, name: 'Paris', country: 'Canada', isoCode: 'CA', type: 'CITY' },
+    ];
+    component.onAutocompleteKeydown('departure', new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+    expect(component.activeSuggestionIndex).toBe(1);
+    component.onAutocompleteKeydown('departure', new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(component.activeAutocomplete).toBeNull();
+    expect(component.activeSuggestionIndex).toBe(-1);
+  });
+
+  it('omits an unknown timezone country and displays actual fractional prices', () => {
+    spyOn(Intl, 'DateTimeFormat').and.returnValue({ resolvedOptions: () => ({ timeZone: 'Etc/UTC' }) } as Intl.DateTimeFormat);
+    tripServiceMock.getLandingFeed.and.returnValue(of([{
+      id: 9, travelerId: 7, reference: 'TRP-TEST', travelerName: 'Alice Martin',
+      departureAddress: 'Paris', destination: 'Abidjan', departureTime: '2026-12-21T10:30:00',
+      pricePerKilo: 12.5, availableWeight: 2.5, instantAcceptance: true,
+      travelerRatingAverage: 0, travelerRatingCount: 0,
+    }]));
+    fixture.detectChanges();
+    expect(tripServiceMock.getLandingFeed).toHaveBeenCalledWith(undefined, 3);
+    expect(component.trips[0].price).toBe('12,5€');
+    expect(component.trips[0].capacity).toBe('2,5 kg libres');
+    expect(component.trips[0].rating).toBe('Nouveau');
+  });
+
+  it('releases pending feed requests when the page is destroyed', () => {
+    const feed = new Subject<any[]>();
+    tripServiceMock.getLandingFeed.and.returnValue(feed);
+    fixture.detectChanges();
+    fixture.destroy();
+    expect(feed.observed).toBeFalse();
+  });
+
+});
 
 function buildLandingTripCard(overrides: { reference?: string } = {}) {
   return {
