@@ -1,4 +1,4 @@
-# Fiche trajet — cinq propositions mobiles
+# Fiche trajet — maquettes mobiles et desktop
 
 Maquettes exploratoires générées avec l’outil intégré imagegen le 26 octobre 2026. Données et portraits fictifs. Elles proposent la page consultée après sélection d’un résultat de recherche, avant le formulaire de réservation existant.
 
@@ -35,3 +35,19 @@ Les prompts complets sont conservés dans [prompts.json](prompts.json).
 | Blanc 3 (recommandée) | Timeline légère et petits repères pour alléger le bloc. | [Maquette](08-blanc-timeline.png) |
 
 Éditions réalisées avec imagegen intégré à partir de 01-synthese.png. Vérification visuelle : fond blanc, informations de départ et d’arrivée conservées, profil et bouton Réserver présents. De légères variations de rendu sont inhérentes aux images générées. [Prompts complets de ces trois éditions](prompts-fond-blanc.json).
+
+## Cinq compositions desktop sur fond blanc
+
+Adaptations de la version mobile Blanc 1 (06-blanc-bordure.png) avec imagegen intégré, une génération distincte par composition. Cible visuelle : viewport paysage 1440 × 1000 ; les dimensions natives des PNG peuvent légèrement différer. Les cartes restent blanches sur fond gris très clair, avec textes bleu profond et bouton orange. La navigation reprend les liens desktop existants.
+
+| Version | Composition | Image |
+| --- | --- | --- |
+| Desktop 1 | Deux colonnes : trajet, profil et modalités à gauche, réservation à droite. | [Maquette](09-desktop-deux-colonnes.png) |
+| Desktop 2 (recommandée) | Itinéraire horizontal en haut, profil et modalités dessous, réservation à droite. | [Maquette](10-desktop-itineraire-horizontal.png) |
+| Desktop 3 | Trois colonnes : voyageuse, trajet et réservation. | [Maquette](11-desktop-trois-colonnes.png) |
+| Desktop 4 | Grande fiche unifiée avec séparateurs, panneau de réservation distinct. | [Maquette](12-desktop-fiche-unifiee.png) |
+| Desktop 5 | Composition horizontale et barre de réservation fixe en bas. | [Maquette](13-desktop-pleine-largeur.png) |
+
+La version 2 utilise la largeur desktop pour une lecture immédiate du parcours, tout en maintenant une réservation visible. La version 1 est la plus proche de la structure mobile ; la version 4 réduit le nombre de cartes.
+
+Validation visuelle : présence et lisibilité du trajet Paris → Abidjan, des dates du 12 novembre 2026, des horaires 10:30 et 17:00, d’Aminata K., de la note 4,9 et des 24 avis, des 15 kg disponibles, du prix de 12 €/kg, des modalités et du bouton Réserver. Le libellé Voyageuse de la version 4 a fait l’objet d’une correction ciblée. Les images restent des intentions visuelles : réutiliser le logo existant et ses couleurs exactes à l’implémentation. Aucun changement de code, d’API ou de comportement ; pas de tests applicatifs pour ces livrables statiques. [Prompts complets et correction](prompts-desktop.json).
