@@ -23,3 +23,15 @@ Les images sont des intentions visuelles, pas des spécifications fonctionnelles
 Aucun code applicatif modifié. Vérification visuelle des cinq images : trajet, horaires, prix, capacité, profil, avis et bouton « Réserver » présents. Les tests unitaires et fonctionnels ne s’appliquent pas à ces fichiers de conception statiques.
 
 Les prompts complets sont conservés dans [prompts.json](prompts.json).
+
+## Déclinaisons de la synthèse sur fond blanc
+
+À la demande de l’utilisateur, trois éditions de la maquette 1 remplacent le fond bleu du bloc trajet par du blanc, en conservant le reste de la fiche et le bouton Réserver.
+
+| Version | Traitement | Image |
+| --- | --- | --- |
+| Blanc 1 | Bordure fine, grandes icônes et liaison verticale. | [Maquette](06-blanc-bordure.png) |
+| Blanc 2 | Séparateur horizontal et repère d’arrivée orange. | [Maquette](07-blanc-separateur.png) |
+| Blanc 3 (recommandée) | Timeline légère et petits repères pour alléger le bloc. | [Maquette](08-blanc-timeline.png) |
+
+Éditions réalisées avec imagegen intégré à partir de 01-synthese.png. Vérification visuelle : fond blanc, informations de départ et d’arrivée conservées, profil et bouton Réserver présents. De légères variations de rendu sont inhérentes aux images générées. [Prompts complets de ces trois éditions](prompts-fond-blanc.json).
