@@ -143,6 +143,14 @@ describe('DashboardPageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Consultez notre FAQ');
   });
 
+  it('does not render the dashboard statistics cards', () => {
+    const text = fixture.nativeElement.textContent;
+
+    expect(text).not.toContain('Voyages Actifs');
+    expect(text).not.toContain('Demandes en Attente');
+    expect(text).not.toContain('Gains Totaux');
+  });
+
   it('loads sent bookings on init', () => {
     expect(tripServiceMock.getMyBookings).toHaveBeenCalled();
     expect(component.myBookings).toEqual(mockSentBookings);
@@ -195,20 +203,6 @@ describe('DashboardPageComponent', () => {
     // Trip 11 is COMPLETED, so getTripBookings should only be called for trip 10
     expect(tripServiceMock.getTripBookings).toHaveBeenCalledTimes(1);
     expect(tripServiceMock.getTripBookings).toHaveBeenCalledWith(10);
-  });
-
-  it('computes activeTripsCount correctly', () => {
-    expect(component.activeTripsCount).toBe(1);
-  });
-
-  it('computes pendingReceivedCount correctly', () => {
-    expect(component.pendingReceivedCount).toBe(1);
-  });
-
-  it('computes totalEarnings from accepted bookings and trip pricePerKilo', () => {
-    // Only booking 101 (ACCEPTED, weight=1) on trip 10 (pricePerKilo=5) → 1*5 = 5
-    // Booking 100 is PENDING so excluded
-    expect(component.totalEarnings).toBe(5);
   });
 
   it('displays empty state for sent bookings when empty', () => {
