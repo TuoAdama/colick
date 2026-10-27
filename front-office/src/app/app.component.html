@@ -11,7 +11,7 @@
   </a>
 
   <!-- Header Navigation -->
-  <app-header [landing]="currentPagePath === '/'" />
+  <app-header [class.hidden]="isTripDetailPage" [class.md:block]="isTripDetailPage" [landing]="currentPagePath === '/'" />
 }
 
 <!-- Main Content -->
@@ -21,7 +21,7 @@
 
 @if (showSharedChrome) {
   <!-- Footer -->
-  <app-footer />
+  <app-footer [class.block]="isTripDetailPage" [class.pb-28]="isTripDetailPage" [class.md:pb-0]="isTripDetailPage" />
 }
 
 @if (analytics.consentRequired()) {

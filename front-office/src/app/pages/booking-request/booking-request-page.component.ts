@@ -33,7 +33,8 @@ export class BookingRequestPageComponent implements OnInit {
   ngOnInit(): void {
     const reference = this.route.snapshot.paramMap.get('reference')?.trim() ?? '';
     this.returnUrl = this.getSafeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
-    this.resultsReturnUrl = /^\/search(?:[?#]|$)/.test(this.returnUrl) ? this.returnUrl : '/search';
+    const resultsUrl = this.route.snapshot.queryParamMap.get('resultsReturnUrl') ?? this.returnUrl;
+    this.resultsReturnUrl = /^\/search(?:[?#]|$)/.test(resultsUrl) ? resultsUrl : '/search';
     this.initialWeight = this.parseWeight(this.route.snapshot.queryParamMap.get('weight'));
 
     if (!reference) {
@@ -89,9 +90,7 @@ export class BookingRequestPageComponent implements OnInit {
   private getSafeReturnUrl(value: string | null): string {
     const fallback = '/search';
     const candidate = value?.trim() ?? '';
-    const candidatePath = candidate.split(/[?#]/, 1)[0];
-    const isLegacyTripDetail = /^\/trips\/ref\/[^/]+\/?$/.test(candidatePath);
-    return candidate.startsWith('/') && !candidate.startsWith('//') && !isLegacyTripDetail
+    return candidate.startsWith('/') && !candidate.startsWith('//')
       ? candidate
       : fallback;
   }

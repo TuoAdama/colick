@@ -222,15 +222,15 @@ describe('BookingRequestPageComponent', () => {
     });
   }
 
-  it('normalizes legacy trip detail return URLs with query parameters', () => {
+  it('returns to the public trip detail with its original query parameters', () => {
     routeSnapshot.queryParamMap = convertToParamMap({ returnUrl: '/trips/ref/TRP-2026-000013?utm_source=share' });
     fixture = TestBed.createComponent(BookingRequestPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
     component.goBack();
 
-    expect(component.returnUrl).toBe('/search');
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/search');
+    expect(component.returnUrl).toBe('/trips/ref/TRP-2026-000013?utm_source=share');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/trips/ref/TRP-2026-000013?utm_source=share');
   });
 
   it('does not allow booking the current user’s own trip', () => {

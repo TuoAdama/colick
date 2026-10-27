@@ -290,9 +290,10 @@
 
         @if (hasSearched && !isLoading && !errorMessage && trips.length > 0) {
           @for (trip of trips; track trip.id) {
-            <article class="rounded-2xl bg-white p-4 shadow-sm md:hidden" [attr.aria-label]="'Trajet de ' + trip.departureAddress + ' vers ' + trip.destination" data-testid="mobile-trip-card">
+            <article class="relative rounded-2xl bg-white p-4 shadow-sm md:hidden" [attr.aria-label]="'Trajet de ' + trip.departureAddress + ' vers ' + trip.destination" data-testid="mobile-trip-card">
+              @if (trip.reference) { <a class="absolute inset-0 z-10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent" [routerLink]="['/trips/ref', trip.reference]" [queryParams]="{ returnUrl: resultsReturnUrl, source: 'search_results' }" [attr.aria-label]="'Voir le trajet de ' + trip.departureAddress + ' vers ' + trip.destination" data-testid="trip-detail-link"></a> }
               <div class="flex items-start justify-between gap-2 border-b border-border/60 pb-4">
-                <a [routerLink]="['/travelers', trip.travelerId]" class="flex min-w-0 items-center gap-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent" [attr.aria-label]="'Voir le profil de ' + trip.travelerName">
+                <a [routerLink]="['/travelers', trip.travelerId]" class="relative z-20 flex min-w-0 items-center gap-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent" [attr.aria-label]="'Voir le profil de ' + trip.travelerName">
                   <app-user-avatar [name]="trip.travelerName" [photoUrl]="trip.travelerPhotoUrl" sizeClasses="w-9 h-9 shrink-0" textClasses="text-xs" />
                   <div class="min-w-0"><p class="break-words text-xs font-bold text-primary">{{ trip.travelerName }}</p><p class="text-[10px] text-text-secondary"><span class="text-accent">★ {{ hasTravelerRating(trip) ? formatTravelerRatingAverage(trip) : 'Nouveau' }}</span>@if (hasTravelerRating(trip)) { · {{ trip.travelerRatingCount }} avis }</p></div>
                 </a>
@@ -307,13 +308,14 @@
                 <span class="rounded-lg bg-slate-50 px-2 py-1 text-[10px] text-text-secondary">{{ trip.availableWeight }} kg libres</span>
                 @if (isOwnTrip(trip)) { <span class="text-xs font-bold text-primary">Votre trajet</span> }
                 @else if (hasActiveBookingForTrip(trip.id)) { <span class="text-xs font-bold text-primary">Demande envoyée</span> }
-                @else { <button type="button" class="min-h-10 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white" (click)="openBookingRequestPage(trip)" [attr.aria-label]="'Réserver le trajet vers ' + trip.destination">Réserver</button> }
+                @else { <button type="button" class="relative z-20 min-h-10 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white" (click)="openTripDetails(trip)" [attr.aria-label]="'Voir le trajet vers ' + trip.destination">Voir le trajet</button> }
               </div>
             </article>
             <article
-              class="hidden md:flex flex-col gap-6 rounded-xl border border-[#E8E8EC] bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-lg md:flex-row"
+              class="relative hidden md:flex flex-col gap-6 rounded-xl border border-[#E8E8EC] bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-lg md:flex-row"
               [attr.aria-label]="'Trajet de ' + trip.departureAddress + ' vers ' + trip.destination"
             >
+              @if (trip.reference) { <a class="absolute inset-0 z-10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent" [routerLink]="['/trips/ref', trip.reference]" [queryParams]="{ returnUrl: resultsReturnUrl, source: 'search_results' }" [attr.aria-label]="'Voir le trajet de ' + trip.departureAddress + ' vers ' + trip.destination" data-testid="trip-detail-link"></a> }
               <div class="flex flex-1 flex-col justify-between">
                 <div class="mb-4 flex items-start justify-between gap-4">
                   <div class="flex min-w-0 flex-col gap-4">
@@ -355,7 +357,7 @@
                 <div class="my-2 h-px w-full bg-[#E8E8EC]"></div>
 
                 <div class="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <a [routerLink]="['/travelers', trip.travelerId]" class="flex items-center gap-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent" [attr.aria-label]="'Voir le profil de ' + trip.travelerName">
+                  <a [routerLink]="['/travelers', trip.travelerId]" class="relative z-20 flex items-center gap-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent" [attr.aria-label]="'Voir le profil de ' + trip.travelerName">
                     <app-user-avatar
                       [name]="trip.travelerName"
                       [photoUrl]="trip.travelerPhotoUrl"
@@ -386,8 +388,8 @@
                       } @else {
                         <button
                           type="button"
-                          class="rounded-lg bg-primary px-6 py-2 text-sm font-bold text-white shadow-sm transition hover:-translate-y-px hover:bg-primary/90"
-                          (click)="openBookingRequestPage(trip)"
+                          class="relative z-20 rounded-lg bg-primary px-6 py-2 text-sm font-bold text-white shadow-sm transition hover:-translate-y-px hover:bg-primary/90"
+                          (click)="openTripDetails(trip)"
                           [attr.aria-label]="'Choisir le trajet vers ' + trip.destination"
                         >
                           Choisir

@@ -44,10 +44,12 @@ describe('AppComponent', () => {
     routerEvents.next(new NavigationEnd(1, '/trips/ref/TRP-2026-000004', '/trips/ref/TRP-2026-000004'));
 
     expect(fixture.componentInstance.showSharedChrome).toBeTrue();
+    expect(fixture.componentInstance.isTripDetailPage).toBeTrue();
 
     routerEvents.next(new NavigationEnd(2, '/trips/ref/TRP-2026-000004/request?source=search_results', '/trips/ref/TRP-2026-000004/request?source=search_results'));
 
     expect(fixture.componentInstance.showSharedChrome).toBeTrue();
+    expect(fixture.componentInstance.isTripDetailPage).toBeFalse();
   });
 
   it('keeps the skip link on the active route', () => {

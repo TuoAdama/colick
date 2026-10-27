@@ -49,14 +49,13 @@ describe('app routes', () => {
     expect(contactRoute?.loadComponent).toBeDefined();
   });
 
-  it('redirects legacy public trip detail URLs to the booking request page', () => {
-    const legacyTripRoute = routes.find((currentRoute) => currentRoute.path === 'trips/ref/:reference');
-
-    expect(legacyTripRoute).toEqual(jasmine.objectContaining({
-      redirectTo: '/trips/ref/:reference/request',
-      pathMatch: 'full',
-    }));
-    expect(legacyTripRoute?.loadComponent).toBeUndefined();
+  it('loads public trip details while keeping the request route authenticated', () => {
+    const detail = routes.find(route => route.path === 'trips/ref/:reference');
+    const request = routes.find(route => route.path === 'trips/ref/:reference/request');
+    expect(detail?.loadComponent).toBeDefined();
+    expect(detail?.redirectTo).toBeUndefined();
+    expect(detail?.canActivate).toBeUndefined();
+    expect(request?.canActivate?.length).toBeGreaterThan(0);
   });
 
   it('defines every public trust route with lazy loading and SEO metadata', () => {
