@@ -44,8 +44,7 @@
     <div class="hidden sm:flex items-center gap-3">
       @if (authService.currentUser$ | async) {
         <a
-          [routerLink]="['/dashboard']"
-          [queryParams]="{ tab: 'received' }"
+          routerLink="/sent-bookings"
           class="text-primary font-semibold hover:text-secondary transition-colors duration-200 text-sm"
           aria-label="Mes réservations"
         >
@@ -121,12 +120,12 @@
                 Mon profil
               </a>
               <a
-                routerLink="/sent-bookings"
+                routerLink="/trips"
                 class="block px-4 py-2.5 text-sm text-text-primary hover:bg-background-secondary"
                 (click)="closeMenus()"
                 role="menuitem"
               >
-                Mes demandes
+                Mes trajets
               </a>
               <a
                 routerLink="/messages"
