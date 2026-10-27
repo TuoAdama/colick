@@ -121,8 +121,7 @@
                 Mon profil
               </a>
               <a
-                [routerLink]="['/dashboard']"
-                [queryParams]="{ tab: 'sent' }"
+                routerLink="/sent-bookings"
                 class="block px-4 py-2.5 text-sm text-text-primary hover:bg-background-secondary"
                 (click)="closeMenus()"
                 role="menuitem"
