@@ -43,6 +43,7 @@ export class AppComponent {
    */
   title = 'Coliclic - Envoyez vos colis avec des voyageurs de confiance';
   showSharedChrome = true;
+  isTripDetailPage = false;
   currentPagePath = '/';
 
   constructor() {
@@ -64,6 +65,7 @@ export class AppComponent {
   }
 
   private updateSharedChrome(url: string): void {
+    this.isTripDetailPage = this.publicTripReferenceRoutePattern.test(url);
     this.currentPagePath = url.split(/[?#]/, 1)[0] || '/';
     this.showSharedChrome =
       this.publicTripReferenceRoutePattern.test(url) ||

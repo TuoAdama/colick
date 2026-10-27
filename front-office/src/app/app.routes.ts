@@ -121,8 +121,8 @@ export const routes: Routes = [
   },
   {
     path: 'trips/ref/:reference',
-    redirectTo: '/trips/ref/:reference/request',
-    pathMatch: 'full',
+    data: { seo: { title: 'Détail du trajet | Coliclic', description: 'Consultez le trajet, le tarif au kilo et le profil du voyageur avant de réserver.', index: false } },
+    loadComponent: () => import('./pages/trip-detail/trip-detail-page.component').then(m => m.TripDetailPageComponent),
   },
   {
     path: 'traveler-review',

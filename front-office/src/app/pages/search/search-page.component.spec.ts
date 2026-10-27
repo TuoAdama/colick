@@ -481,20 +481,20 @@ describe('SearchPageComponent', () => {
     authServiceMock.getUser.and.returnValue({ id: 3 });
     const ownTrip = { id: 10, travelerId: 3 } as Trip;
 
-    component.openBookingRequestPage(ownTrip);
+    component.openTripDetails(ownTrip);
 
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('opens the dedicated booking request page and preserves the search URL', () => {
+  it('opens the public trip detail page and preserves the search URL', () => {
     spyOnProperty(router, 'url', 'get').and.returnValue(
       '/search?from=Paris&to=Abidjan&date=2026-06-14&sort=rating_desc&minPrice=8&maxPrice=15',
     );
     const trip = { id: 10, reference: 'TRP-2026-000010', travelerId: 3 } as Trip;
 
-    component.openBookingRequestPage(trip);
+    component.openTripDetails(trip);
 
-    expect(router.navigate).toHaveBeenCalledWith(['/trips/ref', 'TRP-2026-000010', 'request'], {
+    expect(router.navigate).toHaveBeenCalledWith(['/trips/ref', 'TRP-2026-000010'], {
       queryParams: {
         returnUrl: '/search?from=Paris&to=Abidjan&date=2026-06-14&sort=rating_desc&minPrice=8&maxPrice=15',
         source: 'search_results',
@@ -863,7 +863,7 @@ describe('SearchPageComponent', () => {
     expect(card.textContent).toContain('Confirmation instantanée');
     expect(card.textContent).toContain(component.formatDate(trip.arrivalTime));
     expect(card.textContent).toContain('Nouveau');
-    const reserve = spyOn(component, 'openBookingRequestPage');
+    const reserve = spyOn(component, 'openTripDetails');
     card.querySelector('button')!.click();
     expect(reserve).toHaveBeenCalledWith(trip);
     trip.instantAcceptance = false;

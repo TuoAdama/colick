@@ -59,6 +59,8 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   private queryParamsSubscription?: Subscription;
   private lastAutoSearchKey = '';
 
+  get resultsReturnUrl(): string { return this.router.url; }
+
   /** Selected departure location */
   departure: Location | null = null;
 
@@ -461,12 +463,12 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     };
   }
 
-  /** Navigate to the dedicated booking request page for this trip. */
-  openBookingRequestPage(trip: Trip): void {
+  /** Open the public trip details before starting a booking request. */
+  openTripDetails(trip: Trip): void {
     if (this.isOwnTrip(trip) || !trip.reference) {
       return;
     }
-    void this.router.navigate(['/trips/ref', trip.reference, 'request'], {
+    void this.router.navigate(['/trips/ref', trip.reference], {
       queryParams: { returnUrl: this.router.url, source: 'search_results' },
     });
   }

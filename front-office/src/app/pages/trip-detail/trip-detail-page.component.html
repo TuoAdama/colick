@@ -1,0 +1,59 @@
+<div class="trip-detail">
+  <header class="mobile-header">
+    <a [routerLink]="returnLink" aria-label="Retour aux résultats"><span class="material-symbols-outlined" aria-hidden="true">chevron_left</span></a>
+    <span class="mobile-title">Détail du trajet</span>
+    <a routerLink="/" class="wordmark" aria-label="Coliclic - Accueil"><span>Coli</span>clic</a>
+  </header>
+  <div class="detail-container">
+    <a class="back-link" [routerLink]="returnLink"><span aria-hidden="true">←</span> Retour aux résultats</a>
+    @if (isLoading) {
+      <section class="detail-card state" role="status">Chargement du trajet…</section>
+    } @else if (!trip) {
+      <section class="detail-card state" role="alert">
+        <h1>Trajet introuvable</h1>
+        <p>Cette annonce est introuvable ou n’est plus disponible.</p>
+        <a routerLink="/search">Rechercher un trajet</a>
+      </section>
+    } @else {
+      <p class="eyebrow">Détail du trajet</p>
+      <h1>{{ trip.departureAddress }} <span aria-label="vers">→</span> {{ trip.destination }}</h1>
+      <div class="detail-grid">
+        <div class="detail-content">
+          <section class="detail-card itinerary" aria-label="Itinéraire" data-testid="trip-itinerary">
+            @for (stop of [{ label: 'Départ', icon: 'flight_takeoff', date: trip.departureTime, address: trip.departureAddress }, { label: 'Arrivée', icon: 'location_on', date: trip.arrivalTime, address: trip.destination }]; track stop.label) {
+              <div class="stop">
+                <span class="icon-circle route-icon"><span class="material-symbols-outlined" aria-hidden="true">{{ stop.icon }}</span></span>
+                <div class="stop-content"><p class="muted stop-label">{{ stop.label }}</p><time [attr.datetime]="stop.date"><span class="stop-date">{{ formatDate(stop.date) }}</span><span class="stop-time">{{ formatTime(stop.date) }}</span></time><p class="muted address">{{ stop.address }}</p></div>
+              </div>
+            }
+          </section>
+          <section class="detail-card traveler" aria-label="Voyageur">
+            <a class="traveler-identity" [routerLink]="['/travelers', trip.travelerId]">
+              <app-user-avatar [name]="trip.travelerName" [photoUrl]="trip.travelerPhotoUrl" sizeClasses="w-16 h-16 md:w-24 md:h-24 shrink-0" textClasses="text-xl" />
+              <div><p class="muted">Voyageur</p><h2>{{ trip.travelerName }}</h2><p class="rating">@if (hasRating) { <span class="star" aria-hidden="true">★</span> <strong>{{ formatRating(trip.travelerRatingAverage) }}</strong><span class="muted"> · {{ trip.travelerRatingCount }} avis</span> } @else { <span class="muted">Nouveau · Aucun avis</span> }</p></div>
+            </a>
+            <a class="profile-link" [routerLink]="['/travelers', trip.travelerId]" [attr.aria-label]="'Voir le profil de ' + trip.travelerName"><span>Voir le profil</span><span aria-hidden="true">›</span></a>
+          </section>
+          <div class="mobile-metrics">
+            <div class="detail-card metric"><span class="icon-circle"><span class="material-symbols-outlined" aria-hidden="true">weight</span></span><div><strong>{{ formatNumber(trip.availableWeight) }} kg</strong><p class="muted">disponibles</p></div></div>
+            <div class="detail-card metric"><span class="icon-circle"><span class="material-symbols-outlined" aria-hidden="true">payments</span></span><div><strong>{{ formatNumber(trip.pricePerKilo) }} €/kg</strong><p class="muted">Prix par kilo</p></div></div>
+          </div>
+          <section class="detail-card conditions" aria-labelledby="conditions-title">
+            <h2 id="conditions-title">À savoir</h2>
+            <div class="condition"><span class="icon-circle neutral"><span class="material-symbols-outlined" aria-hidden="true">group</span></span><div><h3>{{ trip.instantAcceptance ? 'Confirmation instantanée' : 'Sur accord du voyageur' }}</h3><p class="muted">{{ trip.instantAcceptance ? 'Votre demande de réservation sera acceptée automatiquement.' : 'Votre demande de réservation sera soumise au voyageur.' }}</p></div></div>
+            <div class="condition"><span class="icon-circle neutral"><span class="material-symbols-outlined" aria-hidden="true">chat</span></span><div><h3>Remise à convenir</h3><p class="muted">Les détails de la remise du colis seront discutés avec le voyageur.</p></div></div>
+          </section>
+        </div>
+        <aside class="detail-card booking-summary" aria-label="Réservation" data-testid="trip-booking-summary">
+          <div class="summary-metric"><span class="icon-circle"><span class="material-symbols-outlined" aria-hidden="true">payments</span></span><div><strong>{{ formatNumber(trip.pricePerKilo) }} €/kg</strong><p class="muted">Prix par kilo</p></div></div>
+          <div class="summary-metric"><span class="icon-circle"><span class="material-symbols-outlined" aria-hidden="true">weight</span></span><div><strong>{{ formatNumber(trip.availableWeight) }} kg</strong><p class="muted">disponibles</p></div></div>
+          <button type="button" class="reserve-button" [disabled]="!canBook" (click)="reserve()">{{ bookingLabel }}</button>
+        </aside>
+      </div>
+      <aside class="mobile-booking" aria-label="Réserver ce trajet">
+        <div><p class="muted">Prix</p><strong>{{ formatNumber(trip.pricePerKilo) }} €/kg</strong></div>
+        <button type="button" class="reserve-button" [disabled]="!canBook" (click)="reserve()">{{ bookingLabel }}</button>
+      </aside>
+    }
+  </div>
+</div>

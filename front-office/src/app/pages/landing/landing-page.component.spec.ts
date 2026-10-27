@@ -243,7 +243,7 @@ describe('LandingPageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Aucune demande trouvee.');
   });
 
-  it('links a landing trip card directly to the booking request page', () => {
+  it('links a landing trip card to the trip detail page', () => {
     fixture.detectChanges();
     component.trips = [buildLandingTripCard({ reference: 'TRP-2026-000013' })];
     component.isTripsLoading = false;
@@ -251,8 +251,8 @@ describe('LandingPageComponent', () => {
 
     const link = fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]') as HTMLElement | null;
     expect(link).not.toBeNull();
-    expect(link?.getAttribute('href')).toBe('/trips/ref/TRP-2026-000013/request?returnUrl=%2F&source=landing_recommended');
-    expect(link?.getAttribute('aria-label')).toBe('Réserver le trajet de Paris, France vers Abidjan, Côte d\'Ivoire');
+    expect(link?.getAttribute('href')).toBe('/trips/ref/TRP-2026-000013?returnUrl=%2F&source=landing_recommended');
+    expect(link?.getAttribute('aria-label')).toBe('Voir le trajet de Paris, France vers Abidjan, Côte d\'Ivoire');
   });
 
   it('keeps the traveler profile link above the full-card trip overlay', () => {
@@ -305,7 +305,7 @@ describe('LandingPageComponent', () => {
   }
 
   for (const signedIn of [true, false]) {
-    it(`opens another traveler's booking request on click when ${signedIn ? 'signed in' : 'anonymous'}`, () => {
+    it(`opens another traveler's trip details on click when ${signedIn ? 'signed in' : 'anonymous'}`, () => {
       authServiceMock.isLoggedIn.and.returnValue(signedIn);
       authServiceMock.getUser.and.returnValue(signedIn ? { id: 42 } : null);
       fixture.detectChanges();
@@ -319,7 +319,7 @@ describe('LandingPageComponent', () => {
 
       expect(navigateByUrl).toHaveBeenCalledTimes(1);
       expect(router.serializeUrl(navigateByUrl.calls.mostRecent().args[0] as UrlTree))
-        .toBe('/trips/ref/TRP-2026-000013/request?returnUrl=%2F&source=landing_recommended');
+        .toBe('/trips/ref/TRP-2026-000013?returnUrl=%2F&source=landing_recommended');
     });
   }
 
