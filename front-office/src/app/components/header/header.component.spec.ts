@@ -336,6 +336,9 @@ describe('HeaderComponent', () => {
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Mon profil');
     expect(text).toContain('Mes demandes');
+    const sentBookingsLink = (Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[])
+      .find((link) => (link.textContent ?? '').trim() === 'Mes demandes') as HTMLAnchorElement | undefined;
+    expect(sentBookingsLink?.getAttribute('href')).toBe('/sent-bookings');
     expect(text).toContain('Messages');
     expect(text).toContain('Déconnexion');
   });
