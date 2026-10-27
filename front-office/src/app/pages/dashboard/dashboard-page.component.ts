@@ -6,7 +6,6 @@ import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
 import { BookingResponse } from '../../models/booking.model';
 import { Trip } from '../../models/trip.model';
-import { CommercialContentService } from '../../services/commercial-content.service';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -18,7 +17,6 @@ export class DashboardPageComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly tripService = inject(TripService);
   private readonly router = inject(Router);
-  readonly commercialContent = inject(CommercialContentService);
 
   currentUser$ = this.authService.currentUser$;
 
@@ -33,27 +31,6 @@ export class DashboardPageComponent implements OnInit {
   // Received bookings (bookings on my trips)
   receivedBookings: BookingResponse[] = [];
   isLoadingReceivedBookings = false;
-
-  // Map tripId → Trip for earnings computation
-  private tripsMap = new Map<number, Trip>();
-
-  get activeTripsCount(): number {
-    return this.myTrips.filter(t => t.status === 'ACTIVE').length;
-  }
-
-  get pendingReceivedCount(): number {
-    return this.receivedBookings.filter(b => b.status === 'PENDING').length;
-  }
-
-  get totalEarnings(): number {
-    return this.receivedBookings
-      .filter(b => b.status === 'ACCEPTED' || b.deliveredAt)
-      .reduce((sum, b) => {
-        const trip = this.tripsMap.get(b.tripId);
-        const pricePerKilo = trip?.pricePerKilo ?? 0;
-        return sum + (b.weight * pricePerKilo);
-      }, 0);
-  }
 
   ngOnInit(): void {
     if (!this.authService.isLoggedIn()) {
@@ -77,7 +54,6 @@ export class DashboardPageComponent implements OnInit {
     this.tripService.getMyTrips().subscribe({
       next: (trips) => {
         this.myTrips = trips;
-        this.tripsMap = new Map(trips.map(t => [t.id, t]));
         this.isLoadingTrips = false;
         this.loadReceivedBookings(trips);
       },
