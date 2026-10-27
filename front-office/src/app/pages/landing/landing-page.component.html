@@ -1,0 +1,118 @@
+  <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <symbol id="landing-i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+      <symbol id="landing-i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+      <symbol id="landing-i-route" viewBox="0 0 24 24"><path d="m3 10 18-7-7 18-3-8-8-3Z"/></symbol>
+      <symbol id="landing-i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 11h18"/></symbol>
+      <symbol id="landing-i-box" viewBox="0 0 24 24"><path d="m12 2 10 5.5v9L12 22 2 16.5v-9L12 2Zm0 20V11.5M2 7.5l10 4 10-4M7 4.75l10 5v5"/></symbol>
+      <symbol id="landing-i-plane" viewBox="0 0 24 24"><path d="m22 2-6 20-4-9-10-4 20-7ZM12 13 22 2"/></symbol>
+      <symbol id="landing-i-swap" viewBox="0 0 24 24"><path d="M4 8h16m-4-4 4 4-4 4M20 16H4m4-4-4 4 4 4"/></symbol>
+      <symbol id="landing-i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+      <symbol id="landing-i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    </defs>
+  </svg>
+
+<section class="hero shell" aria-labelledby="hero-title">
+  <h1 id="hero-title" class="hero-title">Expédiez vos colis avec des voyageurs de <span class="text-accent">confiance</span></h1>
+  <app-landing-visual class="hero-visual" appLandingParallax />
+
+  <section class="search-section" aria-label="Rechercher un trajet">
+    <div class="mode-tabs" role="tablist" aria-label="Que souhaitez-vous faire ?">
+      <button #sendTab id="mode-send" type="button" class="mode-tab" role="tab" [attr.aria-selected]="activeMode === 'send'" [attr.tabindex]="activeMode === 'send' ? 0 : -1" aria-controls="search-panel" (click)="selectMode('send')" (keydown.ArrowRight)="selectMode('transport'); transportTab.focus()" (keydown.ArrowLeft)="selectMode('transport'); transportTab.focus()"><svg class="icon" aria-hidden="true"><use href="#landing-i-box"/></svg>Envoyer</button>
+      <button #transportTab id="mode-transport" type="button" class="mode-tab" role="tab" [attr.aria-selected]="activeMode === 'transport'" [attr.tabindex]="activeMode === 'transport' ? 0 : -1" aria-controls="search-panel" (click)="selectMode('transport')" (keydown.ArrowLeft)="selectMode('send'); sendTab.focus()" (keydown.ArrowRight)="selectMode('send'); sendTab.focus()"><svg class="icon" aria-hidden="true"><use href="#landing-i-plane"/></svg>Voyager</button>
+    </div>
+    <div id="search-panel" role="tabpanel" [attr.aria-labelledby]="activeMode === 'send' ? 'mode-send' : 'mode-transport'">
+      <form class="search-form" (ngSubmit)="activeMode === 'send' ? searchTrips() : searchParcelRequests()" novalidate>
+        <div class="route-fields">
+          <div class="field-wrap">
+            <label class="search-field" for="landing-departure"><svg class="icon field-icon text-accent" aria-hidden="true"><use href="#landing-i-pin"/></svg><span class="field-copy"><span class="field-label">Départ</span><input id="landing-departure" name="departure" type="text" placeholder="Ville de départ" [(ngModel)]="departureQuery" (input)="onDepartureInput()" (focus)="showAutocomplete('departure')" (blur)="closeAutocompleteSoon()" (keydown)="onAutocompleteKeydown('departure', $event)" autocomplete="off" required aria-required="true" role="combobox" aria-autocomplete="list" [attr.aria-expanded]="activeAutocomplete === 'departure' && departureSuggestions.length > 0" aria-controls="departure-list" [attr.aria-activedescendant]="activeAutocomplete === 'departure' && activeSuggestionIndex >= 0 ? 'departure-option-' + activeSuggestionIndex : null" [attr.aria-invalid]="formError && !departureQuery.trim() ? 'true' : null" aria-describedby="landing-form-error"></span></label>
+            @if (activeAutocomplete === 'departure' && departureSuggestions.length > 0) {
+              <ul id="departure-list" class="suggestions" role="listbox" aria-label="Villes de départ">
+                @for (location of departureSuggestions; track location.id; let index = $index) {
+                  <li id="departure-option-{{ index }}" role="option" [attr.aria-selected]="index === activeSuggestionIndex" (mousedown)="$event.preventDefault(); selectLocation('departure', location)" (click)="selectLocation('departure', location)">{{ location.name }}, {{ location.country }}</li>
+                }
+              </ul>
+            }
+            @if (isDepartureLoading) { <span class="field-status" role="status">Recherche…</span> }
+          </div>
+          <button type="button" class="swap-button" (click)="swapRoute()" aria-label="Inverser le départ et la destination" data-testid="landing-route-swap"><svg class="icon" aria-hidden="true"><use href="#landing-i-swap"/></svg></button>
+          <div class="field-wrap">
+            <label class="search-field" for="landing-destination"><svg class="icon field-icon text-accent" aria-hidden="true"><use href="#landing-i-route"/></svg><span class="field-copy"><span class="field-label">Destination</span><input id="landing-destination" name="destination" type="text" placeholder="Ville d’arrivée" [(ngModel)]="destinationQuery" (input)="onDestinationInput()" (focus)="showAutocomplete('destination')" (blur)="closeAutocompleteSoon()" (keydown)="onAutocompleteKeydown('destination', $event)" autocomplete="off" required aria-required="true" role="combobox" aria-autocomplete="list" [attr.aria-expanded]="activeAutocomplete === 'destination' && destinationSuggestions.length > 0" aria-controls="destination-list" [attr.aria-activedescendant]="activeAutocomplete === 'destination' && activeSuggestionIndex >= 0 ? 'destination-option-' + activeSuggestionIndex : null" [attr.aria-invalid]="formError && !destinationQuery.trim() ? 'true' : null" aria-describedby="landing-form-error"></span></label>
+            @if (activeAutocomplete === 'destination' && destinationSuggestions.length > 0) {
+              <ul id="destination-list" class="suggestions" role="listbox" aria-label="Villes de destination">
+                @for (location of destinationSuggestions; track location.id; let index = $index) {
+                  <li id="destination-option-{{ index }}" role="option" [attr.aria-selected]="index === activeSuggestionIndex" (mousedown)="$event.preventDefault(); selectLocation('destination', location)" (click)="selectLocation('destination', location)">{{ location.name }}, {{ location.country }}</li>
+                }
+              </ul>
+            }
+            @if (isDestinationLoading) { <span class="field-status" role="status">Recherche…</span> }
+          </div>
+        </div>
+        <label class="search-field date-field" for="landing-date"><svg class="icon field-icon" aria-hidden="true"><use href="#landing-i-calendar"/></svg><span class="field-copy"><span class="field-label">{{ activeMode === 'send' ? 'À partir de' : 'Date souhaitée' }}</span><input id="landing-date" name="travelDate" type="date" [(ngModel)]="travelDate" [attr.aria-label]="activeMode === 'send' ? 'À partir de — date facultative' : 'Date souhaitée — facultative'"></span></label>
+        <button type="submit" class="search-submit">{{ activeMode === 'send' ? 'Trouver un voyageur' : 'Voir les demandes' }}<svg class="icon" aria-hidden="true"><use href="#landing-i-arrow"/></svg></button>
+      </form>
+      <p id="landing-form-error" class="form-error" role="alert">{{ formError }}</p>
+      @if (activeMode === 'transport') {
+        <button type="button" class="publish-link" (click)="publishTrip()">Vous partez bientôt ? Publier un trajet <svg class="icon" aria-hidden="true"><use href="#landing-i-arrow"/></svg></button>
+      }
+    </div>
+  </section>
+</section>
+<section class="recommendations shell" aria-labelledby="trips-title">
+  <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end" appLandingReveal>
+    <div><p class="eyebrow">Les prochains départs</p><h2 id="trips-title" class="section-title">Un voyage, <span class="text-accent">des possibilités.</span></h2></div>
+    <a routerLink="/search" class="all-trips">Voir tous les trajets <svg class="icon" aria-hidden="true"><use href="#landing-i-arrow"/></svg></a>
+  </div>
+  <p class="sr-only" role="status" aria-live="polite">{{ isTripsLoading ? 'Chargement des trajets' : tripsError ? 'Impossible de charger les trajets' : trips.length + ' trajet(s) disponible(s)' }}</p>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-7" [attr.aria-busy]="isTripsLoading">
+    @if (isTripsLoading) {
+      @for (item of [1, 2, 3]; track item) { <div class="skeleton h-[268px] rounded-[18px] border border-[#eee9e2] p-6" aria-hidden="true"><span></span><span></span><span></span><span></span></div> }
+    } @else if (tripsError) {
+      <div class="col-span-full rounded-2xl border border-[#ece9e4] bg-[#fffcf8] px-6 py-10 text-center text-sm text-text-secondary"><p>Les trajets n’ont pas pu être chargés.</p><button type="button" class="mx-auto mt-4 block rounded-lg border border-accent/50 bg-white px-5 py-2.5 font-semibold text-primary" (click)="reloadTrips()">Réessayer</button></div>
+    } @else if (trips.length === 0) {
+      <p class="col-span-full rounded-2xl border border-[#ece9e4] bg-[#fffcf8] px-6 py-10 text-center text-sm text-text-secondary">Aucun trajet disponible pour le moment.</p>
+    } @else {
+      @for (trip of trips; track trip.id; let index = $index) {
+        <article class="trip-card relative rounded-[18px] border border-[#ece9e4] bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-card" appLandingReveal [style.--delay]="index * 90 + 'ms'">
+          @if (isOwnTrip(trip)) {
+            <a class="absolute inset-0 z-10 rounded-[18px]" [routerLink]="['/trips', trip.id, 'reservations']" [attr.aria-label]="'Voir les détails du trajet de ' + trip.departure + ' vers ' + trip.arrival" data-testid="landing-trip-card-link"></a>
+          } @else if (trip.reference) {
+            <a class="absolute inset-0 z-10 rounded-[18px]" [routerLink]="['/trips/ref', trip.reference]" [queryParams]="recommendedTripQueryParams()" [attr.aria-label]="'Voir le trajet de ' + trip.departure + ' vers ' + trip.arrival" data-testid="landing-trip-card-link"></a>
+          }
+          <div class="flex items-center justify-between gap-3"><span class="rounded-md bg-accent/10 px-2.5 py-1.5 text-[10px] font-bold text-[#a14e00]">{{ trip.tag }}</span><p class="text-2xl font-bold tracking-tight">{{ trip.price }}<span class="text-[11px] font-normal tracking-normal text-text-secondary"> / kg</span></p></div>
+          <div class="relative my-5 space-y-4 pl-6 before:absolute before:bottom-3 before:left-1 before:top-2.5 before:border-l before:border-dashed before:border-accent/50"><p class="relative text-[15px] font-semibold before:absolute before:-left-6 before:top-1.5 before:h-[9px] before:w-[9px] before:rounded-full before:border-2 before:border-accent before:bg-white last:before:bg-accent">{{ trip.departure }}</p><p class="relative text-[15px] font-semibold before:absolute before:-left-6 before:top-1.5 before:h-[9px] before:w-[9px] before:rounded-full before:border-2 before:border-accent before:bg-white last:before:bg-accent">{{ trip.arrival }}</p></div>
+          <p class="flex items-center gap-2 text-xs text-text-secondary"><svg class="icon" aria-hidden="true"><use href="#landing-i-calendar"/></svg>{{ trip.date }}</p>
+          <div class="mt-5 flex items-center justify-between gap-2 border-t border-[#f0ece7] pt-4 md:flex-col md:items-start lg:flex-row lg:items-center">
+            <a class="traveler relative z-20 flex min-w-0 items-center gap-2 rounded-md" [routerLink]="['/travelers', trip.travelerId]" [attr.aria-label]="'Voir le profil de ' + trip.traveler"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#FFF0DC] text-[11px] font-bold text-[#9b5107]" aria-hidden="true">{{ trip.avatar }}</span><span><span class="block text-xs font-semibold">{{ trip.traveler }}</span><span class="mt-0.5 block text-[10px] text-[#946025]">{{ trip.rating === 'Nouveau' ? 'Nouveau' : '★ ' + trip.rating }}</span></span></a>
+            <p class="whitespace-nowrap text-[10px] text-text-secondary">{{ trip.capacity }}</p>
+          </div>
+        </article>
+      }
+    }
+  </div>
+</section>
+<section id="securite" class="bg-background-primary py-14 lg:py-20">
+  <div class="mx-auto max-w-[1140px] px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="font-display text-3xl sm:text-[34px] font-bold text-primary tracking-tight">
+        Votre securite,
+        <span class="text-accent">notre priorite</span>
+      </h2>
+      <p class="mt-4 text-sm text-text-secondary">
+        Rejoignez une communaute ou chaque etape est pensee pour votre tranquillite.
+      </p>
+    </div>
+
+    <div class="mt-10 grid gap-6 md:grid-cols-3">
+      @for (card of trustCards; track card.title) {
+        <article class="rounded-2xl border border-border bg-white p-7 text-center transition hover:-translate-y-1 hover:shadow-card">
+          <span [class]="'material-symbols-outlined mx-auto mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl ' + card.tone" aria-hidden="true">
+            {{ card.icon }}
+          </span>
+          <h3 class="font-display text-lg font-semibold text-primary">{{ card.title }}</h3>
+          <p class="mt-3 text-sm leading-6 text-text-secondary">{{ card.description }}</p>
+        </article>
+      }
+    </div>
+  </div>
+</section>
