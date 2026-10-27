@@ -73,6 +73,8 @@ describe('HeaderComponent', () => {
           { path: 'propose', component: TestRouteComponent },
           { path: 'comment-ca-marche', component: TestRouteComponent },
           { path: 'contact', component: TestRouteComponent },
+          { path: 'sent-bookings', component: TestRouteComponent },
+          { path: 'trips', component: TestRouteComponent },
         ]),
         { provide: AuthService, useValue: authServiceMock },
         { provide: MessagingService, useValue: messagingServiceMock },
@@ -335,12 +337,43 @@ describe('HeaderComponent', () => {
 
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Mon profil');
-    expect(text).toContain('Mes demandes');
-    const sentBookingsLink = (Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[])
-      .find((link) => (link.textContent ?? '').trim() === 'Mes demandes') as HTMLAnchorElement | undefined;
-    expect(sentBookingsLink?.getAttribute('href')).toBe('/sent-bookings');
+    expect(text).toContain('Mes trajets');
+    expect(text).not.toContain('Mes demandes');
+    const tripsLink = (Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[])
+      .find((link) => (link.textContent ?? '').trim() === 'Mes trajets') as HTMLAnchorElement | undefined;
+    expect(tripsLink?.getAttribute('href')).toBe('/trips');
     expect(text).toContain('Messages');
     expect(text).toContain('Déconnexion');
+  });
+
+  it('navigates to sent bookings when clicking Mes réservations without the received tab', async () => {
+    currentUser$.next(AUTHENTICATED_USER);
+    fixture.detectChanges();
+
+    const link = fixture.nativeElement.querySelector('a[aria-label="Mes réservations"]') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/sent-bookings');
+    link.click();
+    await fixture.whenStable();
+
+    expect(router.url).toBe('/sent-bookings');
+  });
+
+  it('navigates to trips and closes the profile menu when clicking Mes trajets', async () => {
+    currentUser$.next(AUTHENTICATED_USER);
+    fixture.detectChanges();
+    const profileButton = fixture.nativeElement.querySelector('button[aria-label="Menu profil"]') as HTMLButtonElement;
+    profileButton.click();
+    fixture.detectChanges();
+
+    const link = fixture.nativeElement.querySelector('a[role="menuitem"][href="/trips"]') as HTMLAnchorElement;
+    expect(link.textContent?.trim()).toBe('Mes trajets');
+    link.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(router.url).toBe('/trips');
+    expect(component.isProfileMenuOpen).toBeFalse();
+    expect(fixture.nativeElement.querySelector('[role="menu"]')).toBeNull();
   });
 
   it('logs out and resets unread counter', () => {
