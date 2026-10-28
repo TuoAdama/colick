@@ -1,0 +1,38 @@
+{
+  "title": "Un colis. Tout un lien.",
+  "brand": "Coliclic",
+  "website": "coliclic.com",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "duration": 50,
+  "colors": {"navy": "#023047", "orange": "#FB8500", "cream": "#F8F5EF"},
+  "demo_notice": "Démonstration · personnages et échanges fictifs",
+  "parcel": {"id": "ABJ-heart", "body": "navy", "tape": "orange", "label": "ABJ", "sticker": "heart"},
+  "characters": {
+    "sender": {"name": "Sam", "skin": "#AF7051", "shirt": "#E7B65A", "hair": "#302C2D"},
+    "traveler": {"name": "Aya", "skin": "#895039", "shirt": "#327F85", "hair": "#242E35", "scarf": "#FB8500"},
+    "recipient": {"name": "Léa", "skin": "#98583D", "shirt": "#D67966", "hair": "#302C2D"}
+  },
+  "scenes": [
+    {"id": "prepare", "start": 0, "end": 5, "lines": ["Un colis à envoyer", "à Abidjan ?"], "accent": 1, "kicker": "DE PARIS À VOS PROCHES", "voiceover": "À Paris, un colis se prépare pour un proche à Abidjan.", "vo_start": 0.35, "vo_end": 4.8},
+    {"id": "search", "start": 5, "end": 13, "lines": ["Trouvez un voyageur", "qui fait le trajet."], "accent": 1, "kicker": "LA RENCONTRE COMMENCE ICI", "voiceover": "Sur Coliclic, cherchez Paris, Abidjan. Consultez les kilos disponibles, le tarif au kilo et les avis. Choisissez votre voyageur.", "vo_start": 5.25, "vo_end": 12.75},
+    {"id": "request", "start": 13, "end": 21, "lines": ["Décrivez votre colis.", "Organisez la remise."], "accent": 1, "kicker": "UNE DEMANDE, PUIS UN ÉCHANGE", "voiceover": "Décrivez votre colis et envoyez votre demande. Aya l’accepte. Vous échangez pour convenir d’un rendez-vous.", "vo_start": 13.3, "vo_end": 20.7},
+    {"id": "handoff", "start": 21, "end": 28, "lines": ["Votre colis rejoint", "son voyage."], "accent": 1, "kicker": "PARIS · LA REMISE", "voiceover": "Vous retrouvez Aya à Paris. Votre colis rejoint son voyage.", "vo_start": 21.5, "vo_end": 26.5},
+    {"id": "flight", "start": 28, "end": 36, "lines": ["Direction", "Abidjan."], "accent": 1, "kicker": "UN VOYAGE QUI CRÉE DU LIEN", "voiceover": "Direction Abidjan. Le voyage continue, avec un peu de vous dans les bagages.", "vo_start": 28.65, "vo_end": 35.2},
+    {"id": "receive", "start": 36, "end": 43, "lines": ["Arrivé à destination.", "Remis en main propre."], "accent": 1, "kicker": "ABIDJAN · LES RETROUVAILLES", "voiceover": "À Abidjan, Aya retrouve votre proche et lui remet le colis, en main propre.", "vo_start": 36.45, "vo_end": 42.5},
+    {"id": "brand", "start": 43, "end": 50, "lines": ["Des voyages,", "des colis, des liens."], "accent": 1, "kicker": "", "voiceover": "Coliclic. Des voyages, des colis, des liens. Trouvez votre voyageur sur coliclic point com.", "vo_start": 43.4, "vo_end": 49.7}
+  ],
+  "sfx": [
+    {"time": 1.8, "kind": "tape"},
+    {"time": 6.9, "kind": "tap"},
+    {"time": 10.6, "kind": "tap"},
+    {"time": 15.4, "kind": "send"},
+    {"time": 17.4, "kind": "accept"},
+    {"time": 19.1, "kind": "tap"},
+    {"time": 24.8, "kind": "cloth"},
+    {"time": 28.5, "kind": "air"},
+    {"time": 39.8, "kind": "cloth"},
+    {"time": 44.2, "kind": "accept"}
+  ]
+}
