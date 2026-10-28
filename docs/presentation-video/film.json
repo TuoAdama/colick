@@ -1,0 +1,18 @@
+{
+  "brand": "Coliclic",
+  "title": "Les voyages créent des liens",
+  "website": "coliclic.com",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "duration": 50,
+  "colors": {"navy": "#023047", "orange": "#FB8500", "cream": "#F8F5EF"},
+  "scenes": [
+    {"id": "opening", "start": 0, "end": 7, "eyebrow": "LES VOYAGES CRÉENT DES LIENS", "lines": ["Un colis.", "Tout un lien."], "body": "Rapprochez ce qui compte.", "voiceover": "Il y a des colis qui transportent bien plus que des objets. Ils rapprochent ceux qui comptent."},
+    {"id": "connection", "start": 7, "end": 15, "eyebrow": "UNE AUTRE FAÇON D’ENVOYER", "lines": ["Votre destination.", "Son prochain voyage."], "body": "Coliclic met en relation expéditeurs et voyageurs.", "voiceover": "Avec Coliclic, trouvez un voyageur qui se rend à la destination de votre colis."},
+    {"id": "search", "start": 15, "end": 24, "eyebrow": "01 / TROUVER UN VOYAGEUR", "lines": ["Le bon trajet.", "Pour votre colis."], "body": "Recherchez votre destination.\nConsultez les trajets et les profils.", "voiceover": "Indiquez votre départ et votre destination. Consultez les trajets, les profils et les avis pour choisir votre voyageur."},
+    {"id": "request", "start": 24, "end": 32, "eyebrow": "02 / ORGANISER VOTRE ENVOI", "lines": ["Une demande.", "Le lien se crée."], "body": "Décrivez votre colis.\nÉchangez pour organiser sa remise.", "voiceover": "Décrivez votre colis et envoyez votre demande. Échangez avec le voyageur pour organiser la remise."},
+    {"id": "travel", "start": 32, "end": 41, "eyebrow": "VOUS PARTEZ BIENTÔT ?", "lines": ["Votre voyage", "peut aller plus loin."], "body": "Proposez votre espace disponible.\nFixez votre tarif au kilo.", "voiceover": "Vous voyagez ? Publiez votre trajet, proposez votre espace disponible et fixez votre tarif au kilo. Votre voyage devient un service utile."},
+    {"id": "closing", "start": 41, "end": 50, "eyebrow": "DES VOYAGES. DES COLIS. DES LIENS.", "lines": ["Le prochain lien", "commence avec vous."], "body": "Trouvez un voyageur. Ou proposez votre trajet.", "voiceover": "Coliclic. Des voyages, des colis, des liens. Trouvez un voyageur, ou proposez votre prochain trajet."}
+  ]
+}
