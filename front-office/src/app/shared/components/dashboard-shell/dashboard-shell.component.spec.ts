@@ -42,6 +42,17 @@ describe('DashboardShellComponent', () => {
     fixture = TestBed.createComponent(DashboardShellComponent);
   });
 
+  it('shows administration only to admins in desktop and mobile navigation', () => {
+    const original = authServiceMock.getUser();
+    fixture.componentInstance.openMobileMenu();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('a[href="/admin/users"]').length).toBe(0);
+    authServiceMock.getUser.and.returnValue({ ...original, role: 'ADMIN' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('a[href="/admin/users"]').length).toBe(2);
+    authServiceMock.getUser.and.returnValue(original);
+  });
+
   it('renders a compact dashboard footer with legal links', () => {
     fixture.detectChanges();
 
