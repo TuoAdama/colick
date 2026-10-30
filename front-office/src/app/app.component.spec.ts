@@ -86,6 +86,10 @@ describe('AppComponent', () => {
   it('hides shared marketing chrome on dashboard shell routes', () => {
     const dashboardRoutes = [
       '/dashboard',
+      '/admin/users',
+      '/admin/users/7',
+      '/admin/users/7/trips?page=1',
+      '/admin/users/7/bookings',
       '/trips',
       '/trips/42/reservations/7/profile',
       '/propose',

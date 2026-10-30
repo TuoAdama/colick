@@ -1,0 +1,20 @@
+<section class="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
+  <a routerLink="/admin/users" class="text-sm font-semibold text-primary underline">← Tous les utilisateurs</a>
+  @if (loading()) { <p class="mt-6" role="status">Chargement de l’utilisateur…</p> }
+  @else if (error()) { <div class="mt-6 rounded-xl border border-border p-5" role="alert"><p>{{ error() }}</p><button class="mt-3 font-semibold text-primary underline" (click)="reload()">Réessayer</button></div> }
+  @if (detail(); as data) {
+    <header class="my-6"><p class="text-sm text-text-secondary">Administration · Fiche utilisateur</p><h1 class="mt-2 break-words text-3xl font-bold text-primary">{{ data.user.firstName }} {{ data.user.lastName }}</h1><span class="mt-3 inline-block rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">{{ data.user.verified ? 'Vérifié' : 'Non vérifié' }}</span></header>
+    <dl class="grid gap-6 rounded-2xl border border-border bg-background-secondary p-6 sm:grid-cols-2">
+      <div><dt class="text-sm text-text-secondary">Nom</dt><dd class="mt-1 font-semibold">{{ data.user.lastName }}</dd></div>
+      <div><dt class="text-sm text-text-secondary">Prénom</dt><dd class="mt-1 font-semibold">{{ data.user.firstName }}</dd></div>
+      <div><dt class="text-sm text-text-secondary">E-mail</dt><dd class="mt-1 break-all font-semibold">{{ data.user.email }}</dd></div>
+      <div><dt class="text-sm text-text-secondary">Méthodes de connexion</dt><dd class="mt-1 font-semibold">{{ connections(data.user) }}</dd></div>
+      <div><dt class="text-sm text-text-secondary">Date d’inscription</dt><dd class="mt-1 font-semibold">{{ date(data.user.createdAt) }} @if (data.user.createdAtEstimated) { <span class="text-sm font-normal">(date estimée)</span> }</dd></div>
+      <div><dt class="text-sm text-text-secondary">Dernière modification</dt><dd class="mt-1 font-semibold">{{ date(data.user.updatedAt) }}</dd></div>
+    </dl>
+    <div class="mt-6 grid gap-4 sm:grid-cols-2">
+      <a [routerLink]="['/admin/users', data.user.id, 'trips']" class="rounded-2xl border border-border bg-background-secondary p-6 transition hover:border-primary"><span class="block text-3xl font-bold text-primary">{{ data.tripsCount }}</span><span class="mt-2 block font-semibold">Trajets publiés →</span></a>
+      <a [routerLink]="['/admin/users', data.user.id, 'bookings']" class="rounded-2xl border border-border bg-background-secondary p-6 transition hover:border-primary"><span class="block text-3xl font-bold text-primary">{{ data.bookingsCount }}</span><span class="mt-2 block font-semibold">Demandes envoyées →</span></a>
+    </div>
+  }
+</section>
