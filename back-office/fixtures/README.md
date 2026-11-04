@@ -29,10 +29,15 @@ Les adresses sont fictives et les numéros de téléphone sont laissés vides.
 
 | Comptes | Rôle et état |
 | --- | --- |
-| `fixture.user001@example.test`, `fixture.user002@example.test` | ADMIN, actifs et vérifiés |
-| `fixture.user003@example.test` à `fixture.user080@example.test` | USER, actifs et vérifiés, voyageurs/expéditeurs |
-| `fixture.user081@example.test` à `fixture.user090@example.test` | USER, actifs mais e-mail non vérifié |
-| `fixture.user091@example.test` à `fixture.user100@example.test` | USER, désactivés et non vérifiés |
+| `aicha.kone@example.test`, `thomas.martin@example.test` | ADMIN, actifs et vérifiés |
+| Profils 3 à 80 du catalogue | USER, actifs et vérifiés, voyageurs/expéditeurs |
+| Profils 81 à 90 du catalogue | USER, actifs mais e-mail non vérifié |
+| Profils 91 à 100 du catalogue | USER, désactivés et non vérifiés |
+
+Les 100 identités sont sélectionnées individuellement : Fatou Diallo, Aminata Traoré,
+Moussa Diop, Chloé Bernard, Koffi Kouassi, etc. Les e-mails suivent le format
+`prenom.nom@example.test`, sans accents. La liste complète, numérotée de 1 à 100,
+figure dans `fixture_people` au début de `demo.sql`. Ces profils sont fictifs.
 
 Les 100 comptes ont une connexion locale par mot de passe. Aucun faux compte Google
 n'est lié. Ces identifiants publics sont destinés à une base de démonstration uniquement.
@@ -49,6 +54,12 @@ n'est lié. Ces identifiants publics sont destinés à une base de démonstratio
 | conversations | 200 (100 liées à un trajet et 100 à une demande) |
 | messages | 800, lus et non lus |
 | trip_alerts | 100 |
+
+Les colis couvrent 20 situations concrètes (manuels scolaires, dossier universitaire,
+tissus de couture, vêtements, romans…) avec un poids et une description adaptés.
+Les conversations emploient les prénoms des interlocuteurs, les parcours et le contenu
+du colis concerné ; les commentaires d’avis sont cohérents avec leur note.
+Les titres et messages affichés ne portent aucun préfixe technique « FIXTURE ».
 
 Les parcours relient des villes européennes et africaines, avec des capacités,
 prix et modes d'acceptation variés. Les réservations utilisent le mode commercial
@@ -81,6 +92,12 @@ insertions sont atomiques ; toute erreur annule le chargement. Les tables tempor
 sont supprimées au commit. Un verrou d'écriture sur les huit tables sérialise les
 chargements ; l'exécuter pendant une période sans activité sur la base de démonstration.
 Aucune donnée existante n'est supprimée et aucun reset automatique n'est fourni.
+
+Si la première version a déjà été chargée, ses e-mails `fixture.userNNN@example.test`
+et ses anciens titres/messages sont reconnus et conservés. Cette version améliore
+les nouvelles insertions ; elle ne transforme pas les lignes déjà chargées. Pour
+visualiser entièrement le nouveau jeu, utiliser une base de démonstration vierge
+initialisée par le backend.
 
 ## Vérification
 

@@ -95,8 +95,36 @@ class DemoFixtureIntegrationTest {
         assertThat(number("SELECT count(*) FROM users WHERE email_verified_at IS NULL")).isEqualTo(20);
         var encoder = new BCryptPasswordEncoder();
         assertThat(encoder.matches("ColiclicDemo2026!", jdbc.queryForObject(
-                "SELECT password FROM users WHERE email='fixture.user001@example.test'", String.class))).isTrue();
+                "SELECT password FROM users WHERE email='aicha.kone@example.test'", String.class))).isTrue();
         assertThat(number("SELECT count(DISTINCT password) FROM users")).isEqualTo(1);
+    }
+
+    @Test
+    void usesRealisticProfilesParcelsAndConversations() throws Exception {
+        loadFixture();
+        assertThat(jdbc.queryForMap("SELECT first_name, last_name, email FROM users WHERE id=-910000001"))
+                .containsEntry("first_name", "Aïcha").containsEntry("last_name", "Koné")
+                .containsEntry("email", "aicha.kone@example.test");
+        assertThat(number("SELECT count(DISTINCT first_name || ' ' || last_name) FROM users")).isEqualTo(100);
+        assertThat(number("SELECT count(DISTINCT title) FROM trip_bookings")).isEqualTo(20);
+        assertThat(number("SELECT count(DISTINCT description) FROM trip_bookings")).isEqualTo(20);
+        assertThat(number("SELECT count(*) FROM trip_bookings WHERE title LIKE 'FIXTURE%' OR recipient_contact LIKE 'fixture.%' OR description LIKE '%démonstration%'")).isZero();
+        assertThat(number("SELECT count(*) FROM parcel_requests WHERE package_title LIKE 'FIXTURE%' OR description LIKE '%démonstration%'")).isZero();
+        assertThat(number("SELECT count(*) FROM messages WHERE content LIKE 'FIXTURE%'")).isZero();
+        assertThat(number("SELECT count(DISTINCT content) FROM messages")).isGreaterThan(100);
+        assertThat(number("SELECT count(*) FROM traveler_reviews WHERE rating=1 AND comment NOT LIKE '%retard%'")).isZero();
+    }
+
+    @Test
+    void recognizesLegacyFixtureKeysWithoutOverwritingThem() throws Exception {
+        loadFixture();
+        jdbc.update("UPDATE users SET email='fixture.user001@example.test' WHERE id=-910000001");
+        jdbc.update("UPDATE trip_bookings SET title='FIXTURE colis 1 - Documents' WHERE id=-910000001");
+        jdbc.update("UPDATE parcel_requests SET package_title='FIXTURE demande 1 - effets personnels' WHERE id=-910000001");
+        jdbc.update("UPDATE messages SET content='FIXTURE message 1 : Bonjour, le transport est-il disponible ?' WHERE id=-910000001");
+        var before = snapshot();
+        loadFixture();
+        assertThat(snapshot()).isEqualTo(before);
     }
 
     @Test
@@ -158,7 +186,7 @@ class DemoFixtureIntegrationTest {
 
     @Test
     void refusesEmailCollisionBeforeLoadingAnyRows() {
-        users.saveAndFlush(user("fixture.user001@example.test"));
+        users.saveAndFlush(user("aicha.kone@example.test"));
         var before = snapshot();
         assertThatThrownBy(this::loadFixture).hasMessageContaining("Fixture unique key collision");
         assertThat(snapshot()).isEqualTo(before);
