@@ -100,3 +100,10 @@ règles de protection des branches GitHub :
 - `frontend-tests`
 - `frontend-build`
 - `commercial-config-check`
+
+## Jeu de données de démonstration
+
+Une fixture SQL PostgreSQL autonome fournit 100 comptes (dont deux administrateurs),
+500 trajets et leurs réservations, avis, demandes de colis, messages et alertes.
+Consulter [les instructions et comptes de démonstration](back-office/fixtures/README.md).
+Son exécution est manuelle, transactionnelle et sans doublons à la relance.
