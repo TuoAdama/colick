@@ -1,12 +1,13 @@
--- Coliclic demo v1 -- PostgreSQL 16, existing Hibernate schema required.
+-- Coliclic demo -- PostgreSQL 16, existing Hibernate schema required.
 -- Run the ENTIRE file with autocommit enabled. No application startup hook.
--- IDs are allocated by the normal PostgreSQL sequences, only for missing rows.
+-- Replace previous fixture data atomically; allocate new positive IDs from normal sequences.
 -- Password for every account: ColiclicDemo2026! (BCrypt).
 BEGIN;
 
 -- Serialize fixture runs and prevent a concurrent write between checks/inserts.
 LOCK TABLE users, trips, trip_bookings, traveler_reviews, parcel_requests,
-    conversations, messages, trip_alerts IN SHARE ROW EXCLUSIVE MODE;
+    conversations, messages, trip_alerts, trip_alert_notifications, password_reset_tokens
+    IN SHARE ROW EXCLUSIVE MODE;
 
 -- Curated fictional identities, with realistic names and non-deliverable email addresses.
 CREATE TEMP TABLE fixture_people (n integer, first_name text, last_name text, email text) ON COMMIT DROP;
@@ -112,11 +113,44 @@ INSERT INTO fixture_people VALUES
  (99,'Djamila','Belkacem','djamila.belkacem@example.test'),
  (100,'Mamadou','Kébé','mamadou.kebe@example.test');
 
--- Reuse the original clock on rerun; never refresh existing demo dates.
-CREATE TEMP TABLE fixture_clock ON COMMIT DROP AS
-SELECT COALESCE((SELECT u.created_at + (400-p.n)*INTERVAL '1 day'
-                 FROM users u JOIN fixture_people p ON p.email=u.email
-                 ORDER BY p.n DESC LIMIT 1), LOCALTIMESTAMP) AS base_time;
+-- Identify the demo accounts from both published versions, never by ID sign alone.
+CREATE TEMP TABLE fixture_old_users ON COMMIT DROP AS
+SELECT u.id FROM users u WHERE u.email IN (SELECT email FROM fixture_people)
+    OR u.email IN (SELECT 'fixture.user' || lpad(n::text,3,'0') || '@example.test'
+                  FROM generate_series(1,100) AS g(n));
+CREATE TEMP TABLE fixture_old_trips ON COMMIT DROP AS
+SELECT id FROM trips WHERE user_id IN (SELECT id FROM fixture_old_users)
+    OR reference IN (SELECT 'FIXTURE-' || lpad(n::text,4,'0') FROM generate_series(1,500) AS g(n));
+CREATE TEMP TABLE fixture_old_parcels ON COMMIT DROP AS
+SELECT id FROM parcel_requests WHERE sender_id IN (SELECT id FROM fixture_old_users);
+CREATE TEMP TABLE fixture_old_bookings ON COMMIT DROP AS
+SELECT id FROM trip_bookings WHERE trip_id IN (SELECT id FROM fixture_old_trips)
+    OR sender_id IN (SELECT id FROM fixture_old_users);
+CREATE TEMP TABLE fixture_old_conversations ON COMMIT DROP AS
+SELECT id FROM conversations WHERE trip_id IN (SELECT id FROM fixture_old_trips)
+    OR parcel_request_id IN (SELECT id FROM fixture_old_parcels)
+    OR participant1_id IN (SELECT id FROM fixture_old_users)
+    OR participant2_id IN (SELECT id FROM fixture_old_users);
+CREATE TEMP TABLE fixture_old_alerts ON COMMIT DROP AS
+SELECT id FROM trip_alerts WHERE user_id IN (SELECT id FROM fixture_old_users);
+
+-- Delete dependent rows first, including activity added to the demo accounts.
+-- No TRUNCATE/CASCADE: independent accounts and their activity remain intact.
+DELETE FROM messages WHERE conversation_id IN (SELECT id FROM fixture_old_conversations)
+    OR sender_id IN (SELECT id FROM fixture_old_users);
+DELETE FROM conversations WHERE id IN (SELECT id FROM fixture_old_conversations);
+DELETE FROM traveler_reviews WHERE booking_id IN (SELECT id FROM fixture_old_bookings);
+DELETE FROM trip_bookings WHERE id IN (SELECT id FROM fixture_old_bookings);
+DELETE FROM trip_alert_notifications WHERE alert_id IN (SELECT id FROM fixture_old_alerts)
+    OR trip_id IN (SELECT id FROM fixture_old_trips);
+DELETE FROM trip_alerts WHERE id IN (SELECT id FROM fixture_old_alerts);
+DELETE FROM parcel_requests WHERE id IN (SELECT id FROM fixture_old_parcels);
+DELETE FROM trips WHERE id IN (SELECT id FROM fixture_old_trips);
+DELETE FROM password_reset_tokens WHERE user_id IN (SELECT id FROM fixture_old_users);
+DELETE FROM users WHERE id IN (SELECT id FROM fixture_old_users);
+
+-- Refresh dates with each complete replacement.
+CREATE TEMP TABLE fixture_clock ON COMMIT DROP AS SELECT LOCALTIMESTAMP AS base_time;
 
 -- Staging tables have the deployed column layout, without defaults/sequences.
 CREATE TEMP TABLE fixture_users ON COMMIT DROP AS SELECT * FROM users WITH NO DATA;
@@ -287,54 +321,35 @@ SELECT i, (3+(i-1)%78), r.departure, lower(r.departure),
 FROM generate_series(1,100) AS g(i) JOIN fixture_routes r ON r.n=(i-1)%10 CROSS JOIN fixture_clock;
 
 -- These temporary IDs are local row numbers, never persisted as application IDs.
--- Resolve each natural key first, allocating a normal sequence value only if absent.
+-- Allocate fresh sequence values for every scenario after deleting the old fixture.
 CREATE TEMP TABLE fixture_ids (
     target text, seed_id bigint, actual_id bigint,
     PRIMARY KEY (target, seed_id), UNIQUE (target, actual_id)
 ) ON COMMIT DROP;
 
-CREATE FUNCTION pg_temp.fixture_resolve(target text, keys text[]) RETURNS void
-LANGUAGE plpgsql AS $resolve$
+CREATE FUNCTION pg_temp.fixture_insert(target text) RETURNS void
+LANGUAGE plpgsql AS $insert$
 DECLARE
-    predicate text;
-    ambiguous boolean;
-    nonpositive boolean;
     sequence_name text;
 BEGIN
-    SELECT string_agg(format('a.%I IS NOT DISTINCT FROM e.%I', k, k), ' AND ')
-    INTO predicate FROM unnest(keys) AS k;
-    EXECUTE format('SELECT EXISTS (SELECT e.id FROM %I e JOIN %I a ON %s
-        GROUP BY e.id HAVING count(*)>1)', 'fixture_' || target, target, predicate) INTO ambiguous;
-    IF ambiguous THEN
-        RAISE EXCEPTION 'Ambiguous fixture key in %. No data loaded.', target;
-    END IF;
-    EXECUTE format('INSERT INTO fixture_ids SELECT $1, e.id, a.id FROM %I e
-        LEFT JOIN %I a ON %s', 'fixture_' || target, target, predicate) USING target;
-    SELECT EXISTS (SELECT 1 FROM fixture_ids i WHERE i.target=fixture_resolve.target AND i.actual_id<=0)
-    INTO nonpositive;
-    IF nonpositive THEN
-        RAISE EXCEPTION 'Existing nonpositive fixture IDs in %. Use a fresh demo database; existing data is not migrated.', target;
-    END IF;
     sequence_name := CASE WHEN target='trips' THEN 'trips_id_seq'
                          ELSE pg_get_serial_sequence(target, 'id') END;
     IF sequence_name IS NULL THEN
         RAISE EXCEPTION 'Missing ID sequence for %. Initialize the application schema first.', target;
     END IF;
-    UPDATE fixture_ids i SET actual_id=nextval(sequence_name::regclass)
-    WHERE i.target=fixture_resolve.target AND i.actual_id IS NULL;
-    IF EXISTS (SELECT 1 FROM fixture_ids i WHERE i.target=fixture_resolve.target AND i.actual_id<=0) THEN
+    EXECUTE format('INSERT INTO fixture_ids SELECT $1, e.id, nextval($2::regclass) FROM %I e',
+        'fixture_' || target) USING target, sequence_name;
+    IF EXISTS (SELECT 1 FROM fixture_ids i WHERE i.target=fixture_insert.target AND i.actual_id<=0) THEN
         RAISE EXCEPTION 'Nonpositive sequence value for %.', target;
     END IF;
     EXECUTE format('UPDATE %I e SET id=i.actual_id FROM fixture_ids i
         WHERE i.target=$1 AND e.id=i.seed_id', 'fixture_' || target) USING target;
-    EXECUTE format('INSERT INTO %I SELECT e.* FROM %I e
-        WHERE NOT EXISTS (SELECT 1 FROM %I a WHERE a.id=e.id)',
-        target, 'fixture_' || target, target);
+    EXECUTE format('INSERT INTO %I SELECT e.* FROM %I e', target, 'fixture_' || target);
 END
-$resolve$;
+$insert$;
 
 -- Parent IDs are resolved before dependent rows, preserving every foreign key.
-SELECT pg_temp.fixture_resolve('users', ARRAY['email']);
+SELECT pg_temp.fixture_insert('users');
 UPDATE fixture_trips e SET user_id=i.actual_id FROM fixture_ids i WHERE i.target='users' AND e.user_id=i.seed_id;
 UPDATE fixture_trip_bookings e SET sender_id=i.actual_id FROM fixture_ids i WHERE i.target='users' AND e.sender_id=i.seed_id;
 UPDATE fixture_parcel_requests e SET sender_id=i.actual_id FROM fixture_ids i WHERE i.target='users' AND e.sender_id=i.seed_id;
@@ -343,19 +358,19 @@ UPDATE fixture_conversations e SET participant2_id=i.actual_id FROM fixture_ids 
 UPDATE fixture_messages e SET sender_id=i.actual_id FROM fixture_ids i WHERE i.target='users' AND e.sender_id=i.seed_id;
 UPDATE fixture_trip_alerts e SET user_id=i.actual_id FROM fixture_ids i WHERE i.target='users' AND e.user_id=i.seed_id;
 
-SELECT pg_temp.fixture_resolve('trips', ARRAY['reference','user_id']);
+SELECT pg_temp.fixture_insert('trips');
 UPDATE fixture_trip_bookings e SET trip_id=i.actual_id FROM fixture_ids i WHERE i.target='trips' AND e.trip_id=i.seed_id;
 UPDATE fixture_conversations e SET trip_id=i.actual_id FROM fixture_ids i WHERE i.target='trips' AND e.trip_id=i.seed_id;
 
-SELECT pg_temp.fixture_resolve('trip_bookings', ARRAY['trip_id','sender_id','title']);
+SELECT pg_temp.fixture_insert('trip_bookings');
 UPDATE fixture_traveler_reviews e SET booking_id=i.actual_id FROM fixture_ids i WHERE i.target='trip_bookings' AND e.booking_id=i.seed_id;
-SELECT pg_temp.fixture_resolve('traveler_reviews', ARRAY['booking_id','token_hash']);
+SELECT pg_temp.fixture_insert('traveler_reviews');
 
-SELECT pg_temp.fixture_resolve('parcel_requests', ARRAY['sender_id','package_title','departure','destination']);
+SELECT pg_temp.fixture_insert('parcel_requests');
 UPDATE fixture_conversations e SET parcel_request_id=i.actual_id FROM fixture_ids i WHERE i.target='parcel_requests' AND e.parcel_request_id=i.seed_id;
-SELECT pg_temp.fixture_resolve('conversations', ARRAY['trip_id','parcel_request_id','participant1_id','participant2_id']);
+SELECT pg_temp.fixture_insert('conversations');
 UPDATE fixture_messages e SET conversation_id=i.actual_id FROM fixture_ids i WHERE i.target='conversations' AND e.conversation_id=i.seed_id;
-SELECT pg_temp.fixture_resolve('messages', ARRAY['conversation_id','sender_id','content']);
-SELECT pg_temp.fixture_resolve('trip_alerts', ARRAY['user_id','departure','destination']);
-DROP FUNCTION pg_temp.fixture_resolve(text,text[]);
+SELECT pg_temp.fixture_insert('messages');
+SELECT pg_temp.fixture_insert('trip_alerts');
+DROP FUNCTION pg_temp.fixture_insert(text);
 COMMIT;

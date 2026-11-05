@@ -68,42 +68,38 @@ disposent d'un code de validation de démonstration à six chiffres, consultable
 base ; aucun envoi réel n'est déclenché. Les invitations aux avis ont des empreintes
 fictives, sans lien de soumission utilisable.
 
-## Relances et isolation
+## Remplacement des anciennes données
 
-Les IDs sont des entiers positifs générés par les séquences habituelles PostgreSQL,
-comme lors d'une création dans l'application. Aucune plage d'IDs n'est réservée et
-les séquences ne sont jamais réinitialisées. Les trajets gardent des références
-`FIXTURE-0001` à `FIXTURE-0500` pour être reconnaissables.
+Chaque exécution supprime les anciennes données de démonstration puis recrée le
+jeu complet avec de nouveaux IDs positifs générés par les séquences PostgreSQL.
+Les dates, noms, mots de passe et statuts du jeu sont réinitialisés. Les séquences
+ne sont pas remises à zéro et les IDs ne sont pas réutilisés.
 
-Les nombres figurant dans les tables temporaires sont uniquement des numéros de
-scénario. Le script les remplace par les IDs réels avant toute insertion, puis
-reporte ces IDs dans toutes les relations (voyageur, expéditeur, réservation, conversation…).
+Le périmètre supprimé comprend les comptes dont l'e-mail est dans le catalogue
+`fixture_people`, ainsi que les anciens comptes `fixture.user001@example.test` à
+`fixture.user100@example.test`. Les trajets portant les références `FIXTURE-0001`
+à `FIXTURE-0500` sont également reconnus. Les anciennes versions à IDs négatifs
+sont supprimées et remplacées de la même manière, sans filtrer sur le signe de l'ID.
 
-Une relance retrouve les lignes par leurs clés métier : e-mail du compte, référence
-et voyageur du trajet, trajet/expéditeur/titre de réservation, réservation/empreinte
-d'avis, expéditeur/titre/parcours de demande, contexte/participants de conversation,
-conversation/auteur/contenu de message et utilisateur/parcours d'alerte.
-Les lignes existantes sont conservées intégralement, sans écraser les mots de passe,
-profils ou statuts. Un compte ayant déjà le même e-mail est réutilisé sans modifier
-son rôle ni ses accès. Si plusieurs lignes correspondent à une même clé, le script
-refuse le chargement pour éviter une association ambiguë.
+Le script supprime les trajets, réservations, demandes de colis, avis, conversations,
+messages, alertes, notifications d'alertes et jetons de réinitialisation associés
+à ces comptes/trajets, y compris l'activité ajoutée depuis le précédent chargement.
+Une réservation ou conversation d'un autre utilisateur liée à un trajet de la
+fixture fait partie de ce périmètre ; le compte de cet autre utilisateur reste présent.
+Les comptes étrangers à la fixture et leur activité indépendante sont conservés.
+Un compte utilisant l'une des adresses réservées au catalogue sera supprimé et recréé.
 
-Les nouvelles lignes consomment une valeur de séquence normale. Une relance complète
-sans ligne manquante ne consomme aucune nouvelle valeur. Une ligne supprimée puis
-recréée reçoit un nouvel ID. Comme pour toute séquence PostgreSQL, une erreur peut
-laisser des trous dans la numérotation, même si les insertions sont annulées.
-Les dates ne sont pas rafraîchies : le jeu vieillit naturellement. L'horloge initiale
-est reconstruite depuis les comptes du catalogue encore présents.
+Le nettoyage est explicite et suit l'ordre des clés étrangères, sans `TRUNCATE`
+ni suppression générale de la base. La suppression et la recréation appartiennent
+à une transaction unique : si une insertion échoue, les anciennes données sont
+restaurées par le rollback. Les séquences PostgreSQL peuvent toutefois conserver
+des trous après un rollback.
 
-Toutes les insertions sont atomiques ; une collision ou une erreur annule le
-chargement. Les tables et la fonction temporaires sont supprimées en fin d'exécution.
-Un verrou d'écriture sur les huit tables sérialise les chargements ; exécuter la
-fixture pendant une période sans activité sur la base de démonstration.
-
-Cette version ne migre pas automatiquement une ancienne fixture chargée avec des
-IDs négatifs. Elle refuse les lignes correspondantes plutôt que de modifier les
-relations ou supprimer des données existantes. Utiliser une base de démonstration
-vierge initialisée par le backend pour charger entièrement le nouveau jeu.
+Les nombres des tables temporaires sont uniquement des numéros de scénario.
+Le script les remplace par les IDs réels et reporte ceux-ci dans toutes les
+relations. Les tables et la fonction temporaires sont supprimées en fin d'exécution.
+Les dix tables concernées sont verrouillées pendant le chargement ; exécuter la
+fixture sur une base de démonstration pendant une période sans activité.
 
 ## Vérification
 

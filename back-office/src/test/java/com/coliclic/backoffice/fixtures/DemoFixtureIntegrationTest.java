@@ -114,34 +114,31 @@ class DemoFixtureIntegrationTest {
     }
 
     @Test
-    void allocatesPositiveIdsUsingNormalSequences() throws Exception {
+    void replacesEveryFixtureRowWithNewPositiveIds() throws Exception {
+        loadFixture();
+        Map<String, Long> oldMaxIds = new LinkedHashMap<>();
+        for (String table : COUNTS.keySet()) {
+            oldMaxIds.put(table, jdbc.queryForObject("SELECT max(id) FROM " + table, Long.class));
+        }
         loadFixture();
         for (String table : COUNTS.keySet()) {
-            assertThat(number("SELECT count(*) FROM " + table + " WHERE id<=0")).isZero();
+            assertThat(number("SELECT count(*) FROM " + table)).isEqualTo(COUNTS.get(table));
+            assertThat(jdbc.queryForObject("SELECT min(id) FROM " + table, Long.class)).isGreaterThan(oldMaxIds.get(table));
         }
-        var sequences = sequenceSnapshot();
-        loadFixture();
-        assertThat(sequenceSnapshot()).isEqualTo(sequences);
     }
 
     @Test
-    void rerunPreservesAllRowsAndCompletesMissingLeafRows() throws Exception {
+    void recreatesEditedAccountsAndActivityInsteadOfKeepingOldValues() throws Exception {
         loadFixture();
         jdbc.update("UPDATE users SET first_name='Modifié', password='changed' WHERE email='fatou.diallo@example.test'");
-        jdbc.update("UPDATE trip_bookings SET status='CANCELLED' WHERE id=(SELECT max(id) FROM trip_bookings)");
-        var first = snapshot();
+        jdbc.update("UPDATE trip_bookings SET status='CANCELLED'");
+        jdbc.update("UPDATE messages SET content='Ancien message modifié'");
         loadFixture();
-        assertThat(snapshot()).isEqualTo(first);
-        Long messageId = jdbc.queryForObject("SELECT max(id) FROM messages", Long.class);
-        String message = jdbc.queryForObject("SELECT (to_jsonb(m)-'id')::text FROM messages m WHERE id=?", String.class, messageId);
-        jdbc.update("DELETE FROM messages WHERE id=?", messageId);
-        loadFixture();
-        assertThat(number("SELECT count(*) FROM messages")).isEqualTo(800);
-        assertThat(jdbc.queryForObject("SELECT (to_jsonb(m)-'id')::text FROM messages m WHERE id=(SELECT max(id) FROM messages)", String.class)).isEqualTo(message);
-        var restored = snapshot();
-        restored.remove("messages");
-        first.remove("messages");
-        assertThat(restored).isEqualTo(first);
+        assertThat(jdbc.queryForObject("SELECT first_name FROM users WHERE email='fatou.diallo@example.test'", String.class)).isEqualTo("Fatou");
+        assertThat(number("SELECT count(*) FROM users WHERE password='changed'")).isZero();
+        assertThat(number("SELECT count(*) FROM messages WHERE content='Ancien message modifié'")).isZero();
+        assertThat(number("SELECT count(DISTINCT status) FROM trip_bookings")).isEqualTo(6);
+        assertThat(number("SELECT count(*) FROM trip_bookings")).isEqualTo(1000);
     }
 
     @Test
@@ -167,49 +164,97 @@ class DemoFixtureIntegrationTest {
     }
 
     @Test
-    void refusesAmbiguousNaturalKeysWithoutWritingData() throws Exception {
+    void removesExtraActivityAndResetTokensOnDemoAccounts() throws Exception {
         loadFixture();
-        jdbc.execute("INSERT INTO messages (conversation_id,sender_id,content,sent_at,read) SELECT conversation_id,sender_id,content,sent_at,read FROM messages ORDER BY id LIMIT 1");
-        var before = snapshot();
-        assertThatThrownBy(this::loadFixture).isInstanceOf(SQLException.class)
-                .hasMessageContaining("Ambiguous fixture key in messages");
-        assertThat(snapshot()).isEqualTo(before);
+        jdbc.execute("INSERT INTO messages (conversation_id,sender_id,content,sent_at,read) SELECT conversation_id,sender_id,'Activité ajoutée',sent_at,read FROM messages ORDER BY id LIMIT 1");
+        jdbc.execute("INSERT INTO password_reset_tokens (user_id,token_hash,expires_at) SELECT id,repeat('a',64),localtimestamp+interval '1 hour' FROM users WHERE email='aicha.kone@example.test'");
+        jdbc.execute("INSERT INTO trip_alert_notifications (alert_id,trip_id,sent_at) SELECT (SELECT min(id) FROM trip_alerts),(SELECT min(id) FROM trips),localtimestamp");
+        loadFixture();
+        assertThat(number("SELECT count(*) FROM messages")).isEqualTo(800);
+        assertThat(number("SELECT count(*) FROM password_reset_tokens")).isZero();
+        assertThat(number("SELECT count(*) FROM trip_alert_notifications")).isZero();
     }
 
     @Test
-    void reusesEmailWithoutChangingExistingAccount() throws Exception {
+    void replacesAnExistingAccountUsingAReservedDemoEmail() throws Exception {
         User existing = users.saveAndFlush(user("aicha.kone@example.test"));
-        var row = jdbc.queryForMap("SELECT * FROM users WHERE id=?", existing.getId());
         loadFixture();
-        assertThat(jdbc.queryForMap("SELECT * FROM users WHERE id=?", existing.getId())).isEqualTo(row);
+        assertThat(users.findById(existing.getId())).isEmpty();
+        var replacement = jdbc.queryForMap("SELECT first_name,role FROM users WHERE email='aicha.kone@example.test'");
+        assertThat(replacement).containsEntry("first_name", "Aïcha").containsEntry("role", "ADMIN");
         assertThat(number("SELECT count(*) FROM users")).isEqualTo(100);
-        assertThat(number("SELECT count(*) FROM trips t JOIN users u ON u.id=t.user_id WHERE u.email LIKE '%@example.test'")).isEqualTo(500);
     }
 
     @Test
-    void refusesReferenceCollisionAndRollsBackNewParentRows() throws Exception {
+    void replacesLegacyNegativeIdsAndAllDependentRows() throws Exception {
+        jdbc.execute("""
+            INSERT INTO users (id,first_name,last_name,email,password,role) VALUES
+                (-910000001,'Ancien','Admin','fixture.user001@example.test','hash','ADMIN'),
+                (-910000003,'Ancien','Expéditeur','fatou.diallo@example.test','hash','USER');
+            INSERT INTO trips (id,reference,user_id,departure_address,destination,departure_time,arrival_time,
+                max_weight,price_per_kilo,instant_acceptance,status,created_at) VALUES
+                (-910000001,'FIXTURE-0001',-910000001,'Paris','Abidjan',localtimestamp,localtimestamp+interval '8 hours',10,5,false,'COMPLETED',localtimestamp);
+            INSERT INTO trip_bookings (id,trip_id,sender_id,title,weight,recipient_contact,status,created_at) VALUES
+                (-910000001,-910000001,-910000003,'Ancien colis',1,'old@example.test','ACCEPTED',localtimestamp);
+            INSERT INTO traveler_reviews (id,booking_id,token_hash,invited_at) VALUES
+                (-910000001,-910000001,repeat('b',64),localtimestamp);
+            INSERT INTO parcel_requests (id,sender_id,departure,normalized_departure,destination,normalized_destination,
+                package_title,weight,status,created_at) VALUES
+                (-910000001,-910000003,'Paris','paris','Abidjan','abidjan','Ancienne demande',1,'ACTIVE',localtimestamp);
+            INSERT INTO conversations (id,trip_id,participant1_id,participant2_id,created_at) VALUES
+                (-910000001,-910000001,-910000001,-910000003,localtimestamp);
+            INSERT INTO messages (id,conversation_id,sender_id,content,sent_at,read) VALUES
+                (-910000001,-910000001,-910000003,'Ancien message',localtimestamp,false);
+            INSERT INTO trip_alerts (id,user_id,departure,normalized_departure,destination,normalized_destination,created_at) VALUES
+                (-910000001,-910000003,'Paris','paris','Abidjan','abidjan',localtimestamp);
+            INSERT INTO trip_alert_notifications (alert_id,trip_id,sent_at) VALUES
+                ((SELECT id FROM trip_alerts LIMIT 1),-910000001,localtimestamp);
+            INSERT INTO password_reset_tokens (user_id,token_hash,expires_at) VALUES
+                (-910000001,repeat('c',64),localtimestamp+interval '1 hour');
+            """);
         loadFixture();
-        jdbc.update("UPDATE trips SET user_id=(SELECT id FROM users WHERE email='aicha.kone@example.test') WHERE reference='FIXTURE-0001'");
-        jdbc.update("DELETE FROM users WHERE email='mamadou.kebe@example.test'");
-        var before = snapshot();
-        assertThatThrownBy(this::loadFixture).isInstanceOf(SQLException.class)
-                .hasMessageContaining("duplicate key");
-        assertThat(snapshot()).isEqualTo(before);
+        for (String table : COUNTS.keySet()) {
+            assertThat(number("SELECT count(*) FROM " + table)).isEqualTo(COUNTS.get(table));
+            assertThat(number("SELECT count(*) FROM " + table + " WHERE id<=0")).isZero();
+        }
+        assertThat(number("SELECT count(*) FROM users WHERE email LIKE 'fixture.user%'")).isZero();
+        assertThat(number("SELECT count(*) FROM password_reset_tokens")).isZero();
+        assertThat(number("SELECT count(*) FROM trip_alert_notifications")).isZero();
     }
 
     @Test
-    void refusesOldNegativeAccountsWithoutMigratingThem() {
-        jdbc.update("INSERT INTO users (id,first_name,last_name,email,password,role) VALUES (-1,'Aïcha','Koné','aicha.kone@example.test','hash','ADMIN')");
-        var before = snapshot();
-        assertThatThrownBy(this::loadFixture).hasMessageContaining("Existing nonpositive fixture IDs");
-        assertThat(snapshot()).isEqualTo(before);
+    void preservesIndependentActivityAndOtherNegativeIds() throws Exception {
+        jdbc.execute("""
+            INSERT INTO users (id,first_name,last_name,email,password,role) VALUES
+                (-1,'Compte','Indépendant','independent@example.test','hash','USER');
+            INSERT INTO trips (id,reference,user_id,departure_address,destination,departure_time,arrival_time,
+                max_weight,price_per_kilo,instant_acceptance,status,created_at) VALUES
+                (-1,'TRP-2026-999999',-1,'Lyon','Dakar',localtimestamp,localtimestamp+interval '8 hours',10,5,false,'ACTIVE',localtimestamp);
+            INSERT INTO trip_alerts (id,user_id,departure,normalized_departure,destination,normalized_destination) VALUES
+                (-1,-1,'Lyon','lyon','Dakar','dakar');
+            INSERT INTO trip_alert_notifications (alert_id,trip_id,sent_at) VALUES (-1,-1,localtimestamp);
+            INSERT INTO password_reset_tokens (user_id,token_hash,expires_at) VALUES
+                (-1,repeat('d',64),localtimestamp+interval '1 hour');
+            """);
+        var account = jdbc.queryForMap("SELECT * FROM users WHERE id=-1");
+        var trip = jdbc.queryForMap("SELECT * FROM trips WHERE id=-1");
+        var notification = jdbc.queryForList("SELECT * FROM trip_alert_notifications");
+        var token = jdbc.queryForList("SELECT * FROM password_reset_tokens");
+        loadFixture();
+        loadFixture();
+        assertThat(jdbc.queryForMap("SELECT * FROM users WHERE id=-1")).isEqualTo(account);
+        assertThat(jdbc.queryForMap("SELECT * FROM trips WHERE id=-1")).isEqualTo(trip);
+        assertThat(jdbc.queryForList("SELECT * FROM trip_alert_notifications")).isEqualTo(notification);
+        assertThat(jdbc.queryForList("SELECT * FROM password_reset_tokens")).isEqualTo(token);
     }
 
     @Test
-    void rollsBackEarlierInsertsWhenALateInsertFails() {
+    void restoresDeletedFixtureWhenRecreationFails() throws Exception {
+        loadFixture();
         users.saveAndFlush(user("unrelated@example.test"));
         var before = snapshot();
-        jdbc.execute("ALTER TABLE messages ADD CONSTRAINT test_reject_fixture CHECK (content='unrelated')");
+        long maxMessage = jdbc.queryForObject("SELECT max(id) FROM messages", Long.class);
+        jdbc.execute("ALTER TABLE messages ADD CONSTRAINT test_reject_fixture CHECK (id<=" + maxMessage + ") NOT VALID");
         try {
             assertThatThrownBy(this::loadFixture).isInstanceOf(SQLException.class)
                     .hasMessageContaining("test_reject_fixture");
@@ -241,10 +286,6 @@ class DemoFixtureIntegrationTest {
         COUNTS.keySet().forEach(table -> result.put(table, jdbc.queryForObject(
                 "SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY id),'[]'::jsonb)::text FROM " + table + " t", String.class)));
         return result;
-    }
-
-    private Object sequenceSnapshot() {
-        return jdbc.queryForList("SELECT sequencename, last_value FROM pg_sequences WHERE schemaname='public' ORDER BY sequencename");
     }
 
     private User user(String email) {

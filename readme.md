@@ -128,4 +128,5 @@ règles de protection des branches GitHub :
 Une fixture SQL PostgreSQL autonome fournit 100 comptes (dont deux administrateurs),
 500 trajets et leurs réservations, avis, demandes de colis, messages et alertes.
 Consulter [les instructions et comptes de démonstration](back-office/fixtures/README.md).
-Son exécution est manuelle, transactionnelle et sans doublons à la relance.
+Son exécution est manuelle et transactionnelle : elle supprime les anciennes données
+de la fixture puis recrée le jeu complet avec de nouveaux IDs positifs.
