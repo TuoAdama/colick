@@ -63,6 +63,21 @@ public class TripController {
         return ResponseEntity.ok(tripService.searchTrips(departure, destination, date, sort, minPrice, maxPrice));
     }
 
+    /** Public catalogue; route filters are optional. */
+    @GetMapping("/catalog")
+    public ResponseEntity<TripCatalogResponse> getCatalog(
+            @RequestParam(required = false) String departure,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(tripService.getCatalog(departure, destination, date,
+                sort, minPrice, maxPrice, page, size));
+    }
+
     /** List all active trips (public). */
     @GetMapping
     public ResponseEntity<List<TripResponse>> getAllTrips() {

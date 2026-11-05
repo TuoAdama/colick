@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subject, throwError } from 'rxjs';
 import { SearchPageComponent } from './search-page.component';
-import { TripService } from '../../services/trip.service';
+import { TripCatalogPage, TripService } from '../../services/trip.service';
 import { TripAlertService } from '../../services/trip-alert.service';
 import { AuthService } from '../../services/auth.service';
 import { MessagingService } from '../../services/messaging.service';
@@ -23,6 +23,7 @@ describe('SearchPageComponent', () => {
   };
 
   const tripServiceMock = {
+    getCatalog: jasmine.createSpy('getCatalog').and.returnValue(of({ items: [], totalElements: 0, hasNext: false, page: 0, size: 20 })),
     searchTrips: jasmine.createSpy('searchTrips').and.returnValue(of([])),
     createBooking: jasmine.createSpy('createBooking'),
     getMyBookings: jasmine.createSpy('getMyBookings').and.returnValue(of([])),
@@ -81,6 +82,8 @@ describe('SearchPageComponent', () => {
     router = TestBed.inject(Router);
     activatedRoute = TestBed.inject(ActivatedRoute);
     spyOn(router, 'navigate').and.resolveTo(true);
+    tripServiceMock.getCatalog.calls.reset();
+    tripServiceMock.getCatalog.and.returnValue(of({ items: [], totalElements: 0, hasNext: false, page: 0, size: 20 }));
     tripServiceMock.searchTrips.calls.reset();
     tripServiceMock.searchTrips.and.returnValue(of([]));
     tripAlertServiceMock.createAlert.calls.reset();
@@ -98,6 +101,89 @@ describe('SearchPageComponent', () => {
     routeMock.snapshot.queryParamMap = paramMap;
     queryParamMapSubject.next(paramMap);
   }
+
+  const catalogTrip = (id: number): Trip => ({
+    id, reference: `TRP-2027-${id}`, travelerId: 2, travelerName: 'Alice',
+    departureAddress: 'Paris', destination: 'Abidjan', departureTime: '2027-01-01T10:00:00',
+    arrivalTime: '2027-01-01T18:00:00', maxWeight: 20, availableWeight: 10,
+    pricePerKilo: 5, instantAcceptance: false, status: 'ACTIVE',
+  });
+
+  it('auto-loads the catalogue without cities, sorted by next departure, without adding history', () => {
+    setQueryParams({ mode: 'all' });
+    fixture.detectChanges();
+    expect(component.isFormValid).toBeTrue();
+    expect(component.hasSearched).toBeTrue();
+    expect(tripServiceMock.getCatalog).toHaveBeenCalledWith(jasmine.objectContaining({ sort: 'departure_asc' }), 0);
+    expect(tripServiceMock.searchTrips).not.toHaveBeenCalled();
+    expect(searchHistoryServiceMock.add).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('h1').textContent).toContain('Tous les trajets disponibles');
+    expect(fixture.nativeElement.textContent).toContain('Aucun trajet disponible pour le moment');
+  });
+
+  it('keeps loaded cards while loading more, retries the failed page and resets pagination on filters', () => {
+    tripServiceMock.getCatalog.and.returnValue(of({ items: [catalogTrip(1)], totalElements: 2, hasNext: true, page: 0, size: 20 }));
+    setQueryParams({ mode: 'all' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="catalog-load-more"]').textContent).toContain('Voir plus');
+    const nextPage = new Subject<TripCatalogPage>();
+    tripServiceMock.getCatalog.and.returnValue(nextPage);
+    component.loadMore();
+    component.loadMore();
+    fixture.detectChanges();
+    expect(component.isLoadingMore).toBeTrue();
+    expect(tripServiceMock.getCatalog).toHaveBeenCalledTimes(2);
+    expect(component.trips.map(trip => trip.id)).toEqual([1]);
+    nextPage.error(new Error('offline'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="catalog-load-more"]').textContent).toContain('Réessayer');
+    tripServiceMock.getCatalog.and.returnValue(of({ items: [catalogTrip(2)], totalElements: 2, hasNext: false, page: 1, size: 20 }));
+    component.loadMore();
+    fixture.detectChanges();
+    expect(tripServiceMock.getCatalog.calls.mostRecent().args[1]).toBe(1);
+    expect(component.trips.map(trip => trip.id)).toEqual([1, 2]);
+    expect(fixture.nativeElement.querySelector('[data-testid="catalog-load-more"]')).toBeNull();
+
+    setQueryParams({ mode: 'all', maxPrice: '10', sort: 'price_asc' });
+    expect(tripServiceMock.getCatalog.calls.mostRecent().args).toEqual([
+      jasmine.objectContaining({ maxPrice: 10, sort: 'price_asc' }), 0,
+    ]);
+    expect(component.trips.map(trip => trip.id)).toEqual([2]);
+  });
+
+  it('applies date and price filters without cities and preserves catalogue mode in the URL', () => {
+    setQueryParams({ mode: 'all' });
+    fixture.detectChanges();
+    component.selectedDate = '2027-02-01';
+    component.minPrice = 5;
+    component.onFilterChange();
+    expect(router.navigate).toHaveBeenCalledWith([], jasmine.objectContaining({
+      queryParams: jasmine.objectContaining({ mode: 'all', date: '2027-02-01', minPrice: 5 }),
+    }));
+  });
+
+  it('shows loading and retry states and ignores an old response after leaving catalogue mode', () => {
+    const pending = new Subject<TripCatalogPage>();
+    tripServiceMock.getCatalog.and.returnValue(pending);
+    setQueryParams({ mode: 'all' });
+    fixture.detectChanges();
+    expect(component.isLoading).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain('Recherche en cours');
+    pending.error(new Error('offline'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Impossible de charger les trajets');
+    tripServiceMock.getCatalog.and.returnValue(of({ items: [], totalElements: 0, hasNext: false, page: 0, size: 20 }));
+    component.searchTrips();
+    expect(tripServiceMock.getCatalog).toHaveBeenCalledTimes(2);
+
+    const obsolete = new Subject<TripCatalogPage>();
+    tripServiceMock.getCatalog.and.returnValue(obsolete);
+    setQueryParams({ mode: 'all', sort: 'price_asc' });
+    setQueryParams({});
+    obsolete.next({ items: [catalogTrip(3)], totalElements: 1, hasNext: false, page: 0, size: 20 });
+    expect(component.trips).toEqual([]);
+    expect(component.hasSearched).toBeFalse();
+  });
 
   it('reads from/to query params and auto-searches when both exist', () => {
     setQueryParams({ from: 'Paris', to: 'Abidjan' });
