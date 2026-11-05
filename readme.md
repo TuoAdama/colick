@@ -18,6 +18,7 @@ Donc voici les fonctionnalités à intégrer:
 	- L'adresse de départ
 	- La destination
 	- Bouton recherche
+- La recherche accepte une ville de départ seule, une destination seule ou les deux. La date facultative filtre les départs à partir du jour choisi ; au moins une ville est obligatoire. Les alertes nécessitent un départ et une destination.
 - Lister les résultats corresponds aux critères définis.
 - Chaque résultats affichés doit comprendre:
 	- Le départ

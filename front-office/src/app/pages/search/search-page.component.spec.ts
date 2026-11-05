@@ -308,13 +308,13 @@ describe('SearchPageComponent', () => {
     expect(component.isSearchModalOpen).toBeFalse();
   });
 
-  it('does not auto-search when query params are incomplete', () => {
+  it('auto-searches when only departure is provided', () => {
     setQueryParams({ from: 'Paris' });
     fixture.detectChanges();
 
     expect(component.departureQuery).toBe('Paris');
     expect(component.destinationQuery).toBe('');
-    expect(tripServiceMock.searchTrips).not.toHaveBeenCalled();
+    expect(tripServiceMock.searchTrips).toHaveBeenCalledWith(jasmine.objectContaining({ departure: 'Paris', destination: undefined }));
   });
 
   it('does not trigger duplicate auto-search for identical params', () => {
@@ -889,6 +889,78 @@ describe('SearchPageComponent', () => {
       day: 'numeric', month: 'short', year: 'numeric',
     });
     expect(component.formatDate(timestamp)).toBe(expected);
+  });
+
+  for (const params of [{ from: 'Paris' }, { to: 'Paris' }] as Record<string, string>[]) {
+    it(`searches and renders the partial route ${JSON.stringify(params)}`, () => {
+      setQueryParams(params);
+      fixture.detectChanges();
+      expect(component.hasSearched).toBeTrue();
+      expect(component.isFormValid).toBeTrue();
+      const label = params['from'] ? 'Au départ de Paris' : 'À destination de Paris';
+      expect(component.resultRouteLabel()).toBe(label);
+      const host: HTMLElement = fixture.nativeElement;
+      expect(host.querySelector('[data-testid="mobile-search-summary"]')?.textContent).toContain(label);
+      expect(Array.from(host.querySelectorAll('button')).some(button => button.textContent?.includes("M'alerter"))).toBeFalse();
+      expect(host.textContent).toContain('Complétez le départ et la destination');
+    });
+  }
+
+  it('clears the missing city when navigating from a full route to a partial route', () => {
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
+    fixture.detectChanges();
+    setQueryParams({ to: 'Abidjan' });
+    expect(component.departure).toBeNull();
+    expect(component.departureQuery).toBe('');
+    expect(tripServiceMock.searchTrips).toHaveBeenCalledWith(jasmine.objectContaining({ departure: undefined, destination: 'Abidjan' }));
+    component.searchTrips();
+    expect(tripServiceMock.searchTrips).toHaveBeenCalledTimes(3);
+  });
+
+  it('refines a partial search with a second city, date and price filter', () => {
+    setQueryParams({ from: 'Paris' });
+    fixture.detectChanges();
+    component.onDestinationSelected({ id: 2, name: 'Abidjan', country: '', isoCode: '', type: 'CITY' });
+    component.selectedDate = '2027-01-01';
+    component.maxPrice = 15;
+    component.onFilterChange();
+    expect(router.navigate).toHaveBeenCalledWith([], jasmine.objectContaining({
+      queryParams: { from: 'Paris', to: 'Abidjan', date: '2027-01-01', sort: 'price_asc', minPrice: null, maxPrice: 15 },
+    }));
+  });
+
+  it('clears a city through the rendered autocomplete and omits it from the URL', () => {
+    setQueryParams({ from: 'Paris', to: 'Abidjan' });
+    fixture.detectChanges();
+    const host: HTMLElement = fixture.nativeElement;
+    const input = host.querySelector<HTMLInputElement>('app-autocomplete input')!;
+    input.value = '';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(component.departure).toBeNull();
+    expect(component.departureQuery).toBe('');
+    component.searchTrips();
+    expect(router.navigate).toHaveBeenCalledWith([], jasmine.objectContaining({ queryParams: jasmine.objectContaining({ from: null, to: 'Abidjan' }) }));
+  });
+
+  it('swaps a partial route and retains its validity', () => {
+    setQueryParams({ from: 'Paris' });
+    fixture.detectChanges();
+    component.swapRoute();
+    expect(component.departure).toBeNull();
+    expect(component.destination?.name).toBe('Paris');
+    expect(component.resultRouteLabel()).toBe('À destination de Paris');
+    expect(component.isFormValid).toBeTrue();
+  });
+
+  it('does not search with only a date or blank cities', () => {
+    setQueryParams({ from: '  ', to: ' ', date: '2027-01-01' });
+    fixture.detectChanges();
+    component.selectedDate = '2027-01-01';
+    component.searchTrips();
+    expect(component.isFormValid).toBeFalse();
+    expect(tripServiceMock.searchTrips).not.toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 
 });
