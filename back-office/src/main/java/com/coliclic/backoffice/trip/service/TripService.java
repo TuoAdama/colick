@@ -99,6 +99,11 @@ public interface TripService {
                                    BigDecimal minPrice,
                                    BigDecimal maxPrice);
 
+    /** Public catalogue of upcoming trips with remaining capacity. */
+    TripCatalogResponse getCatalog(String departure, String destination, LocalDate date,
+                                   String sort, BigDecimal minPrice, BigDecimal maxPrice,
+                                   int page, int size);
+
     /**
      * Returns a small public feed for the landing page.
      * When a country is provided, matching active trips are preferred before

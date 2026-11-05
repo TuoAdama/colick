@@ -55,6 +55,9 @@ export class AutocompleteComponent implements OnInit, OnDestroy, OnChanges {
   /** Emits when the input is cleared */
   @Output() cleared = new EventEmitter<void>();
 
+  /** Emits typed text so search forms can discard a previous selection. */
+  @Output() queryChanged = new EventEmitter<string>();
+
   @ViewChild('inputRef') inputRef!: ElementRef<HTMLInputElement>;
 
   private readonly locationService = inject(LocationService);
@@ -137,6 +140,7 @@ export class AutocompleteComponent implements OnInit, OnDestroy, OnChanges {
    */
   onInputChange(): void {
     this.hasSelected = false;
+    this.queryChanged.emit(this.query);
     this.searchSubject.next(this.query);
     if (this.query.length < 2) {
       this.suggestions = [];

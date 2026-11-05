@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 import { guestGuard } from './guards/guest.guard';
 
 /**
@@ -192,6 +193,19 @@ export const routes: Routes = [
         (m) => m.DashboardLayoutComponent
       ),
     children: [
+      {
+        path: 'admin',
+        canActivate: [adminGuard],
+        canActivateChild: [adminGuard],
+        data: { seo: { title: 'Administration | Coliclic', description: 'Consultation des utilisateurs et de leur activité.', index: false } },
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'users' },
+          { path: 'users', loadComponent: () => import('./pages/admin/admin-users-page.component').then(m => m.AdminUsersPageComponent) },
+          { path: 'users/:id/trips', data: { kind: 'trips' }, loadComponent: () => import('./pages/admin/admin-user-activity-page.component').then(m => m.AdminUserActivityPageComponent) },
+          { path: 'users/:id/bookings', data: { kind: 'bookings' }, loadComponent: () => import('./pages/admin/admin-user-activity-page.component').then(m => m.AdminUserActivityPageComponent) },
+          { path: 'users/:id', loadComponent: () => import('./pages/admin/admin-user-detail-page.component').then(m => m.AdminUserDetailPageComponent) },
+        ],
+      },
       {
         path: 'dashboard',
         loadComponent: () =>

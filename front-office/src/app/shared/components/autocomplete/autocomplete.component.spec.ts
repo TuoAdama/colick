@@ -39,4 +39,17 @@ describe('AutocompleteComponent', () => {
     expect(component.isOpen).toBeFalse();
     expect(component.isLoading).toBeFalse();
   }));
+  it('notifies the parent when a selected city is edited or erased', () => {
+    const querySpy = spyOn(component.queryChanged, 'emit');
+    const clearedSpy = spyOn(component.cleared, 'emit');
+    component.selectLocation({ id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' });
+    component.query = 'Lyon';
+    component.onInputChange();
+    expect(component.hasSelected).toBeFalse();
+    expect(querySpy).toHaveBeenCalledWith('Lyon');
+    component.clearInput();
+    expect(component.query).toBe('');
+    expect(clearedSpy).toHaveBeenCalled();
+  });
+
 });

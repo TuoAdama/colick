@@ -61,7 +61,7 @@
 <section class="recommendations shell" aria-labelledby="trips-title">
   <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end" appLandingReveal>
     <div><p class="eyebrow">Les prochains départs</p><h2 id="trips-title" class="section-title">Un voyage, <span class="text-accent">des possibilités.</span></h2></div>
-    <a routerLink="/search" class="all-trips">Voir tous les trajets <svg class="icon" aria-hidden="true"><use href="#landing-i-arrow"/></svg></a>
+    <a routerLink="/search" [queryParams]="{ mode: 'all' }" class="all-trips">Voir tous les trajets <svg class="icon" aria-hidden="true"><use href="#landing-i-arrow"/></svg></a>
   </div>
   <p class="sr-only" role="status" aria-live="polite">{{ isTripsLoading ? 'Chargement des trajets' : tripsError ? 'Impossible de charger les trajets' : trips.length + ' trajet(s) disponible(s)' }}</p>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-7" [attr.aria-busy]="isTripsLoading">

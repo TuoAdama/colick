@@ -18,6 +18,9 @@ Donc voici les fonctionnalités à intégrer:
 	- L'adresse de départ
 	- La destination
 	- Bouton recherche
+- La recherche accepte une ville de départ seule, une destination seule ou les deux. La date facultative filtre les départs à partir du jour choisi ; au moins une ville est obligatoire. Les alertes nécessitent un départ et une destination.
+- Le bouton « Voir tous les trajets » ouvre `/search?mode=all` : catalogue public des trajets actifs à venir avec des kilos disponibles, triés par départ le plus proche. Les filtres sont facultatifs et conservés dans l’URL, avec 20 résultats puis « Voir plus ».
+- `GET /api/trips/catalog` accepte `departure`, `destination`, `date` (date minimale), `sort` (`departure_asc` par défaut, `price_asc`, `rating_desc`), `minPrice`, `maxPrice`, `page` (0 par défaut) et `size` (20 par défaut, de 1 à 100). La réponse contient `items`, `totalElements`, `page`, `size` et `hasNext`. Les égalités de tri sont départagées par identifiant croissant.
 - Lister les résultats corresponds aux critères définis.
 - Chaque résultats affichés doit comprendre:
 	- Le départ
@@ -58,6 +61,25 @@ Le formulaire de contact doit comprendre les champs suivants:
 
 
 ## Administration (back-office)
+
+L’espace `/admin/users` de l’application est réservé aux comptes ayant déjà le rôle
+`ADMIN`. Il permet uniquement de consulter les comptes, de rechercher un utilisateur
+par nom, prénom ou e-mail, puis de parcourir ses trajets publiés et ses réservations
+envoyées, tous statuts confondus. Les listes sont paginées par 20 éléments.
+
+Le statut « Vérifié » correspond à une adresse e-mail vérifiée. Les méthodes de
+connexion indiquent les accès disponibles (Google, mot de passe ou les deux).
+Les dates d’inscription reconstruites sont signalées comme estimées. Le champ
+`users.updated_at` est ajouté par la mise à jour de schéma Hibernate existante :
+il suit les modifications persistées du compte, et reste inconnu pour les anciens
+comptes tant qu’ils ne sont pas modifiés. Aucun historique de modification n’est
+reconstitué.
+
+Les endpoints `GET /api/admin/users`, `/{id}`, `/{id}/trips` et `/{id}/bookings`
+(suffixes relatifs à `/api/admin/users`) exigent le rôle `ADMIN`. Les listes acceptent
+`page` (à partir de 0) et `size` (de 1 à 100, 20 par défaut) ; la liste des comptes
+accepte aussi `q`. Les inscriptions et activités les plus récentes sont affichées
+en premier, avec les dates inconnues en dernier.
 
 - Possibilité de consulter les recherches qui ont été créées
 - Interface pour afficher les demandes associées à une recherche

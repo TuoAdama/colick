@@ -105,8 +105,8 @@ export class LandingPageComponent implements OnInit, OnDestroy {
     const to = this.destination?.name ?? this.destinationQuery.trim();
     const date = this.travelDate.trim();
 
-    if (!from || !to) {
-      this.formError = 'Renseignez votre ville de départ et votre destination.';
+    if (!from && !to) {
+      this.formError = 'Renseignez au moins une ville de départ ou de destination.';
       this.element.nativeElement.querySelector<HTMLInputElement>(!from ? '#landing-departure' : '#landing-destination')?.focus();
       return;
     }

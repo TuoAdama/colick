@@ -606,6 +606,30 @@ public class TripServiceImpl implements TripService {
 
     @Override
     @Transactional(readOnly = true)
+    public TripCatalogResponse getCatalog(String departure, String destination, LocalDate date,
+                                         String sort, BigDecimal minPrice, BigDecimal maxPrice,
+                                         int page, int size) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new BadRequestException("La page doit être positive ou nulle et la taille comprise entre 1 et 100.");
+        }
+        // Reuse route expansion, departure dates, prices and accepted-booking capacity.
+        List<TripResponse> available = searchTrips(departure, destination, date, null, minPrice, maxPrice)
+                .stream()
+                .filter(trip -> trip.getAvailableWeight().signum() > 0)
+                .sorted(Comparator.comparing(TripResponse::getId))
+                .toList();
+        // Stream sorting is stable, so the ID order breaks ties for every supported sort.
+        String effectiveSort = Set.of("price_asc", "rating_desc").contains(sort == null ? "" : sort)
+                ? sort : "departure_asc";
+        List<TripResponse> sorted = sortSearchResults(available, effectiveSort);
+        long offset = (long) page * size;
+        List<TripResponse> items = sorted.stream().skip(offset).limit(size).toList();
+        return new TripCatalogResponse(items, sorted.size(), page, size,
+                offset + items.size() < sorted.size());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<TripResponse> getLandingFeed(String country, int limit) {
         int boundedLimit = Math.max(1, Math.min(limit, 12));
         LocalDateTime referenceTime = LocalDateTime.now();

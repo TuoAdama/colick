@@ -29,6 +29,7 @@ export class AppComponent {
   private readonly publicTripReferenceRoutePattern = /^\/trips\/ref\/[^/?#]+(?:[?#].*)?$/;
   private readonly publicTripBookingRequestRoutePattern = /^\/trips\/ref\/[^/?#]+\/request(?:[?#].*)?$/;
   private readonly dashboardShellRoutePatterns = [
+    /^\/admin(?:\/[^?#]*)?(?:[?#].*)?$/,
     /^\/dashboard(?:[?#].*)?$/,
     /^\/trips(?:\/[^?#]*)?(?:[?#].*)?$/,
     /^\/propose(?:\/[^?#]*)?(?:[?#].*)?$/,
