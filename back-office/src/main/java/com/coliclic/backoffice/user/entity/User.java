@@ -89,6 +89,10 @@ public class User {
     @Column
     private LocalDateTime createdAt;
 
+    /** Last persisted account change; unknown for untouched legacy accounts. */
+    @Column
+    private LocalDateTime updatedAt;
+
     /** Whether createdAt was reconstructed from legacy activity rather than captured at signup. */
     @Column
     @Builder.Default
@@ -104,6 +108,12 @@ public class User {
             createdAt = LocalDateTime.now();
             createdAtEstimated = false;
         }
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 
     public boolean isCreatedAtEstimated() {

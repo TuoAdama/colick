@@ -96,7 +96,7 @@
         @if (trip.status === 'ACTIVE') {
           <button
             type="button"
-            class="announcement-card mt-3 flex w-full items-center gap-3 rounded-[18px] border border-[#E6ECF1] bg-white px-3.5 py-3 text-left shadow-[0_4px_14px_rgba(19,44,70,0.07)] transition hover:border-[#F15A24]/40 hover:shadow-[0_6px_18px_rgba(19,44,70,0.1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F15A24] disabled:cursor-wait disabled:opacity-70"
+            class="announcement-card mt-3 flex w-full items-center gap-3 rounded-[18px] border border-[#E6ECF1] bg-white px-3.5 py-3 text-left shadow-[0_4px_14px_rgba(19,44,70,.07)] transition hover:border-[#F15A24]/40 hover:shadow-[0_6px_18px_rgba(19,44,70,0.1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F15A24] disabled:cursor-wait disabled:opacity-70"
             [disabled]="isGeneratingShareCard"
             (click)="downloadTripAnnouncementImage()"
             aria-label="Télécharger l'image de l'annonce"

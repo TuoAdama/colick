@@ -1,0 +1,30 @@
+<section class="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+  <p class="text-sm font-semibold text-text-secondary">Administration</p>
+  <h1 class="mt-2 text-3xl font-bold text-primary">Utilisateurs inscrits</h1>
+  <p class="mt-2 text-text-secondary">Consultez les comptes et leur activité sur Coliclic.</p>
+  <form (ngSubmit)="search()" class="my-6 flex flex-wrap gap-3">
+    <label for="admin-search" class="sr-only">Rechercher par nom, prénom ou e-mail</label>
+    <input id="admin-search" name="q" [(ngModel)]="query" type="search" placeholder="Nom, prénom ou e-mail" class="min-w-0 flex-1 rounded-xl border border-border bg-background-secondary px-4 py-3" />
+    <button type="submit" class="rounded-xl bg-primary px-5 py-3 font-semibold text-white">Rechercher</button>
+  </form>
+  @if (loading()) { <p role="status">Chargement des utilisateurs…</p> }
+  @else if (error()) {
+    <div role="alert" class="rounded-xl border border-border p-5"><p>Impossible de charger les utilisateurs.</p><button class="mt-3 font-semibold text-primary underline" (click)="reload()">Réessayer</button></div>
+  }
+  @if (result(); as data) {
+    @if (data.items.length === 0) { <p class="rounded-xl border border-border p-6">Aucun utilisateur trouvé.</p> }
+    @else {
+      <div class="overflow-x-auto rounded-2xl border border-border bg-background-secondary" tabindex="0" role="region" aria-label="Liste des utilisateurs">
+        <table class="w-full text-left text-sm">
+          <thead class="border-b border-border bg-background-primary text-text-secondary"><tr><th class="p-4">Nom</th><th class="p-4">Prénom</th><th class="p-4">Inscription</th><th class="p-4">Dernière modification</th><th class="p-4">E-mail</th><th class="p-4">Connexion</th></tr></thead>
+          <tbody>
+            @for (user of data.items; track user.id) {
+              <tr class="border-b border-border last:border-0"><td class="p-4"><a class="font-semibold text-primary underline" [routerLink]="['/admin/users', user.id]">{{ user.lastName }}</a></td><td class="p-4">{{ user.firstName }}</td><td class="whitespace-nowrap p-4">{{ date(user.createdAt) }} @if (user.createdAtEstimated) { <span class="block text-xs text-text-secondary">Date estimée</span> }</td><td class="whitespace-nowrap p-4">{{ date(user.updatedAt) }}</td><td class="p-4">{{ user.email }}</td><td class="p-4">{{ connections(user) }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <app-admin-pagination [page]="data.page" [totalPages]="data.totalPages" [totalElements]="data.totalElements" (pageChange)="changePage($event)" />
+  }
+</section>

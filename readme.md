@@ -59,6 +59,25 @@ Le formulaire de contact doit comprendre les champs suivants:
 
 ## Administration (back-office)
 
+L’espace `/admin/users` de l’application est réservé aux comptes ayant déjà le rôle
+`ADMIN`. Il permet uniquement de consulter les comptes, de rechercher un utilisateur
+par nom, prénom ou e-mail, puis de parcourir ses trajets publiés et ses réservations
+envoyées, tous statuts confondus. Les listes sont paginées par 20 éléments.
+
+Le statut « Vérifié » correspond à une adresse e-mail vérifiée. Les méthodes de
+connexion indiquent les accès disponibles (Google, mot de passe ou les deux).
+Les dates d’inscription reconstruites sont signalées comme estimées. Le champ
+`users.updated_at` est ajouté par la mise à jour de schéma Hibernate existante :
+il suit les modifications persistées du compte, et reste inconnu pour les anciens
+comptes tant qu’ils ne sont pas modifiés. Aucun historique de modification n’est
+reconstitué.
+
+Les endpoints `GET /api/admin/users`, `/{id}`, `/{id}/trips` et `/{id}/bookings`
+(suffixes relatifs à `/api/admin/users`) exigent le rôle `ADMIN`. Les listes acceptent
+`page` (à partir de 0) et `size` (de 1 à 100, 20 par défaut) ; la liste des comptes
+accepte aussi `q`. Les inscriptions et activités les plus récentes sont affichées
+en premier, avec les dates inconnues en dernier.
+
 - Possibilité de consulter les recherches qui ont été créées
 - Interface pour afficher les demandes associées à une recherche
 - Possibilité de consulter les infos qui ont été créées par les voyage

@@ -13,6 +13,10 @@ export class DashboardShellComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  isAdmin(): boolean {
+    return this.authService.getUser()?.role === 'ADMIN';
+  }
+
   currentYear = new Date().getFullYear();
   isMobileMenuOpen = false;
   private profilePhotoLoadFailed = false;
