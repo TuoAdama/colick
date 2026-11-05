@@ -360,4 +360,15 @@ describe('TripService', () => {
       ],
     });
   });
+  for (const field of ['departure', 'destination'] as const) {
+    it(`omits the absent city when searching by ${field}`, () => {
+      service.searchTrips({ [field]: ' Paris ', date: '2027-01-01' }).subscribe();
+      const req = httpMock.expectOne(request => request.url === '/api/trips/search');
+      expect(req.request.params.get(field)).toBe('Paris');
+      expect(req.request.params.has(field === 'departure' ? 'destination' : 'departure')).toBeFalse();
+      expect(req.request.params.get('date')).toBe('2027-01-01');
+      req.flush([]);
+    });
+  }
+
 });

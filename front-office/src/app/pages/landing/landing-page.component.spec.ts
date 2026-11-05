@@ -153,7 +153,7 @@ describe('LandingPageComponent', () => {
     expect(component.isDepartureLoading).toBeFalse();
   }));
 
-  it('does not navigate when departure or destination is missing', () => {
+  it('requires at least one city and allows refining the route', () => {
     fixture.detectChanges();
 
     component.searchTrips();
@@ -161,7 +161,7 @@ describe('LandingPageComponent', () => {
 
     component.departureQuery = 'Paris';
     component.searchTrips();
-    expect(router.navigate).not.toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['/search'], { queryParams: { from: 'Paris' } });
 
     component.destinationQuery = 'Abidjan';
     component.searchTrips();
@@ -431,6 +431,22 @@ describe('LandingPageComponent', () => {
     fixture.detectChanges();
     fixture.destroy();
     expect(feed.observed).toBeFalse();
+  });
+
+  it('searches by destination only with an optional date', () => {
+    fixture.detectChanges();
+    component.destinationQuery = ' Abidjan ';
+    component.travelDate = '2027-01-01';
+    component.searchTrips();
+    expect(router.navigate).toHaveBeenCalledWith(['/search'], { queryParams: { to: 'Abidjan', date: '2027-01-01' } });
+  });
+
+  it('rejects a date without a city', () => {
+    fixture.detectChanges();
+    component.travelDate = '2027-01-01';
+    component.searchTrips();
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(component.formError).toContain('au moins une ville');
   });
 
 });

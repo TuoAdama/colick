@@ -61,7 +61,7 @@ describe('SearchHistoryService', () => {
 
   it('ignores malformed stored data', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([
-      { criteria: { departure: 'Paris' }, createdAt: '2026-09-21T00:00:00.000Z' },
+      { criteria: { departure: 123 }, createdAt: '2026-09-21T00:00:00.000Z' },
       { criteria: criteria(1), createdAt: '2026-09-21T00:00:00.000Z' },
     ]));
 
@@ -94,4 +94,22 @@ describe('SearchHistoryService', () => {
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(service.getEntries()).toEqual([]);
   });
+  it('persists, reloads and deduplicates partial searches alongside full routes', () => {
+    service.add(criteria(1));
+    service.add({ departure: ' Paris ' });
+    service.add({ destination: ' Abidjan ' });
+    service.add({ departure: 'Paris', destination: ' ' });
+    const entries = service.getEntries();
+    expect(entries).toHaveSize(3);
+    expect(entries[0].criteria.departure).toBe('Paris');
+    expect(entries[0].criteria.destination).toBeUndefined();
+    expect(entries[1].criteria.destination).toBe('Abidjan');
+    expect(entries[2].criteria).toEqual(criteria(1));
+  });
+
+  it('rejects history entries with no city even when a date is supplied', () => {
+    service.add({ departure: ' ', date: '2027-01-01' });
+    expect(service.getEntries()).toEqual([]);
+  });
+
 });

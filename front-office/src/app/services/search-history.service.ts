@@ -28,13 +28,13 @@ export class SearchHistoryService {
 
   add(criteria: TripSearchCriteria): SearchHistoryEntry[] {
     if (!isPlatformBrowser(this.platformId)) return [];
-    if (!criteria.departure?.trim() || !criteria.destination?.trim()) {
+    if (!criteria.departure?.trim() && !criteria.destination?.trim()) {
       return this.getEntries();
     }
 
     const normalized: TripSearchCriteria = {
-      departure: criteria.departure.trim(),
-      destination: criteria.destination.trim(),
+      departure: criteria.departure?.trim() || undefined,
+      destination: criteria.destination?.trim() || undefined,
       date: criteria.date?.trim() || undefined,
       sort: criteria.sort ?? 'price_asc',
       minPrice: criteria.minPrice ?? null,
@@ -88,9 +88,8 @@ export class SearchHistoryService {
     const criteria = entry.criteria;
     return typeof entry.createdAt === 'string'
       && !!criteria
-      && typeof criteria.departure === 'string'
-      && criteria.departure.trim().length > 0
-      && typeof criteria.destination === 'string'
-      && criteria.destination.trim().length > 0;
+      && (criteria.departure === undefined || typeof criteria.departure === 'string')
+      && (criteria.destination === undefined || typeof criteria.destination === 'string')
+      && !!(criteria.departure?.trim() || criteria.destination?.trim());
   }
 }
