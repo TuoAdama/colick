@@ -57,6 +57,14 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private queryParamsSubscription?: Subscription;
+  private resultsSubscription?: Subscription;
+  isCatalog = false;
+  catalogTotal = 0;
+  catalogHasNext = false;
+  isLoadingMore = false;
+  loadMoreError = '';
+  private catalogPage = 0;
+  private catalogCriteria: TripSearchCriteria = {};
   private lastAutoSearchKey = '';
 
   get resultsReturnUrl(): string { return this.router.url; }
@@ -135,10 +143,10 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if at least one location is provided
+   * Catalogue browsing allows empty cities; classic search requires at least one.
    */
   get isFormValid(): boolean {
-    return !!(this.departure?.name.trim() || this.departureQuery.trim()
+    return this.isCatalog || !!(this.departure?.name.trim() || this.departureQuery.trim()
       || this.destination?.name.trim() || this.destinationQuery.trim());
   }
 
@@ -151,6 +159,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     }
 
     this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
+      this.isCatalog = params.get('mode') === 'all';
       const from = params.get('from')?.trim() ?? '';
       const to = params.get('to')?.trim() ?? '';
       const date = params.get('date')?.trim() ?? '';
@@ -158,7 +167,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       const minPrice = this.parseOptionalNumber(params.get('minPrice'));
       const maxPrice = this.parseOptionalNumber(params.get('maxPrice'));
 
-      if (!from && !to) {
+      if (!this.isCatalog && !from && !to) {
         if (this.hasSearched || this.trips.length > 0 || this.lastAutoSearchKey) {
           this.resetSearchState();
         }
@@ -176,7 +185,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
       this.destination = to ? this.createLocationFromQuery(to) : null;
 
       const criteria = this.buildCriteria(from, to, date, sort, minPrice, maxPrice);
-      const searchKey = this.buildSearchKey(criteria);
+      const searchKey = `${this.isCatalog}:${this.buildSearchKey(criteria)}`;
       if (searchKey === this.lastAutoSearchKey) {
         return;
       }
@@ -188,10 +197,16 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
+    this.resultsSubscription?.unsubscribe();
     this.closeMobileFilters();
   }
 
   private resetSearchState(): void {
+    this.resultsSubscription?.unsubscribe();
+    this.isLoadingMore = false;
+    this.loadMoreError = '';
+    this.catalogTotal = 0;
+    this.catalogHasNext = false;
     this.departure = null;
     this.destination = null;
     this.departureQuery = '';
@@ -226,7 +241,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     );
 
     if (this.hasMatchingSearchParams(criteria)) {
-      this.lastAutoSearchKey = this.buildSearchKey(criteria);
+      this.lastAutoSearchKey = `${this.isCatalog}:${this.buildSearchKey(criteria)}`;
       this.searchTripsByCriteria(criteria);
       return;
     }
@@ -349,8 +364,14 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   }
 
   private searchTripsByCriteria(criteria: TripSearchCriteria): void {
-    this.searchHistoryService.add(criteria);
-    this.searchHistory = this.searchHistoryService.getEntries();
+    this.resultsSubscription?.unsubscribe();
+    this.isLoadingMore = false;
+    this.loadMoreError = '';
+    this.catalogHasNext = false;
+    if (!this.isCatalog || criteria.departure || criteria.destination) {
+      this.searchHistoryService.add(criteria);
+      this.searchHistory = this.searchHistoryService.getEntries();
+    }
     this.analytics.track('search_started', {
       departure: criteria.departure,
       destination: criteria.destination,
@@ -364,7 +385,15 @@ export class SearchPageComponent implements OnInit, OnDestroy {
     this.alertErrorMessage = '';
     this.trips = [];
 
-    this.tripService
+    if (this.isCatalog) {
+      this.catalogCriteria = criteria;
+      this.catalogPage = 0;
+      this.catalogTotal = 0;
+      this.loadCatalogPage(0);
+      return;
+    }
+
+    this.resultsSubscription = this.tripService
       .searchTrips(criteria)
       .subscribe({
         next: (results) => {
@@ -382,6 +411,42 @@ export class SearchPageComponent implements OnInit, OnDestroy {
           this.isLoading = false;
         },
       });
+  }
+
+  loadMore(): void {
+    if (!this.isCatalog || !this.catalogHasNext || this.isLoading || this.isLoadingMore) return;
+    this.isLoadingMore = true;
+    this.loadMoreError = '';
+    this.loadCatalogPage(this.catalogPage + 1);
+  }
+
+  private loadCatalogPage(page: number): void {
+    this.resultsSubscription = this.tripService.getCatalog(this.catalogCriteria, page).subscribe({
+      next: (result) => {
+        this.trips = page === 0 ? result.items : [...this.trips, ...result.items.filter(
+          (item) => !this.trips.some((trip) => trip.id === item.id)
+        )];
+        this.catalogPage = page;
+        this.catalogTotal = result.totalElements;
+        this.catalogHasNext = result.hasNext;
+        this.isLoading = false;
+        this.isLoadingMore = false;
+        this.analytics.track('results_displayed', {
+          departure: this.catalogCriteria.departure,
+          destination: this.catalogCriteria.destination,
+          result_count: result.totalElements,
+        });
+      },
+      error: () => {
+        if (page === 0) {
+          this.errorMessage = 'Impossible de charger les trajets pour le moment.';
+        } else {
+          this.loadMoreError = 'Impossible de charger les trajets suivants.';
+        }
+        this.isLoading = false;
+        this.isLoadingMore = false;
+      },
+    });
   }
 
   private hasMatchingSearchParams(criteria: TripSearchCriteria): boolean {
@@ -414,6 +479,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
   private toQueryParams(criteria: TripSearchCriteria): Record<string, string | number | null> {
     return {
+      ...(this.isCatalog ? { mode: 'all' } : {}),
       from: criteria.departure ?? null,
       to: criteria.destination ?? null,
       date: criteria.date ?? null,
@@ -437,7 +503,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
   private parseSort(value: string | null): TripSearchSort {
     return value === 'departure_asc' || value === 'rating_desc' || value === 'price_asc'
       ? value
-      : 'price_asc';
+      : this.isCatalog ? 'departure_asc' : 'price_asc';
   }
 
   private parseOptionalNumber(value: string | null): number | null {

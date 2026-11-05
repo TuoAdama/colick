@@ -1,3 +1,4 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -9,17 +10,22 @@ import { TripService } from '../../services/trip.service';
 import { TripAlertService } from '../../services/trip-alert.service';
 import { MessagingService } from '../../services/messaging.service';
 import { LocationService } from '../../services/location.service';
+import { Trip } from '../../models/trip.model';
 import { SearchHistoryService } from '../../services/search-history.service';
+
+@Component({ standalone: true, template: '' })
+class TripDestinationComponent {}
 
 // Exercise real route navigation and browser history storage across both screens.
 describe('Partial trip search flow', () => {
   let harness: RouterTestingHarness;
   let router: Router;
-  let tripService: { searchTrips: jasmine.Spy; getLandingFeed: jasmine.Spy };
+  let tripService: { searchTrips: jasmine.Spy; getLandingFeed: jasmine.Spy; getCatalog: jasmine.Spy };
 
   beforeEach(async () => {
     localStorage.removeItem('coliclic.search-history');
     tripService = {
+      getCatalog: jasmine.createSpy('getCatalog').and.returnValue(of({ items: [], totalElements: 0, hasNext: false, page: 0, size: 20 })),
       searchTrips: jasmine.createSpy('searchTrips').and.returnValue(of([])),
       getLandingFeed: jasmine.createSpy('getLandingFeed').and.returnValue(of([])),
     };
@@ -28,6 +34,7 @@ describe('Partial trip search flow', () => {
         provideRouter([
           { path: '', component: LandingPageComponent },
           { path: 'search', component: SearchPageComponent },
+          { path: 'trips/ref/:reference', component: TripDestinationComponent },
         ]),
         { provide: TripService, useValue: tripService },
         { provide: AuthService, useValue: { isLoggedIn: () => false, getUser: () => null } },
@@ -41,6 +48,38 @@ describe('Partial trip search flow', () => {
   });
 
   afterEach(() => localStorage.removeItem('coliclic.search-history'));
+
+  it('opens the catalogue from the home link and restores filters after visiting a trip', async () => {
+    const trip: Trip = {
+      id: 1, reference: 'TRP-2027-000001', travelerId: 2, travelerName: 'Alice',
+      departureAddress: 'Paris', destination: 'Abidjan', departureTime: '2027-01-01T10:00:00',
+      arrivalTime: '2027-01-01T18:00:00', maxWeight: 20, availableWeight: 10,
+      pricePerKilo: 5, instantAcceptance: false, status: 'ACTIVE',
+    };
+    tripService.getCatalog.and.returnValue(of({ items: [trip], totalElements: 1, hasNext: false, page: 0, size: 20 }));
+    await harness.navigateByUrl('/', LandingPageComponent);
+    harness.routeNativeElement!.querySelector<HTMLAnchorElement>('.all-trips')!.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(router.url).toBe('/search?mode=all');
+    expect(tripService.getCatalog).toHaveBeenCalledWith(jasmine.objectContaining({ sort: 'departure_asc' }), 0);
+    const page = harness.routeDebugElement!.componentInstance as SearchPageComponent;
+    page.minPrice = 4;
+    page.selectedDate = '2027-01-01';
+    page.onFilterChange();
+    await harness.fixture.whenStable();
+    const returnUrl = page.resultsReturnUrl;
+    expect(router.parseUrl(returnUrl).queryParams).toEqual(jasmine.objectContaining({ mode: 'all', minPrice: '4', date: '2027-01-01' }));
+    page.openTripDetails(trip);
+    await harness.fixture.whenStable();
+    expect(router.url).toContain('/trips/ref/TRP-2027-000001?');
+    expect(router.parseUrl(router.url).queryParams['returnUrl']).toBe(returnUrl);
+    const restored = await harness.navigateByUrl(returnUrl, SearchPageComponent);
+    expect(restored.isCatalog).toBeTrue();
+    expect(restored.minPrice).toBe(4);
+    expect(restored.selectedDate).toBe('2027-01-01');
+    expect(TestBed.inject(SearchHistoryService).getEntries()).toEqual([]);
+  });
 
   it('navigates from the home form, refines, reloads and restores a partial search', async () => {
     await harness.navigateByUrl('/', LandingPageComponent);

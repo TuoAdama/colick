@@ -19,6 +19,8 @@ Donc voici les fonctionnalités à intégrer:
 	- La destination
 	- Bouton recherche
 - La recherche accepte une ville de départ seule, une destination seule ou les deux. La date facultative filtre les départs à partir du jour choisi ; au moins une ville est obligatoire. Les alertes nécessitent un départ et une destination.
+- Le bouton « Voir tous les trajets » ouvre `/search?mode=all` : catalogue public des trajets actifs à venir avec des kilos disponibles, triés par départ le plus proche. Les filtres sont facultatifs et conservés dans l’URL, avec 20 résultats puis « Voir plus ».
+- `GET /api/trips/catalog` accepte `departure`, `destination`, `date` (date minimale), `sort` (`departure_asc` par défaut, `price_asc`, `rating_desc`), `minPrice`, `maxPrice`, `page` (0 par défaut) et `size` (20 par défaut, de 1 à 100). La réponse contient `items`, `totalElements`, `page`, `size` et `hasNext`. Les égalités de tri sont départagées par identifiant croissant.
 - Lister les résultats corresponds aux critères définis.
 - Chaque résultats affichés doit comprendre:
 	- Le départ

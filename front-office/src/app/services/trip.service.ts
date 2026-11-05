@@ -23,6 +23,14 @@ export interface TripSearchCriteria {
   maxPrice?: number | null;
 }
 
+export interface TripCatalogPage {
+  items: Trip[];
+  totalElements: number;
+  page: number;
+  size: number;
+  hasNext: boolean;
+}
+
 /**
  * Service responsible for trip search, creation, and booking operations.
  */
@@ -40,6 +48,20 @@ export class TripService {
 
   /** Search trips by route and optional filters. */
   searchTrips(criteria: TripSearchCriteria): Observable<Trip[]> {
+    const params = this.searchParams(criteria);
+    return this.http.get<Trip[]>(`${this.baseUrl}/search`, { params }).pipe(
+      map((trips) => trips.map((trip) => this.normalizeTrip(trip)))
+    );
+  }
+
+  getCatalog(criteria: TripSearchCriteria, page = 0, size = 20): Observable<TripCatalogPage> {
+    const params = this.searchParams(criteria).set('page', page).set('size', size);
+    return this.http.get<TripCatalogPage>(`${this.baseUrl}/catalog`, { params }).pipe(
+      map((result) => ({ ...result, items: result.items.map((trip) => this.normalizeTrip(trip)) }))
+    );
+  }
+
+  private searchParams(criteria: TripSearchCriteria): HttpParams {
     let params = new HttpParams();
     if (criteria.departure?.trim()) {
       params = params.set('departure', criteria.departure.trim());
@@ -60,9 +82,7 @@ export class TripService {
       params = params.set('maxPrice', criteria.maxPrice);
     }
 
-    return this.http.get<Trip[]>(`${this.baseUrl}/search`, { params }).pipe(
-      map((trips) => trips.map((trip) => this.normalizeTrip(trip)))
-    );
+    return params;
   }
 
   /** Get the small trip feed displayed on the landing page. */

@@ -20,6 +20,24 @@ describe('TripService', () => {
     httpMock.verify();
   });
 
+  it('loads a catalogue page without cities and normalizes its photos', () => {
+    service.getCatalog({ sort: 'departure_asc', minPrice: 0, date: '2027-01-01' }, 1).subscribe(page => {
+      expect(page.totalElements).toBe(21);
+      expect(page.hasNext).toBeFalse();
+      expect(page.items[0].travelerPhotoUrl).toBe('/api/uploads/traveler.png');
+    });
+    const req = httpMock.expectOne(request => request.url === '/api/trips/catalog');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('page')).toBe('1');
+    expect(req.request.params.get('size')).toBe('20');
+    expect(req.request.params.get('sort')).toBe('departure_asc');
+    expect(req.request.params.get('minPrice')).toBe('0');
+    expect(req.request.params.get('date')).toBe('2027-01-01');
+    expect(req.request.params.has('departure')).toBeFalse();
+    expect(req.request.params.has('destination')).toBeFalse();
+    req.flush({ items: [{ id: 1, travelerPhotoUrl: '/uploads/traveler.png' }], totalElements: 21, hasNext: false, page: 1, size: 20 });
+  });
+
   it('searches trips with filters and normalizes traveler photo URLs', () => {
     service.searchTrips({
       departure: 'Paris',

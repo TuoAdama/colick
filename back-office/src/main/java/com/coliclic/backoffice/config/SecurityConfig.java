@@ -87,7 +87,7 @@ public class SecurityConfig {
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/locations/**").permitAll()
                 .requestMatchers("/trips/search").permitAll()
-                .requestMatchers(HttpMethod.GET, "/trips/landing-feed").permitAll()
+                .requestMatchers(HttpMethod.GET, "/trips/catalog", "/trips/landing-feed").permitAll()
                 .requestMatchers(HttpMethod.GET, "/trips/reference/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/parcel-requests").permitAll()
                 .requestMatchers(

@@ -1717,6 +1717,91 @@ class TripServiceImplTest {
     }
 
     @Test
+    void catalog_shouldExcludeDepartedAndFullTripsBeforePaginatingWithStableOrder() {
+        Trip full = catalogTrip(11L, sampleTrip.getDepartureTime());
+        Trip expired = catalogTrip(12L, LocalDateTime.now().minusMinutes(1));
+        Trip tied = catalogTrip(9L, sampleTrip.getDepartureTime());
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE))
+                .thenReturn(List.of(sampleTrip, full, expired, tied));
+        when(bookingRepository.findByTripAndStatus(any(Trip.class), eq(TripBooking.BookingStatus.ACCEPTED)))
+                .thenAnswer(invocation -> invocation.getArgument(0) == full
+                        ? List.of(TripBooking.builder().weight(full.getMaxWeight()).build()) : List.of());
+
+        TripCatalogResponse first = tripService.getCatalog(null, null, null, null, null, null, 0, 1);
+        TripCatalogResponse second = tripService.getCatalog(null, null, null, null, null, null, 1, 1);
+        TripCatalogResponse beyond = tripService.getCatalog(null, null, null, null, null, null, 99, 1);
+
+        assertThat(first.items()).extracting(TripResponse::getId).containsExactly(9L);
+        assertThat(first.totalElements()).isEqualTo(2);
+        assertThat(first.hasNext()).isTrue();
+        assertThat(second.items()).extracting(TripResponse::getId).containsExactly(10L);
+        assertThat(second.hasNext()).isFalse();
+        assertThat(beyond.items()).isEmpty();
+        assertThat(beyond.totalElements()).isEqualTo(2);
+        assertThat(beyond.hasNext()).isFalse();
+        verify(tripRepository, times(3)).findByStatus(Trip.TripStatus.ACTIVE);
+    }
+
+    @Test
+    void catalog_shouldApplyRouteDatePriceAndRatingFilters() {
+        Trip later = catalogTrip(11L, sampleTrip.getDepartureTime().plusDays(2));
+        later.setTraveler(sender);
+        later.setPricePerKilo(BigDecimal.TEN);
+        Trip expensive = catalogTrip(12L, later.getDepartureTime());
+        expensive.setPricePerKilo(BigDecimal.valueOf(50));
+        Trip wrongRoute = catalogTrip(13L, later.getDepartureTime());
+        wrongRoute.setDestination("Dakar");
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE))
+                .thenReturn(List.of(sampleTrip, later, expensive, wrongRoute));
+        when(travelerReviewService.getTravelerRatingSummaries(anyCollection()))
+                .thenReturn(Map.of(sender.getId(), new TravelerRatingSummary(4.8, 3L)));
+
+        TripCatalogResponse filtered = tripService.getCatalog("Paris", "Abidjan",
+                later.getDepartureTime().toLocalDate(), "rating_desc", BigDecimal.valueOf(6),
+                BigDecimal.valueOf(20), 0, 20);
+        assertThat(filtered.items()).extracting(TripResponse::getId).containsExactly(11L);
+        assertThat(filtered.totalElements()).isEqualTo(1);
+        assertThat(filtered.items().get(0).getTravelerRatingAverage()).isEqualTo(4.8);
+    }
+
+    @Test
+    void catalog_shouldSupportEverySortWithIdTieBreaker() {
+        Trip tied = catalogTrip(9L, sampleTrip.getDepartureTime());
+        Trip earlyExpensive = catalogTrip(11L, sampleTrip.getDepartureTime().minusDays(1));
+        earlyExpensive.setPricePerKilo(BigDecimal.TEN);
+        earlyExpensive.setTraveler(sender);
+        when(tripRepository.findByStatus(Trip.TripStatus.ACTIVE))
+                .thenReturn(List.of(sampleTrip, earlyExpensive, tied));
+        when(travelerReviewService.getTravelerRatingSummaries(anyCollection()))
+                .thenReturn(Map.of(sender.getId(), new TravelerRatingSummary(4.8, 3L)));
+
+        assertThat(tripService.getCatalog(null, null, null, null, null, null, 0, 20).items())
+                .extracting(TripResponse::getId).containsExactly(11L, 9L, 10L);
+        assertThat(tripService.getCatalog(null, null, null, "price_asc", null, null, 0, 20).items())
+                .extracting(TripResponse::getId).containsExactly(9L, 10L, 11L);
+        assertThat(tripService.getCatalog(null, null, null, "rating_desc", null, null, 0, 20).items())
+                .extracting(TripResponse::getId).containsExactly(11L, 9L, 10L);
+    }
+
+    @Test
+    void catalog_shouldRejectInvalidPagination() {
+        assertThatThrownBy(() -> tripService.getCatalog(null, null, null, null, null, null, -1, 20))
+                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> tripService.getCatalog(null, null, null, null, null, null, 0, 0))
+                .isInstanceOf(BadRequestException.class);
+        assertThatThrownBy(() -> tripService.getCatalog(null, null, null, null, null, null, 0, 101))
+                .isInstanceOf(BadRequestException.class);
+    }
+
+    private Trip catalogTrip(long id, LocalDateTime departure) {
+        return Trip.builder().id(id).traveler(traveler)
+                .departureAddress("Paris").destination("Abidjan")
+                .departureTime(departure).arrivalTime(departure.plusHours(6))
+                .maxWeight(BigDecimal.valueOf(20)).pricePerKilo(BigDecimal.valueOf(5))
+                .status(Trip.TripStatus.ACTIVE).build();
+    }
+
+    @Test
     void getLandingFeed_shouldPreferCountryMatchesAndRespectLimit() {
         Trip localTrip = Trip.builder()
                 .id(11L).traveler(traveler)
