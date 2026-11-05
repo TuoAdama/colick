@@ -33,6 +33,7 @@ public class JwtUtil {
                 .subject(user.getEmail())
                 .claim("role", user.getRole().name())
                 .claim("userId", user.getId())
+                .claim("sessionVersion", user.getSessionVersion())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(secretKey)
@@ -59,6 +60,22 @@ public class JwtUtil {
             Claims claims = extractClaims(token);
             return !claims.getExpiration().before(new Date());
         } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Rejects revoked, legacy, disabled-account and reassigned-email sessions. */
+    public boolean isTokenValid(String token, User user) {
+        try {
+            Claims claims = extractClaims(token);
+            Number version = claims.get("sessionVersion", Number.class);
+            Number userId = claims.get("userId", Number.class);
+            return Boolean.TRUE.equals(user.getEnabled())
+                    && claims.getExpiration().after(new Date())
+                    && user.getEmail().equals(claims.getSubject())
+                    && userId != null && user.getId().equals(userId.longValue())
+                    && version != null && version.longValue() == user.getSessionVersion();
+        } catch (Exception ex) {
             return false;
         }
     }

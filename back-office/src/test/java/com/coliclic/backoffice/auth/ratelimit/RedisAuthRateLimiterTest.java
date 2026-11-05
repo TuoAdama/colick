@@ -70,12 +70,21 @@ class RedisAuthRateLimiterTest {
     }
 
     @Test
-    void checkLogin_shouldFailOpenWhenRedisIsUnavailable() {
+    void checkLogin_shouldFailClosedWhenRedisIsUnavailable() {
         when(redisTemplate.execute(any(RedisScript.class), anyList(),
                 any(), any(), any())).thenThrow(new IllegalStateException("Redis unavailable"));
 
         RateLimitDecision decision = rateLimiter.checkLogin("user@example.com", "203.0.113.7");
 
-        assertThat(decision).isEqualTo(RateLimitDecision.allowedDecision());
+        assertThat(decision).isEqualTo(RateLimitDecision.rejected(60));
+    }
+
+    @Test
+    void checkPasswordReset_shouldRejectAnAbsentRedisDecision() {
+        when(redisTemplate.execute(any(RedisScript.class), anyList(),
+                any(), any(), any())).thenReturn(null);
+
+        assertThat(rateLimiter.checkPasswordReset("user@example.com", "203.0.113.7"))
+                .isEqualTo(RateLimitDecision.rejected(60));
     }
 }

@@ -89,6 +89,13 @@ public class BookingValidationService {
         booking.setValidationDeliveryChannel(channel);
         booking.setValidationDeliveryStatus(TripBooking.ValidationDeliveryStatus.DELIVERED);
         booking.setValidationCodeSentAt(LocalDateTime.now());
+        LocalDateTime reference = booking.getValidationCodeSentAt();
+        if (booking.getTrip().getArrivalTime() != null && booking.getTrip().getArrivalTime().isAfter(reference)) {
+            reference = booking.getTrip().getArrivalTime();
+        }
+        booking.setValidationCodeExpiresAt(reference.plusDays(7));
+        booking.setValidationCodeFailedAttempts(0);
+        booking.setValidationCodeBlockedUntil(null);
         booking.setValidationCodeInvalidatedAt(null);
         booking.setValidationCodeDeliveryFailedAt(null);
     }

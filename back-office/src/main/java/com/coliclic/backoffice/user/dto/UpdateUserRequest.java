@@ -1,7 +1,6 @@
 package com.coliclic.backoffice.user.dto;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -19,6 +18,4 @@ public class UpdateUserRequest {
 
     private String phone;
 
-    @Size(min = 8)
-    private String password;
 }

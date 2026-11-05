@@ -171,7 +171,7 @@ class ParcelRequestServiceImplTest {
         ParcelRequest request = parcelRequest(10L, sender, "Paris", "Abidjan", null);
         MockMultipartFile file = new MockMultipartFile("file", "box.png", "image/png", new byte[] {1});
         when(parcelRequestRepository.findById(10L)).thenReturn(Optional.of(request));
-        when(fileStorageService.store(file)).thenReturn("/uploads/new.png");
+        when(fileStorageService.storeImage(file, com.coliclic.backoffice.parcelguidelines.ParcelGuidelines.MAX_PHOTO_BYTES)).thenReturn("/uploads/new.png");
         when(parcelRequestRepository.save(request)).thenReturn(request);
 
         ParcelRequestResponse response = service.uploadPhoto(10L, file, sender);

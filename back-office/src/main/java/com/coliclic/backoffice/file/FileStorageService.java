@@ -9,9 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.MemoryCacheImageInputStream;
 import java.nio.file.*;
 import java.util.UUID;
-import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -28,11 +32,7 @@ public class FileStorageService {
     @Value("${upload.dir:./uploads}")
     private String uploadDir;
 
-    private static final Map<String, String> IMAGE_EXTENSIONS = Map.of(
-            "image/jpeg", ".jpg",
-            "image/png", ".png",
-            "image/webp", ".webp"
-    );
+    private static final Set<String> IMAGE_CONTENT_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
 
     /** Stores a validated image without trusting its client-provided filename. */
     public String storeImage(MultipartFile file, long maxBytes) {
@@ -42,75 +42,59 @@ public class FileStorageService {
         if (file.getSize() > maxBytes) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La photo dépasse la taille maximale autorisée.");
         }
-        String extension = IMAGE_EXTENSIONS.get(file.getContentType());
-        if (extension == null) {
+        String contentType = file.getContentType();
+        if (contentType == null || !IMAGE_CONTENT_TYPES.contains(contentType)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La photo doit être au format JPEG, PNG ou WebP.");
         }
-        if (!hasExpectedImageSignature(file, file.getContentType())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le contenu du fichier ne correspond pas à un format d’image autorisé.");
-        }
-        return storeWithExtension(file, extension);
+        return storeDecodedImage(file, contentType.substring("image/".length()));
     }
 
-    private boolean hasExpectedImageSignature(MultipartFile file, String contentType) {
-        try {
-            byte[] header = file.getInputStream().readNBytes(12);
-            return switch (contentType) {
-                case "image/jpeg" -> header.length >= 3
-                        && (header[0] & 0xff) == 0xff && (header[1] & 0xff) == 0xd8 && (header[2] & 0xff) == 0xff;
-                case "image/png" -> header.length >= 8
-                        && (header[0] & 0xff) == 0x89 && header[1] == 0x50 && header[2] == 0x4e
-                        && header[3] == 0x47 && header[4] == 0x0d && header[5] == 0x0a
-                        && header[6] == 0x1a && header[7] == 0x0a;
-                case "image/webp" -> header.length >= 12
-                        && header[0] == 'R' && header[1] == 'I' && header[2] == 'F' && header[3] == 'F'
-                        && header[8] == 'W' && header[9] == 'E' && header[10] == 'B' && header[11] == 'P';
-                default -> false;
-            };
-        } catch (IOException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Impossible de lire la photo.", ex);
-        }
-    }
-
-    /**
-     * Stores a multipart file under the configured upload directory and returns
-     * the URL path that can be used to retrieve it (e.g. {@code /uploads/uuid.jpg}).
-     *
-     * @param file the uploaded file
-     * @return the relative URL path to the stored file
-     * @throws RuntimeException if an I/O error occurs during storage
-     */
-    public String store(MultipartFile file) {
-        try {
-            Path dir = Paths.get(uploadDir).toAbsolutePath().normalize();
-            Files.createDirectories(dir);
-
-            // Preserve the original file extension when present
-            String ext = "";
-            String original = file.getOriginalFilename();
-            if (original != null && original.contains(".")) {
-                ext = original.substring(original.lastIndexOf("."));
+    private String storeDecodedImage(MultipartFile file, String expectedFormat) {
+        BufferedImage image;
+        try (var input = new MemoryCacheImageInputStream(file.getInputStream())) {
+            var readers = ImageIO.getImageReaders(input);
+            if (!readers.hasNext()) throw invalidImage();
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(input, true, true);
+                if (!reader.getFormatName().equalsIgnoreCase(expectedFormat)) throw invalidImage();
+                int width = reader.getWidth(0);
+                int height = reader.getHeight(0);
+                if (width < 1 || height < 1 || (long) width * height > 20_000_000L) {
+                    throw invalidImage();
+                }
+                image = reader.read(0);
+                if (image == null) throw invalidImage();
+            } finally {
+                reader.dispose();
             }
-
-            String filename = UUID.randomUUID() + ext;
-            Path target = dir.resolve(filename);
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-            return PUBLIC_UPLOAD_PREFIX + filename;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to store file", e);
+        } catch (IOException | IllegalArgumentException ex) {
+            throw invalidImage();
         }
-    }
 
-    private String storeWithExtension(MultipartFile file, String extension) {
+        // Re-encoding discards metadata, trailing HTML and other client-supplied bytes.
+        String outputFormat = expectedFormat.equals("jpeg") ? "jpeg" : "png";
+        String extension = outputFormat.equals("jpeg") ? ".jpg" : ".png";
+        Path target = null;
         try {
             Path dir = Paths.get(uploadDir).toAbsolutePath().normalize();
             Files.createDirectories(dir);
-            Path target = dir.resolve(UUID.randomUUID() + extension);
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+            target = dir.resolve(UUID.randomUUID() + extension);
+            if (!ImageIO.write(image, outputFormat, target.toFile())) {
+                throw new IOException("No image writer for " + outputFormat);
+            }
             return PUBLIC_UPLOAD_PREFIX + target.getFileName();
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to store file", e);
+        } catch (IOException ex) {
+            if (target != null) {
+                try { Files.deleteIfExists(target); } catch (IOException cleanup) { ex.addSuppressed(cleanup); }
+            }
+            throw new IllegalStateException("Failed to store image", ex);
         }
+    }
+
+    private ResponseStatusException invalidImage() {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Le contenu du fichier ne correspond pas à un format d’image autorisé.");
     }
 
     /** Deletes only a single file under the managed upload directory, never an external URL. */
