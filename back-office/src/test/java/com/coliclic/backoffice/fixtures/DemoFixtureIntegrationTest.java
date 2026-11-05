@@ -8,8 +8,6 @@ import com.coliclic.backoffice.user.entity.User;
 import com.coliclic.backoffice.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -102,7 +100,7 @@ class DemoFixtureIntegrationTest {
     @Test
     void usesRealisticProfilesParcelsAndConversations() throws Exception {
         loadFixture();
-        assertThat(jdbc.queryForMap("SELECT first_name, last_name, email FROM users WHERE id=-910000001"))
+        assertThat(jdbc.queryForMap("SELECT first_name, last_name, email FROM users WHERE email='aicha.kone@example.test'"))
                 .containsEntry("first_name", "Aïcha").containsEntry("last_name", "Koné")
                 .containsEntry("email", "aicha.kone@example.test");
         assertThat(number("SELECT count(DISTINCT first_name || ' ' || last_name) FROM users")).isEqualTo(100);
@@ -116,40 +114,45 @@ class DemoFixtureIntegrationTest {
     }
 
     @Test
-    void recognizesLegacyFixtureKeysWithoutOverwritingThem() throws Exception {
+    void allocatesPositiveIdsUsingNormalSequences() throws Exception {
         loadFixture();
-        jdbc.update("UPDATE users SET email='fixture.user001@example.test' WHERE id=-910000001");
-        jdbc.update("UPDATE trip_bookings SET title='FIXTURE colis 1 - Documents' WHERE id=-910000001");
-        jdbc.update("UPDATE parcel_requests SET package_title='FIXTURE demande 1 - effets personnels' WHERE id=-910000001");
-        jdbc.update("UPDATE messages SET content='FIXTURE message 1 : Bonjour, le transport est-il disponible ?' WHERE id=-910000001");
-        var before = snapshot();
+        for (String table : COUNTS.keySet()) {
+            assertThat(number("SELECT count(*) FROM " + table + " WHERE id<=0")).isZero();
+        }
+        var sequences = sequenceSnapshot();
         loadFixture();
-        assertThat(snapshot()).isEqualTo(before);
+        assertThat(sequenceSnapshot()).isEqualTo(sequences);
     }
 
     @Test
     void rerunPreservesAllRowsAndCompletesMissingLeafRows() throws Exception {
         loadFixture();
-        jdbc.update("UPDATE users SET first_name='Modifié', password='changed' WHERE id=-910000003");
-        jdbc.update("UPDATE trip_bookings SET status='CANCELLED' WHERE id=-910000999");
+        jdbc.update("UPDATE users SET first_name='Modifié', password='changed' WHERE email='fatou.diallo@example.test'");
+        jdbc.update("UPDATE trip_bookings SET status='CANCELLED' WHERE id=(SELECT max(id) FROM trip_bookings)");
         var first = snapshot();
         loadFixture();
         assertThat(snapshot()).isEqualTo(first);
-        jdbc.update("DELETE FROM messages WHERE id=-910000800");
+        Long messageId = jdbc.queryForObject("SELECT max(id) FROM messages", Long.class);
+        String message = jdbc.queryForObject("SELECT (to_jsonb(m)-'id')::text FROM messages m WHERE id=?", String.class, messageId);
+        jdbc.update("DELETE FROM messages WHERE id=?", messageId);
         loadFixture();
-        assertThat(snapshot()).isEqualTo(first);
+        assertThat(number("SELECT count(*) FROM messages")).isEqualTo(800);
+        assertThat(jdbc.queryForObject("SELECT (to_jsonb(m)-'id')::text FROM messages m WHERE id=(SELECT max(id) FROM messages)", String.class)).isEqualTo(message);
+        var restored = snapshot();
+        restored.remove("messages");
+        first.remove("messages");
+        assertThat(restored).isEqualTo(first);
     }
 
     @Test
-    void preservesUnrelatedDataAndSequencesAndAllowsNormalJpaCreation() throws Exception {
+    void preservesUnrelatedDataAndAllowsNormalJpaCreation() throws Exception {
         User existing = users.saveAndFlush(user("existing@example.test"));
         var existingRow = jdbc.queryForMap("SELECT * FROM users WHERE id=?", existing.getId());
-        var sequences = sequenceSnapshot();
         loadFixture();
         assertThat(jdbc.queryForMap("SELECT * FROM users WHERE id=?", existing.getId())).isEqualTo(existingRow);
-        assertThat(sequenceSnapshot()).isEqualTo(sequences);
+        long maxUserId = jdbc.queryForObject("SELECT max(id) FROM users", Long.class);
         User next = users.saveAndFlush(user("next@example.test"));
-        assertThat(next.getId()).isGreaterThan(existing.getId());
+        assertThat(next.getId()).isGreaterThan(maxUserId);
         Trip trip = Trip.builder().traveler(next).departureAddress("Paris, France")
                 .destination("Abidjan, Côte d'Ivoire").departureTime(LocalDateTime.now().plusDays(5))
                 .arrivalTime(LocalDateTime.now().plusDays(6)).maxWeight(BigDecimal.TEN)
@@ -163,32 +166,42 @@ class DemoFixtureIntegrationTest {
         assertThat(number("SELECT count(*) FROM users")).isEqualTo(102);
     }
 
-    @ParameterizedTest
-    @CsvSource({"users,email", "trips,reference", "trip_bookings,title", "traveler_reviews,token_hash",
-            "parcel_requests,package_title", "messages,content", "trip_alerts,departure"})
-    void refusesReservedIdOwnedByDifferentData(String table, String key) throws Exception {
+    @Test
+    void refusesAmbiguousNaturalKeysWithoutWritingData() throws Exception {
         loadFixture();
-        jdbc.update("UPDATE " + table + " SET " + key + "='unrelated' WHERE id=-910000001");
-        jdbc.update("DELETE FROM messages WHERE id=-910000800");
+        jdbc.execute("INSERT INTO messages (conversation_id,sender_id,content,sent_at,read) SELECT conversation_id,sender_id,content,sent_at,read FROM messages ORDER BY id LIMIT 1");
         var before = snapshot();
-        assertThatThrownBy(this::loadFixture).isInstanceOf(SQLException.class).hasMessageContaining("Fixture ID collision");
+        assertThatThrownBy(this::loadFixture).isInstanceOf(SQLException.class)
+                .hasMessageContaining("Ambiguous fixture key in messages");
         assertThat(snapshot()).isEqualTo(before);
     }
 
     @Test
-    void refusesConversationCollision() throws Exception {
+    void reusesEmailWithoutChangingExistingAccount() throws Exception {
+        User existing = users.saveAndFlush(user("aicha.kone@example.test"));
+        var row = jdbc.queryForMap("SELECT * FROM users WHERE id=?", existing.getId());
         loadFixture();
-        jdbc.update("UPDATE conversations SET participant2_id=-910000080 WHERE id=-910000001");
+        assertThat(jdbc.queryForMap("SELECT * FROM users WHERE id=?", existing.getId())).isEqualTo(row);
+        assertThat(number("SELECT count(*) FROM users")).isEqualTo(100);
+        assertThat(number("SELECT count(*) FROM trips t JOIN users u ON u.id=t.user_id WHERE u.email LIKE '%@example.test'")).isEqualTo(500);
+    }
+
+    @Test
+    void refusesReferenceCollisionAndRollsBackNewParentRows() throws Exception {
+        loadFixture();
+        jdbc.update("UPDATE trips SET user_id=(SELECT id FROM users WHERE email='aicha.kone@example.test') WHERE reference='FIXTURE-0001'");
+        jdbc.update("DELETE FROM users WHERE email='mamadou.kebe@example.test'");
         var before = snapshot();
-        assertThatThrownBy(this::loadFixture).hasMessageContaining("Fixture ID collision");
+        assertThatThrownBy(this::loadFixture).isInstanceOf(SQLException.class)
+                .hasMessageContaining("duplicate key");
         assertThat(snapshot()).isEqualTo(before);
     }
 
     @Test
-    void refusesEmailCollisionBeforeLoadingAnyRows() {
-        users.saveAndFlush(user("aicha.kone@example.test"));
+    void refusesOldNegativeAccountsWithoutMigratingThem() {
+        jdbc.update("INSERT INTO users (id,first_name,last_name,email,password,role) VALUES (-1,'Aïcha','Koné','aicha.kone@example.test','hash','ADMIN')");
         var before = snapshot();
-        assertThatThrownBy(this::loadFixture).hasMessageContaining("Fixture unique key collision");
+        assertThatThrownBy(this::loadFixture).hasMessageContaining("Existing nonpositive fixture IDs");
         assertThat(snapshot()).isEqualTo(before);
     }
 
@@ -196,7 +209,7 @@ class DemoFixtureIntegrationTest {
     void rollsBackEarlierInsertsWhenALateInsertFails() {
         users.saveAndFlush(user("unrelated@example.test"));
         var before = snapshot();
-        jdbc.execute("ALTER TABLE messages ADD CONSTRAINT test_reject_fixture CHECK (id>0)");
+        jdbc.execute("ALTER TABLE messages ADD CONSTRAINT test_reject_fixture CHECK (content='unrelated')");
         try {
             assertThatThrownBy(this::loadFixture).isInstanceOf(SQLException.class)
                     .hasMessageContaining("test_reject_fixture");

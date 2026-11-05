@@ -70,34 +70,40 @@ fictives, sans lien de soumission utilisable.
 
 ## Relances et isolation
 
-Les identifiants `-910000001` à `-910001000` sont réservés, indépendamment dans
-chaque table. Les trajets ont des références `FIXTURE-0001` à `FIXTURE-0500`.
-Le script n'appelle aucune séquence : les créations normales gardent leurs IDs positifs.
+Les IDs sont des entiers positifs générés par les séquences habituelles PostgreSQL,
+comme lors d'une création dans l'application. Aucune plage d'IDs n'est réservée et
+les séquences ne sont jamais réinitialisées. Les trajets gardent des références
+`FIXTURE-0001` à `FIXTURE-0500` pour être reconnaissables.
 
-Une nouvelle exécution conserve intégralement les lignes déjà présentes et ajoute
-les lignes absentes. Les dates initiales ne sont pas rafraîchies : le jeu vieillit
-naturellement. L'horloge initiale est reconstruite depuis les utilisateurs de la
-fixture encore présents. Sans aucun de ces utilisateurs, un nouveau chargement
-utilise la date courante.
+Les nombres figurant dans les tables temporaires sont uniquement des numéros de
+scénario. Le script les remplace par les IDs réels avant toute insertion, puis
+reporte ces IDs dans toutes les relations (voyageur, expéditeur, réservation, conversation…).
 
-L'appartenance à la fixture est reconnue par l'ID et des clés stables : e-mail pour
-les comptes, référence et voyageur pour les trajets, relations et titre/contenu
-pour les colis/messages, relations pour les conversations, empreinte pour les avis,
-et utilisateur/parcours pour les alertes. Les changements de statut, mot de passe,
-profil et dates sont conservés. Modifier une clé stable entraîne une collision à
-la relance ; le script refuse alors le chargement au lieu d'écraser des données.
+Une relance retrouve les lignes par leurs clés métier : e-mail du compte, référence
+et voyageur du trajet, trajet/expéditeur/titre de réservation, réservation/empreinte
+d'avis, expéditeur/titre/parcours de demande, contexte/participants de conversation,
+conversation/auteur/contenu de message et utilisateur/parcours d'alerte.
+Les lignes existantes sont conservées intégralement, sans écraser les mots de passe,
+profils ou statuts. Un compte ayant déjà le même e-mail est réutilisé sans modifier
+son rôle ni ses accès. Si plusieurs lignes correspondent à une même clé, le script
+refuse le chargement pour éviter une association ambiguë.
 
-Les collisions d'ID et de clés uniques sont vérifiées avant insertion. Toutes les
-insertions sont atomiques ; toute erreur annule le chargement. Les tables temporaires
-sont supprimées au commit. Un verrou d'écriture sur les huit tables sérialise les
-chargements ; l'exécuter pendant une période sans activité sur la base de démonstration.
-Aucune donnée existante n'est supprimée et aucun reset automatique n'est fourni.
+Les nouvelles lignes consomment une valeur de séquence normale. Une relance complète
+sans ligne manquante ne consomme aucune nouvelle valeur. Une ligne supprimée puis
+recréée reçoit un nouvel ID. Comme pour toute séquence PostgreSQL, une erreur peut
+laisser des trous dans la numérotation, même si les insertions sont annulées.
+Les dates ne sont pas rafraîchies : le jeu vieillit naturellement. L'horloge initiale
+est reconstruite depuis les comptes du catalogue encore présents.
 
-Si la première version a déjà été chargée, ses e-mails `fixture.userNNN@example.test`
-et ses anciens titres/messages sont reconnus et conservés. Cette version améliore
-les nouvelles insertions ; elle ne transforme pas les lignes déjà chargées. Pour
-visualiser entièrement le nouveau jeu, utiliser une base de démonstration vierge
-initialisée par le backend.
+Toutes les insertions sont atomiques ; une collision ou une erreur annule le
+chargement. Les tables et la fonction temporaires sont supprimées en fin d'exécution.
+Un verrou d'écriture sur les huit tables sérialise les chargements ; exécuter la
+fixture pendant une période sans activité sur la base de démonstration.
+
+Cette version ne migre pas automatiquement une ancienne fixture chargée avec des
+IDs négatifs. Elle refuse les lignes correspondantes plutôt que de modifier les
+relations ou supprimer des données existantes. Utiliser une base de démonstration
+vierge initialisée par le backend pour charger entièrement le nouveau jeu.
 
 ## Vérification
 

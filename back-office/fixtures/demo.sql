@@ -1,6 +1,6 @@
 -- Coliclic demo v1 -- PostgreSQL 16, existing Hibernate schema required.
 -- Run the ENTIRE file with autocommit enabled. No application startup hook.
--- Reserved IDs: -910000001 .. -910001000 (independently in each table).
+-- IDs are allocated by the normal PostgreSQL sequences, only for missing rows.
 -- Password for every account: ColiclicDemo2026! (BCrypt).
 BEGIN;
 
@@ -114,11 +114,9 @@ INSERT INTO fixture_people VALUES
 
 -- Reuse the original clock on rerun; never refresh existing demo dates.
 CREATE TEMP TABLE fixture_clock ON COMMIT DROP AS
-SELECT COALESCE((SELECT created_at + (400 - (-id - 910000000)) * INTERVAL '1 day'
-                 FROM users WHERE id BETWEEN -910000100 AND -910000001
-                   AND (email = (SELECT p.email FROM fixture_people p WHERE p.n=-users.id-910000000)
-                        OR email = 'fixture.user' || lpad((-id-910000000)::text,3,'0') || '@example.test')
-                 ORDER BY id DESC LIMIT 1), LOCALTIMESTAMP) AS base_time;
+SELECT COALESCE((SELECT u.created_at + (400-p.n)*INTERVAL '1 day'
+                 FROM users u JOIN fixture_people p ON p.email=u.email
+                 ORDER BY p.n DESC LIMIT 1), LOCALTIMESTAMP) AS base_time;
 
 -- Staging tables have the deployed column layout, without defaults/sequences.
 CREATE TEMP TABLE fixture_users ON COMMIT DROP AS SELECT * FROM users WITH NO DATA;
@@ -131,13 +129,14 @@ CREATE TEMP TABLE fixture_messages ON COMMIT DROP AS SELECT * FROM messages WITH
 CREATE TEMP TABLE fixture_trip_alerts ON COMMIT DROP AS SELECT * FROM trip_alerts WITH NO DATA;
 
 INSERT INTO fixture_users (id, first_name, last_name, email, phone, password,
-    local_auth_enabled, auth_provider, enabled, role, created_at, created_at_estimated, email_verified_at)
-SELECT -910000000 - n,
+    local_auth_enabled, auth_provider, enabled, role, created_at, created_at_estimated, email_verified_at, updated_at)
+SELECT n,
     p.first_name, p.last_name, p.email,
     NULL, '$2y$10$MCuSAkKiLymc7pFk.crcK.B3rzv46y5IcOZsMC/0K0FHRHHI34nDu',
     true, 'LOCAL', n <= 90, CASE WHEN n <= 2 THEN 'ADMIN' ELSE 'USER' END,
     base_time - (400-n)*INTERVAL '1 day', false,
-    CASE WHEN n <= 80 THEN base_time - (400-n)*INTERVAL '1 day' + INTERVAL '1 hour' END
+    CASE WHEN n <= 80 THEN base_time - (400-n)*INTERVAL '1 day' + INTERVAL '1 hour' END,
+    base_time - (400-n)*INTERVAL '1 day'
 FROM fixture_people p CROSS JOIN fixture_clock;
 
 -- Stable route catalog, with the same display and lowercase normalization as services.
@@ -156,7 +155,7 @@ INSERT INTO fixture_routes VALUES
 
 INSERT INTO fixture_trips (id, reference, user_id, departure_address, destination,
     departure_time, arrival_time, max_weight, price_per_kilo, instant_acceptance, status, created_at)
-SELECT -910000000-i, 'FIXTURE-' || lpad(i::text,4,'0'), -910000000-(3+(i-1)%78),
+SELECT i, 'FIXTURE-' || lpad(i::text,4,'0'), (3+(i-1)%78),
     r.departure, r.destination,
     base_time + (CASE WHEN i<=150 THEN -180+i ELSE 1+(i-151)%120 END)*INTERVAL '1 day',
     base_time + (CASE WHEN i<=150 THEN -180+i ELSE 1+(i-151)%120 END)*INTERVAL '1 day' + INTERVAL '8 hours',
@@ -192,7 +191,7 @@ INSERT INTO fixture_parcels VALUES
 INSERT INTO fixture_trip_bookings (id, trip_id, sender_id, title, weight, description,
     recipient_contact, status, commercial_mode, platform_fee_rate, created_at,
     parcel_policy_version, parcel_policy_accepted_at, delivered_at)
-SELECT -910000000-((i-1)*2+j), t.id, -910000000-(3+(i-1+j)%78),
+SELECT ((i-1)*2+j), t.id, (3+(i-1+j)%78),
     parcel.title, parcel.weight, parcel.description,
     recipient.email,
     CASE WHEN i<=75 THEN 'ACCEPTED'
@@ -204,12 +203,12 @@ SELECT -910000000-((i-1)*2+j), t.id, -910000000-(3+(i-1+j)%78),
     'FREE', 0, t.created_at + INTERVAL '1 day', '2026-09-01', t.created_at + INTERVAL '1 day',
     CASE WHEN i BETWEEN 76 AND 100 AND j=1 THEN t.arrival_time END
 FROM generate_series(1,500) AS g(i) CROSS JOIN generate_series(1,2) AS s(j)
-JOIN fixture_trips t ON t.id=-910000000-i
+JOIN fixture_trips t ON t.id=i
 JOIN fixture_parcels parcel ON parcel.n=(i+j)%20
 JOIN fixture_people recipient ON recipient.n=3+(i+j+10)%78;
 
 -- Include working email validation codes on accepted, active bookings.
-UPDATE fixture_trip_bookings b SET validation_code=lpad((-b.id-910000000)::text,6,'0'),
+UPDATE fixture_trip_bookings b SET validation_code=lpad((b.id)::text,6,'0'),
     validation_delivery_channel='EMAIL', validation_delivery_status='DELIVERED',
     validation_code_sent_at=b.created_at + INTERVAL '1 hour'
 FROM fixture_trips t WHERE t.id=b.trip_id AND t.status='ACTIVE' AND b.status='ACCEPTED';
@@ -225,12 +224,12 @@ SELECT b.id, b.id, md5('fixture-review-' || b.id) || md5('fixture-token-' || b.i
         'Voyageur ponctuel et attentionné. Ma famille a récupéré le colis sans difficulté.'])[1+n%5] END,
     CASE WHEN n%3<>0 THEN t.arrival_time + INTERVAL '2 days' END
 FROM generate_series(1,150) AS g(n)
-JOIN fixture_trip_bookings b ON b.id=-910000000-n JOIN fixture_trips t ON t.id=b.trip_id;
+JOIN fixture_trip_bookings b ON b.id=n JOIN fixture_trips t ON t.id=b.trip_id;
 
 INSERT INTO fixture_parcel_requests (id, sender_id, departure, normalized_departure,
     destination, normalized_destination, desired_date, package_title, weight, description,
     status, created_at, updated_at, deleted_at)
-SELECT -910000000-i, -910000000-(3+(i-1)%78), r.departure, lower(r.departure),
+SELECT i, (3+(i-1)%78), r.departure, lower(r.departure),
     r.destination, lower(r.destination),
     CASE WHEN i%4<>0 THEN (base_time + (1+i%60)*INTERVAL '1 day')::date END,
     parcel.title, parcel.weight,
@@ -242,16 +241,16 @@ FROM generate_series(1,200) AS g(i) JOIN fixture_routes r ON r.n=(i-1)%10
 JOIN fixture_parcels parcel ON parcel.n=(i-1)%20 CROSS JOIN fixture_clock;
 
 INSERT INTO fixture_conversations (id, trip_id, parcel_request_id, participant1_id, participant2_id, created_at)
-SELECT -910000000-i,
+SELECT i,
     CASE WHEN i<=100 THEN t.id END, CASE WHEN i>100 THEN p.id END,
     CASE WHEN i<=100 THEN t.user_id ELSE p.sender_id END,
-    -910000000-(3+i%78),
+    (3+i%78),
     CASE WHEN i<=100 THEN t.created_at+INTERVAL '2 days' ELSE p.created_at+INTERVAL '1 day' END
 FROM generate_series(1,200) AS g(i)
-JOIN fixture_trips t ON t.id=-910000000-i JOIN fixture_parcel_requests p ON p.id=-910000000-i;
+JOIN fixture_trips t ON t.id=i JOIN fixture_parcel_requests p ON p.id=i;
 
 INSERT INTO fixture_messages (id, conversation_id, sender_id, content, sent_at, read)
-SELECT -910000000-((i-1)*4+j), c.id,
+SELECT ((i-1)*4+j), c.id,
     CASE WHEN j%2=1 THEN c.participant1_id ELSE c.participant2_id END,
     CASE WHEN i<=100 THEN
         (ARRAY[
@@ -270,16 +269,16 @@ SELECT -910000000-((i-1)*4+j), c.id,
     END,
     c.created_at+j*INTERVAL '5 minutes', j<=2 OR i%2=0
 FROM generate_series(1,200) AS g(i) CROSS JOIN generate_series(1,4) AS s(j)
-JOIN fixture_conversations c ON c.id=-910000000-i
-JOIN fixture_people owner ON owner.n=-c.participant1_id-910000000
-JOIN fixture_people contact ON contact.n=-c.participant2_id-910000000
+JOIN fixture_conversations c ON c.id=i
+JOIN fixture_people owner ON owner.n=c.participant1_id
+JOIN fixture_people contact ON contact.n=c.participant2_id
 LEFT JOIN fixture_trips t ON t.id=c.trip_id
 LEFT JOIN fixture_parcel_requests p ON p.id=c.parcel_request_id
 JOIN fixture_parcels parcel ON parcel.n=(i+1)%20;
 
 INSERT INTO fixture_trip_alerts (id, user_id, departure, normalized_departure,
     destination, normalized_destination, date, sort, min_price, max_price, created_at)
-SELECT -910000000-i, -910000000-(3+(i-1)%78), r.departure, lower(r.departure),
+SELECT i, (3+(i-1)%78), r.departure, lower(r.departure),
     r.destination, lower(r.destination),
     CASE WHEN i%3<>0 THEN (base_time+(1+i%60)*INTERVAL '1 day')::date END,
     (ARRAY['price_asc','departure_asc','rating_desc'])[1+i%3],
@@ -287,76 +286,76 @@ SELECT -910000000-i, -910000000-(3+(i-1)%78), r.departure, lower(r.departure),
     base_time-INTERVAL '3 days'
 FROM generate_series(1,100) AS g(i) JOIN fixture_routes r ON r.n=(i-1)%10 CROSS JOIN fixture_clock;
 
--- Recognize the original fixture's stable labels too, without rewriting existing rows.
-CREATE TEMP TABLE fixture_legacy_keys (target text, id bigint, key text, value text) ON COMMIT DROP;
-INSERT INTO fixture_legacy_keys
-SELECT 'users', -910000000-n, 'email', 'fixture.user' || lpad(n::text,3,'0') || '@example.test'
-FROM generate_series(1,100) AS g(n)
-UNION ALL
-SELECT 'trip_bookings', -910000000-((i-1)*2+j), 'title',
-    'FIXTURE colis ' || ((i-1)*2+j) || ' - ' ||
-    (ARRAY['Livres','Vêtements','Documents','Jouets','Accessoires'])[1+(i+j)%5]
-FROM generate_series(1,500) AS g(i) CROSS JOIN generate_series(1,2) AS s(j)
-UNION ALL
-SELECT 'parcel_requests', -910000000-i, 'package_title', 'FIXTURE demande ' || i || ' - effets personnels'
-FROM generate_series(1,200) AS g(i)
-UNION ALL
-SELECT 'messages', -910000000-((i-1)*4+j), 'content',
-    'FIXTURE message ' || ((i-1)*4+j) || ' : ' ||
-    (ARRAY['Bonjour, le transport est-il disponible ?','Oui, quel est le contenu du colis ?',
-           'Des livres et des vêtements soigneusement emballés.','Merci, organisons la remise.'])[j]
-FROM generate_series(1,200) AS g(i) CROSS JOIN generate_series(1,4) AS s(j);
+-- These temporary IDs are local row numbers, never persisted as application IDs.
+-- Resolve each natural key first, allocating a normal sequence value only if absent.
+CREATE TEMP TABLE fixture_ids (
+    target text, seed_id bigint, actual_id bigint,
+    PRIMARY KEY (target, seed_id), UNIQUE (target, actual_id)
+) ON COMMIT DROP;
 
--- Ownership keys distinguish a previous fixture run from unrelated reserved-ID rows.
--- Mutable status/profile/timestamp fields are deliberately preserved on rerun.
-DO $fixture$
+CREATE FUNCTION pg_temp.fixture_resolve(target text, keys text[]) RETURNS void
+LANGUAGE plpgsql AS $resolve$
 DECLARE
-    target text;
-    keys text[];
-    collision boolean;
+    predicate text;
+    ambiguous boolean;
+    nonpositive boolean;
+    sequence_name text;
 BEGIN
-    FOREACH target IN ARRAY ARRAY['users','trips','trip_bookings','traveler_reviews',
-        'parcel_requests','conversations','messages','trip_alerts']
-    LOOP
-        keys := CASE target
-            WHEN 'users' THEN ARRAY['email']
-            WHEN 'trips' THEN ARRAY['reference','user_id']
-            WHEN 'trip_bookings' THEN ARRAY['trip_id','sender_id','title']
-            WHEN 'traveler_reviews' THEN ARRAY['booking_id','token_hash']
-            WHEN 'parcel_requests' THEN ARRAY['sender_id','package_title']
-            WHEN 'conversations' THEN ARRAY['trip_id','parcel_request_id','participant1_id','participant2_id']
-            WHEN 'messages' THEN ARRAY['conversation_id','sender_id','content']
-            WHEN 'trip_alerts' THEN ARRAY['user_id','departure','destination']
-        END;
-        EXECUTE format('SELECT EXISTS (SELECT 1 FROM %I a JOIN %I e USING (id)
-            CROSS JOIN unnest($1) k WHERE (to_jsonb(a)->k) IS DISTINCT FROM (to_jsonb(e)->k)
-            AND NOT EXISTS (SELECT 1 FROM fixture_legacy_keys l
-                WHERE l.target=$2 AND l.id=a.id AND l.key=k AND l.value=to_jsonb(a)->>k))',
-            target, 'fixture_' || target) INTO collision USING keys, target;
-        IF collision THEN
-            RAISE EXCEPTION 'Fixture ID collision in table %. No data loaded.', target;
-        END IF;
-    END LOOP;
-
-    -- Validate unique natural keys too, before the first persistent insert.
-    IF EXISTS (SELECT 1 FROM users a JOIN fixture_users e USING (email) WHERE a.id<>e.id)
-        OR EXISTS (SELECT 1 FROM trips a JOIN fixture_trips e USING (reference) WHERE a.id<>e.id)
-        OR EXISTS (SELECT 1 FROM traveler_reviews a JOIN fixture_traveler_reviews e
-                   ON a.booking_id=e.booking_id OR a.token_hash=e.token_hash WHERE a.id<>e.id)
-        OR EXISTS (SELECT 1 FROM conversations a JOIN fixture_conversations e
-                   ON a.participant1_id=e.participant1_id AND a.participant2_id=e.participant2_id
-                   AND (a.trip_id=e.trip_id OR a.parcel_request_id=e.parcel_request_id) WHERE a.id<>e.id)
-    THEN
-        RAISE EXCEPTION 'Fixture unique key collision. No data loaded.';
+    SELECT string_agg(format('a.%I IS NOT DISTINCT FROM e.%I', k, k), ' AND ')
+    INTO predicate FROM unnest(keys) AS k;
+    EXECUTE format('SELECT EXISTS (SELECT e.id FROM %I e JOIN %I a ON %s
+        GROUP BY e.id HAVING count(*)>1)', 'fixture_' || target, target, predicate) INTO ambiguous;
+    IF ambiguous THEN
+        RAISE EXCEPTION 'Ambiguous fixture key in %. No data loaded.', target;
     END IF;
-
-    FOREACH target IN ARRAY ARRAY['users','trips','trip_bookings','traveler_reviews',
-        'parcel_requests','conversations','messages','trip_alerts']
-    LOOP
-        EXECUTE format('INSERT INTO %I SELECT e.* FROM %I e
-            WHERE NOT EXISTS (SELECT 1 FROM %I a WHERE a.id=e.id)',
-            target, 'fixture_' || target, target);
-    END LOOP;
+    EXECUTE format('INSERT INTO fixture_ids SELECT $1, e.id, a.id FROM %I e
+        LEFT JOIN %I a ON %s', 'fixture_' || target, target, predicate) USING target;
+    SELECT EXISTS (SELECT 1 FROM fixture_ids i WHERE i.target=fixture_resolve.target AND i.actual_id<=0)
+    INTO nonpositive;
+    IF nonpositive THEN
+        RAISE EXCEPTION 'Existing nonpositive fixture IDs in %. Use a fresh demo database; existing data is not migrated.', target;
+    END IF;
+    sequence_name := CASE WHEN target='trips' THEN 'trips_id_seq'
+                         ELSE pg_get_serial_sequence(target, 'id') END;
+    IF sequence_name IS NULL THEN
+        RAISE EXCEPTION 'Missing ID sequence for %. Initialize the application schema first.', target;
+    END IF;
+    UPDATE fixture_ids i SET actual_id=nextval(sequence_name::regclass)
+    WHERE i.target=fixture_resolve.target AND i.actual_id IS NULL;
+    IF EXISTS (SELECT 1 FROM fixture_ids i WHERE i.target=fixture_resolve.target AND i.actual_id<=0) THEN
+        RAISE EXCEPTION 'Nonpositive sequence value for %.', target;
+    END IF;
+    EXECUTE format('UPDATE %I e SET id=i.actual_id FROM fixture_ids i
+        WHERE i.target=$1 AND e.id=i.seed_id', 'fixture_' || target) USING target;
+    EXECUTE format('INSERT INTO %I SELECT e.* FROM %I e
+        WHERE NOT EXISTS (SELECT 1 FROM %I a WHERE a.id=e.id)',
+        target, 'fixture_' || target, target);
 END
-$fixture$;
+$resolve$;
+
+-- Parent IDs are resolved before dependent rows, preserving every foreign key.
+SELECT pg_temp.fixture_resolve('users', ARRAY['email']);
+UPDATE fixture_trips e SET user_id=i.actual_id FROM fixture_ids i WHERE i.target='users' AND e.user_id=i.seed_id;
+UPDATE fixture_trip_bookings e SET sender_id=i.actual_id FROM fixture_ids i WHERE i.target='users' AND e.sender_id=i.seed_id;
+UPDATE fixture_parcel_requests e SET sender_id=i.actual_id FROM fixture_ids i WHERE i.target='users' AND e.sender_id=i.seed_id;
+UPDATE fixture_conversations e SET participant1_id=i.actual_id FROM fixture_ids i WHERE i.target='users' AND e.participant1_id=i.seed_id;
+UPDATE fixture_conversations e SET participant2_id=i.actual_id FROM fixture_ids i WHERE i.target='users' AND e.participant2_id=i.seed_id;
+UPDATE fixture_messages e SET sender_id=i.actual_id FROM fixture_ids i WHERE i.target='users' AND e.sender_id=i.seed_id;
+UPDATE fixture_trip_alerts e SET user_id=i.actual_id FROM fixture_ids i WHERE i.target='users' AND e.user_id=i.seed_id;
+
+SELECT pg_temp.fixture_resolve('trips', ARRAY['reference','user_id']);
+UPDATE fixture_trip_bookings e SET trip_id=i.actual_id FROM fixture_ids i WHERE i.target='trips' AND e.trip_id=i.seed_id;
+UPDATE fixture_conversations e SET trip_id=i.actual_id FROM fixture_ids i WHERE i.target='trips' AND e.trip_id=i.seed_id;
+
+SELECT pg_temp.fixture_resolve('trip_bookings', ARRAY['trip_id','sender_id','title']);
+UPDATE fixture_traveler_reviews e SET booking_id=i.actual_id FROM fixture_ids i WHERE i.target='trip_bookings' AND e.booking_id=i.seed_id;
+SELECT pg_temp.fixture_resolve('traveler_reviews', ARRAY['booking_id','token_hash']);
+
+SELECT pg_temp.fixture_resolve('parcel_requests', ARRAY['sender_id','package_title','departure','destination']);
+UPDATE fixture_conversations e SET parcel_request_id=i.actual_id FROM fixture_ids i WHERE i.target='parcel_requests' AND e.parcel_request_id=i.seed_id;
+SELECT pg_temp.fixture_resolve('conversations', ARRAY['trip_id','parcel_request_id','participant1_id','participant2_id']);
+UPDATE fixture_messages e SET conversation_id=i.actual_id FROM fixture_ids i WHERE i.target='conversations' AND e.conversation_id=i.seed_id;
+SELECT pg_temp.fixture_resolve('messages', ARRAY['conversation_id','sender_id','content']);
+SELECT pg_temp.fixture_resolve('trip_alerts', ARRAY['user_id','departure','destination']);
+DROP FUNCTION pg_temp.fixture_resolve(text,text[]);
 COMMIT;
