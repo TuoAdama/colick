@@ -1,5 +1,6 @@
 package com.coliclic.backoffice.trip.repository;
 
+import com.coliclic.backoffice.admin.dto.AdminActivityCount;
 import com.coliclic.backoffice.trip.entity.Trip;
 import com.coliclic.backoffice.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +32,10 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
             Pageable pageable);
 
     long countByTraveler(User traveler);
+
+    @Query("select trip.traveler.id as userId, count(trip) as activityCount from Trip trip "
+            + "where trip.traveler.id in :userIds group by trip.traveler.id")
+    List<AdminActivityCount> countAdminTripsByUserIds(@Param("userIds") Collection<Long> userIds);
 
     List<Trip> findByStatus(Trip.TripStatus status);
 

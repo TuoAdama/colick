@@ -10,7 +10,7 @@ import { AdminUsersPageComponent } from './admin-users-page.component';
 import { AdminPage, AdminUser } from '../../models/admin.model';
 import { adminDate, connectionLabels } from './admin-display';
 
-const user: AdminUser = { id: 7, firstName: 'Ada', lastName: 'Admin', email: 'ada@test.com', verified: true, createdAtEstimated: true, connectionMethods: ['GOOGLE', 'PASSWORD'] };
+const user: AdminUser = { id: 7, firstName: 'Ada', lastName: 'Admin', email: 'ada@test.com', verified: true, createdAtEstimated: true, connectionMethods: ['GOOGLE', 'PASSWORD'], tripsCount: 2, bookingsCount: 3 };
 const page = <T>(items: T[], totalPages = 1): AdminPage<T> => ({ items, page: 0, size: 20, totalElements: items.length, totalPages });
 
 describe('Admin pages', () => {
@@ -40,6 +40,18 @@ describe('Admin pages', () => {
     expect(harness.routeNativeElement?.textContent).toContain('Non disponible');
     expect(harness.routeNativeElement?.textContent).toContain('Date estimée');
     expect(harness.routeNativeElement?.querySelector('tbody a')?.getAttribute('href')).toBe('/admin/users/7');
+    const headers = Array.from(harness.routeNativeElement!.querySelectorAll('thead th')).map(header => header.textContent?.trim());
+    const cells = Array.from(harness.routeNativeElement!.querySelectorAll('tbody tr td')).map(cell => cell.textContent?.trim());
+    expect(headers).toContain('Trajets publiés');
+    expect(headers).toContain('Demandes envoyées');
+    expect(cells?.slice(-2)).toEqual(['2', '3']);
+  });
+
+  it('renders zero activity counts', async () => {
+    service.users.and.returnValue(of(page([{ ...user, tripsCount: 0, bookingsCount: 0 }])));
+    await harness.navigateByUrl('/admin/users', AdminUsersPageComponent);
+    const cells = Array.from(harness.routeNativeElement!.querySelectorAll('tbody tr td')).map(cell => cell.textContent?.trim());
+    expect(cells.slice(-2)).toEqual(['0', '0']);
   });
 
   it('searches on the server, resets pagination and navigates to the next page', async () => {

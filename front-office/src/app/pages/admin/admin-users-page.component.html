@@ -16,10 +16,10 @@
     @else {
       <div class="overflow-x-auto rounded-2xl border border-border bg-background-secondary" tabindex="0" role="region" aria-label="Liste des utilisateurs">
         <table class="w-full text-left text-sm">
-          <thead class="border-b border-border bg-background-primary text-text-secondary"><tr><th class="p-4">Nom</th><th class="p-4">Prénom</th><th class="p-4">Inscription</th><th class="p-4">Dernière modification</th><th class="p-4">E-mail</th><th class="p-4">Connexion</th></tr></thead>
+          <thead class="border-b border-border bg-background-primary text-text-secondary"><tr><th class="p-4">Nom</th><th class="p-4">Prénom</th><th class="p-4">Inscription</th><th class="p-4">Dernière modification</th><th class="p-4">E-mail</th><th class="p-4">Connexion</th><th class="whitespace-nowrap p-4">Trajets publiés</th><th class="whitespace-nowrap p-4">Demandes envoyées</th></tr></thead>
           <tbody>
             @for (user of data.items; track user.id) {
-              <tr class="border-b border-border last:border-0"><td class="p-4"><a class="font-semibold text-primary underline" [routerLink]="['/admin/users', user.id]">{{ user.lastName }}</a></td><td class="p-4">{{ user.firstName }}</td><td class="whitespace-nowrap p-4">{{ date(user.createdAt) }} @if (user.createdAtEstimated) { <span class="block text-xs text-text-secondary">Date estimée</span> }</td><td class="whitespace-nowrap p-4">{{ date(user.updatedAt) }}</td><td class="p-4">{{ user.email }}</td><td class="p-4">{{ connections(user) }}</td></tr>
+              <tr class="border-b border-border last:border-0"><td class="p-4"><a class="font-semibold text-primary underline" [routerLink]="['/admin/users', user.id]">{{ user.lastName }}</a></td><td class="p-4">{{ user.firstName }}</td><td class="whitespace-nowrap p-4">{{ date(user.createdAt) }} @if (user.createdAtEstimated) { <span class="block text-xs text-text-secondary">Date estimée</span> }</td><td class="whitespace-nowrap p-4">{{ date(user.updatedAt) }}</td><td class="p-4">{{ user.email }}</td><td class="p-4">{{ connections(user) }}</td><td class="p-4">{{ user.tripsCount }}</td><td class="p-4">{{ user.bookingsCount }}</td></tr>
             }
           </tbody>
         </table>

@@ -61,7 +61,9 @@ class AdminUserIntegrationTest {
                 .andExpect(jsonPath("$.items[0].connectionMethods[1]").value("PASSWORD"))
                 .andExpect(jsonPath("$.items[0].password").doesNotExist())
                 .andExpect(jsonPath("$.items[0].googleSubject").doesNotExist())
-                .andExpect(jsonPath("$.items[0].signupConfirmToken").doesNotExist());
+                .andExpect(jsonPath("$.items[0].signupConfirmToken").doesNotExist())
+                .andExpect(jsonPath("$.items[0].tripsCount").value(0))
+                .andExpect(jsonPath("$.items[0].bookingsCount").value(0));
         mvc.perform(admin("").param("size", "1").param("page", "1"))
                 .andExpect(jsonPath("$.page").value(1)).andExpect(jsonPath("$.items[0].id").value(old.getId()));
         for (String query : new String[]{" BÉATRICE ", "DUPONT", "NEW@ADMIN.TEST"}) {
@@ -87,6 +89,9 @@ class AdminUserIntegrationTest {
                 .andExpect(jsonPath("$.tripsCount").value(3))
                 .andExpect(jsonPath("$.bookingsCount").value(6))
                 .andExpect(jsonPath("$.user.verified").value(false));
+        mvc.perform(admin("").param("q", "owner@admin.test"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].tripsCount").value(3))
+                .andExpect(jsonPath("$.items[0].bookingsCount").value(6));
         mvc.perform(admin(path + "/trips").param("size", "2"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(3))
                 .andExpect(jsonPath("$.items.length()").value(2));
