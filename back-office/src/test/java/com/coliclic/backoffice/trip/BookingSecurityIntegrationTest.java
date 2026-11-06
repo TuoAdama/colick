@@ -12,6 +12,7 @@ import com.coliclic.backoffice.trip.dto.UpdateTripRequest;
 import com.coliclic.backoffice.trip.entity.Trip;
 import com.coliclic.backoffice.trip.entity.TripBooking;
 import com.coliclic.backoffice.trip.repository.TripRepository;
+import com.coliclic.backoffice.trip.repository.TravelerReviewRepository;
 import com.coliclic.backoffice.trip.repository.TripBookingRepository;
 import com.coliclic.backoffice.trip.service.TripService;
 import com.coliclic.backoffice.user.entity.User;
@@ -51,6 +52,7 @@ class BookingSecurityIntegrationTest {
     @Autowired TripService service;
     @Autowired TripRepository trips;
     @Autowired TripBookingRepository bookings;
+    @Autowired TravelerReviewRepository reviews;
     @Autowired UserRepository users;
     @Autowired PlatformTransactionManager transactions;
     @Autowired MockMvc mvc;
@@ -73,6 +75,8 @@ class BookingSecurityIntegrationTest {
     @AfterEach
     void cleanup() {
         new TransactionTemplate(transactions).executeWithoutResult(status -> {
+            reviews.deleteAll(reviews.findByBookingIn(bookings.findByTrip(trip)));
+            reviews.flush();
             bookings.deleteAll(bookings.findByTrip(trip));
             trips.deleteById(trip.getId());
             users.deleteAllById(List.of(traveler.getId(), sender.getId(), otherSender.getId()));
@@ -113,6 +117,32 @@ class BookingSecurityIntegrationTest {
         UpdateTripRequest update = new UpdateTripRequest(); update.setMaxWeight(BigDecimal.ONE);
         assertThatThrownBy(() -> service.updateTrip(trip.getId(), update, traveler)).isInstanceOf(ConflictException.class);
         assertThat(trips.findById(trip.getId()).orElseThrow().getMaxWeight()).isEqualByComparingTo(BigDecimal.TEN);
+    }
+
+    @Test
+    void rescheduledTripCanBeDeliveredWithOriginalCode() throws Exception {
+        TripBooking booking = booking(sender, TripBooking.BookingStatus.ACCEPTED);
+        LocalDateTime sentAt = LocalDateTime.now().minusDays(20);
+        booking.setValidationCodeSentAt(sentAt);
+        booking.setValidationCodeExpiresAt(sentAt.plusDays(7));
+        bookings.saveAndFlush(booking);
+        LocalDateTime newArrival = LocalDateTime.now().plusDays(10).withNano(0);
+        String tripPath = "/trips/" + trip.getId();
+        Cookie cookie = new Cookie("COLICLIC_AUTH", jwt.generateToken(traveler));
+        mvc.perform(put("/api" + tripPath).contextPath("/api").servletPath(tripPath).cookie(cookie).with(csrf())
+                        .contentType("application/json")
+                        .content("{\"arrivalTime\":\"" + newArrival + "\"}"))
+                .andExpect(status().isOk());
+        TripBooking refreshed = bookings.findById(booking.getId()).orElseThrow();
+        assertThat(refreshed.getValidationCodeExpiresAt()).isEqualTo(newArrival.plusDays(7));
+        assertThat(refreshed.getValidationCode()).isEqualTo("123456");
+        service.completeTrip(trip.getId(), traveler);
+        String deliveryPath = tripPath + "/bookings/" + booking.getId() + "/deliver";
+        mvc.perform(put("/api" + deliveryPath).contextPath("/api").servletPath(deliveryPath).cookie(cookie).with(csrf())
+                        .contentType("application/json").content("{\"validationCode\":\"123456\"}"))
+                .andExpect(status().isOk());
+        assertThat(bookings.findById(booking.getId()).orElseThrow().getStatus())
+                .isEqualTo(TripBooking.BookingStatus.DELIVERED);
     }
 
     @Test
