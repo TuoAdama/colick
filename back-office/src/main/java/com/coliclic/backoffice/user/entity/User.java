@@ -21,6 +21,12 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Prevents stale account writes from restoring credentials or revoked sessions. */
+    @Version
+    @Column(nullable = false)
+    @org.hibernate.annotations.ColumnDefault("0")
+    private long rowVersion;
+
     @Column(nullable = false)
     private String firstName;
 
@@ -35,6 +41,29 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    /** Incremented on credential changes and activation changes; null means legacy version zero. */
+    @Column
+    @Builder.Default
+    private Long sessionVersion = 0L;
+
+    public long getSessionVersion() {
+        return sessionVersion == null ? 0L : sessionVersion;
+    }
+
+    public void revokeSessions() {
+        sessionVersion = getSessionVersion() + 1;
+    }
+
+    public void setPassword(String password) {
+        if (!java.util.Objects.equals(this.password, password)) revokeSessions();
+        this.password = password;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        if (!java.util.Objects.equals(this.enabled, enabled)) revokeSessions();
+        this.enabled = enabled;
+    }
 
     /** Whether password-based sign-in is enabled for this account. */
     @Column

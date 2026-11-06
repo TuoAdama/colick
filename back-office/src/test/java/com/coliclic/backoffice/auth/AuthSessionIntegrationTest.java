@@ -4,6 +4,12 @@ import com.coliclic.backoffice.user.entity.User;
 import com.coliclic.backoffice.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import com.coliclic.backoffice.auth.ratelimit.AuthRateLimiter;
+import com.coliclic.backoffice.auth.ratelimit.RateLimitDecision;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,6 +36,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class AuthSessionIntegrationTest {
 
+    @MockitoBean AuthRateLimiter authRateLimiter;
+
+    @BeforeEach
+    void allowAuthenticationRequests() {
+        when(authRateLimiter.checkLogin(anyString(), anyString())).thenReturn(RateLimitDecision.allowedDecision());
+        when(authRateLimiter.checkPasswordReset(anyString(), anyString())).thenReturn(RateLimitDecision.allowedDecision());
+    }
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -38,6 +52,23 @@ class AuthSessionIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Test
+    @Transactional
+    void legacyNullActivationFlag_shouldAllowLoginAndProtectedRequests() throws Exception {
+        String email = "legacy-session-" + UUID.randomUUID() + "@example.com";
+        userRepository.saveAndFlush(User.builder().firstName("Ada").lastName("Lovelace").email(email)
+                .password(passwordEncoder.encode("StrongPass1")).enabled(null).build());
+
+        Cookie authCookie = mockMvc.perform(post("/api/auth/login").with(csrf())
+                        .contextPath("/api").servletPath("/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + email + "\",\"password\":\"StrongPass1\"}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getCookie("COLICLIC_AUTH");
+
+        assertThat(authCookie).isNotNull();
+        mockMvc.perform(get("/api/auth/session").contextPath("/api").servletPath("/auth/session").cookie(authCookie))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.email").value(email));
+    }
 
     @Test
     void csrfEndpoint_shouldMaterializeAngularXsrfCookie() throws Exception {

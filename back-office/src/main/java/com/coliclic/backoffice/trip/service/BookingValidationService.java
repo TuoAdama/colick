@@ -90,7 +90,24 @@ public class BookingValidationService {
         booking.setValidationDeliveryStatus(TripBooking.ValidationDeliveryStatus.DELIVERED);
         booking.setValidationCodeSentAt(LocalDateTime.now());
         booking.setValidationCodeInvalidatedAt(null);
+        refreshValidationCodeExpiration(booking);
+        booking.setValidationCodeFailedAttempts(0);
+        booking.setValidationCodeBlockedUntil(null);
         booking.setValidationCodeDeliveryFailedAt(null);
+    }
+
+    /** Rebase expiration without changing the code or resetting the lockout. */
+    public void refreshValidationCodeExpiration(TripBooking booking) {
+        if (booking.getValidationCode() == null || booking.getValidationCodeSentAt() == null
+                || booking.getValidationDeliveryStatus() != TripBooking.ValidationDeliveryStatus.DELIVERED
+                || booking.getValidationCodeInvalidatedAt() != null) {
+            return;
+        }
+        LocalDateTime reference = booking.getValidationCodeSentAt();
+        if (booking.getTrip().getArrivalTime() != null && booking.getTrip().getArrivalTime().isAfter(reference)) {
+            reference = booking.getTrip().getArrivalTime();
+        }
+        booking.setValidationCodeExpiresAt(reference.plusDays(7));
     }
 
     public void markValidationCodeDeliveryFailed(TripBooking booking,

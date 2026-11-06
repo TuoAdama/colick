@@ -37,6 +37,17 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void handleConcurrentUpdate_shouldReturn409WithoutExposingDatabaseDetails() {
+        var response = handler.handleConcurrentUpdate(
+                new org.springframework.orm.ObjectOptimisticLockingFailureException("private-entity", 42L));
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("This information changed during your request. Reload the page and try again.",
+                response.getBody().getMessage());
+    }
+
+    @Test
     void handleGeneric_shouldReturn500WithGenericMessage() {
         Exception ex = new RuntimeException("something went wrong");
 

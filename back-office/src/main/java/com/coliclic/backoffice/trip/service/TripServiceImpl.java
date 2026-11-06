@@ -3,6 +3,8 @@ package com.coliclic.backoffice.trip.service;
 import com.coliclic.backoffice.commercial.CommercialProperties;
 import com.coliclic.backoffice.email.EmailService;
 import com.coliclic.backoffice.exception.BadRequestException;
+import com.coliclic.backoffice.exception.InvalidValidationCodeException;
+import com.coliclic.backoffice.exception.TooManyRequestsException;
 import com.coliclic.backoffice.exception.ConflictException;
 import com.coliclic.backoffice.exception.ResourceNotFoundException;
 import com.coliclic.backoffice.exception.TripBookingConflictException;
@@ -127,28 +129,42 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public TripResponse updateTrip(Long id, UpdateTripRequest request, User requester) {
-        Trip trip = findTripOrThrow(id);
+        Trip trip = findTripForUpdateOrThrow(id);
         assertTripOwner(trip, requester);
         if (trip.getStatus() != Trip.TripStatus.ACTIVE) {
             throw new TripUpdateNotAllowedException(localizedMessages.get("error.trip.onlyActiveUpdatable"));
         }
 
+        boolean arrivalChanged = request.getArrivalTime() != null
+                && !request.getArrivalTime().equals(trip.getArrivalTime());
         if (request.getDepartureAddress() != null) trip.setDepartureAddress(request.getDepartureAddress());
         if (request.getDestination() != null) trip.setDestination(request.getDestination());
         if (request.getDepartureTime() != null) trip.setDepartureTime(request.getDepartureTime());
         if (request.getArrivalTime() != null) trip.setArrivalTime(request.getArrivalTime());
-        if (request.getMaxWeight() != null) trip.setMaxWeight(request.getMaxWeight());
+        if (request.getMaxWeight() != null) {
+            BigDecimal bookedWeight = trip.getMaxWeight().subtract(computeAvailableWeight(trip));
+            if (request.getMaxWeight().compareTo(bookedWeight) < 0) {
+                throw new ConflictException(localizedMessages.get("error.trip.requestedWeightExceedsAvailable"));
+            }
+            trip.setMaxWeight(request.getMaxWeight());
+        }
         if (request.getPricePerKilo() != null) trip.setPricePerKilo(request.getPricePerKilo());
         if (request.getInstantAcceptance() != null) trip.setInstantAcceptance(request.getInstantAcceptance());
 
         Trip savedTrip = tripRepository.save(trip);
+        if (arrivalChanged) {
+            List<TripBooking> acceptedBookings = bookingRepository.findByTripAndStatus(
+                    savedTrip, TripBooking.BookingStatus.ACCEPTED);
+            acceptedBookings.forEach(bookingValidationService::refreshValidationCodeExpiration);
+            bookingRepository.saveAll(acceptedBookings);
+        }
         notifyAcceptedBookingSendersAboutTripUpdate(savedTrip);
         return toTripResponse(savedTrip);
     }
 
     @Override
     public TripResponse completeTrip(Long id, User requester) {
-        Trip trip = findTripOrThrow(id);
+        Trip trip = findTripForUpdateOrThrow(id);
         assertTripOwner(trip, requester);
 
         if (trip.getStatus() == Trip.TripStatus.COMPLETED) {
@@ -169,7 +185,7 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public void deleteTrip(Long id, User requester) {
-        Trip trip = findTripOrThrow(id);
+        Trip trip = findTripForUpdateOrThrow(id);
         assertTripOwner(trip, requester);
         if (trip.getStatus() != Trip.TripStatus.ACTIVE) {
             throw new ConflictException(localizedMessages.get("error.trip.onlyActiveCancelable"));
@@ -236,7 +252,7 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public TripBookingResponse createBooking(Long tripId, CreateBookingRequest request, User sender) {
-        Trip trip = findTripOrThrow(tripId);
+        Trip trip = findTripForUpdateOrThrow(tripId);
 
         if (!request.isParcelPolicyAccepted()
                 || !ParcelGuidelines.VERSION.equals(request.getParcelPolicyVersion())) {
@@ -302,6 +318,7 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public TripBookingResponse uploadBookingPhoto(Long tripId, Long bookingId, MultipartFile file, User sender) {
+        findTripForUpdateOrThrow(tripId);
         TripBooking booking = findSenderBookingOrThrow(tripId, bookingId, sender);
         if (booking.getStatus() == TripBooking.BookingStatus.CANCELLED
                 || booking.getStatus() == TripBooking.BookingStatus.REJECTED
@@ -348,7 +365,7 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public TripBookingResponse acceptBooking(Long tripId, Long bookingId, User requester) {
-        TripBooking booking = findBookingOrThrow(tripId, bookingId);
+        TripBooking booking = findBookingForUpdateOrThrow(tripId, bookingId);
         assertTripOwner(booking.getTrip(), requester);
         if (booking.getTrip().getStatus() != Trip.TripStatus.ACTIVE) {
             throw new ConflictException(localizedMessages.get("error.trip.onlyActiveBookingsAcceptable"));
@@ -361,6 +378,10 @@ public class TripServiceImpl implements TripService {
             throw new ConflictException(localizedMessages.get("error.trip.onlyPendingBookingsAcceptable"));
         }
 
+        if (booking.getWeight() != null
+                && booking.getWeight().compareTo(computeAvailableWeight(booking.getTrip())) > 0) {
+            throw new ConflictException(localizedMessages.get("error.trip.requestedWeightExceedsAvailable"));
+        }
         booking.setStatus(TripBooking.BookingStatus.ACCEPTED);
         TripBooking saved = bookingRepository.save(booking);
         saved = deliverValidationCodeWithoutBlockingAcceptance(saved);
@@ -376,11 +397,12 @@ public class TripServiceImpl implements TripService {
     }
 
     @Override
+    @Transactional(noRollbackFor = InvalidValidationCodeException.class)
     public TripBookingResponse confirmBookingDelivery(Long tripId,
                                                       Long bookingId,
                                                       ConfirmBookingDeliveryRequest request,
                                                       User requester) {
-        TripBooking booking = findBookingOrThrow(tripId, bookingId);
+        TripBooking booking = findBookingForUpdateOrThrow(tripId, bookingId);
         assertTripOwner(booking.getTrip(), requester);
 
         if (booking.getStatus() == TripBooking.BookingStatus.DELIVERED) {
@@ -395,10 +417,27 @@ public class TripServiceImpl implements TripService {
         if (!booking.hasActiveValidationCode()) {
             throw new ConflictException(localizedMessages.get("error.trip.noActiveValidationCode"));
         }
-        if (!booking.getValidationCode().equals(request.getValidationCode().trim())) {
-            throw new BadRequestException(localizedMessages.get("error.trip.invalidValidationCode"));
+        LocalDateTime now = LocalDateTime.now();
+        if (booking.getValidationCodeBlockedUntil() != null) {
+            if (booking.getValidationCodeBlockedUntil().isAfter(now)) {
+                long retryAfter = java.time.Duration.between(now, booking.getValidationCodeBlockedUntil()).toSeconds() + 1;
+                throw new TooManyRequestsException(localizedMessages.get("error.trip.validationCodeBlocked"), retryAfter);
+            }
+            booking.setValidationCodeFailedAttempts(0);
+            booking.setValidationCodeBlockedUntil(null);
+        }
+        if (!booking.getValidationCode().equals(request.getValidationCode())) {
+            booking.setValidationCodeFailedAttempts(booking.getValidationCodeFailedAttempts() + 1);
+            if (booking.getValidationCodeFailedAttempts() >= 5) {
+                booking.setValidationCodeBlockedUntil(now.plusMinutes(15));
+            }
+            bookingRepository.save(booking);
+            // Only this exception commits the failed-attempt counter; other failures still roll back.
+            throw new InvalidValidationCodeException(localizedMessages.get("error.trip.invalidValidationCode"));
         }
 
+        booking.setValidationCodeFailedAttempts(0);
+        booking.setValidationCodeBlockedUntil(null);
         booking.setStatus(TripBooking.BookingStatus.DELIVERED);
         booking.setDeliveredAt(LocalDateTime.now());
         bookingValidationService.invalidateValidationCode(booking);
@@ -407,7 +446,7 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public TripBookingResponse rejectBooking(Long tripId, Long bookingId, User requester) {
-        TripBooking booking = findBookingOrThrow(tripId, bookingId);
+        TripBooking booking = findBookingForUpdateOrThrow(tripId, bookingId);
         assertTripOwner(booking.getTrip(), requester);
         if (booking.getTrip().getStatus() != Trip.TripStatus.ACTIVE) {
             throw new ConflictException(localizedMessages.get("error.trip.onlyActiveBookingsRejectable"));
@@ -436,7 +475,7 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public void removeBooking(Long tripId, Long bookingId, User requester) {
-        TripBooking booking = findBookingOrThrow(tripId, bookingId);
+        TripBooking booking = findBookingForUpdateOrThrow(tripId, bookingId);
         assertTripOwner(booking.getTrip(), requester);
 
         if (booking.getStatus() == TripBooking.BookingStatus.REMOVED) {
@@ -460,7 +499,7 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public TripBookingResponse cancelBooking(Long tripId, Long bookingId, User requester) {
-        TripBooking booking = findBookingOrThrow(tripId, bookingId);
+        TripBooking booking = findBookingForUpdateOrThrow(tripId, bookingId);
 
         if (!booking.getSender().getId().equals(requester.getId())) {
             throw new AccessDeniedException(localizedMessages.get("error.trip.notBookingSender"));
@@ -483,6 +522,18 @@ public class TripServiceImpl implements TripService {
                 booking.getTrip().getDestination());
 
         return toTripBookingResponse(saved);
+    }
+
+    private Trip findTripForUpdateOrThrow(Long id) {
+        return tripRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException(localizedMessages.get("error.trip.notFound", id)));
+    }
+
+    private TripBooking findBookingForUpdateOrThrow(Long tripId, Long bookingId) {
+        findTripForUpdateOrThrow(tripId);
+        return bookingRepository.findById(bookingId)
+                .filter(b -> b.getTrip().getId().equals(tripId))
+                .orElseThrow(() -> new ResourceNotFoundException(localizedMessages.get("error.booking.notFound", bookingId)));
     }
 
     private Trip findTripOrThrow(Long id) {

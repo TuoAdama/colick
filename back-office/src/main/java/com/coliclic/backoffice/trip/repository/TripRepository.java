@@ -18,6 +18,11 @@ import java.util.Optional;
 @Repository
 public interface TripRepository extends JpaRepository<Trip, Long> {
 
+    /** Shared serialization point for every trip/booking mutation. */
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select trip from Trip trip where trip.id = :id")
+    Optional<Trip> findByIdForUpdate(@Param("id") Long id);
+
     @Query("select item from Trip item where item.traveler.id = :userId "
             + "order by case when item.createdAt is null then 1 else 0 end, item.createdAt desc, item.id desc")
     Page<Trip> findAdminHistory(

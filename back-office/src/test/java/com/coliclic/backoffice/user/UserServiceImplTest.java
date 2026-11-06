@@ -14,6 +14,9 @@ import com.coliclic.backoffice.user.entity.User;
 import com.coliclic.backoffice.user.repository.UserRepository;
 import com.coliclic.backoffice.user.service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -71,6 +74,13 @@ class UserServiceImplTest {
                 .password("hashed")
                 .role(User.Role.USER)
                 .build();
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(sampleUser, null, List.of()));
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -150,6 +160,7 @@ class UserServiceImplTest {
 
     @Test
     void getUserById_shouldThrow_whenNotFound() {
+        sampleUser.setId(99L);
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getUserById(99L))

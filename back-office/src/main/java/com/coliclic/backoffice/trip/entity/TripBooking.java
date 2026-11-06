@@ -77,6 +77,31 @@ public class TripBooking {
     private LocalDateTime validationCodeSentAt;
 
     @Column
+    private LocalDateTime validationCodeExpiresAt;
+
+    @Column
+    @Builder.Default
+    private Integer validationCodeFailedAttempts = 0;
+
+    @Column
+    private LocalDateTime validationCodeBlockedUntil;
+
+    public int getValidationCodeFailedAttempts() {
+        return validationCodeFailedAttempts == null ? 0 : validationCodeFailedAttempts;
+    }
+
+    public LocalDateTime effectiveValidationCodeExpiresAt() {
+        if (validationCodeExpiresAt != null) return validationCodeExpiresAt;
+        // Legacy codes need a provable issuance time. Never revive an undated code.
+        if (validationCodeSentAt == null) return null;
+        LocalDateTime reference = validationCodeSentAt;
+        if (trip != null && trip.getArrivalTime() != null && trip.getArrivalTime().isAfter(reference)) {
+            reference = trip.getArrivalTime();
+        }
+        return reference.plusDays(7);
+    }
+
+    @Column
     private LocalDateTime validationCodeInvalidatedAt;
 
     @Column
@@ -106,7 +131,9 @@ public class TripBooking {
     public boolean hasActiveValidationCode() {
         return validationCode != null
                 && validationDeliveryStatus == ValidationDeliveryStatus.DELIVERED
-                && validationCodeInvalidatedAt == null;
+                && validationCodeInvalidatedAt == null
+                && effectiveValidationCodeExpiresAt() != null
+                && effectiveValidationCodeExpiresAt().isAfter(LocalDateTime.now());
     }
 
     public enum BookingStatus {

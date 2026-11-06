@@ -2,6 +2,7 @@ package com.coliclic.backoffice.parcelrequest.service;
 
 import com.coliclic.backoffice.exception.ResourceNotFoundException;
 import com.coliclic.backoffice.file.FileStorageService;
+import com.coliclic.backoffice.parcelguidelines.ParcelGuidelines;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
 import com.coliclic.backoffice.parcelrequest.dto.CreateParcelRequestRequest;
 import com.coliclic.backoffice.parcelrequest.dto.ParcelRequestResponse;
@@ -110,7 +111,7 @@ public class ParcelRequestServiceImpl implements ParcelRequestService {
     public ParcelRequestResponse uploadPhoto(Long requestId, MultipartFile file, User sender) {
         ParcelRequest request = findOwnedRequest(requestId, sender);
         requireActive(request);
-        request.setPackagePhotoUrl(fileStorageService.store(file));
+        request.setPackagePhotoUrl(fileStorageService.storeImage(file, ParcelGuidelines.MAX_PHOTO_BYTES));
         return ParcelRequestResponse.from(parcelRequestRepository.save(request));
     }
 

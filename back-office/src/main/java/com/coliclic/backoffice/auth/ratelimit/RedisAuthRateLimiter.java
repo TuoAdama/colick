@@ -94,14 +94,18 @@ public class RedisAuthRateLimiter implements AuthRateLimiter {
                     Integer.toString(ipLimit),
                     Long.toString(window.toMillis())
             );
-            if (retryAfterMillis == null || retryAfterMillis <= 0) {
+            if (retryAfterMillis == null) {
+                log.warn("No Redis rate-limit decision for authentication operation {}; denying request", operation);
+                return RateLimitDecision.rejected(60);
+            }
+            if (retryAfterMillis <= 0) {
                 return RateLimitDecision.allowedDecision();
             }
             return RateLimitDecision.rejected((retryAfterMillis + 999) / 1000);
         } catch (RuntimeException ex) {
-            log.warn("Redis unavailable while rate limiting authentication operation {}; allowing request",
+            log.warn("Redis unavailable while rate limiting authentication operation {}; denying request",
                     operation, ex);
-            return RateLimitDecision.allowedDecision();
+            return RateLimitDecision.rejected(60);
         }
     }
 

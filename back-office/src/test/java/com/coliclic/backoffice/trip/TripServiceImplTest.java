@@ -314,7 +314,7 @@ class TripServiceImplTest {
                 .status(TripBooking.BookingStatus.PENDING)
                 .build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(tripRepository.save(any(Trip.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
                 .thenReturn(List.of(acceptedBooking));
@@ -345,7 +345,7 @@ class TripServiceImplTest {
         UpdateTripRequest request = new UpdateTripRequest();
         request.setDestination("Dakar");
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
 
         assertThatThrownBy(() -> tripService.updateTrip(10L, request, traveler))
                 .isInstanceOf(TripUpdateNotAllowedException.class)
@@ -361,7 +361,7 @@ class TripServiceImplTest {
         UpdateTripRequest request = new UpdateTripRequest();
         request.setDestination("Dakar");
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
 
         assertThatThrownBy(() -> tripService.updateTrip(10L, request, traveler))
                 .isInstanceOf(TripUpdateNotAllowedException.class)
@@ -373,7 +373,7 @@ class TripServiceImplTest {
 
     @Test
     void deleteTrip_shouldCancelTrip_whenOwner() {
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(tripRepository.save(any(Trip.class))).thenReturn(sampleTrip);
         when(bookingRepository.findByTripAndStatusIn(eq(sampleTrip), anyList())).thenReturn(List.of());
 
@@ -394,7 +394,7 @@ class TripServiceImplTest {
                 .id(2L).trip(sampleTrip).sender(anotherSender)
                 .status(TripBooking.BookingStatus.ACCEPTED).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(tripRepository.save(any(Trip.class))).thenReturn(sampleTrip);
         when(bookingRepository.findByTripAndStatusIn(eq(sampleTrip), anyList()))
                 .thenReturn(List.of(pending, accepted));
@@ -677,7 +677,7 @@ class TripServiceImplTest {
                 .title("Box").recipientContact("+225 00").weight(BigDecimal.valueOf(2))
                 .status(TripBooking.BookingStatus.ACCEPTED).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(bookingRepository.save(any())).thenReturn(booking);
         doNothing().when(emailService).sendBookingCancelledBySenderEmail(
@@ -699,7 +699,7 @@ class TripServiceImplTest {
                 .title("Box").recipientContact("+225 00").weight(BigDecimal.valueOf(2))
                 .status(TripBooking.BookingStatus.PENDING).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(2L)).thenReturn(Optional.of(booking));
         when(bookingRepository.save(any())).thenReturn(booking);
         doNothing().when(emailService).sendBookingCancelledBySenderEmail(
@@ -717,7 +717,7 @@ class TripServiceImplTest {
                 .id(1L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.ACCEPTED).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.cancelBooking(10L, 1L, traveler))
@@ -731,7 +731,7 @@ class TripServiceImplTest {
                 .id(1L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.CANCELLED).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.cancelBooking(10L, 1L, sender))
@@ -746,7 +746,7 @@ class TripServiceImplTest {
                 .id(1L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.REJECTED).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.cancelBooking(10L, 1L, sender))
@@ -756,7 +756,7 @@ class TripServiceImplTest {
 
     @Test
     void deleteTrip_shouldThrow_whenNotOwner() {
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
 
         assertThatThrownBy(() -> tripService.deleteTrip(10L, sender))
                 .isInstanceOf(AccessDeniedException.class);
@@ -782,7 +782,7 @@ class TripServiceImplTest {
                 .status(TripBooking.BookingStatus.PENDING)
                 .build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
@@ -815,7 +815,7 @@ class TripServiceImplTest {
         CreateBookingRequest request = new CreateBookingRequest();
         request.setParcelPolicyAccepted(true);
         request.setParcelPolicyVersion("obsolete-version");
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
 
         assertThatThrownBy(() -> tripService.createBooking(10L, request, sender))
                 .isInstanceOf(BadRequestException.class)
@@ -837,6 +837,7 @@ class TripServiceImplTest {
         MockMultipartFile photo = new MockMultipartFile(
                 "file", "parcel.png", "image/png", new byte[]{(byte) 0x89, 0x50, 0x4e, 0x47});
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(fileStorageService.storeImage(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
                 .thenReturn("/uploads/parcel.png");
@@ -857,6 +858,7 @@ class TripServiceImplTest {
         MockMultipartFile photo = new MockMultipartFile(
                 "file", "parcel.png", "image/png", new byte[]{(byte) 0x89, 0x50, 0x4e, 0x47});
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(fileStorageService.storeImage(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
                 .thenReturn("/uploads/new.png");
@@ -876,6 +878,7 @@ class TripServiceImplTest {
         MockMultipartFile photo = new MockMultipartFile(
                 "file", "parcel.png", "image/png", new byte[]{(byte) 0x89, 0x50, 0x4e, 0x47});
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(fileStorageService.storeImage(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
                 .thenReturn("/uploads/new.png");
@@ -898,6 +901,7 @@ class TripServiceImplTest {
         MockMultipartFile photo = new MockMultipartFile(
                 "file", "parcel.png", "image/png", new byte[]{(byte) 0x89, 0x50, 0x4e, 0x47});
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(fileStorageService.storeImage(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
                 .thenReturn("/uploads/new.png");
@@ -929,6 +933,7 @@ class TripServiceImplTest {
         MockMultipartFile photo = new MockMultipartFile(
                 "file", "parcel.png", "image/png", new byte[]{(byte) 0x89, 0x50, 0x4e, 0x47});
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.uploadBookingPhoto(10L, 1L, photo, anotherUser))
@@ -954,7 +959,7 @@ class TripServiceImplTest {
                 .recipientContact("+225 01 00 00 00")
                 .status(TripBooking.BookingStatus.ACCEPTED).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
@@ -984,7 +989,7 @@ class TripServiceImplTest {
                 .recipientContact("+22501000000")
                 .status(TripBooking.BookingStatus.ACCEPTED).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(TripBooking.class))).thenReturn(savedBooking);
@@ -1018,7 +1023,7 @@ class TripServiceImplTest {
 
         List<TripBooking.BookingStatus> activeStatuses = List.of(
                 TripBooking.BookingStatus.PENDING, TripBooking.BookingStatus.ACCEPTED);
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.existsByTripAndSenderAndStatusIn(
                 sampleTrip, sender, activeStatuses)).thenReturn(true);
 
@@ -1050,7 +1055,7 @@ class TripServiceImplTest {
 
         List<TripBooking.BookingStatus> activeStatuses = List.of(
                 TripBooking.BookingStatus.PENDING, TripBooking.BookingStatus.ACCEPTED);
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.existsByTripAndSenderAndStatusIn(
                 sampleTrip, sender, activeStatuses)).thenReturn(false);
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
@@ -1073,7 +1078,7 @@ class TripServiceImplTest {
                 request.setRecipientContact("+225 07 00 00 00");
                 acceptParcelPolicy(request);
 
-                when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+                when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
 
                 assertThatThrownBy(() -> tripService.createBooking(10L, request, traveler))
                                 .isInstanceOf(BadRequestException.class)
@@ -1089,7 +1094,7 @@ class TripServiceImplTest {
                 .id(1L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.PENDING).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(bookingRepository.save(any())).thenReturn(booking);
         doNothing().when(emailService).sendTripBookingAcceptedEmail(anyString(), anyString(), anyString(), anyString());
@@ -1112,7 +1117,7 @@ class TripServiceImplTest {
                 .id(1L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.PENDING).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(bookingRepository.save(any())).thenReturn(booking);
         doThrow(new ValidationCodeDeliveryException(
@@ -1137,7 +1142,7 @@ class TripServiceImplTest {
                 .id(1L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.ACCEPTED).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         TripBookingResponse response = tripService.acceptBooking(10L, 1L, traveler);
@@ -1154,7 +1159,7 @@ class TripServiceImplTest {
                 .id(1L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.CANCELLED).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.acceptBooking(10L, 1L, traveler))
@@ -1168,7 +1173,7 @@ class TripServiceImplTest {
                 .id(1L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.PENDING).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(bookingRepository.save(any())).thenReturn(booking);
         doNothing().when(emailService).sendTripBookingRejectedEmail(anyString(), anyString(), anyString(), anyString());
@@ -1191,7 +1196,7 @@ class TripServiceImplTest {
                 .id(1L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.REJECTED).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         TripBookingResponse response = tripService.rejectBooking(10L, 1L, traveler);
@@ -1207,7 +1212,7 @@ class TripServiceImplTest {
                 .id(1L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.ACCEPTED).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.rejectBooking(10L, 1L, traveler))
@@ -1217,7 +1222,7 @@ class TripServiceImplTest {
 
     @Test
     void completeTrip_shouldSetCompleted_whenOwnerAndNoPendingBookings() {
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.existsByTripAndStatus(sampleTrip, TripBooking.BookingStatus.PENDING)).thenReturn(false);
         when(tripRepository.save(sampleTrip)).thenReturn(sampleTrip);
 
@@ -1232,7 +1237,7 @@ class TripServiceImplTest {
     @Test
     void completeTrip_shouldBeIdempotent_whenAlreadyCompleted() {
         sampleTrip.setStatus(Trip.TripStatus.COMPLETED);
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
 
         TripResponse response = tripService.completeTrip(10L, traveler);
 
@@ -1243,7 +1248,7 @@ class TripServiceImplTest {
 
     @Test
     void completeTrip_shouldThrow_whenPendingBookingsRemain() {
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.existsByTripAndStatus(sampleTrip, TripBooking.BookingStatus.PENDING)).thenReturn(true);
 
         assertThatThrownBy(() -> tripService.completeTrip(10L, traveler))
@@ -1263,7 +1268,7 @@ class TripServiceImplTest {
         request.setRecipientContact("+225 07 00 00 00");
         acceptParcelPolicy(request);
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
 
         assertThatThrownBy(() -> tripService.createBooking(10L, request, sender))
                 .isInstanceOf(ConflictException.class)
@@ -1281,13 +1286,14 @@ class TripServiceImplTest {
                 .sender(sender)
                 .status(TripBooking.BookingStatus.ACCEPTED)
                 .validationCode("123456")
+                .validationCodeSentAt(LocalDateTime.now())
                 .validationDeliveryStatus(TripBooking.ValidationDeliveryStatus.DELIVERED)
                 .validationCodeInvalidatedAt(null)
                 .build();
         ConfirmBookingDeliveryRequest request = new ConfirmBookingDeliveryRequest();
         request.setValidationCode("123456");
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(bookingRepository.save(booking)).thenReturn(booking);
 
@@ -1308,13 +1314,14 @@ class TripServiceImplTest {
                 .sender(sender)
                 .status(TripBooking.BookingStatus.ACCEPTED)
                 .validationCode("123456")
+                .validationCodeSentAt(LocalDateTime.now())
                 .validationDeliveryStatus(TripBooking.ValidationDeliveryStatus.DELIVERED)
                 .validationCodeInvalidatedAt(null)
                 .build();
         ConfirmBookingDeliveryRequest request = new ConfirmBookingDeliveryRequest();
         request.setValidationCode("123456");
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.confirmBookingDelivery(10L, 1L, request, traveler))
@@ -1334,13 +1341,14 @@ class TripServiceImplTest {
                 .sender(sender)
                 .status(TripBooking.BookingStatus.ACCEPTED)
                 .validationCode("123456")
+                .validationCodeSentAt(LocalDateTime.now())
                 .validationDeliveryStatus(TripBooking.ValidationDeliveryStatus.DELIVERED)
                 .validationCodeInvalidatedAt(null)
                 .build();
         ConfirmBookingDeliveryRequest request = new ConfirmBookingDeliveryRequest();
         request.setValidationCode("654321");
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.confirmBookingDelivery(10L, 1L, request, traveler))
@@ -1348,7 +1356,8 @@ class TripServiceImplTest {
                 .hasMessageContaining("Invalid validation code");
 
         verify(bookingValidationService, never()).invalidateValidationCode(any());
-        verify(bookingRepository, never()).save(any());
+        verify(bookingRepository).save(booking);
+        assertThat(booking.getValidationCodeFailedAttempts()).isEqualTo(1);
     }
 
     @Test
@@ -1357,7 +1366,7 @@ class TripServiceImplTest {
                 .id(1L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.ACCEPTED).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         doNothing().when(emailService).sendTripBookingRemovedEmail(anyString(), anyString(), anyString(), anyString());
         when(bookingRepository.save(booking)).thenReturn(booking);
@@ -1381,7 +1390,7 @@ class TripServiceImplTest {
                 .id(1L).trip(sampleTrip).sender(sender)
                 .status(TripBooking.BookingStatus.PENDING).build();
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThatThrownBy(() -> tripService.removeBooking(10L, 1L, traveler))
@@ -1406,7 +1415,7 @@ class TripServiceImplTest {
         request.setRecipientContact("+225 07 00 00 00");
         acceptParcelPolicy(request);
 
-        when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
+        when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED))
                 .thenReturn(List.of(existingAccepted));
 

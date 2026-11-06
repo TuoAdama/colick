@@ -13,6 +13,8 @@ import com.coliclic.backoffice.user.entity.User;
 import com.coliclic.backoffice.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.coliclic.backoffice.parcelguidelines.ParcelGuidelines;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,11 +88,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserResponse getUserById(Long id) {
+        assertOwner(id);
         return UserResponse.from(findOrThrow(id));
     }
 
     @Override
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
+        assertOwner(id);
         User user = findOrThrow(id);
         if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
             throw new BadRequestException(localizedMessages.get("error.user.emailChangeRequiresConfirmation"));
@@ -98,10 +102,6 @@ public class UserServiceImpl implements UserService {
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
         if (request.getLastName() != null) user.setLastName(request.getLastName());
         if (request.getPhone() != null) user.setPhone(request.getPhone());
-        if (request.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-            user.setLocalAuthEnabled(true);
-        }
         return UserResponse.from(userRepository.save(user));
     }
 
@@ -120,8 +120,9 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public UserResponse uploadPhoto(Long id, MultipartFile file) {
+        assertOwner(id);
         User user = findOrThrow(id);
-        String url = fileStorageService.store(file);
+        String url = fileStorageService.storeImage(file, ParcelGuidelines.MAX_PHOTO_BYTES);
         user.setPhotoUrl(url);
         return UserResponse.from(userRepository.save(user));
     }
@@ -132,6 +133,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public void requestEmailChange(Long id, String newEmail) {
+        assertOwner(id);
         User user = findOrThrow(id);
         if (!newEmail.equals(user.getEmail()) && userRepository.existsByEmail(newEmail)) {
             throw new UserAlreadyExistsException(localizedMessages.get("error.user.exists", newEmail));
@@ -186,6 +188,7 @@ public class UserServiceImpl implements UserService {
         if (user.getPendingEmail() == null || user.getPendingEmail().isBlank()) {
             throw new ResourceNotFoundException(localizedMessages.get("error.user.invalidOrExpiredToken"));
         }
+        user.revokeSessions();
         user.setEmail(user.getPendingEmail());
         user.setEmailVerifiedAt(LocalDateTime.now());
         user.setPendingEmail(null);
@@ -199,6 +202,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public UserResponse changePassword(Long id, String oldPassword, String newPassword) {
+        assertOwner(id);
         User user = findOrThrow(id);
         if (Boolean.FALSE.equals(user.getLocalAuthEnabled())) {
             throw new AccessDeniedException(localizedMessages.get("error.auth.googleNoLocalPassword"));
@@ -224,4 +228,12 @@ public class UserServiceImpl implements UserService {
         return expiresAt == null || expiresAt.isBefore(LocalDateTime.now());
     }
 
+    private void assertOwner(Long id) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || !(authentication.getPrincipal() instanceof User requester)
+                || id == null || !id.equals(requester.getId())) {
+            throw new AccessDeniedException(localizedMessages.get("error.auth.forbidden"));
+        }
+    }
 }

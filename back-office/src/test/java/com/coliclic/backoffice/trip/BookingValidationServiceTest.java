@@ -50,6 +50,40 @@ class BookingValidationServiceTest {
     private Trip trip;
     private User sender;
 
+    @Test
+    void refreshExpiration_preservesCodeAndLockoutAndUsesLaterOfArrivalAndIssuance() {
+        LocalDateTime sentAt = LocalDateTime.now().minusDays(10);
+        LocalDateTime blockedUntil = LocalDateTime.now().plusMinutes(15);
+        TripBooking booking = TripBooking.builder().trip(trip).validationCode("123456")
+                .validationDeliveryStatus(TripBooking.ValidationDeliveryStatus.DELIVERED)
+                .validationCodeSentAt(sentAt).validationCodeExpiresAt(sentAt.plusDays(7))
+                .validationCodeFailedAttempts(5).validationCodeBlockedUntil(blockedUntil).build();
+        bookingValidationService.refreshValidationCodeExpiration(booking);
+        assertThat(booking.getValidationCodeExpiresAt()).isEqualTo(trip.getArrivalTime().plusDays(7));
+        assertThat(booking.getValidationCode()).isEqualTo("123456");
+        assertThat(booking.getValidationCodeSentAt()).isEqualTo(sentAt);
+        assertThat(booking.getValidationCodeFailedAttempts()).isEqualTo(5);
+        assertThat(booking.getValidationCodeBlockedUntil()).isEqualTo(blockedUntil);
+        trip.setArrivalTime(sentAt.minusDays(1));
+        bookingValidationService.refreshValidationCodeExpiration(booking);
+        assertThat(booking.getValidationCodeExpiresAt()).isEqualTo(sentAt.plusDays(7));
+    }
+
+    @Test
+    void refreshExpiration_doesNotReviveInvalidatedOrUndatedCodes() {
+        LocalDateTime expiredAt = LocalDateTime.now().minusDays(1);
+        TripBooking booking = TripBooking.builder().trip(trip).validationCode("123456")
+                .validationDeliveryStatus(TripBooking.ValidationDeliveryStatus.DELIVERED)
+                .validationCodeSentAt(expiredAt.minusDays(7)).validationCodeExpiresAt(expiredAt)
+                .validationCodeInvalidatedAt(expiredAt).build();
+        bookingValidationService.refreshValidationCodeExpiration(booking);
+        assertThat(booking.getValidationCodeExpiresAt()).isEqualTo(expiredAt);
+        booking.setValidationCodeInvalidatedAt(null);
+        booking.setValidationCodeSentAt(null);
+        bookingValidationService.refreshValidationCodeExpiration(booking);
+        assertThat(booking.getValidationCodeExpiresAt()).isEqualTo(expiredAt);
+    }
+
     @BeforeEach
     void setUp() {
         LocaleContextHolder.setLocale(Locale.ENGLISH);

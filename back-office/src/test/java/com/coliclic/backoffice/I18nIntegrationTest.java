@@ -3,6 +3,12 @@ package com.coliclic.backoffice;
 import com.coliclic.backoffice.user.entity.User;
 import com.coliclic.backoffice.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import com.coliclic.backoffice.auth.ratelimit.AuthRateLimiter;
+import com.coliclic.backoffice.auth.ratelimit.RateLimitDecision;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,6 +29,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class I18nIntegrationTest {
+
+    @MockitoBean AuthRateLimiter authRateLimiter;
+
+    @BeforeEach
+    void allowAuthenticationRequests() {
+        when(authRateLimiter.checkLogin(anyString(), anyString())).thenReturn(RateLimitDecision.allowedDecision());
+        when(authRateLimiter.checkPasswordReset(anyString(), anyString())).thenReturn(RateLimitDecision.allowedDecision());
+    }
 
     @Autowired
     private MockMvc mockMvc;
