@@ -2,6 +2,7 @@ package com.coliclic.backoffice.exception;
 
 import com.coliclic.backoffice.i18n.LocalizedMessages;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -57,6 +58,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(new ApiError(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ApiError> handleConcurrentUpdate(OptimisticLockingFailureException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError(HttpStatus.CONFLICT.value(), localizedMessages.get("error.concurrentUpdate")));
     }
 
     @ExceptionHandler(UnauthorizedException.class)

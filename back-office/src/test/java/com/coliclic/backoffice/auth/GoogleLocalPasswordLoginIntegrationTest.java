@@ -2,6 +2,8 @@ package com.coliclic.backoffice.auth;
 
 import com.coliclic.backoffice.auth.controller.AuthController;
 import com.coliclic.backoffice.auth.dto.LoginRequest;
+import com.coliclic.backoffice.auth.google.GoogleTokenPayload;
+import com.coliclic.backoffice.auth.google.GoogleTokenVerifier;
 import com.coliclic.backoffice.auth.passwordreset.entity.PasswordResetToken;
 import com.coliclic.backoffice.auth.passwordreset.repository.PasswordResetTokenRepository;
 import com.coliclic.backoffice.auth.passwordreset.service.PasswordResetService;
@@ -12,6 +14,8 @@ import com.coliclic.backoffice.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
@@ -26,11 +30,42 @@ import java.util.HexFormat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
 class GoogleLocalPasswordLoginIntegrationTest {
+
+    @Autowired private MockMvc mvc;
+    @MockitoBean private GoogleTokenVerifier googleTokenVerifier;
+
+    @Test
+    void legacyNullActivationFlag_shouldAllowGoogleLoginAndProtectedRequests() throws Exception {
+        String email = "legacy-google@example.com";
+        userRepository.saveAndFlush(User.builder().firstName("Ada").lastName("Lovelace").email(email)
+                .password("unused-random-hash").enabled(null).googleSubject("legacy-google-subject").build());
+        when(googleTokenVerifier.verify("legacy-google-token")).thenReturn(
+                new GoogleTokenPayload(
+                        "legacy-google-subject", email, "Ada", "Lovelace", "Ada Lovelace", true));
+
+        var login = mvc.perform(post("/api/auth/google")
+                        .contextPath("/api").servletPath("/auth/google")
+                        .with(csrf())
+                        .contentType("application/json").content("{\"idToken\":\"legacy-google-token\"}"))
+                .andExpect(status().isOk()).andReturn();
+        var cookie = login.getResponse().getCookie("COLICLIC_AUTH");
+        assertThat(cookie).isNotNull();
+        mvc.perform(get("/api/auth/session")
+                        .contextPath("/api").servletPath("/auth/session").cookie(cookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(email));
+    }
 
     @Autowired
     private UserRepository userRepository;

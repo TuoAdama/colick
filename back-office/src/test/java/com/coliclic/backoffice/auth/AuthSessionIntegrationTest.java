@@ -54,6 +54,23 @@ class AuthSessionIntegrationTest {
     private PasswordEncoder passwordEncoder;
 
     @Test
+    @Transactional
+    void legacyNullActivationFlag_shouldAllowLoginAndProtectedRequests() throws Exception {
+        String email = "legacy-session-" + UUID.randomUUID() + "@example.com";
+        userRepository.saveAndFlush(User.builder().firstName("Ada").lastName("Lovelace").email(email)
+                .password(passwordEncoder.encode("StrongPass1")).enabled(null).build());
+
+        Cookie authCookie = mockMvc.perform(post("/api/auth/login").with(csrf())
+                        .contextPath("/api").servletPath("/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + email + "\",\"password\":\"StrongPass1\"}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getCookie("COLICLIC_AUTH");
+
+        assertThat(authCookie).isNotNull();
+        mockMvc.perform(get("/api/auth/session").contextPath("/api").servletPath("/auth/session").cookie(authCookie))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.email").value(email));
+    }
+
+    @Test
     void csrfEndpoint_shouldMaterializeAngularXsrfCookie() throws Exception {
         mockMvc.perform(get("/api/auth/csrf").contextPath("/api").servletPath("/auth/csrf"))
                 .andExpect(status().isOk())

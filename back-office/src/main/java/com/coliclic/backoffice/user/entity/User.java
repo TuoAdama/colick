@@ -21,6 +21,12 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Prevents stale account writes from restoring credentials or revoked sessions. */
+    @Version
+    @Column(nullable = false)
+    @org.hibernate.annotations.ColumnDefault("0")
+    private long rowVersion;
+
     @Column(nullable = false)
     private String firstName;
 

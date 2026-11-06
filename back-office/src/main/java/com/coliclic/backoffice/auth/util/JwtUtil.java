@@ -70,7 +70,8 @@ public class JwtUtil {
             Claims claims = extractClaims(token);
             Number version = claims.get("sessionVersion", Number.class);
             Number userId = claims.get("userId", Number.class);
-            return Boolean.TRUE.equals(user.getEnabled())
+            // Legacy NULL activation flags are allowed by both local and Google sign-in.
+            return !Boolean.FALSE.equals(user.getEnabled())
                     && claims.getExpiration().after(new Date())
                     && user.getEmail().equals(claims.getSubject())
                     && userId != null && user.getId().equals(userId.longValue())
