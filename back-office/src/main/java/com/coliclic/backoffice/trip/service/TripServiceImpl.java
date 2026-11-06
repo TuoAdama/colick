@@ -135,6 +135,8 @@ public class TripServiceImpl implements TripService {
             throw new TripUpdateNotAllowedException(localizedMessages.get("error.trip.onlyActiveUpdatable"));
         }
 
+        boolean arrivalChanged = request.getArrivalTime() != null
+                && !request.getArrivalTime().equals(trip.getArrivalTime());
         if (request.getDepartureAddress() != null) trip.setDepartureAddress(request.getDepartureAddress());
         if (request.getDestination() != null) trip.setDestination(request.getDestination());
         if (request.getDepartureTime() != null) trip.setDepartureTime(request.getDepartureTime());
@@ -150,6 +152,12 @@ public class TripServiceImpl implements TripService {
         if (request.getInstantAcceptance() != null) trip.setInstantAcceptance(request.getInstantAcceptance());
 
         Trip savedTrip = tripRepository.save(trip);
+        if (arrivalChanged) {
+            List<TripBooking> acceptedBookings = bookingRepository.findByTripAndStatus(
+                    savedTrip, TripBooking.BookingStatus.ACCEPTED);
+            acceptedBookings.forEach(bookingValidationService::refreshValidationCodeExpiration);
+            bookingRepository.saveAll(acceptedBookings);
+        }
         notifyAcceptedBookingSendersAboutTripUpdate(savedTrip);
         return toTripResponse(savedTrip);
     }
