@@ -16,6 +16,8 @@ export interface AdminUser {
   updatedAt?: string;
   connectionMethods: ('GOOGLE' | 'PASSWORD')[];
   verified: boolean;
+  tripsCount: number;
+  bookingsCount: number;
 }
 
 export interface AdminUserDetail {

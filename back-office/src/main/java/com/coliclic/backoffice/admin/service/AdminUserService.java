@@ -7,10 +7,14 @@ import com.coliclic.backoffice.trip.repository.TripBookingRepository;
 import com.coliclic.backoffice.trip.repository.TripRepository;
 import com.coliclic.backoffice.user.entity.User;
 import com.coliclic.backoffice.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -26,14 +30,26 @@ public class AdminUserService {
     }
 
     public AdminPage<AdminUserResponse> users(int page, int size, String query) {
-        return AdminPage.from(users.searchForAdmin(query.trim().toLowerCase(Locale.ROOT), pagination(page, size))
-                .map(AdminUserResponse::from));
+        Page<User> userPage = users.searchForAdmin(query.trim().toLowerCase(Locale.ROOT), pagination(page, size));
+        List<Long> userIds = userPage.getContent().stream().map(User::getId).toList();
+        if (userIds.isEmpty()) {
+            return AdminPage.from(userPage.map(user -> AdminUserResponse.from(user, 0, 0)));
+        }
+
+        Map<Long, Long> tripsByUser = trips.countAdminTripsByUserIds(userIds).stream()
+                .collect(Collectors.toMap(AdminActivityCount::getUserId, AdminActivityCount::getActivityCount));
+        Map<Long, Long> bookingsByUser = bookings.countAdminBookingsByUserIds(userIds).stream()
+                .collect(Collectors.toMap(AdminActivityCount::getUserId, AdminActivityCount::getActivityCount));
+        return AdminPage.from(userPage.map(user -> AdminUserResponse.from(user,
+                tripsByUser.getOrDefault(user.getId(), 0L), bookingsByUser.getOrDefault(user.getId(), 0L))));
     }
 
     public AdminUserDetailResponse detail(Long id) {
         User user = requireUser(id);
-        return new AdminUserDetailResponse(AdminUserResponse.from(user), trips.countByTraveler(user),
-                bookings.countBySender(user));
+        long tripsCount = trips.countByTraveler(user);
+        long bookingsCount = bookings.countBySender(user);
+        return new AdminUserDetailResponse(AdminUserResponse.from(user, tripsCount, bookingsCount), tripsCount,
+                bookingsCount);
     }
 
     public AdminPage<AdminTripResponse> trips(Long id, int page, int size) {

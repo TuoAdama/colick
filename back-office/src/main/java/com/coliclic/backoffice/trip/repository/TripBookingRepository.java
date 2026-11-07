@@ -1,5 +1,6 @@
 package com.coliclic.backoffice.trip.repository;
 
+import com.coliclic.backoffice.admin.dto.AdminActivityCount;
 import com.coliclic.backoffice.trip.entity.Trip;
 import com.coliclic.backoffice.trip.entity.TripBooking;
 import com.coliclic.backoffice.user.entity.User;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +42,10 @@ public interface TripBookingRepository extends JpaRepository<TripBooking, Long> 
     List<TripBooking> findBySender(User sender);
 
     long countBySender(User sender);
+
+    @Query("select booking.sender.id as userId, count(booking) as activityCount from TripBooking booking "
+            + "where booking.sender.id in :userIds group by booking.sender.id")
+    List<AdminActivityCount> countAdminBookingsByUserIds(@Param("userIds") Collection<Long> userIds);
 
     Optional<TripBooking> findFirstBySenderAndCreatedAtIsNotNullOrderByCreatedAtAsc(User sender);
 
