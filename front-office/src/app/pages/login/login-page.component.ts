@@ -28,6 +28,7 @@ export class LoginPageComponent {
   isLoading = false;
   isGoogleLoading = false;
   errorMessage = '';
+  successMessage = this.router.getCurrentNavigation()?.extras.state?.['successMessage'] ?? '';
 
   onSubmit(): void {
     if (this.loginForm.invalid) return;

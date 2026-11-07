@@ -91,6 +91,15 @@ describe('LoginPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Compte créé avec Google');
   });
 
+  it('displays the registration success message passed through navigation state', () => {
+    component.successMessage = 'Compte créé. Vérifiez votre e-mail pour activer votre compte avant de vous connecter.';
+    fixture.detectChanges();
+
+    const successMessage = fixture.nativeElement.querySelector('[class*="bg-success"]');
+    expect(successMessage).not.toBeNull();
+    expect(successMessage.textContent).toContain('Vérifiez votre e-mail');
+  });
+
   it('redirects to search after Google login', () => {
     authServiceMock.googleLogin.and.returnValue(of({
       token: 'jwt-token',

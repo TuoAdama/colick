@@ -1,5 +1,5 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of, throwError } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { Router } from '@angular/router';
 import { RegisterPageComponent } from './register-page.component';
@@ -46,7 +46,7 @@ describe('RegisterPageComponent', () => {
     navigateSpy = spyOn(router, 'navigate').and.resolveTo(true);
   });
 
-  it('shows activation message after successful register', fakeAsync(() => {
+  it('redirects immediately to login with the activation message after successful register', () => {
     component.registerForm.setValue({
       firstName: 'John',
       lastName: 'Doe',
@@ -67,10 +67,31 @@ describe('RegisterPageComponent', () => {
     });
     expect(component.registerForm.contains('identityDocument')).toBeFalse();
     expect(fixture.nativeElement.querySelector('#identityDocument')).toBeNull();
-    expect(component.successMessage).toContain("Vérifiez votre e-mail");
-    tick(2500);
-    expect(navigateSpy).toHaveBeenCalledWith(['/login']);
-  }));
+    expect(navigateSpy).toHaveBeenCalledWith(['/login'], {
+      state: {
+        successMessage: "Compte créé. Vérifiez votre e-mail pour activer votre compte avant de vous connecter.",
+      },
+    });
+  });
+
+  it('stays on registration and displays the error when register fails', () => {
+    authServiceMock.register.and.returnValue(throwError(() => ({ error: { message: 'Adresse déjà utilisée.' } })));
+    component.registerForm.setValue({
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      phone: '',
+      password: 'password123',
+      confirmPassword: 'password123',
+    });
+
+    component.onSubmit();
+    fixture.detectChanges();
+
+    expect(navigateSpy).not.toHaveBeenCalled();
+    expect(component.errorMessage).toBe('Adresse déjà utilisée.');
+    expect(fixture.nativeElement.textContent).toContain('Adresse déjà utilisée.');
+  });
 
   it('redirects to search after Google signup when profile is already complete', () => {
     component.onGoogleCredential('google-id-token');
