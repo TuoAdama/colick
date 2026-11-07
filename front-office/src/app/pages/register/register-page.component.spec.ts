@@ -31,6 +31,8 @@ describe('RegisterPageComponent', () => {
   };
 
   beforeEach(async () => {
+    authServiceMock.register.and.returnValue(of({ id: 1 } as any));
+
     await TestBed.configureTestingModule({
       imports: [RegisterPageComponent],
       providers: [
@@ -69,7 +71,7 @@ describe('RegisterPageComponent', () => {
     expect(fixture.nativeElement.querySelector('#identityDocument')).toBeNull();
     expect(navigateSpy).toHaveBeenCalledWith(['/login'], {
       state: {
-        successMessage: "Compte créé. Vérifiez votre e-mail pour activer votre compte avant de vous connecter.",
+        successMessage: 'Pour activer votre compte, vérifiez votre e-mail et cliquez sur le lien de confirmation. Vous pourrez ensuite vous connecter.',
       },
     });
   });

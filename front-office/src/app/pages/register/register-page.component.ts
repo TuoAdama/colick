@@ -52,7 +52,7 @@ export class RegisterPageComponent {
         this.isLoading = false;
         void this.router.navigate(['/login'], {
           state: {
-            successMessage: "Compte créé. Vérifiez votre e-mail pour activer votre compte avant de vous connecter.",
+            successMessage: 'Pour activer votre compte, vérifiez votre e-mail et cliquez sur le lien de confirmation. Vous pourrez ensuite vous connecter.',
           },
         });
       },
