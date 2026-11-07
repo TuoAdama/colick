@@ -4,6 +4,10 @@
       <h1 class="text-2xl font-bold text-primary text-center mb-2">Connexion</h1>
       <p class="text-text-secondary text-center mb-8">Accédez à votre compte Coliclic</p>
 
+      @if (successMessage) {
+        <div class="bg-secondary/10 border border-secondary/30 text-secondary rounded-xl p-3 mb-6 text-sm text-center" role="status">{{ successMessage }}</div>
+      }
+
       @if (errorMessage) {
         <div class="bg-error/10 border border-error/30 text-error rounded-xl p-3 mb-6 text-sm text-center">{{ errorMessage }}</div>
       }

@@ -31,7 +31,6 @@ export class RegisterPageComponent {
   isLoading = false;
   isGoogleLoading = false;
   errorMessage = '';
-  successMessage = '';
 
   passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
     const pw = control.get('password')?.value;
@@ -51,8 +50,11 @@ export class RegisterPageComponent {
     }).subscribe({
       next: () => {
         this.isLoading = false;
-        this.successMessage = "Compte créé. Vérifiez votre e-mail pour activer votre compte avant de vous connecter.";
-        setTimeout(() => this.router.navigate(['/login']), 2500);
+        void this.router.navigate(['/login'], {
+          state: {
+            successMessage: 'Pour activer votre compte, vérifiez votre e-mail et cliquez sur le lien de confirmation. Vous pourrez ensuite vous connecter.',
+          },
+        });
       },
       error: (err: any) => {
         this.isLoading = false;
@@ -66,7 +68,6 @@ export class RegisterPageComponent {
 
     this.isGoogleLoading = true;
     this.errorMessage = '';
-    this.successMessage = '';
 
     this.authService.googleLogin(idToken).subscribe({
       next: () => {
