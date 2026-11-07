@@ -1,0 +1,175 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of, throwError } from 'rxjs';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
+import { LoginPageComponent } from './login-page.component';
+import { AuthService } from '../../services/auth.service';
+import { GoogleIdentityService } from '../../services/google-identity.service';
+
+describe('LoginPageComponent', () => {
+  let fixture: ComponentFixture<LoginPageComponent>;
+  let component: LoginPageComponent;
+  let router: Router;
+  let routeMock: { snapshot: { queryParamMap: ReturnType<typeof convertToParamMap> } };
+  const authServiceMock = {
+    login: jasmine.createSpy('login'),
+    googleLogin: jasmine.createSpy('googleLogin'),
+  };
+  const googleIdentityServiceMock = {
+    renderButton: jasmine.createSpy('renderButton').and.resolveTo(false),
+  };
+
+  beforeEach(async () => {
+    routeMock = {
+      snapshot: {
+        queryParamMap: convertToParamMap({}),
+      },
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [LoginPageComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: routeMock },
+        { provide: AuthService, useValue: authServiceMock },
+        { provide: GoogleIdentityService, useValue: googleIdentityServiceMock },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(LoginPageComponent);
+    component = fixture.componentInstance;
+    router = TestBed.inject(Router);
+    spyOn(router, 'navigate').and.resolveTo(true);
+    spyOn(router, 'navigateByUrl').and.resolveTo(true);
+  });
+
+  it('shows the generic message instead of exposing the backend account state', () => {
+    authServiceMock.login.and.returnValue(
+      throwError(() => ({
+        error: { message: 'Votre compte n\'est pas encore activé.' },
+      }))
+    );
+
+    component.loginForm.setValue({
+      email: 'john@example.com',
+      password: 'password123',
+    });
+
+    component.onSubmit();
+
+    expect(component.loginForm.get('password')?.value).toBe('');
+    expect(component.loginForm.get('email')?.value).toBe('john@example.com');
+    expect(component.errorMessage).toBe('Adresse e-mail ou mot de passe invalide.');
+  });
+
+  it('clears password and uses fallback message when backend message is missing', () => {
+    authServiceMock.login.and.returnValue(throwError(() => ({ error: {} })));
+
+    component.loginForm.setValue({
+      email: 'john@example.com',
+      password: 'password123',
+    });
+
+    component.onSubmit();
+
+    expect(component.loginForm.get('password')?.value).toBe('');
+    expect(component.loginForm.get('email')?.value).toBe('john@example.com');
+    expect(component.errorMessage).toBe('Adresse e-mail ou mot de passe invalide.');
+  });
+
+  it('shows a dedicated message when login is rate limited', () => {
+    authServiceMock.login.and.returnValue(throwError(() => ({ status: 429 })));
+    component.loginForm.setValue({ email: 'john@example.com', password: 'password123' });
+
+    component.onSubmit();
+
+    expect(component.errorMessage).toContain('Trop de tentatives');
+  });
+
+  it('always shows password setup help for Google-created accounts', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Compte créé avec Google');
+  });
+
+  it('displays the registration activation instructions in an informational style', () => {
+    component.successMessage = 'Pour activer votre compte, vérifiez votre e-mail et cliquez sur le lien de confirmation. Vous pourrez ensuite vous connecter.';
+    fixture.detectChanges();
+
+    const infoMessage = fixture.nativeElement.querySelector('[role="status"]');
+    expect(infoMessage).not.toBeNull();
+    expect(infoMessage.className).toContain('bg-secondary/10');
+    expect(infoMessage.className).toContain('border-secondary/30');
+    expect(infoMessage.className).toContain('text-secondary');
+    expect(infoMessage.textContent).toContain('cliquez sur le lien de confirmation');
+  });
+
+  it('redirects to search after Google login', () => {
+    authServiceMock.googleLogin.and.returnValue(of({
+      token: 'jwt-token',
+      type: 'Bearer',
+      user: {
+        id: 1,
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        email: 'ada@example.com',
+        role: 'USER',
+        hasPassword: false,
+      },
+    }));
+
+    component.onGoogleCredential('google-id-token');
+
+    expect(authServiceMock.googleLogin).toHaveBeenCalledWith('google-id-token');
+    expect(router.navigate).toHaveBeenCalledWith(['/search']);
+  });
+
+  it('redirects to returnUrl after login when profile is complete', () => {
+    routeMock.snapshot.queryParamMap = convertToParamMap({ returnUrl: '/trips/ref/TRP-2026-000013' });
+    authServiceMock.login.and.returnValue(of({
+      token: 'jwt-token',
+      type: 'Bearer',
+      user: {
+        id: 1,
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        email: 'ada@example.com',
+        role: 'USER',
+        hasPassword: true,
+      },
+    }));
+
+    component.loginForm.setValue({
+      email: 'ada@example.com',
+      password: 'password123',
+    });
+    component.onSubmit();
+
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/trips/ref/TRP-2026-000013');
+    expect(router.navigate).not.toHaveBeenCalledWith(['/search']);
+  });
+
+  it('ignores ambiguous returnUrl after login', () => {
+    routeMock.snapshot.queryParamMap = convertToParamMap({ returnUrl: '//example.com' });
+    authServiceMock.login.and.returnValue(of({
+      token: 'jwt-token',
+      type: 'Bearer',
+      user: {
+        id: 1,
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        email: 'ada@example.com',
+        role: 'USER',
+        hasPassword: true,
+      },
+    }));
+
+    component.loginForm.setValue({
+      email: 'ada@example.com',
+      password: 'password123',
+    });
+    component.onSubmit();
+
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['/search']);
+  });
+});

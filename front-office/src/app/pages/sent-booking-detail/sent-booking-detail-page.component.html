@@ -1,0 +1,102 @@
+<div class="booking-page" aria-labelledby="booking-title">
+  <div class="booking-column">
+    <a routerLink="/sent-bookings" class="booking-link back-link"><span aria-hidden="true">←</span><span class="back-link-label">Demandes envoyées</span></a>
+
+    @if (isLoading && !booking) {
+      <div class="booking-notice" role="status">Chargement de la demande…</div>
+    } @else if (loadError && !booking) {
+      <div class="booking-notice booking-error" role="alert">
+        <h1 id="booking-title">Impossible d'afficher cette demande</h1>
+        <p>{{ loadError }}</p>
+      </div>
+    } @else if (trip && booking) {
+      <header class="detail-heading">
+        <div class="detail-title-row">
+          <h1 id="booking-title">{{ booking.title }}</h1>
+          <span class="booking-status" [attr.data-status]="booking.status">{{ statusLabel(booking.status) }}</span>
+        </div>
+        <p class="detail-reference">
+          @if (trip.reference?.trim(); as reference) { Référence trajet : {{ reference }} }
+          @if (createdAtLabel(booking.createdAt); as date) {
+            @if (trip.reference?.trim()) { · }{{ date }}
+          }
+        </p>
+      </header>
+
+      @if (actionError) { <div class="booking-notice booking-error action-notice" role="alert">{{ actionError }}</div> }
+
+      <div class="detail-sections">
+        <section class="detail-card" aria-labelledby="route-heading">
+          <h2 id="route-heading">Trajet</h2>
+          <div class="route-cities">
+            <div>
+              <p class="city" aria-hidden="true">{{ routeCity(trip.departureAddress) }}</p>
+              @if (routeCountry(trip.departureAddress); as country) { <p class="country" aria-hidden="true">{{ country }}</p> }
+              <span class="sr-only">{{ trip.departureAddress }}</span>
+            </div>
+            <div class="route-connector" aria-hidden="true"><span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16m-6-6 6 6-6 6" /></svg><span></span></div>
+            <div class="destination">
+              <p class="city" aria-hidden="true">{{ routeCity(trip.destination) }}</p>
+              @if (routeCountry(trip.destination); as country) { <p class="country" aria-hidden="true">{{ country }}</p> }
+              <span class="sr-only">{{ trip.destination }}</span>
+            </div>
+          </div>
+          <dl class="route-dates">
+            <div><dt>Départ</dt><dd>{{ dateTimeLabel(trip.departureTime) || 'Non renseigné' }}</dd></div>
+            <div><dt>Arrivée prévue</dt><dd>{{ dateTimeLabel(trip.arrivalTime) || 'Non renseignée' }}</dd></div>
+          </dl>
+        </section>
+
+        <section class="detail-card" aria-labelledby="parcel-heading">
+          <h2 id="parcel-heading">Votre colis</h2>
+          <dl class="parcel-fields">
+            <div><dt>Poids</dt><dd>{{ booking.weight | number:'1.0-2' }} kg</dd></div>
+            <div><dt>Description</dt><dd class="description">{{ booking.description || 'Aucune description fournie.' }}</dd></div>
+            <div><dt>Destinataire</dt><dd>
+              <span>{{ booking.recipientContact || 'Non renseigné' }}</span>
+              @if (booking.recipientContact) {
+                <div class="contact-actions">
+                  <button type="button" class="booking-link" (click)="copyRecipientContact()" [disabled]="isCopyingContact">{{ isCopyingContact ? 'Copie…' : 'Copier le contact' }}</button>
+                  @if (phoneHref(booking.recipientContact); as href) { <a class="booking-link" [href]="href">Appeler</a> }
+                </div>
+              }
+            </dd></div>
+          </dl>
+          <p class="contact-feedback" [class.copy-error]="contactCopyFailed" role="status">{{ contactCopyFeedback }}</p>
+          @if (booking.packagePhotoUrl) {
+            <img class="parcel-photo" [src]="booking.packagePhotoUrl" [alt]="'Photo du colis ' + booking.title" loading="lazy" decoding="async" />
+          } @else if (canCancelBooking()) {
+            <div class="photo-upload">
+              <button type="button" class="booking-link" [disabled]="isProcessing" (click)="photoInput.click()">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linejoin="round" d="M3 7h4l2-3h6l2 3h4v13H3Z"/><circle cx="12" cy="13" r="4"/></svg>
+                Ajouter une photo
+              </button>
+              <input #photoInput type="file" hidden aria-label="Photo du colis" accept="image/jpeg,image/png,image/webp" (change)="retryPhotoUpload($event)" />
+              <p class="photo-help">Facultatif · JPEG, PNG ou WebP · 5 Mo maximum</p>
+            </div>
+          }
+          @if (photoMessage) { <p class="photo-feedback" role="status">{{ photoMessage }}</p> }
+        </section>
+
+        <section class="detail-card" aria-labelledby="traveler-heading">
+          <h2 id="traveler-heading">Voyageur et tarif</h2>
+          <div class="traveler">
+            <app-user-avatar [name]="trip.travelerName" [photoUrl]="trip.travelerPhotoUrl" sizeClasses="w-12 h-12" textClasses="text-base" />
+            <div><p class="traveler-name">{{ trip.travelerName }}</p><p class="muted">{{ travelerRatingLabel() || 'Aucun avis pour le moment' }}</p></div>
+          </div>
+          <p class="price-calculation">{{ booking.weight | number:'1.0-2' }} kg × {{ trip.pricePerKilo | number:'1.0-2' }} €/kg</p>
+          <div class="price-total"><span>Total estimé</span><strong>{{ grossAmount() | number:'1.0-2' }} €</strong></div>
+          @if (isFreeBooking()) { <p class="settlement">Règlement à convenir avec le voyageur.</p> }
+        </section>
+      </div>
+      <div class="detail-actions">
+        <button type="button" class="message-button" [disabled]="isProcessing" (click)="messageTraveler()">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linejoin="round" d="M21 11.5a9 9 0 0 1-9 9 10 10 0 0 1-4-.8L3 21l1.3-4.5A9 9 0 1 1 21 11.5Z" /></svg>
+          Contacter le voyageur
+        </button>
+        @if (canCancelBooking()) { <button type="button" class="cancel-button" [disabled]="isProcessing" (click)="cancelBooking()">Annuler la demande</button> }
+        @if (isProcessing) { <p class="muted processing-status" role="status">Traitement en cours…</p> }
+      </div>
+    }
+  </div>
+</div>

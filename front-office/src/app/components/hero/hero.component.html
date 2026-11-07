@@ -1,0 +1,123 @@
+<!-- Hero Section -->
+<section class="hero-gradient min-h-screen flex items-center pt-16" aria-labelledby="hero-title">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+    <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <!-- Left Content -->
+      <div class="text-white">
+        <!-- Title -->
+        <h1 id="hero-title" class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
+          Envoyez vos colis avec des <span class="text-accent">voyageurs</span> de confiance
+        </h1>
+
+        <!-- Description -->
+        <p class="text-lg sm:text-xl text-white/80 mb-8 max-w-lg">
+          Mettez en relation des personnes qui voyagent et des personnes qui souhaitent faire transporter leurs colis. Paris → Abidjan, et bien plus encore.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <!-- Primary CTA: solid accent fill on all sizes; lighter, tighter presentation on desktop -->
+          <a routerLink="/search"
+             class="inline-flex items-center justify-center rounded-full transition
+                    bg-accent text-white font-bold
+                    px-8 py-4 text-lg shadow-xl shadow-accent/40
+                    hover:bg-opacity-90
+                    lg:px-6 lg:py-2.5 lg:text-sm lg:font-semibold lg:shadow-md lg:shadow-accent/20
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-transparent">
+            <svg class="w-5 h-5 mr-2 lg:w-4 lg:h-4 lg:mr-1.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Rechercher un voyage
+          </a>
+
+          <!-- Secondary CTA: solid white on mobile → ghost outline on desktop for clear hierarchy -->
+          <a routerLink="/propose"
+             class="inline-flex items-center justify-center rounded-full transition
+                    bg-white text-primary font-bold shadow-xl
+                    px-8 py-4 text-lg
+                    hover:bg-opacity-90
+                    lg:bg-transparent lg:text-white lg:font-medium lg:border lg:border-white/60
+                    lg:px-6 lg:py-2.5 lg:text-sm lg:shadow-none
+                    lg:hover:bg-white/10
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-1 focus-visible:ring-offset-transparent">
+            <svg class="w-5 h-5 mr-2 lg:w-4 lg:h-4 lg:mr-1.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+            Proposer un voyage
+          </a>
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="flex items-center gap-8 mt-10 text-white/70 text-sm flex-wrap">
+          @for (badge of trustBadges; track badge.label) {
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>{{ badge.label }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Right Content - Search Preview Card -->
+      <div class="hidden lg:block">
+        <div class="relative">
+          <!-- Background decorations -->
+          <div class="absolute -top-4 -left-4 w-72 h-72 bg-accent/30 rounded-full blur-3xl"></div>
+          <div class="absolute -bottom-8 -right-8 w-64 h-64 bg-secondary/40 rounded-full blur-3xl"></div>
+
+          <!-- Search Card -->
+          <div class="relative bg-white rounded-3xl shadow-2xl p-8">
+            <!-- Card Header -->
+            <div class="flex items-center gap-4 mb-6">
+              <div class="w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div>
+                <p class="font-semibold text-primary">Recherche rapide</p>
+                <p class="text-sm text-text-muted">Trouvez un voyageur en quelques clics</p>
+              </div>
+            </div>
+
+            <!-- Search Form Preview -->
+            <div class="space-y-4">
+              <app-autocomplete
+                label="Départ"
+                placeholder="Ex: Paris, France"
+                (selected)="onDepartureSelected($event)"
+              />
+              <app-autocomplete
+                label="Destination"
+                placeholder="Ex: Abidjan, Côte d'Ivoire"
+                (selected)="onDestinationSelected($event)"
+              />
+              <button
+                (click)="search()"
+                class="w-full bg-accent text-white font-bold py-4 rounded-xl hover:bg-opacity-90 transition mt-2">
+                Rechercher
+              </button>
+            </div>
+
+            <!-- Available Travelers -->
+            <div class="mt-6 pt-6 border-t border-gray-100">
+              <p class="text-sm text-text-muted mb-3">3 voyageurs disponibles</p>
+              <div class="flex -space-x-3">
+                @for (traveler of availableTravelers; track traveler.initials) {
+                  <div [class]="traveler.bgColor + ' w-10 h-10 rounded-full border-2 border-white flex items-center justify-center text-white font-semibold text-sm'">
+                    {{ traveler.initials }}
+                  </div>
+                }
+                <div class="w-10 h-10 bg-gray-200 rounded-full border-2 border-white flex items-center justify-center text-text-secondary font-semibold text-sm">
+                  +2
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

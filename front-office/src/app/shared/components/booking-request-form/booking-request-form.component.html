@@ -1,0 +1,333 @@
+@if (trip) {
+  <section #bookingRequestCard class="scroll-mt-24" [class.bg-background-primary]="!successMessage" aria-labelledby="booking-page-title">
+      @if (successMessage && createdBooking) {
+        <div class="mx-auto max-w-2xl px-2 pb-12 pt-5 font-body sm:px-8 sm:pt-8" data-testid="booking-confirmation">
+          <h1 #confirmationTitle id="booking-page-title" tabindex="-1" class="text-2xl font-bold leading-tight text-primary outline-none sm:text-3xl">Demande envoyée</h1>
+          <p class="mt-2 text-lg leading-relaxed text-text-secondary" role="status">
+            {{ createdBooking.status === 'ACCEPTED' ? 'Votre demande a été acceptée.' : 'Votre demande est en cours de traitement.' }}
+          </p>
+
+          <p class="mt-6 flex flex-wrap items-baseline gap-x-4 gap-y-2 text-lg text-primary sm:text-xl" data-testid="confirmation-route">
+            <span class="min-w-0 font-bold [overflow-wrap:anywhere]">{{ departure.city }} <span class="mx-1" aria-hidden="true">→</span><span class="sr-only">vers</span> {{ destination.city }}</span>
+            <span class="border-l border-gray-200 pl-4 text-text-secondary">{{ trip.pricePerKilo }} €/kg</span>
+          </p>
+
+          <section class="mt-8 border-t border-gray-200 pt-7" aria-labelledby="booking-next-steps">
+            <h2 id="booking-next-steps" class="text-base font-bold text-primary sm:text-lg">Prochaines étapes</h2>
+            <ol class="mt-8 space-y-0">
+              <li class="relative flex gap-7 pb-12 before:absolute before:bottom-2 before:left-[17px] before:top-10 before:w-px before:bg-gray-200 sm:gap-8">
+                <svg class="h-9 w-9 shrink-0 text-primary" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="16" cy="16" r="13"/><path d="m10 16 4 4 8-9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <div class="min-w-0 pt-0.5"><h3 class="text-lg font-bold text-primary">Transmission</h3><p class="mt-1 text-base leading-relaxed text-text-secondary">Le voyageur a reçu votre demande.</p></div>
+              </li>
+              <li class="relative flex gap-7 pb-12 before:absolute before:bottom-2 before:left-[17px] before:top-10 before:w-px before:bg-gray-200 sm:gap-8">
+                <svg class="h-9 w-9 shrink-0" [class.text-text-secondary]="createdBooking.status !== 'ACCEPTED'" [class.text-primary]="createdBooking.status === 'ACCEPTED'" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                  <circle cx="16" cy="16" r="13"/>
+                  @if (createdBooking.status === 'ACCEPTED') { <path d="m10 16 4 4 8-9" stroke-linecap="round" stroke-linejoin="round"/> } @else { <path d="M16 8v9h6" stroke-linecap="round" stroke-linejoin="round"/> }
+                </svg>
+                <div class="min-w-0 pt-0.5"><h3 class="text-lg font-bold text-primary">Réponse du voyageur</h3><p class="mt-1 text-base leading-relaxed text-text-secondary">{{ createdBooking.status === 'ACCEPTED' ? 'Votre demande a été acceptée.' : 'En attente de son acceptation.' }}</p></div>
+              </li>
+              <li class="flex gap-7 sm:gap-8">
+                <svg class="h-9 w-9 shrink-0 text-text-secondary" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="6" width="26" height="20" rx="1.5"/><path d="m4 8 12 10L28 8" stroke-linejoin="round"/></svg>
+                <div class="min-w-0 pt-0.5"><h3 class="text-lg font-bold text-primary">Code par e-mail</h3><p class="mt-1 text-base leading-relaxed text-text-secondary">{{ codeDeliveryMessage }}</p></div>
+              </li>
+            </ol>
+          </section>
+
+          <div class="mt-14 flex flex-col items-stretch gap-6">
+            <a [routerLink]="['/sent-bookings', createdBooking.tripId, createdBooking.id]" class="inline-flex min-h-12 items-center justify-center rounded-lg bg-accent px-4 py-4 text-center text-lg font-bold text-white transition hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent" data-testid="booking-follow-link">Suivre ma demande</a>
+            <a [routerLink]="resultsLink" class="self-center rounded text-base text-primary underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent" data-testid="booking-results-link">Retour aux résultats</a>
+          </div>
+        </div>
+      } @else {
+      <header class="px-5 pt-5 sm:px-8 sm:pt-6" data-testid="booking-request-header">
+        <p class="text-base text-text-muted">Votre trajet</p>
+        <p class="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-3xl font-bold leading-tight text-primary sm:text-4xl" data-testid="booking-route">
+          <span class="min-w-0 [overflow-wrap:anywhere]">{{ departure.city }}</span>
+          <span class="font-normal text-accent" aria-hidden="true">→</span>
+          <span class="sr-only">vers</span>
+          <span class="min-w-0 [overflow-wrap:anywhere]">{{ destination.city }}</span>
+        </p>
+        @if (departure.country || destination.country) {
+          <p class="mt-1 flex flex-wrap items-baseline gap-x-2 text-base text-text-muted sm:text-lg" data-testid="booking-countries">
+            <span>{{ departure.country }}</span>
+            @if (departure.country && destination.country) {
+              <span aria-hidden="true">→</span>
+              <span class="sr-only">vers</span>
+            }
+            <span>{{ destination.country }}</span>
+          </p>
+        }
+        <p class="mt-4 text-base text-primary sm:text-lg" data-testid="booking-capacity">
+          {{ trip.availableWeight }} kg disponibles · {{ trip.pricePerKilo }} €/kg
+        </p>
+
+        <a
+          [routerLink]="['/travelers', trip.travelerId]"
+          target="_blank"
+          rel="noopener noreferrer"
+          [attr.aria-label]="'Voir le profil de ' + trip.travelerName + ' (nouvel onglet)'"
+          title="Ouvrir le profil dans un nouvel onglet pour conserver votre demande"
+          class="mt-5 flex min-h-12 items-center gap-2 rounded-lg text-primary transition hover:bg-accent/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent sm:mt-6 sm:gap-4"
+          data-testid="booking-traveler-profile">
+          <app-user-avatar
+            class="shrink-0"
+            [name]="trip.travelerName"
+            [photoUrl]="trip.travelerPhotoUrl"
+            sizeClasses="h-12 w-12"
+            textClasses="text-lg"
+            tone="accent" />
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-base font-bold sm:text-lg" [title]="trip.travelerName">{{ trip.travelerName }}</span>
+            <span class="block text-xs text-text-secondary sm:text-base">Votre voyageur</span>
+          </span>
+          <span class="flex shrink-0 items-center gap-2 text-sm font-semibold sm:text-base">
+            Voir le profil
+            <svg class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="m9 5 7 7-7 7" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+        </a>
+
+        <div class="mt-6 border-t border-gray-200 pt-4 sm:mt-7 sm:pt-5">
+          <p class="text-base font-medium text-accent" data-testid="booking-step">Étape {{ currentStep }} sur 2</p>
+          <h1 id="booking-page-title" tabindex="-1" class="mt-1 text-3xl font-bold leading-tight text-primary sm:text-4xl">
+            {{ currentStep === 1 ? 'Votre colis' : 'Photo et sécurité' }}
+          </h1>
+        </div>
+      </header>
+
+      <!-- ─── Body ─── -->
+      <div class="px-5 py-5 sm:px-8 sm:py-6">
+
+        <!-- Error alert -->
+        @if (errorMessage) {
+          <div
+            class="flex items-start gap-3 rounded-xl bg-error/10 border border-error/20
+                   p-4 mb-5 animate-[fadeIn_200ms_ease-out]"
+            role="alert">
+            <svg class="w-5 h-5 text-error shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <p class="text-sm text-error font-medium">{{ errorMessage }}</p>
+          </div>
+        }
+
+        <!-- Form (hidden on success) -->
+        @if (!successMessage) {
+          <form
+            [formGroup]="bookingForm"
+            (ngSubmit)="onSubmit()"
+            class="space-y-5"
+            id="booking-form">
+
+            @if (currentStep === 1) {
+
+            <!-- Intitulé du colis -->
+            <div>
+              <label for="booking-title" class="block text-sm font-medium text-text-primary mb-1.5">
+                Intitulé du colis
+                <span class="text-error" aria-hidden="true">*</span>
+              </label>
+              <input
+                id="booking-title"
+                type="text"
+                formControlName="title"
+                placeholder="Ex : Vêtements, électronique…"
+                autocomplete="off"
+                [attr.aria-invalid]="bookingForm.get('title')?.touched && bookingForm.get('title')?.invalid"
+                aria-describedby="title-error"
+                class="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-text-primary
+                       placeholder:text-text-muted bg-white
+                       focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary
+                       transition-shadow" />
+              @if (bookingForm.get('title')?.touched && bookingForm.get('title')?.hasError('required')) {
+                <p id="title-error" class="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                  </svg>
+                  L'intitulé est requis
+                </p>
+              }
+            </div>
+
+            <!-- Poids (kg) -->
+            <div>
+              <label for="booking-weight" class="block text-sm font-medium text-text-primary mb-1.5">
+                Poids (kg)
+                <span class="text-error" aria-hidden="true">*</span>
+              </label>
+              <input
+                id="booking-weight"
+                type="number"
+                formControlName="weight"
+                placeholder="Ex : 5"
+                step="0.1"
+                min="0.1"
+                [max]="trip.availableWeight"
+                [attr.aria-invalid]="bookingForm.get('weight')?.touched && bookingForm.get('weight')?.invalid"
+                aria-describedby="weight-hint weight-error"
+                class="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-text-primary
+                       placeholder:text-text-muted bg-white
+                       focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary
+                       transition-shadow" />
+              <p id="weight-hint" class="mt-1.5 text-xs text-text-muted">
+                Maximum {{ trip.availableWeight }} kg disponibles · {{ trip.pricePerKilo }} €/kg
+              </p>
+              @if (bookingForm.get('weight')?.touched && bookingForm.get('weight')?.hasError('required')) {
+                <p id="weight-error" class="mt-1 text-xs text-error flex items-center gap-1" role="alert">
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                  </svg>
+                  Le poids est requis
+                </p>
+              }
+              @if (bookingForm.get('weight')?.touched && bookingForm.get('weight')?.hasError('min')) {
+                <p id="weight-error" class="mt-1 text-xs text-error flex items-center gap-1" role="alert">
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                  </svg>
+                  Le poids minimum est de 0,1 kg
+                </p>
+              }
+            </div>
+
+            <!-- Description (optionnelle) -->
+            <div>
+              <label for="booking-description" class="block text-sm font-medium text-text-primary mb-1.5">
+                Description
+                <span class="text-text-muted font-normal">(optionnelle)</span>
+              </label>
+              <textarea
+                id="booking-description"
+                formControlName="description"
+                rows="3"
+                placeholder="Décrivez le contenu du colis…"
+                class="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-text-primary
+                       placeholder:text-text-muted bg-white resize-none
+                       focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary
+                       transition-shadow"></textarea>
+            </div>
+
+            <!-- Contact du destinataire -->
+            <div>
+              <label for="booking-recipient" class="block text-sm font-medium text-text-primary mb-1.5">
+                Contact du destinataire
+                <span class="text-error" aria-hidden="true">*</span>
+              </label>
+              <input
+                id="booking-recipient"
+                type="text"
+                formControlName="recipientContact"
+                placeholder="Ex : +22507000000 ou destinataire@email.com"
+                autocomplete="off"
+                [attr.aria-invalid]="bookingForm.get('recipientContact')?.touched && bookingForm.get('recipientContact')?.invalid"
+                aria-describedby="recipient-hint recipient-error"
+                class="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-text-primary
+                       placeholder:text-text-muted bg-white
+                       focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary
+                       transition-shadow" />
+              <p id="recipient-hint" class="mt-1.5 text-xs text-text-muted">
+                Le voyageur reçoit ce contact avec votre demande. Après acceptation, le code de remise est envoyé par e-mail à l’adresse de votre compte.
+              </p>
+              @if (bookingForm.get('recipientContact')?.touched && bookingForm.get('recipientContact')?.hasError('required')) {
+                <p id="recipient-error" class="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                  </svg>
+                  Le contact du destinataire est requis
+                </p>
+              }
+              @if (bookingForm.get('recipientContact')?.touched && bookingForm.get('recipientContact')?.hasError('recipientContact')) {
+                <p id="recipient-error" class="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                  </svg>
+                  Saisissez un numéro de téléphone ou une adresse e-mail valide
+                </p>
+              }
+            </div>
+            } @else {
+              <section aria-labelledby="booking-photo-title">
+                <h3 id="booking-photo-title" class="text-base font-bold text-primary">Photo du colis <span class="font-normal text-text-muted">(facultative)</span></h3>
+                <p class="mt-1 text-xs text-text-secondary">JPEG, PNG ou WebP · 5 Mo maximum.</p>
+                @if (photoPreviewUrl) {
+                  <div class="mt-3 overflow-hidden rounded-xl border border-border bg-background-primary p-3">
+                    <img [src]="photoPreviewUrl" alt="Aperçu de la photo du colis" class="h-44 w-full rounded-lg object-contain" />
+                    <button type="button" class="mt-2 text-sm font-semibold text-error" (click)="removePhoto()">Retirer la photo</button>
+                  </div>
+                } @else {
+                  <label for="booking-photo" class="mt-3 flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-background-primary px-4 text-center hover:border-accent">
+                    <span class="material-symbols-outlined text-3xl text-accent" aria-hidden="true">add_a_photo</span>
+                    <span class="mt-1 text-sm font-semibold text-primary">Ajouter une photo</span>
+                  </label>
+                  <input id="booking-photo" type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" (change)="onPhotoSelected($event)" />
+                }
+                @if (photoError) { <p class="mt-2 text-xs text-error" role="alert">{{ photoError }}</p> }
+              </section>
+
+              @if (guidelines) {
+                <section class="rounded-xl border border-warning/30 bg-warning/5 p-4" aria-labelledby="prohibited-title">
+                  <h3 id="prohibited-title" class="font-bold text-primary">Objets interdits</h3>
+                  <ul class="mt-2 list-disc space-y-1 pl-5 text-xs leading-5 text-text-secondary">
+                    @for (item of guidelines.prohibitedItems; track item) { <li>{{ item }}</li> }
+                  </ul>
+                  <h4 class="mt-4 font-semibold text-primary">Recommandations d’emballage</h4>
+                  <ul class="mt-2 list-disc space-y-1 pl-5 text-xs leading-5 text-text-secondary">
+                    @for (item of guidelines.packagingRecommendations; track item) { <li>{{ item }}</li> }
+                  </ul>
+                </section>
+                <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-border p-4 text-sm text-primary">
+                  <input type="checkbox" formControlName="parcelPolicyAccepted" class="mt-0.5 h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent" />
+                  <span>Je confirme que mon colis ne contient aucun objet interdit et respecte les règles du transporteur et des douanes.</span>
+                </label>
+              } @else if (guidelinesError) {
+                <p class="rounded-xl bg-error/10 p-4 text-sm text-error" role="alert">{{ guidelinesError }}</p>
+              } @else {
+                <p class="text-sm text-text-secondary" role="status">Chargement des règles…</p>
+              }
+            }
+          </form>
+        }
+      </div>
+
+      <!-- ─── Footer ─── -->
+      <div class="border-t border-gray-100 px-5 py-5 sm:px-8 sm:py-6">
+        @if (!successMessage) {
+          <div class="flex flex-col-reverse sm:flex-row gap-3 pt-1">
+            <!-- Cancel -->
+            <button
+              type="button"
+              (click)="currentStep === 2 ? backToDetails() : cancel()"
+              class="btn-outline flex-1 !py-3 !text-sm !px-6">
+              {{ currentStep === 2 ? 'Retour aux informations' : 'Retour au trajet' }}
+            </button>
+
+            @if (currentStep === 1) {
+              <button type="button" (click)="continueToPhoto()" class="btn-primary flex-1 !py-3 !text-sm !px-6">Continuer</button>
+            } @else if (photoUploadFailed) {
+              <button type="button" (click)="retryPhotoUpload()" [disabled]="isLoading" class="btn-primary flex-1 !py-3 !text-sm !px-6">Réessayer la photo</button>
+            } @else {
+            <button type="submit" form="booking-form" [disabled]="bookingForm.invalid || isLoading || !guidelines"
+              class="btn-primary flex-1 !py-3 !text-sm !px-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+              @if (isLoading) {
+                <!-- Spinner -->
+                <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                Envoi en cours…
+              } @else {
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 12 59.768 59.768 0 013.27 20.875L5.999 12zm0 0h7.5" />
+                </svg>
+                Envoyer la demande
+              }
+            </button>
+            }
+          </div>
+        }
+      </div>
+
+      }
+  </section>
+}
