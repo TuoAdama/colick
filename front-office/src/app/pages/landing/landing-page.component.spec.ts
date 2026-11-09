@@ -106,8 +106,7 @@ describe('LandingPageComponent', () => {
       expect(video?.getAttribute('poster')).toBe('/videos/parcours-voyageur-v1.webp');
       expect(source?.type).toBe('video/mp4');
       expect(source?.getAttribute('src')).toBe('/videos/parcours-voyageur-v1.mp4');
-      expect(section?.querySelector('a')?.getAttribute('href')).toBe(source?.getAttribute('src'));
-      expect(section?.querySelector('details li:last-child')?.textContent).toContain('Accepter');
+      expect(section?.querySelector('a, details')).toBeNull();
     });
   }
 
