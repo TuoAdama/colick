@@ -85,6 +85,39 @@ describe('LandingPageComponent', () => {
     expect(dateInput?.closest('label')?.textContent).toContain('À partir de');
   });
 
+  for (const mode of ['send', 'transport'] as const) {
+    it(`shows both journey videos after the recommendations in ${mode} mode`, () => {
+      fixture.detectChanges();
+      component.selectMode(mode);
+      fixture.detectChanges();
+
+      const host = fixture.nativeElement as HTMLElement;
+      const travelerSection = host.querySelector('.recommendations')?.nextElementSibling;
+      const senderSection = travelerSection?.nextElementSibling;
+      expect(senderSection?.nextElementSibling?.id).toBe('securite');
+
+      for (const { section, titleId, title, assetPath } of [
+        { section: travelerSection, titleId: 'traveler-video-title', title: 'Le parcours voyageur', assetPath: '/videos/parcours-voyageur-v1' },
+        { section: senderSection, titleId: 'sender-video-title', title: 'Le parcours expéditeur', assetPath: '/videos/parcours-expediteur-v1' },
+      ]) {
+        const video = section?.querySelector('video');
+        const source = video?.querySelector('source');
+
+        expect(section?.getAttribute('aria-labelledby')).toBe(titleId);
+        expect(section?.querySelector(`#${titleId}`)?.textContent?.trim()).toBe(title);
+        expect(video?.getAttribute('aria-labelledby')).toBe(titleId);
+        expect(video?.controls).toBeTrue();
+        expect(video?.playsInline).toBeTrue();
+        expect(video?.autoplay).toBeFalse();
+        expect(video?.preload).toBe('none');
+        expect(video?.getAttribute('poster')).toBe(`${assetPath}.webp`);
+        expect(source?.type).toBe('video/mp4');
+        expect(source?.getAttribute('src')).toBe(`${assetPath}.mp4`);
+        expect(section?.querySelector('a, details')).toBeNull();
+      }
+    });
+  }
+
   it('marks departure and destination as required in both landing search forms', () => {
     fixture.detectChanges();
 

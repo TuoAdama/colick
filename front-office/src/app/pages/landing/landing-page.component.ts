@@ -76,6 +76,21 @@ export class LandingPageComponent implements OnInit, OnDestroy {
   activeMode: LandingMode = 'send';
   trips: LandingTripCard[] = [];
 
+  readonly journeyVideos = [
+    {
+      titleId: 'traveler-video-title',
+      audience: 'voyageur',
+      assetPath: '/videos/parcours-voyageur-v1',
+      description: 'En 35 secondes, découvrez comment publier un trajet et accepter une demande de transport sur Coliclic.',
+    },
+    {
+      titleId: 'sender-video-title',
+      audience: 'expéditeur',
+      assetPath: '/videos/parcours-expediteur-v1',
+      description: 'En 35 secondes, découvrez comment choisir un trajet, décrire votre colis et suivre votre demande sur Coliclic.',
+    },
+  ];
+
   get isLoggedIn(): boolean {
     return this.authService.isLoggedIn();
   }

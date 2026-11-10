@@ -91,6 +91,27 @@
     }
   </div>
 </section>
+@for (video of journeyVideos; track video.titleId) {
+  <section class="shell pb-14 lg:pb-20" [attr.aria-labelledby]="video.titleId">
+    <div class="mx-auto max-w-4xl">
+      <h2 [id]="video.titleId" class="section-title">Le parcours <span class="text-accent">{{ video.audience }}</span></h2>
+      <p class="mt-3 text-sm leading-6 text-text-secondary">{{ video.description }}</p>
+
+      <video
+        class="mt-5 block aspect-video h-auto w-full rounded-2xl bg-primary"
+        [attr.aria-labelledby]="video.titleId"
+        width="1920"
+        height="1080"
+        controls
+        playsinline
+        preload="none"
+        [poster]="video.assetPath + '.webp'"
+      >
+        <source [src]="video.assetPath + '.mp4'" type="video/mp4">
+      </video>
+    </div>
+  </section>
+}
 <section id="securite" class="bg-background-primary py-14 lg:py-20">
   <div class="mx-auto max-w-[1140px] px-4 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-3xl text-center">
