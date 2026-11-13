@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
+import { Component, DestroyRef, ElementRef, OnInit, effect, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink, UrlTree } from '@angular/router';
 import { catchError, combineLatest, of, switchMap } from 'rxjs';
@@ -7,6 +7,7 @@ import { Trip } from '../../models/trip.model';
 import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
 import { AnalyticsService } from '../../services/analytics.service';
+import { CommercialContentService } from '../../services/commercial-content.service';
 import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
 
 @Component({
@@ -23,11 +24,31 @@ export class TripDetailPageComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly analytics = inject(AnalyticsService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
+  private readonly mobileBooking = viewChild<ElementRef<HTMLElement>>('mobileBooking');
+  readonly commercialContent = inject(CommercialContentService).content;
 
   trip: Trip | null = null;
   isLoading = true;
   returnUrl = '/search';
   source = 'trip_reference';
+
+  constructor() {
+    effect((onCleanup) => {
+      const bar = this.mobileBooking()?.nativeElement;
+      if (!bar || !this.commercialContent().tripBookingPaymentNote || typeof ResizeObserver === 'undefined') return;
+
+      const style = this.document.body.style;
+      const observer = new ResizeObserver(() => {
+        style.setProperty('--trip-booking-bar-height', `${bar.offsetHeight}px`);
+      });
+      observer.observe(bar, { box: 'border-box' });
+      onCleanup(() => {
+        observer.disconnect();
+        style.removeProperty('--trip-booking-bar-height');
+      });
+    });
+  }
 
   ngOnInit(): void {
     combineLatest([this.route.paramMap, this.route.queryParamMap]).pipe(

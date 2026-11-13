@@ -1,3 +1,6 @@
+import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from './app.routes';
 
 describe('app routes', () => {
@@ -63,6 +66,7 @@ describe('app routes', () => {
       'a-propos',
       'tarifs',
       'aide',
+      'aide/reglement-du-transport',
       'cgu',
       'confidentialite',
       'mentions-legales',
@@ -77,6 +81,19 @@ describe('app routes', () => {
       expect(route?.data?.['seo']?.title).withContext(path).toBeTruthy();
       expect(route?.data?.['seo']?.description).withContext(path).toBeTruthy();
     }
+  });
+
+  it('opens the transport payment help page directly without a session', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter(routes)] });
+    const url = '/aide/reglement-du-transport';
+    const harness = await RouterTestingHarness.create(url);
+    const page = harness.routeNativeElement;
+
+    expect(TestBed.inject(Router).url).toBe(url);
+    expect(page?.querySelector('h1')?.textContent).toBe('Comment régler le transport ?');
+    expect(page?.querySelector('#reglement-direct p')?.textContent).toContain('Vous réglez le transport directement avec lui.');
+    expect(page?.querySelector('#moyen-de-paiement p')?.textContent).toContain('Wero, un virement instantané ou PayPal');
+    expect(page?.querySelector('#confirmation p')?.textContent).toContain('Le règlement reste à organiser entre vous.');
   });
 
   it('prevents indexing legal drafts until their mandatory information is validated', () => {

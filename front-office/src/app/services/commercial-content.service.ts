@@ -19,6 +19,7 @@ export interface CommercialContent {
   bookingGrossLabel: string;
   bookingFeeLabel: string;
   bookingNetLabel: string;
+  tripBookingPaymentNote?: string;
   shareCardTrustLabel: string;
   footerCommercialLink: string;
 }
@@ -41,6 +42,7 @@ export const COMMERCIAL_CONTENT: Record<CommercialContentVariant, CommercialCont
     bookingGrossLabel: 'Montant convenu',
     bookingFeeLabel: 'Frais Coliclic',
     bookingNetLabel: 'Montant pour le voyageur',
+    tripBookingPaymentNote: 'Vous réglez le transport directement au voyageur. Coliclic ne facture pas de frais de service.',
     shareCardTrustLabel: 'Mise en relation gratuite',
     footerCommercialLink: 'Plateforme gratuite',
   },

@@ -1,6 +1,7 @@
 export type TrustDocumentSlug =
   | 'about'
   | 'help'
+  | 'transport-payment'
   | 'terms'
   | 'privacy'
   | 'legal-notice'
