@@ -19,10 +19,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriUtils;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Implementation of {@link UserService}.
@@ -30,6 +35,8 @@ import java.util.UUID;
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
+
+    private static final Pattern CONTROL_CHARACTERS = Pattern.compile("\\p{Cc}");
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -69,10 +76,15 @@ public class UserServiceImpl implements UserService {
                 .role(User.Role.USER)
                 .build();
         User createdUser = userRepository.save(user);
+        String confirmUrl = buildConfirmEmailUrl(signupToken);
+        String returnUrl = request.getReturnUrl();
+        if (isInternalReturnUrl(returnUrl)) {
+            confirmUrl += "&returnUrl=" + UriUtils.encode(returnUrl, StandardCharsets.UTF_8);
+        }
         emailService.sendSignupActivationEmail(
                 createdUser.getEmail(),
                 createdUser.getFirstName(),
-                buildConfirmEmailUrl(signupToken)
+                confirmUrl
         );
         return UserResponse.from(createdUser);
     }
@@ -160,6 +172,22 @@ public class UserServiceImpl implements UserService {
             baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
         }
         return baseUrl + "/confirm-email?token=" + token;
+    }
+
+    private boolean isInternalReturnUrl(String value) {
+        if (value == null || !value.startsWith("/") || value.startsWith("//")) {
+            return false;
+        }
+
+        try {
+            URI uri = new URI(value);
+            String path = uri.getPath();
+            return !path.contains("//") && !path.contains("\\")
+                    && !CONTROL_CHARACTERS.matcher(uri.getSchemeSpecificPart()).find()
+                    && (uri.getFragment() == null || !CONTROL_CHARACTERS.matcher(uri.getFragment()).find());
+        } catch (URISyntaxException e) {
+            return false;
+        }
     }
 
     /**

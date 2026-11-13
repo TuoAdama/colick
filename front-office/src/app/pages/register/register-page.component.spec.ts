@@ -66,10 +66,12 @@ describe('RegisterPageComponent', () => {
       email: 'john@example.com',
       phone: undefined,
       password: 'password123',
+      returnUrl: undefined,
     });
     expect(component.registerForm.contains('identityDocument')).toBeFalse();
     expect(fixture.nativeElement.querySelector('#identityDocument')).toBeNull();
     expect(navigateSpy).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: undefined },
       state: {
         successMessage: 'Pour activer votre compte, vérifiez votre e-mail et cliquez sur le lien de confirmation. Vous pourrez ensuite vous connecter.',
       },

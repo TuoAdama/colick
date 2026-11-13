@@ -19,6 +19,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,6 +30,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.mockito.Spy;
 import org.springframework.context.i18n.LocaleContextHolder;
 
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -107,8 +112,51 @@ class UserServiceImplTest {
         verify(emailService).sendSignupActivationEmail(
                 eq("john@example.com"),
                 eq("John"),
-                contains("confirm-email?token=")
+                eq("http://localhost:4200/confirm-email?token=" + userCaptor.getValue().getSignupConfirmToken())
         );
+    }
+
+    @Test
+    void createUser_shouldEncodeReturnUrlInSignupLink() {
+        String returnUrl = "/trips/ref/TRP-2026-000013/request?returnUrl=%2Ftrips%2Fref%2FTRP-2026-000013"
+                + "&resultsReturnUrl=%2Fsearch%3Ffrom%3DParis%26to%3DAbidjan&source=search_results#booking";
+        ReflectionTestUtils.setField(userService, "frontendBaseUrl", "https://coliclic.example/");
+        URI link = createUserAndCaptureSignupLink(returnUrl);
+
+        assertThat(link.getHost()).isEqualTo("coliclic.example");
+        assertThat(link.getPath()).isEqualTo("/confirm-email");
+        assertThat(link.getFragment()).isNull();
+        String[] params = link.getRawQuery().split("&");
+        assertThat(params).hasSize(2);
+        assertThat(params[0]).startsWith("token=");
+        assertThat(params[1]).startsWith("returnUrl=");
+        assertThat(URLDecoder.decode(params[1].substring("returnUrl=".length()), StandardCharsets.UTF_8))
+                .isEqualTo(returnUrl);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"https://example.com", "//example.com", "/%2Fexample.com", "/%5Cexample.com", "/%0Aexample.com", "/search?from=%ZZ"})
+    void createUser_shouldOmitInvalidReturnUrlFromSignupLink(String returnUrl) {
+        URI link = createUserAndCaptureSignupLink(returnUrl);
+
+        assertThat(link.getHost()).isEqualTo("localhost");
+        assertThat(link.getPath()).isEqualTo("/confirm-email");
+        assertThat(link.getRawQuery()).matches("token=[a-f0-9-]+");
+    }
+
+    private URI createUserAndCaptureSignupLink(String returnUrl) {
+        CreateUserRequest request = new CreateUserRequest();
+        request.setEmail(sampleUser.getEmail());
+        request.setPassword("password123");
+        request.setReturnUrl(returnUrl);
+        when(passwordEncoder.encode(request.getPassword())).thenReturn("hashed");
+        when(userRepository.save(any(User.class))).thenReturn(sampleUser);
+
+        userService.createUser(request);
+
+        ArgumentCaptor<String> linkCaptor = ArgumentCaptor.forClass(String.class);
+        verify(emailService).sendSignupActivationEmail(eq(sampleUser.getEmail()), eq(sampleUser.getFirstName()), linkCaptor.capture());
+        return URI.create(linkCaptor.getValue());
     }
 
     @Test
