@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { readAuthReturnUrl } from '../../shared/auth-return-url';
 
 type State = 'ready' | 'loading' | 'success' | 'error';
 
@@ -18,6 +19,10 @@ export class ConfirmEmailPageComponent implements OnInit {
   state: State = 'ready';
   email = '';
   private token: string | null = null;
+
+  get returnUrl(): string | undefined {
+    return readAuthReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
+  }
 
   ngOnInit(): void {
     this.token = this.route.snapshot.queryParamMap.get('token');

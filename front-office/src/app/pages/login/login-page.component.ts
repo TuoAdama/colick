@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { GoogleAuthButtonComponent } from '../../components/google-auth-button/google-auth-button.component';
+import { navigateAfterAuth, readAuthReturnUrl } from '../../shared/auth-return-url';
 
 /**
  * LoginPageComponent - User authentication page with email/password form.
@@ -30,6 +31,10 @@ export class LoginPageComponent {
   errorMessage = '';
   successMessage = this.router.getCurrentNavigation()?.extras.state?.['successMessage'] ?? '';
 
+  get returnUrl(): string | undefined {
+    return readAuthReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
+  }
+
   onSubmit(): void {
     if (this.loginForm.invalid) return;
 
@@ -40,7 +45,7 @@ export class LoginPageComponent {
     this.authService.login(email!, password!).subscribe({
       next: () => {
         this.isLoading = false;
-        this.navigateAfterAuth();
+        void navigateAfterAuth(this.router, this.returnUrl);
       },
       error: (err: any) => {
         this.isLoading = false;
@@ -61,22 +66,12 @@ export class LoginPageComponent {
     this.authService.googleLogin(idToken).subscribe({
       next: () => {
         this.isGoogleLoading = false;
-        this.navigateAfterAuth();
+        void navigateAfterAuth(this.router, this.returnUrl);
       },
       error: (err: any) => {
         this.isGoogleLoading = false;
         this.errorMessage = err?.error?.message || 'Connexion Google impossible pour le moment.';
       },
     });
-  }
-
-  private navigateAfterAuth(): void {
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-    if (returnUrl?.startsWith('/') && !returnUrl.startsWith('//')) {
-      void this.router.navigateByUrl(returnUrl);
-      return;
-    }
-
-    this.router.navigate(['/search']);
   }
 }
