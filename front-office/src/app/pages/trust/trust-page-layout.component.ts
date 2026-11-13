@@ -14,6 +14,10 @@ export class TrustPageLayoutComponent {
   private readonly viewportScroller = inject(ViewportScroller);
   readonly document = input.required<TrustDocument>();
 
+  isText(value: unknown): value is string {
+    return typeof value === 'string';
+  }
+
   reScrollActiveSection(sectionId: string): void {
     if (this.router.parseUrl(this.router.url).fragment === sectionId) {
       this.viewportScroller.scrollToAnchor(sectionId);

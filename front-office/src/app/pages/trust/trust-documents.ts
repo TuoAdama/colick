@@ -97,7 +97,15 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
       {
         id: 'moyen-de-paiement',
         title: 'Les modalités du règlement',
-        paragraphs: ['Convenez ensemble du montant, du moment du règlement et du moyen de paiement qui vous convient. Vous pouvez par exemple choisir Wero, un virement instantané ou PayPal, selon les services auxquels vous avez tous les deux accès.'],
+        paragraphs: [[
+          'Convenez ensemble du montant, du moment du règlement et du moyen de paiement qui vous convient. Vous pouvez par exemple choisir ',
+          { strong: 'Wero' },
+          ', un ',
+          { strong: 'virement instantané' },
+          ' ou ',
+          { strong: 'PayPal' },
+          ', selon les services auxquels vous avez tous les deux accès.',
+        ]],
       },
       {
         id: 'confirmation',

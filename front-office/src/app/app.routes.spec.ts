@@ -92,7 +92,10 @@ describe('app routes', () => {
     expect(TestBed.inject(Router).url).toBe(url);
     expect(page?.querySelector('h1')?.textContent).toBe('Comment régler le transport ?');
     expect(page?.querySelector('#reglement-direct p')?.textContent).toContain('Vous réglez le transport directement avec lui.');
-    expect(page?.querySelector('#moyen-de-paiement p')?.textContent).toContain('Wero, un virement instantané ou PayPal');
+    const paymentMethods = page!.querySelector('#moyen-de-paiement p')!;
+    expect(paymentMethods.textContent?.replace(/\s+/g, ' ')).toContain('Wero, un virement instantané ou PayPal');
+    expect(Array.from(paymentMethods.querySelectorAll('strong.font-bold.text-primary'), element => element.textContent))
+      .toEqual(['Wero', 'virement instantané', 'PayPal']);
     expect(page?.querySelector('#confirmation p')?.textContent).toContain('Le règlement reste à organiser entre vous.');
   });
 
