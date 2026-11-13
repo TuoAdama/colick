@@ -81,6 +81,40 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
       { label: 'Annulation et litiges', route: '/annulation-litiges' },
     ],
   },
+  'transport-payment': {
+    slug: 'transport-payment',
+    title: 'Comment régler le transport ?',
+    description: 'Le règlement du transport en mode gratuit sur Coliclic.',
+    version: '1.0',
+    updatedAt: '2026-11-13',
+    updatedAtLabel: '13 novembre 2026',
+    sections: [
+      {
+        id: 'reglement-direct',
+        title: 'Le règlement avec le voyageur',
+        paragraphs: ['En mode gratuit, Coliclic vous met en relation avec un voyageur. Vous réglez le transport directement avec lui. Coliclic n’encaisse pas le règlement et ne facture pas de frais de service.'],
+      },
+      {
+        id: 'moyen-de-paiement',
+        title: 'Les modalités du règlement',
+        paragraphs: [[
+          'Convenez ensemble du montant, du moment du règlement et du moyen de paiement qui vous convient. Vous pouvez par exemple choisir ',
+          { strong: 'Wero' },
+          ', un ',
+          { strong: 'virement instantané' },
+          ' ou ',
+          { strong: 'PayPal' },
+          ', selon les services auxquels vous avez tous les deux accès.',
+        ]],
+      },
+      {
+        id: 'confirmation',
+        title: 'La confirmation de la réservation',
+        paragraphs: ['La confirmation d’une réservation concerne la demande de transport. Le règlement reste à organiser entre vous.'],
+      },
+    ],
+    related: [{ label: 'Centre d’aide', route: '/aide' }],
+  },
   terms: {
     slug: 'terms',
     title: 'Conditions générales d’utilisation',

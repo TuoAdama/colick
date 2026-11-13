@@ -1,6 +1,7 @@
 export type TrustDocumentSlug =
   | 'about'
   | 'help'
+  | 'transport-payment'
   | 'terms'
   | 'privacy'
   | 'legal-notice'
@@ -10,7 +11,7 @@ export type TrustDocumentSlug =
 export interface TrustSection {
   id: string;
   title: string;
-  paragraphs?: string[];
+  paragraphs?: (string | readonly (string | { strong: string })[])[];
   bullets?: string[];
 }
 

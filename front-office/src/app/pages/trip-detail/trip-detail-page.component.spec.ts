@@ -1,7 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal, WritableSignal } from '@angular/core';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 import { Trip } from '../../models/trip.model';
+import { FREE_APP_CONFIG, PublicAppConfig } from '../../models/app-config.model';
+import { AppConfigService } from '../../services/app-config.service';
 import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
 import { AnalyticsService } from '../../services/analytics.service';
@@ -16,6 +19,7 @@ describe('TripDetailPageComponent', () => {
   let user: BehaviorSubject<{ id: number } | null>;
   let service: { getTripByReference: jasmine.Spy; getMyBookings: jasmine.Spy };
   let analytics: { track: jasmine.Spy };
+  let config: WritableSignal<PublicAppConfig>;
 
   beforeEach(async () => {
     trip = { id: 13, reference: 'TRP-2026-000013', travelerId: 99, travelerName: 'Aminata K.',
@@ -27,16 +31,48 @@ describe('TripDetailPageComponent', () => {
     user = new BehaviorSubject<{ id: number } | null>(null);
     service = { getTripByReference: jasmine.createSpy().and.returnValue(of(trip)), getMyBookings: jasmine.createSpy().and.returnValue(of([])) };
     analytics = { track: jasmine.createSpy() };
+    config = signal(FREE_APP_CONFIG);
     await TestBed.configureTestingModule({ imports: [TripDetailPageComponent], providers: [
       provideRouter([]),
       { provide: ActivatedRoute, useValue: { paramMap: params, queryParamMap: query } },
       { provide: TripService, useValue: service },
       { provide: AuthService, useValue: { currentUser$: user, getUser: () => user.value } },
       { provide: AnalyticsService, useValue: analytics },
+      { provide: AppConfigService, useValue: { config } },
     ] }).compileComponents();
     fixture = TestBed.createComponent(TripDetailPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('shows the direct payment note and accessible help link before both booking actions in FREE', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    for (const action of ['.booking-summary .reserve-button', '.mobile-booking-row']) {
+      const note = host.querySelector(action)?.previousElementSibling;
+      const link = note?.querySelector('a');
+
+      expect(note?.classList.contains('booking-payment-note')).toBeTrue();
+      expect(note?.firstChild?.textContent?.trim()).toBe('Vous réglez le transport directement au voyageur. Coliclic ne facture pas de frais de service.');
+      expect(link?.textContent?.trim()).toBe('En savoir plus');
+      expect(link?.getAttribute('aria-label')).toBe('En savoir plus sur le règlement du transport');
+      expect(link?.getAttribute('href')).toBe('/aide/reglement-du-transport');
+      expect(link?.getAttribute('target')).toBeNull();
+    }
+  });
+
+  it('keeps both booking buttons available in COMMISSION without the FREE payment note or link', () => {
+    config.set({
+      commercialMode: 'COMMISSION',
+      contentVariant: 'commission',
+      platformFeeRate: 0.07,
+      features: { platformPayment: true, platformFee: true },
+    });
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('.booking-payment-note')).toBeNull();
+    expect(host.querySelector('a[href="/aide/reglement-du-transport"]')).toBeNull();
+    expect(host.querySelectorAll('.reserve-button:not(:disabled)').length).toBe(2);
   });
 
   it('renders actual trip dates, capacity, rating and profile before any request starts', () => {
@@ -102,6 +138,8 @@ describe('TripDetailPageComponent', () => {
   it('disables booking when capacity is exhausted or the trip is inactive', () => {
     trip.availableWeight = 0;
     expect(component.canBook).toBeFalse();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.booking-payment-note')).toBeNull();
     trip.availableWeight = 15;
     trip.status = 'CANCELLED';
     expect(component.canBook).toBeFalse();

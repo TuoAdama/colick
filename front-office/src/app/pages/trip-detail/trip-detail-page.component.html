@@ -15,6 +15,14 @@
         <a routerLink="/search">Rechercher un trajet</a>
       </section>
     } @else {
+      <ng-template #paymentNote>
+        @if (canBook && commercialContent().tripBookingPaymentNote; as note) {
+          <p class="booking-payment-note">
+            {{ note }}
+            <a routerLink="/aide/reglement-du-transport" aria-label="En savoir plus sur le règlement du transport">En savoir plus</a>
+          </p>
+        }
+      </ng-template>
       <p class="eyebrow">Détail du trajet</p>
       <h1>{{ trip.departureAddress }} <span aria-label="vers">→</span> {{ trip.destination }}</h1>
       <div class="detail-grid">
@@ -47,12 +55,16 @@
         <aside class="detail-card booking-summary" aria-label="Réservation" data-testid="trip-booking-summary">
           <div class="summary-metric"><span class="icon-circle"><span class="material-symbols-outlined" aria-hidden="true">payments</span></span><div><strong>{{ formatNumber(trip.pricePerKilo) }} €/kg</strong><p class="muted">Prix par kilo</p></div></div>
           <div class="summary-metric"><span class="icon-circle"><span class="material-symbols-outlined" aria-hidden="true">weight</span></span><div><strong>{{ formatNumber(trip.availableWeight) }} kg</strong><p class="muted">disponibles</p></div></div>
+          <ng-container *ngTemplateOutlet="paymentNote" />
           <button type="button" class="reserve-button" [disabled]="!canBook" (click)="reserve()">{{ bookingLabel }}</button>
         </aside>
       </div>
-      <aside class="mobile-booking" aria-label="Réserver ce trajet">
-        <div><p class="muted">Prix</p><strong>{{ formatNumber(trip.pricePerKilo) }} €/kg</strong></div>
-        <button type="button" class="reserve-button" [disabled]="!canBook" (click)="reserve()">{{ bookingLabel }}</button>
+      <aside #mobileBooking class="mobile-booking" aria-label="Réserver ce trajet">
+        <ng-container *ngTemplateOutlet="paymentNote" />
+        <div class="mobile-booking-row">
+          <div><p class="muted">Prix</p><strong>{{ formatNumber(trip.pricePerKilo) }} €/kg</strong></div>
+          <button type="button" class="reserve-button" [disabled]="!canBook" (click)="reserve()">{{ bookingLabel }}</button>
+        </div>
       </aside>
     }
   </div>

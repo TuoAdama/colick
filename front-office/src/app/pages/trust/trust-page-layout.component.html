@@ -31,7 +31,19 @@
           <section [id]="section.id" class="scroll-mt-28" tabindex="-1">
             <h2 class="font-display text-2xl font-bold text-primary sm:text-3xl">{{ section.title }}</h2>
             @for (paragraph of section.paragraphs ?? []; track $index) {
-              <p class="mt-4 text-base leading-7 text-text-secondary">{{ paragraph }}</p>
+              <p class="mt-4 text-base leading-7 text-text-secondary">
+                @if (isText(paragraph)) {
+                  {{ paragraph }}
+                } @else {
+                  @for (part of paragraph; track $index) {
+                    @if (isText(part)) {
+                      <ng-container>{{ part }}</ng-container>
+                    } @else {
+                      <strong class="font-bold text-primary">{{ part.strong }}</strong>
+                    }
+                  }
+                }
+              </p>
             }
             @if (section.bullets?.length) {
               <ul class="mt-4 list-disc space-y-3 pl-6 text-base leading-7 text-text-secondary">

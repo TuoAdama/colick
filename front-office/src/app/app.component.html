@@ -21,7 +21,7 @@
 
 @if (showSharedChrome) {
   <!-- Footer -->
-  <app-footer [class.block]="isTripDetailPage" [class.pb-28]="isTripDetailPage" [class.md:pb-0]="isTripDetailPage" />
+  <app-footer [class.trip-detail-footer]="isTripDetailPage" />
 }
 
 @if (analytics.consentRequired()) {
