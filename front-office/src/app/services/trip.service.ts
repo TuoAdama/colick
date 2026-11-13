@@ -262,7 +262,9 @@ export class TripService {
       ...booking,
       senderPhotoUrl: this.photoUrlService.normalizePhotoUrl(booking.senderPhotoUrl),
       senderRatingCount: booking.senderRatingCount ?? 0,
-      packagePhotoUrl: this.photoUrlService.normalizePhotoUrl(booking.packagePhotoUrl),
+      packagePhotoUrl: booking.packagePhotoUrl?.startsWith(
+        `${this.baseUrl}/${booking.tripId}/bookings/${booking.id}/photo?`
+      ) ? booking.packagePhotoUrl : undefined,
     } as T;
   }
 

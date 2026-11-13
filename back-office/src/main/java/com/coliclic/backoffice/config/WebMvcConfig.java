@@ -1,5 +1,9 @@
 package com.coliclic.backoffice.config;
 
+import com.coliclic.backoffice.file.FileStorageService;
+import com.coliclic.backoffice.parcelrequest.repository.ParcelRequestRepository;
+import com.coliclic.backoffice.trip.repository.TripBookingRepository;
+import com.coliclic.backoffice.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -12,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import java.nio.file.Files;
 import java.nio.file.Paths;
 
 /**
@@ -20,6 +25,16 @@ import java.nio.file.Paths;
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
+
+    private final UserRepository users;
+    private final ParcelRequestRepository parcels;
+    private final TripBookingRepository bookings;
+
+    public WebMvcConfig(UserRepository users, ParcelRequestRepository parcels, TripBookingRepository bookings) {
+        this.users = users;
+        this.parcels = parcels;
+        this.bookings = bookings;
+    }
 
     @Value("${upload.dir:./uploads}")
     private String uploadDir;
@@ -31,15 +46,21 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String absolutePath = Paths.get(uploadDir).toAbsolutePath().normalize().toUri().toString();
+        if (!absolutePath.endsWith("/")) absolutePath += "/";
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(absolutePath)
                 .resourceChain(false)
                 .addResolver(new PathResourceResolver() {
                     @Override
                     protected Resource getResource(String resourcePath, Resource location) throws IOException {
-                        // Also deny active documents uploaded before image validation was introduced.
-                        if (!resourcePath.matches("[a-f0-9-]{36}\\.(?i:jpg|jpeg|png|webp)")) return null;
-                        return super.getResource(resourcePath, location);
+                        if (!FileStorageService.isManagedImageFilename(resourcePath)) return null;
+                        Resource resource = super.getResource(resourcePath, location);
+                        if (resource == null || Files.isSymbolicLink(resource.getFile().toPath())) return null;
+
+                        var references = FileStorageService.legacyUploadReferences(resourcePath);
+                        if (bookings.existsByLegacyPhotoReference(references)) return null;
+                        return users.existsByPhotoUrlIn(references) || parcels.existsByPackagePhotoUrlIn(references)
+                                ? resource : null;
                     }
                 });
     }

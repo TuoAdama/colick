@@ -445,7 +445,7 @@ class TripServiceImplTest {
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findByTrip(sampleTrip)).thenReturn(List.of(pending));
         when(fileStorageService.sanitizePublicUrl("/uploads/bob.png")).thenReturn(null);
-        when(fileStorageService.sanitizePublicUrl("/uploads/package.png")).thenReturn(null);
+        when(fileStorageService.findBookingPhoto("/uploads/package.png")).thenReturn(null);
 
         List<TripBookingResponse> bookings = tripService.getBookings(10L, traveler);
 
@@ -839,13 +839,15 @@ class TripServiceImplTest {
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(fileStorageService.storeImage(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
-                .thenReturn("/uploads/parcel.png");
+        when(fileStorageService.storeBookingPhoto(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
+                .thenReturn("booking-photos/parcel.png");
+        when(fileStorageService.findBookingPhoto("booking-photos/parcel.png"))
+                .thenReturn(java.nio.file.Path.of("booking-photos/parcel.png"));
         when(bookingRepository.save(booking)).thenReturn(booking);
 
         TripBookingResponse response = tripService.uploadBookingPhoto(10L, 1L, photo, sender);
 
-        assertThat(response.getPackagePhotoUrl()).isEqualTo("/uploads/parcel.png");
+        assertThat(response.getPackagePhotoUrl()).startsWith("/api/trips/10/bookings/1/photo?v=");
         verify(bookingRepository).save(booking);
     }
 
@@ -860,14 +862,17 @@ class TripServiceImplTest {
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(fileStorageService.storeImage(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
-                .thenReturn("/uploads/new.png");
+        when(fileStorageService.storeBookingPhoto(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
+                .thenReturn("booking-photos/new.png");
         when(bookingRepository.save(booking)).thenReturn(booking);
 
         tripService.uploadBookingPhoto(10L, 1L, photo, sender);
 
-        verify(fileStorageService).deleteManagedUpload("/uploads/old.png");
-        verify(fileStorageService, never()).deleteManagedUpload("/uploads/new.png");
+        var writeOrder = org.mockito.Mockito.inOrder(fileStorageService, bookingRepository);
+        writeOrder.verify(fileStorageService).privatizeLegacyBookingPhoto("/uploads/old.png");
+        writeOrder.verify(bookingRepository).save(booking);
+        writeOrder.verify(fileStorageService).deleteBookingPhoto("/uploads/old.png");
+        verify(fileStorageService, never()).deleteBookingPhoto("booking-photos/new.png");
     }
 
     @Test
@@ -880,16 +885,16 @@ class TripServiceImplTest {
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(fileStorageService.storeImage(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
-                .thenReturn("/uploads/new.png");
+        when(fileStorageService.storeBookingPhoto(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
+                .thenReturn("booking-photos/new.png");
         when(bookingRepository.save(booking)).thenThrow(new IllegalStateException("database unavailable"));
 
         assertThatThrownBy(() -> tripService.uploadBookingPhoto(10L, 1L, photo, sender))
                 .isInstanceOf(IllegalStateException.class);
 
         assertThat(booking.getPackagePhotoUrl()).isEqualTo("/uploads/old.png");
-        verify(fileStorageService).deleteManagedUpload("/uploads/new.png");
-        verify(fileStorageService, never()).deleteManagedUpload("/uploads/old.png");
+        verify(fileStorageService).deleteBookingPhoto("booking-photos/new.png");
+        verify(fileStorageService, never()).deleteBookingPhoto("/uploads/old.png");
     }
 
     @Test
@@ -903,19 +908,19 @@ class TripServiceImplTest {
         when(tripRepository.findById(10L)).thenReturn(Optional.of(sampleTrip));
         when(tripRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(sampleTrip));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(fileStorageService.storeImage(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
-                .thenReturn("/uploads/new.png");
+        when(fileStorageService.storeBookingPhoto(photo, ParcelGuidelines.MAX_PHOTO_BYTES))
+                .thenReturn("booking-photos/new.png");
         when(bookingRepository.save(booking)).thenReturn(booking);
 
         TransactionSynchronizationManager.initSynchronization();
         try {
             tripService.uploadBookingPhoto(10L, 1L, photo, sender);
-            verify(fileStorageService, never()).deleteManagedUpload(any());
+            verify(fileStorageService, never()).deleteBookingPhoto(any());
             for (TransactionSynchronization synchronization : TransactionSynchronizationManager.getSynchronizations()) {
                 synchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
             }
-            verify(fileStorageService).deleteManagedUpload("/uploads/new.png");
-            verify(fileStorageService, never()).deleteManagedUpload("/uploads/old.png");
+            verify(fileStorageService).deleteBookingPhoto("booking-photos/new.png");
+            verify(fileStorageService, never()).deleteBookingPhoto("/uploads/old.png");
         } finally {
             TransactionSynchronizationManager.clearSynchronization();
         }
@@ -939,7 +944,7 @@ class TripServiceImplTest {
         assertThatThrownBy(() -> tripService.uploadBookingPhoto(10L, 1L, photo, anotherUser))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        verify(fileStorageService, never()).storeImage(any(), anyLong());
+        verify(fileStorageService, never()).storeBookingPhoto(any(), anyLong());
     }
 
     @Test

@@ -70,7 +70,6 @@ public class TripBookingResponse {
                 .title(booking.getTitle())
                 .weight(booking.getWeight())
                 .description(booking.getDescription())
-                .packagePhotoUrl(booking.getPackagePhotoUrl())
                 .recipientContact(booking.getRecipientContact())
                 .status(booking.getStatus())
                 .validationDeliveryChannel(booking.getValidationDeliveryChannel())
