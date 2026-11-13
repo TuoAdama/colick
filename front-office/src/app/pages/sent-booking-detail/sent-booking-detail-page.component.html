@@ -65,11 +65,12 @@
           <p class="contact-feedback" [class.copy-error]="contactCopyFailed" role="status">{{ contactCopyFeedback }}</p>
           @if (booking.packagePhotoUrl) {
             <img class="parcel-photo" [src]="booking.packagePhotoUrl" [alt]="'Photo du colis ' + booking.title" loading="lazy" decoding="async" />
-          } @else if (canCancelBooking()) {
+          }
+          @if (canCancelBooking()) {
             <div class="photo-upload">
               <button type="button" class="booking-link" [disabled]="isProcessing" (click)="photoInput.click()">
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linejoin="round" d="M3 7h4l2-3h6l2 3h4v13H3Z"/><circle cx="12" cy="13" r="4"/></svg>
-                Ajouter une photo
+                {{ booking.packagePhotoUrl ? 'Remplacer la photo' : 'Ajouter une photo' }}
               </button>
               <input #photoInput type="file" hidden aria-label="Photo du colis" accept="image/jpeg,image/png,image/webp" (change)="retryPhotoUpload($event)" />
               <p class="photo-help">Facultatif · JPEG, PNG ou WebP · 5 Mo maximum</p>

@@ -30,6 +30,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -234,6 +236,19 @@ public class TripServiceImpl implements TripService {
 
     @Override
     @Transactional(readOnly = true)
+    public Path getBookingPhoto(Long tripId, Long bookingId, User requester) {
+        TripBooking booking = findNonRemovedBookingOrThrow(tripId, bookingId);
+        if (!isBookingSender(booking, requester) && !isBookingTraveler(booking, requester)) {
+            throw bookingNotFound(bookingId);
+        }
+
+        Path photo = fileStorageService.findBookingPhoto(booking.getPackagePhotoUrl());
+        if (photo == null) throw bookingNotFound(bookingId);
+        return photo;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public TripBookingSenderProfileResponse getBookingSenderProfile(Long tripId, Long bookingId, User requester) {
         TripBooking booking = findVisibleBookingOrThrow(tripId, bookingId, requester);
 
@@ -327,33 +342,34 @@ public class TripServiceImpl implements TripService {
             throw new ConflictException("La photo ne peut plus être modifiée pour cette demande.");
         }
         String previousPhotoUrl = booking.getPackagePhotoUrl();
-        String newPhotoUrl = fileStorageService.storeImage(file, ParcelGuidelines.MAX_PHOTO_BYTES);
-        booking.setPackagePhotoUrl(newPhotoUrl);
+        String newPhotoUrl = fileStorageService.storeBookingPhoto(file, ParcelGuidelines.MAX_PHOTO_BYTES);
         try {
+            fileStorageService.privatizeLegacyBookingPhoto(previousPhotoUrl);
+            booking.setPackagePhotoUrl(newPhotoUrl);
             TripBookingResponse response = toTripBookingResponse(bookingRepository.save(booking));
             if (TransactionSynchronizationManager.isSynchronizationActive()) {
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
                         if (!Objects.equals(previousPhotoUrl, newPhotoUrl)) {
-                            fileStorageService.deleteManagedUpload(previousPhotoUrl);
+                            fileStorageService.deleteBookingPhoto(previousPhotoUrl);
                         }
                     }
 
                     @Override
                     public void afterCompletion(int status) {
                         if (status != STATUS_COMMITTED) {
-                            fileStorageService.deleteManagedUpload(newPhotoUrl);
+                            fileStorageService.deleteBookingPhoto(newPhotoUrl);
                         }
                     }
                 });
             } else if (!Objects.equals(previousPhotoUrl, newPhotoUrl)) {
-                fileStorageService.deleteManagedUpload(previousPhotoUrl);
+                fileStorageService.deleteBookingPhoto(previousPhotoUrl);
             }
             return response;
         } catch (RuntimeException ex) {
             booking.setPackagePhotoUrl(previousPhotoUrl);
-            fileStorageService.deleteManagedUpload(newPhotoUrl);
+            fileStorageService.deleteBookingPhoto(newPhotoUrl);
             throw ex;
         }
     }
@@ -548,30 +564,40 @@ public class TripServiceImpl implements TripService {
                 .orElseThrow(() -> new ResourceNotFoundException(localizedMessages.get("error.booking.notFound", bookingId)));
     }
 
-    private TripBooking findVisibleBookingOrThrow(Long tripId, Long bookingId, User requester) {
+    private TripBooking findNonRemovedBookingOrThrow(Long tripId, Long bookingId) {
         TripBooking booking = findBookingOrThrow(tripId, bookingId);
-
         if (booking.getStatus() == TripBooking.BookingStatus.REMOVED) {
-            throw new ResourceNotFoundException(localizedMessages.get("error.booking.notFound", bookingId));
+            throw bookingNotFound(bookingId);
         }
+        return booking;
+    }
 
-        if (!booking.getTrip().getTraveler().getId().equals(requester.getId())
-                && requester.getRole() != User.Role.ADMIN) {
-            throw new ResourceNotFoundException(localizedMessages.get("error.booking.notFound", bookingId));
+    private TripBooking findVisibleBookingOrThrow(Long tripId, Long bookingId, User requester) {
+        TripBooking booking = findNonRemovedBookingOrThrow(tripId, bookingId);
+        if (!isBookingTraveler(booking, requester) && requester.getRole() != User.Role.ADMIN) {
+            throw bookingNotFound(bookingId);
         }
-
         return booking;
     }
 
     private TripBooking findSenderBookingOrThrow(Long tripId, Long bookingId, User requester) {
-        TripBooking booking = findBookingOrThrow(tripId, bookingId);
-
-        if (booking.getStatus() == TripBooking.BookingStatus.REMOVED
-                || !booking.getSender().getId().equals(requester.getId())) {
-            throw new ResourceNotFoundException(localizedMessages.get("error.booking.notFound", bookingId));
+        TripBooking booking = findNonRemovedBookingOrThrow(tripId, bookingId);
+        if (!isBookingSender(booking, requester)) {
+            throw bookingNotFound(bookingId);
         }
-
         return booking;
+    }
+
+    private boolean isBookingTraveler(TripBooking booking, User requester) {
+        return booking.getTrip().getTraveler().getId().equals(requester.getId());
+    }
+
+    private boolean isBookingSender(TripBooking booking, User requester) {
+        return booking.getSender().getId().equals(requester.getId());
+    }
+
+    private ResourceNotFoundException bookingNotFound(Long bookingId) {
+        return new ResourceNotFoundException(localizedMessages.get("error.booking.notFound", bookingId));
     }
 
     private void assertTripOwner(Trip trip, User requester) {
@@ -775,11 +801,13 @@ public class TripServiceImpl implements TripService {
         return bookings.stream()
                 .map(booking -> {
                     TravelerRatingSummary summary = senderRatingSummaries.get(booking.getSender().getId());
-                    return SentTripBookingResponse.from(
+                    SentTripBookingResponse response = SentTripBookingResponse.from(
                             booking,
                             summary != null ? summary.averageRating() : null,
                             summary != null ? summary.reviewCount() : 0L
                     );
+                    response.setPackagePhotoUrl(bookingPhotoUrl(booking));
+                    return response;
                 })
                 .toList();
     }
@@ -860,7 +888,16 @@ public class TripServiceImpl implements TripService {
                 summary != null ? summary.reviewCount() : 0L
         );
         response.setSenderPhotoUrl(fileStorageService.sanitizePublicUrl(response.getSenderPhotoUrl()));
-        response.setPackagePhotoUrl(fileStorageService.sanitizePublicUrl(response.getPackagePhotoUrl()));
+        response.setPackagePhotoUrl(bookingPhotoUrl(booking));
         return response;
+    }
+
+    private String bookingPhotoUrl(TripBooking booking) {
+        String reference = booking.getPackagePhotoUrl();
+        if (reference == null || booking.getStatus() == TripBooking.BookingStatus.REMOVED
+                || fileStorageService.findBookingPhoto(reference) == null) return null;
+
+        UUID version = UUID.nameUUIDFromBytes(reference.getBytes(StandardCharsets.UTF_8));
+        return "/api/trips/" + booking.getTrip().getId() + "/bookings/" + booking.getId() + "/photo?v=" + version;
     }
 }

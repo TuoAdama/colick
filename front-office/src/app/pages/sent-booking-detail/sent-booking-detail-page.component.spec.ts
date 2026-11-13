@@ -37,7 +37,7 @@ describe('SentBookingDetailPageComponent', () => {
     tripServiceMock.getTripById.and.returnValue(of(buildTrip()));
     tripServiceMock.getMyTripBookingById.and.returnValue(of(buildBooking()));
     tripServiceMock.cancelBooking.and.returnValue(of({ ...buildBooking(), status: 'CANCELLED' }));
-    tripServiceMock.uploadBookingPhoto.and.returnValue(of(buildBooking({ packagePhotoUrl: '/photo.png' })));
+    tripServiceMock.uploadBookingPhoto.and.returnValue(of(buildBooking({ packagePhotoUrl: '/api/trips/12/bookings/7/photo?v=initial' })));
     messagingServiceMock.createConversationDraft.and.returnValue(of({
       id: 3,
       tripId: 12,
@@ -243,12 +243,31 @@ describe('SentBookingDetailPageComponent', () => {
     expect(fixture.nativeElement.querySelector('[role="alert"]')).not.toBeNull();
   });
 
-  it('shows an existing photo inside the parcel section without an upload action', () => {
-    tripServiceMock.getMyTripBookingById.and.returnValue(of(buildBooking({ packagePhotoUrl: '/photo.png' })));
+  it('shows the protected photo and lets the sender replace it', () => {
+    tripServiceMock.getMyTripBookingById.and.returnValue(of(buildBooking({ packagePhotoUrl: '/api/trips/12/bookings/7/photo?v=initial' })));
     createComponent();
     const parcel = fixture.nativeElement.querySelector('[aria-labelledby="parcel-heading"]');
-    expect(parcel.querySelector('img').getAttribute('src')).toBe('/photo.png');
-    expect(parcel.textContent).not.toContain('Ajouter une photo');
+    expect(parcel.querySelector('img').getAttribute('src')).toBe('/api/trips/12/bookings/7/photo?v=initial');
+    expect(parcel.textContent).toContain('Remplacer la photo');
+    const replacement = '/api/trips/12/bookings/7/photo?v=replacement';
+    tripServiceMock.uploadBookingPhoto.and.returnValue(of(buildBooking({ packagePhotoUrl: replacement })));
+    const file = new File(['image'], 'replacement.png', { type: 'image/png' });
+    selectPhoto(file);
+    expect(tripServiceMock.uploadBookingPhoto).toHaveBeenCalledWith(12, 7, file);
+    expect(parcel.querySelector('img').getAttribute('src')).toBe(replacement);
+    expect(parcel.textContent).toContain('La photo du colis a bien été remplacée.');
+  });
+
+  it('keeps the existing protected photo when replacement fails', () => {
+    const original = '/api/trips/12/bookings/7/photo?v=initial';
+    tripServiceMock.getMyTripBookingById.and.returnValue(of(buildBooking({ packagePhotoUrl: original })));
+    tripServiceMock.uploadBookingPhoto.and.returnValue(throwError(() => new Error('offline')));
+    createComponent();
+
+    selectPhoto(new File(['image'], 'replacement.png', { type: 'image/png' }));
+
+    expect(fixture.nativeElement.querySelector('.parcel-photo').getAttribute('src')).toBe(original);
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Impossible d’envoyer la photo');
   });
 
   for (const status of ['REJECTED', 'CANCELLED', 'REMOVED'] as const) {
@@ -275,7 +294,8 @@ describe('SentBookingDetailPageComponent', () => {
       const file = new File(['image'], 'parcel', { type });
       selectPhoto(file);
       expect(tripServiceMock.uploadBookingPhoto).toHaveBeenCalledWith(12, 7, file);
-      expect(fixture.nativeElement.querySelector('.parcel-photo')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('.parcel-photo').getAttribute('src'))
+        .toBe('/api/trips/12/bookings/7/photo?v=initial');
       expect(fixture.nativeElement.textContent).toContain('La photo du colis a bien été ajoutée.');
     });
   }
@@ -298,10 +318,10 @@ describe('SentBookingDetailPageComponent', () => {
     pending.error(new Error('offline'));
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Impossible d’envoyer la photo');
-    tripServiceMock.uploadBookingPhoto.and.returnValue(of(buildBooking({ packagePhotoUrl: '/retry.png' })));
+    tripServiceMock.uploadBookingPhoto.and.returnValue(of(buildBooking({ packagePhotoUrl: '/api/trips/12/bookings/7/photo?v=retry' })));
     selectPhoto(new File(['image'], 'parcel.png', { type: 'image/png' }));
     expect(tripServiceMock.uploadBookingPhoto).toHaveBeenCalledTimes(2);
-    expect(fixture.nativeElement.querySelector('.parcel-photo').getAttribute('src')).toBe('/retry.png');
+    expect(fixture.nativeElement.querySelector('.parcel-photo').getAttribute('src')).toBe('/api/trips/12/bookings/7/photo?v=retry');
   });
 
   it('offers calling only for a telephone recipient', () => {

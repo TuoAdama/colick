@@ -5,6 +5,7 @@ import com.coliclic.backoffice.user.entity.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.nio.file.Path;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,6 +43,8 @@ public interface TripService {
 
     /** Returns a booking submitted by the requester for the given trip. */
     TripBookingResponse getMyBookingById(Long tripId, Long bookingId, User requester);
+
+    Path getBookingPhoto(Long tripId, Long bookingId, User requester);
 
     /** Returns sender profile data for the selected booking. */
     TripBookingSenderProfileResponse getBookingSenderProfile(Long tripId, Long bookingId, User requester);

@@ -6,8 +6,13 @@ import com.coliclic.backoffice.trip.dto.*;
 import com.coliclic.backoffice.trip.service.TripService;
 import com.coliclic.backoffice.user.entity.User;
 import jakarta.validation.Valid;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -181,6 +186,21 @@ public class TripController {
             @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(tripService.createBooking(id, request, currentUser));
+    }
+
+    @GetMapping("/{id}/bookings/{bookingId}/photo")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Resource> getBookingPhoto(
+            @PathVariable Long id,
+            @PathVariable Long bookingId,
+            @AuthenticationPrincipal User currentUser) {
+        Resource photo = new FileSystemResource(tripService.getBookingPhoto(id, bookingId, currentUser));
+        return ResponseEntity.ok()
+                .contentType(MediaTypeFactory.getMediaType(photo).orElse(MediaType.APPLICATION_OCTET_STREAM))
+                .cacheControl(CacheControl.noStore().cachePrivate())
+                .header("Content-Security-Policy", "default-src 'none'; sandbox")
+                .header("X-Content-Type-Options", "nosniff")
+                .body(photo);
     }
 
     @PostMapping("/{id}/bookings/{bookingId}/photo")

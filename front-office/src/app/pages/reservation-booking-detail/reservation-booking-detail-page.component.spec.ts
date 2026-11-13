@@ -216,11 +216,11 @@ describe('ReservationBookingDetailPageComponent', () => {
     expect(component.contactCopyFeedback).toContain('Sélectionnez le contact');
   });
 
-  it('retains the optional package photo and falls back to the initial for a broken sender photo', () => {
-    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking({ packagePhotoUrl: '/parcel.jpg', senderPhotoUrl: '/sender.jpg' })));
+  it('renders the protected package photo and falls back to the initial for a broken sender photo', () => {
+    tripServiceMock.getTripBookingById.and.returnValue(of(buildBooking({ packagePhotoUrl: '/api/trips/12/bookings/7/photo?v=initial', senderPhotoUrl: '/sender.jpg' })));
     createComponent();
     const photo = fixture.nativeElement.querySelector('img[alt="Photo du colis Documents"]');
-    expect(photo.getAttribute('src')).toBe('/parcel.jpg');
+    expect(photo.getAttribute('src')).toBe('/api/trips/12/bookings/7/photo?v=initial');
     fixture.nativeElement.querySelector('.sender-card img').dispatchEvent(new Event('error'));
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.sender-card img')).toBeNull();

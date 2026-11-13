@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.Collection;
 
 /**
  * JPA repository for {@link User} entities.
@@ -31,6 +32,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByGoogleSubject(String googleSubject);
 
     boolean existsByEmail(String email);
+
+    boolean existsByPhotoUrlIn(Collection<String> references);
 
     /** Looks up a user by the one-time e-mail confirmation token. */
     Optional<User> findByEmailConfirmToken(String token);

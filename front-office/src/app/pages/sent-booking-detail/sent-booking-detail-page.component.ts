@@ -206,11 +206,12 @@ export class SentBookingDetailPageComponent implements OnInit {
     this.isProcessing = true;
     this.actionError = '';
     this.photoMessage = '';
+    const replacingPhoto = !!this.booking.packagePhotoUrl;
     this.tripService.uploadBookingPhoto(this.trip.id, this.booking.id, file).subscribe({
       next: booking => {
         this.booking = booking;
         this.isProcessing = false;
-        this.photoMessage = 'La photo du colis a bien été ajoutée.';
+        this.photoMessage = replacingPhoto ? 'La photo du colis a bien été remplacée.' : 'La photo du colis a bien été ajoutée.';
       },
       error: error => {
         this.isProcessing = false;

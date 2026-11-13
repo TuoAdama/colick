@@ -36,6 +36,9 @@ public interface TripBookingRepository extends JpaRepository<TripBooking, Long> 
 
     boolean existsByTripAndStatus(Trip trip, TripBooking.BookingStatus status);
 
+    @Query("select count(booking) > 0 from TripBooking booking where trim(booking.packagePhotoUrl) in :references")
+    boolean existsByLegacyPhotoReference(@Param("references") Collection<String> references);
+
     boolean existsByTripAndSenderAndStatusIn(Trip trip, User sender, List<TripBooking.BookingStatus> statuses);
 
     /** Returns all booking requests submitted by the given user. */

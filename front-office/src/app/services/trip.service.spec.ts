@@ -276,12 +276,12 @@ describe('TripService', () => {
     req.flush({});
   });
 
-  it('normalizes sender and package photo URLs in trip bookings', () => {
+  it('normalizes public sender photos and keeps protected booking photo URLs', () => {
     service.getTripBookings(12).subscribe((bookings) => {
       expect(bookings).toHaveSize(1);
       expect(bookings[0].senderPhotoUrl).toBe('/api/uploads/sender.png');
       expect(bookings[0].senderRatingCount).toBe(12);
-      expect(bookings[0].packagePhotoUrl).toBe('/api/uploads/package.png');
+      expect(bookings[0].packagePhotoUrl).toBe('/api/trips/12/bookings/4/photo?v=initial');
     });
 
     const req = httpMock.expectOne('/api/trips/12/bookings');
@@ -297,7 +297,7 @@ describe('TripService', () => {
         senderRatingCount: 12,
         title: 'Valise',
         weight: 2,
-        packagePhotoUrl: '/uploads/package.png',
+        packagePhotoUrl: '/api/trips/12/bookings/4/photo?v=initial',
         recipientContact: '+22501020304',
         status: 'PENDING',
         validationCodeActive: false,
@@ -305,11 +305,11 @@ describe('TripService', () => {
     ]);
   });
 
-  it('gets a single trip booking and normalizes booking media fields', () => {
+  it('gets a single trip booking and discards a legacy public booking photo URL', () => {
     service.getTripBookingById(12, 34).subscribe((booking) => {
       expect(booking.id).toBe(34);
       expect(booking.senderPhotoUrl).toBe('/api/uploads/sender.png');
-      expect(booking.packagePhotoUrl).toBe('/api/uploads/package.png');
+      expect(booking.packagePhotoUrl).toBeUndefined();
       expect(booking.senderRatingCount).toBe(0);
     });
 
@@ -335,6 +335,7 @@ describe('TripService', () => {
   it('gets a single booking sent by the current user', () => {
     service.getMyTripBookingById(12, 34).subscribe((booking) => {
       expect(booking.id).toBe(34);
+      expect(booking.packagePhotoUrl).toBe('/api/trips/12/bookings/34/photo?v=initial');
       expect(booking.senderPhotoUrl).toBe('/api/uploads/sender.png');
     });
 
@@ -347,6 +348,7 @@ describe('TripService', () => {
       senderName: 'Alice Martin',
       senderPhotoUrl: '/uploads/sender.png',
       title: 'Valise',
+      packagePhotoUrl: '/api/trips/12/bookings/34/photo?v=initial',
       weight: 2,
       status: 'PENDING',
       validationCodeActive: false,

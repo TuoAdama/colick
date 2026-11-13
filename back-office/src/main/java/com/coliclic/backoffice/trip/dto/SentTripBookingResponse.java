@@ -33,7 +33,6 @@ public class SentTripBookingResponse extends TripBookingResponse {
         response.setTitle(base.getTitle());
         response.setWeight(base.getWeight());
         response.setDescription(base.getDescription());
-        response.setPackagePhotoUrl(base.getPackagePhotoUrl());
         response.setRecipientContact(base.getRecipientContact());
         response.setStatus(base.getStatus());
         response.setValidationDeliveryChannel(base.getValidationDeliveryChannel());
