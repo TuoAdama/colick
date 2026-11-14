@@ -468,39 +468,34 @@ describe('SearchPageComponent', () => {
     });
   });
 
-  it('renders the mobile filters toggle and keeps mobile filters collapsed by default', () => {
+  it('renders one mobile filters entry point and hides the inactive count badge', () => {
+    setQueryParams({ mode: 'all' });
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
+    const toggles = host.querySelectorAll('[data-testid="mobile-filters-toggle"]');
     const toggle = host.querySelector('[data-testid="mobile-filters-toggle"]');
     const panel = host.querySelector('[data-testid="mobile-filters-panel"]');
 
+    expect(toggles.length).toBe(1);
     expect(toggle).not.toBeNull();
     expect(toggle?.getAttribute('aria-expanded')).toBe('false');
+    expect(host.querySelector('[data-testid="active-filter-count"]')).toBeNull();
     expect(panel).toBeNull();
   });
 
-  it('keeps the floating mobile filters button near the bottom edge for guests and authenticated users', () => {
-    authServiceMock.isLoggedIn.and.returnValue(false);
+  it('shows the active price filter count and the complete departure sort label', () => {
+    setQueryParams({ mode: 'all', minPrice: '10', maxPrice: '20' });
     fixture.detectChanges();
 
-    let toggle = fixture.nativeElement.querySelector('[data-testid="mobile-filters-floating"]') as HTMLElement;
-
-    expect(getComputedStyle(toggle).bottom).toBe('16px');
-    expect(toggle.classList.contains('bottom-4')).toBeTrue();
-    expect(toggle.classList.contains('bottom-24')).toBeFalse();
-
-    authServiceMock.isLoggedIn.and.returnValue(true);
-    fixture.detectChanges();
-
-    toggle = fixture.nativeElement.querySelector('[data-testid="mobile-filters-floating"]') as HTMLElement;
-
-    expect(getComputedStyle(toggle).bottom).toBe('16px');
-    expect(toggle.classList.contains('bottom-4')).toBeTrue();
-    expect(toggle.classList.contains('bottom-24')).toBeFalse();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('[data-testid="active-filter-count"]')?.textContent?.trim()).toBe('2');
+    expect(host.querySelector<HTMLOptionElement>('select[aria-label="Trier les résultats"] option[value="departure_asc"]')?.textContent?.trim()).toBe('Départ le plus proche');
+    expect(host.querySelector('[data-testid="mobile-filters-floating"]')).toBeNull();
   });
 
   it('opens and closes the mobile filters panel', () => {
+    setQueryParams({ mode: 'all' });
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
@@ -907,9 +902,12 @@ describe('SearchPageComponent', () => {
     component.closeMobileFilters();
   });
 
-  it('opens the same panel from the floating button and removes applied bounds', () => {
+  it('opens the filters panel from the single mobile entry point and removes applied bounds', () => {
     fixture.detectChanges();
-    fixture.nativeElement.querySelector('[data-testid=mobile-filters-floating]').click();
+    component.isCatalog = true;
+    component.hasSearched = true;
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('[data-testid=mobile-filters-toggle]').click();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[role=dialog]')).not.toBeNull();
     component.closeMobileFilters();

@@ -117,7 +117,7 @@ export class SearchPageComponent implements OnInit, OnDestroy {
 
   readonly sortOptions: Array<{ value: TripSearchSort; label: string }> = [
     { value: 'price_asc', label: 'Prix le plus bas' },
-    { value: 'departure_asc', label: 'Date de départ (Proche)' },
+    { value: 'departure_asc', label: 'Départ le plus proche' },
     { value: 'rating_desc', label: 'Meilleurs avis' },
   ];
 
