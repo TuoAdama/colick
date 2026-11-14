@@ -17,8 +17,8 @@ class DeploymentIndexabilityConfigurationTest {
 
         assertThat(compose)
                 .contains("traefik.http.middlewares.colick-preprod-noindex.headers.customresponseheaders.X-Robots-Tag: \"noindex\"")
-                .contains("traefik.http.routers.colick-preprod-front-office.middlewares: \"colick-preprod-noindex@docker\"")
-                .contains("traefik.http.routers.colick-preprod-back-office.middlewares: \"colick-preprod-noindex@docker\"")
+                .containsPattern("traefik\\.http\\.routers\\.colick-preprod-front-office\\.middlewares: \"[^\"\\n]*\\bcolick-preprod-noindex@docker(?:,|\")")
+                .containsPattern("traefik\\.http\\.routers\\.colick-preprod-back-office\\.middlewares: \"[^\"\\n]*\\bcolick-preprod-noindex@docker(?:,|\")")
                 .contains("traefik.http.routers.colick-preprod-front-office.rule: \"Host(`preprod.coliclic.com`)\"")
                 .contains("traefik.http.routers.colick-preprod-back-office.rule: \"Host(`preprod.coliclic.com`) && PathPrefix(`/api`)\"");
     }

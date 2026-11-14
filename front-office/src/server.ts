@@ -12,6 +12,7 @@ const indexHtml = join(serverDistFolder, 'index.server.html');
 
 const app = express();
 const commonEngine = new CommonEngine();
+const cspReportOnly = process.env['SSR_CSP_REPORT_ONLY']?.trim();
 
 // Traefik terminates TLS one hop before Node; trust its forwarded protocol so
 // Angular renders absolute URLs with the public HTTPS origin.
@@ -76,6 +77,9 @@ app.get('**', (req, res, next) => {
     })
     .then((html) => {
       res.setHeader('Cache-Control', 'private, no-store');
+      if (cspReportOnly) {
+        res.setHeader('Content-Security-Policy-Report-Only', cspReportOnly);
+      }
       res.send(html);
     })
     .catch((err) => next(err));
