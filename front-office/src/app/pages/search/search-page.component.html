@@ -140,7 +140,6 @@
 
     <div class="flex flex-col gap-3 md:gap-8 lg:flex-row">
       <div class="flex gap-2 overflow-x-auto pb-2 md:hidden" aria-label="Filtres actifs">
-        <button type="button" class="shrink-0 rounded-full bg-primary px-3 py-2 text-xs font-bold text-white" (click)="toggleMobileFilters()" [attr.aria-expanded]="areMobileFiltersOpen" aria-controls="mobile-search-filters" data-testid="mobile-filters-toggle">☷ Tous les filtres <span class="ml-1 rounded-full bg-accent px-1.5">{{ activeFilterCount }}</span></button>
         @if (minPrice !== null) { <button type="button" class="shrink-0 rounded-full bg-white px-3 py-2 text-xs" (click)="removePriceFilter('minPrice')" aria-label="Supprimer le prix minimum">Prix ≥ {{ minPrice }} € ×</button> }
         @if (maxPrice !== null) { <button type="button" class="shrink-0 rounded-full bg-white px-3 py-2 text-xs" (click)="removePriceFilter('maxPrice')" aria-label="Supprimer le prix maximum">Prix ≤ {{ maxPrice }} € ×</button> }
       </div>
@@ -192,21 +191,34 @@
       </aside>
 
       <section class="flex w-full flex-col gap-4 lg:w-3/4" aria-live="polite" aria-label="Résultats de recherche">
-        @if (hasSearched && !isLoading && !errorMessage) {
-          <div class="mb-2 flex items-center justify-between gap-2">
-            <p class="text-xs md:text-[15px] leading-relaxed text-text-secondary">
-              {{ isCatalog ? catalogTotal : trips.length }} trajet{{ (isCatalog ? catalogTotal : trips.length) > 1 ? 's' : '' }} trouvé{{ (isCatalog ? catalogTotal : trips.length) > 1 ? 's' : '' }}
-              @if (resultRouteLabel()) {
-                <span class="hidden md:inline"> pour <strong class="text-primary">{{ resultRouteLabel() }}</strong></span>
-              }
-            </p>
-            <label class="flex shrink-0 items-center gap-1 text-[11px] text-text-secondary md:hidden">Trier par :
-              <select aria-label="Trier les résultats" class="max-w-[125px] bg-transparent font-bold text-primary" [(ngModel)]="sort" (change)="onFilterChange()">
+        <div class="mb-2 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div class="flex min-w-0 items-center justify-between gap-2">
+            @if (hasSearched && !isLoading && !errorMessage) {
+              <p class="min-w-0 text-xs leading-relaxed text-text-secondary md:text-[15px]">
+                {{ isCatalog ? catalogTotal : trips.length }} trajet{{ (isCatalog ? catalogTotal : trips.length) > 1 ? 's' : '' }} trouvé{{ (isCatalog ? catalogTotal : trips.length) > 1 ? 's' : '' }}
+                @if (resultRouteLabel()) {
+                  <span class="hidden md:inline"> pour <strong class="text-primary">{{ resultRouteLabel() }}</strong></span>
+                }
+              </p>
+            }
+            <button type="button" class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-white md:hidden" (click)="toggleMobileFilters()" [attr.aria-expanded]="areMobileFiltersOpen" aria-controls="mobile-search-filters" data-testid="mobile-filters-toggle">
+              <span aria-hidden="true">☷</span><span>Filtres</span>
+              @if (activeFilterCount > 0) { <span class="rounded-full bg-accent px-1.5 py-0.5" data-testid="active-filter-count">{{ activeFilterCount }}</span> }
+            </button>
+          </div>
+          @if (hasSearched && !isLoading && !errorMessage) {
+            <label class="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-[#E8E8EC] bg-white px-3 text-xs text-text-secondary md:hidden">Trier par :
+              <select aria-label="Trier les résultats" class="min-w-0 flex-1 bg-transparent text-right font-bold text-primary" [(ngModel)]="sort" (change)="onFilterChange()">
                 @for (option of sortOptions; track option.value) { <option [value]="option.value">{{ option.label }}</option> }
               </select>
             </label>
-          </div>
-        }
+            <label class="hidden shrink-0 items-center gap-1 text-[11px] text-text-secondary md:flex">Trier par :
+              <select aria-label="Trier les résultats" class="max-w-[180px] bg-transparent font-bold text-primary" [(ngModel)]="sort" (change)="onFilterChange()">
+                @for (option of sortOptions; track option.value) { <option [value]="option.value">{{ option.label }}</option> }
+              </select>
+            </label>
+          }
+        </div>
 
         @if (isLoading) {
           <div class="flex flex-col items-center justify-center rounded-xl border border-[#E8E8EC] bg-white py-16" role="status">
@@ -442,7 +454,6 @@
     </div>
   </main>
 
-  <button type="button" class="fixed bottom-4 right-4 z-30 min-h-11 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white shadow-lg md:hidden" (click)="toggleMobileFilters()" [attr.aria-expanded]="areMobileFiltersOpen" aria-controls="mobile-search-filters" data-testid="mobile-filters-floating">☷ Filtres <span class="ml-2 rounded-full bg-accent px-1.5">{{ activeFilterCount }}</span></button>
   @if (areMobileFiltersOpen) {
     <div class="fixed inset-0 z-50 flex items-end bg-black/40" (click)="closeMobileFilters()">
       <section #filterPanel id="mobile-search-filters" role="dialog" aria-modal="true" aria-labelledby="filters-title" class="max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-8" (click)="$event.stopPropagation()" data-testid="mobile-filters-panel">
