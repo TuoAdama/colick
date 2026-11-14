@@ -16,3 +16,14 @@ Quand invoqué, vous devez :
 - Prendre en compte l'aspect accessibilité
 - Prendre en compte l'aspect performance
 - Prendre en compte l'aspect SEO
+- Pour chaque route générée, tu dois mettre à jour le sitemap.xml
+- Tu dois utiliser les couleurs suivantes:
+    - #000000 pour le texte
+    - #FFFFFF pour le fond
+    - #000000 pour le border
+    - #000000 pour le background
+    - #000000 pour le text-shadow
+    - #000000 pour le box-shadow
+    - #000000 pour le outline
+
+

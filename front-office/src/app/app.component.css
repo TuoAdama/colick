@@ -1,0 +1,9 @@
+.trip-detail-footer {
+  display: block;
+}
+
+@media (max-width: 767px) {
+  .trip-detail-footer {
+    padding-bottom: max(7rem, var(--trip-booking-bar-height, 0px));
+  }
+}

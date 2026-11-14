@@ -1,0 +1,120 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of, throwError } from 'rxjs';
+import { provideRouter } from '@angular/router';
+import { Router } from '@angular/router';
+import { RegisterPageComponent } from './register-page.component';
+import { AuthService } from '../../services/auth.service';
+import { GoogleIdentityService } from '../../services/google-identity.service';
+
+describe('RegisterPageComponent', () => {
+  let fixture: ComponentFixture<RegisterPageComponent>;
+  let component: RegisterPageComponent;
+  let router: Router;
+  let navigateSpy: jasmine.Spy;
+  const authServiceMock = {
+    register: jasmine.createSpy('register').and.returnValue(of({ id: 1 } as any)),
+    googleLogin: jasmine.createSpy('googleLogin').and.returnValue(of({
+      token: 'jwt-token',
+      type: 'Bearer',
+      user: {
+        id: 2,
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        email: 'ada@example.com',
+        role: 'USER',
+        hasPassword: false,
+      },
+    })),
+  };
+  const googleIdentityServiceMock = {
+    renderButton: jasmine.createSpy('renderButton').and.resolveTo(false),
+  };
+
+  beforeEach(async () => {
+    authServiceMock.register.and.returnValue(of({ id: 1 } as any));
+
+    await TestBed.configureTestingModule({
+      imports: [RegisterPageComponent],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: authServiceMock },
+        { provide: GoogleIdentityService, useValue: googleIdentityServiceMock },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(RegisterPageComponent);
+    component = fixture.componentInstance;
+    router = TestBed.inject(Router);
+    navigateSpy = spyOn(router, 'navigate').and.resolveTo(true);
+  });
+
+  it('redirects immediately to login with the activation message after successful register', () => {
+    component.registerForm.setValue({
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      phone: '',
+      password: 'password123',
+      confirmPassword: 'password123',
+    });
+
+    component.onSubmit();
+
+    expect(authServiceMock.register).toHaveBeenCalledWith({
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      phone: undefined,
+      password: 'password123',
+      returnUrl: undefined,
+    });
+    expect(component.registerForm.contains('identityDocument')).toBeFalse();
+    expect(fixture.nativeElement.querySelector('#identityDocument')).toBeNull();
+    expect(navigateSpy).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: undefined },
+      state: {
+        successMessage: 'Pour activer votre compte, vérifiez votre e-mail et cliquez sur le lien de confirmation. Vous pourrez ensuite vous connecter.',
+      },
+    });
+  });
+
+  it('stays on registration and displays the error when register fails', () => {
+    authServiceMock.register.and.returnValue(throwError(() => ({ error: { message: 'Adresse déjà utilisée.' } })));
+    component.registerForm.setValue({
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      phone: '',
+      password: 'password123',
+      confirmPassword: 'password123',
+    });
+
+    component.onSubmit();
+    fixture.detectChanges();
+
+    expect(navigateSpy).not.toHaveBeenCalled();
+    expect(component.errorMessage).toBe('Adresse déjà utilisée.');
+    expect(fixture.nativeElement.textContent).toContain('Adresse déjà utilisée.');
+  });
+
+  it('redirects to search after Google signup when profile is already complete', () => {
+    component.onGoogleCredential('google-id-token');
+
+    expect(authServiceMock.googleLogin).toHaveBeenCalledWith('google-id-token');
+    expect(navigateSpy).toHaveBeenCalledWith(['/search']);
+  });
+
+  it('centers the registration card at the login width and separates Google auth', () => {
+    fixture.detectChanges();
+
+    const pageContainer = fixture.nativeElement.querySelector('section > div') as HTMLElement;
+    const card = fixture.nativeElement.querySelector('section > div > div') as HTMLElement;
+    const googleAuth = fixture.nativeElement.querySelector('app-google-auth-button > div') as HTMLElement;
+
+    expect(pageContainer.className).toContain('w-full');
+    expect(pageContainer.className).toContain('max-w-md');
+    expect(pageContainer.className).toContain('mx-auto');
+    expect(card.className).toContain('w-full');
+    expect(googleAuth.className).toContain('mt-4');
+  });
+});
