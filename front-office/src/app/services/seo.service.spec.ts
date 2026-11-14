@@ -24,13 +24,13 @@ describe('SeoService', () => {
 
   it('updates title, description, robots and canonical from the deepest route', () => {
     const leaf = {
-      data: {
+      routeConfig: { data: {
         seo: {
           title: 'Conditions générales d’utilisation | Coliclic',
           description: 'Conditions applicables à Coliclic.',
           index: true,
         },
-      },
+      } },
       firstChild: null,
     } as unknown as ActivatedRouteSnapshot;
     const root = { data: {}, firstChild: leaf } as unknown as ActivatedRouteSnapshot;
@@ -56,6 +56,7 @@ describe('SeoService', () => {
     expect(meta.getTag('name="twitter:card"')?.content).toBe('summary_large_image');
     expect(meta.getTag('property="og:url"')?.content.endsWith('/trips/ref/TRP-1')).toBeTrue();
     expect(meta.getTag('property="og:image"')?.content.endsWith('/og-coliclic.png')).toBeTrue();
+    expect(meta.getTag('name="robots"')?.content).toBe('noindex, nofollow');
     expect(document.head.querySelector('script[data-coliclic-structured-data]')?.textContent).toContain('Paris → Abidjan');
   });
 
@@ -64,7 +65,8 @@ describe('SeoService', () => {
 
     expect(title.getTitle()).toBe(DEFAULT_SEO.title);
     expect(meta.getTag('name="description"')?.content).toBe(DEFAULT_SEO.description);
-    expect(meta.getTag('name="robots"')?.content).toBe('index, follow');
+    expect(meta.getTag('name="robots"')?.content).toBe('noindex, nofollow');
+    expect(document.head.querySelector('script[data-coliclic-structured-data]')).toBeNull();
     expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href.endsWith('/cgu')).toBeTrue();
   });
 
@@ -79,26 +81,28 @@ describe('SeoService', () => {
     service = TestBed.inject(SeoService);
     meta = TestBed.inject(Meta);
 
-    const routes = [
-      { url: '/', title: 'Accueil' },
-      { url: '/search?mode=all', title: 'Catalogue' },
-      { url: '/trips/ref/TRP-2026-000001', title: 'Fiche trajet' },
-    ];
+    service.update(indexableRoute());
 
-    for (const route of routes) {
-      service.updateMetadata({ title: route.title, description: 'Page publique.' }, route.url);
-
-      expect(meta.getTag('name="robots"')?.content).toBe('noindex, nofollow');
-      expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href)
-        .toBe(`https://preprod.coliclic.com${route.url.split('?')[0]}`);
-    }
+    expect(meta.getTag('name="robots"')?.content).toBe('noindex, nofollow');
+    expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href)
+      .toBe('https://preprod.coliclic.com/');
   });
 
-  it('keeps production public pages indexable', () => {
-    service.updateMetadata({ title: 'Accueil', description: 'Page publique.' }, '/');
+  it('keeps explicitly opted-in routes indexable and resets robots for the next route', () => {
+    service.update(indexableRoute());
 
     expect(meta.getTag('name="robots"')?.content).toBe('index, follow');
+    service.updateMetadata({ title: 'Profil voyageur', description: 'Profil.' }, '/travelers/7/');
+
+    expect(meta.getTag('name="robots"')?.content).toBe('noindex, nofollow');
     expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href)
-      .toBe('https://coliclic.com/');
+      .toBe('https://coliclic.com/travelers/7');
   });
+
+  function indexableRoute(): ActivatedRouteSnapshot {
+    return {
+      routeConfig: { data: { seo: { title: 'Page publique', description: 'Page publique.', index: true } } },
+      firstChild: null,
+    } as unknown as ActivatedRouteSnapshot;
+  }
 });

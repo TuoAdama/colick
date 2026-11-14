@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { guestGuard } from './guards/guest.guard';
+import { PRODUCTION_ORIGIN } from './seo.config';
 
 /**
  * Application route definitions.
@@ -11,6 +12,19 @@ import { guestGuard } from './guards/guest.guard';
 export const routes: Routes = [
   {
     path: '',
+    data: {
+      seo: {
+        title: 'Envoyer un colis avec un voyageur | Coliclic',
+        description: 'Trouvez un voyageur qui peut transporter votre colis. Comparez les départs, les tarifs au kilo et la place disponible sur Coliclic.',
+        index: true,
+        structuredData: {
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: 'Coliclic',
+          url: `${PRODUCTION_ORIGIN}/`,
+        },
+      },
+    },
     loadComponent: () =>
       import('./pages/landing/landing-page.component').then(
         (m) => m.LandingPageComponent
@@ -32,6 +46,13 @@ export const routes: Routes = [
   },
   {
     path: 'comment-ca-marche',
+    data: {
+      seo: {
+        title: 'Comment envoyer un colis ou proposer un trajet | Coliclic',
+        description: 'Découvrez les étapes pour trouver un voyageur, réserver un envoi ou publier votre propre trajet sur Coliclic.',
+        index: true,
+      },
+    },
     loadComponent: () =>
       import('./pages/how-it-works/how-it-works-page.component').then(
         (m) => m.HowItWorksPageComponent
@@ -39,6 +60,13 @@ export const routes: Routes = [
   },
   {
     path: 'contact',
+    data: {
+      seo: {
+        title: 'Contacter Coliclic',
+        description: 'Contactez Coliclic pour une question sur votre compte, un envoi ou un trajet.',
+        index: true,
+      },
+    },
     loadComponent: () =>
       import('./pages/contact/contact-page.component').then(
         (m) => m.ContactPageComponent
@@ -48,8 +76,8 @@ export const routes: Routes = [
     path: 'tarifs',
     data: {
       seo: {
-        title: 'Tarifs | Coliclic',
-        description: 'Découvrez le calcul des tarifs et le mode commercial actif sur Coliclic.',
+        title: 'Tarif au kilo et règlement du transport | Coliclic',
+        description: 'Le voyageur fixe son prix au kilo. Découvrez comment calculer le coût de votre envoi et régler le transport sur Coliclic.',
         index: true,
       },
     },
@@ -102,8 +130,8 @@ export const routes: Routes = [
     {
       path: 'securite',
       trustSlug: 'security',
-      title: 'Sécurité et objets interdits | Coliclic',
-      description: 'Règles de sécurité, emballage, douane et objets interdits sur Coliclic.',
+      title: 'Préparer son colis et vérifier les objets interdits | Coliclic',
+      description: 'Préparez un emballage adapté et vérifiez les règles de sécurité, de douane et les objets interdits avant votre envoi.',
       index: true,
     },
     {
@@ -186,6 +214,7 @@ export const routes: Routes = [
   },
   {
     path: '404',
+    data: { seo: { title: 'Page introuvable | Coliclic', description: 'La page demandée est introuvable.' } },
     loadComponent: () =>
       import('./pages/not-found/not-found-page.component').then(
         (m) => m.NotFoundPageComponent

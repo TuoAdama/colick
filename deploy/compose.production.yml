@@ -90,6 +90,19 @@ services:
       traefik.http.routers.colick-production-front-office.tls: "true"
       traefik.http.routers.colick-production-front-office.tls.certresolver: "letsencrypt"
       traefik.http.services.colick-production-front-office.loadbalancer.server.port: "4000"
+      traefik.http.routers.colick-production-http.rule: "Host(`coliclic.com`) || Host(`www.coliclic.com`)"
+      traefik.http.routers.colick-production-http.entrypoints: "web"
+      traefik.http.routers.colick-production-http.service: "noop@internal"
+      traefik.http.routers.colick-production-http.middlewares: "colick-production-canonical@docker"
+      traefik.http.routers.colick-production-www.rule: "Host(`www.coliclic.com`)"
+      traefik.http.routers.colick-production-www.entrypoints: "websecure"
+      traefik.http.routers.colick-production-www.tls: "true"
+      traefik.http.routers.colick-production-www.tls.certresolver: "letsencrypt"
+      traefik.http.routers.colick-production-www.service: "noop@internal"
+      traefik.http.routers.colick-production-www.middlewares: "colick-production-canonical@docker"
+      traefik.http.middlewares.colick-production-canonical.redirectregex.regex: '^https?://(www[.])?coliclic[.]com(/.*)$$'
+      traefik.http.middlewares.colick-production-canonical.redirectregex.replacement: 'https://coliclic.com$${2}'
+      traefik.http.middlewares.colick-production-canonical.redirectregex.permanent: "true"
     restart: unless-stopped
 
 volumes:

@@ -29,7 +29,7 @@ describe('HowItWorksPageComponent', () => {
   it('offers calls to action for senders and travelers', () => {
     const links = Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[];
 
-    expect(links.find((link) => link.textContent?.trim() === 'Trouver un voyageur')?.getAttribute('href')).toBe('/search');
+    expect(links.find((link) => link.textContent?.trim() === 'Trouver un voyageur')?.getAttribute('href')).toBe('/search?mode=all');
     expect(links.find((link) => link.textContent?.trim() === 'Publier un trajet')?.getAttribute('href')).toBe('/propose');
   });
 });

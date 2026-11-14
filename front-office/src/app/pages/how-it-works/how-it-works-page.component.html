@@ -43,9 +43,13 @@
         }
       </ol>
 
-      <a routerLink="/search" class="mt-8 inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-primary">
+      <a routerLink="/search" [queryParams]="{ mode: 'all' }" class="mt-8 inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-bold text-white shadow-lg shadow-accent/20 transition hover:bg-primary">
         Trouver un voyageur
       </a>
+      <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-primary">
+        <a routerLink="/tarifs" class="underline">Comprendre le tarif au kilo</a>
+        <a routerLink="/securite" class="underline">Préparer son colis</a>
+      </div>
     </section>
 
     <section class="mt-20 border-t border-border pt-16 lg:mt-24 lg:pt-20" aria-labelledby="traveler-title">

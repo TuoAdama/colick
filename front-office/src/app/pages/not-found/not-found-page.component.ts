@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject, RESPONSE_INIT } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -8,4 +8,9 @@ import { RouterLink } from '@angular/router';
   imports: [CommonModule, RouterLink],
   templateUrl: './not-found-page.component.html',
 })
-export class NotFoundPageComponent {}
+export class NotFoundPageComponent {
+  constructor() {
+    const response = inject(RESPONSE_INIT, { optional: true });
+    if (response) response.status = 404;
+  }
+}
