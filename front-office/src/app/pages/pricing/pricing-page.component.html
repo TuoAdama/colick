@@ -13,6 +13,7 @@
         <h2 class="mt-3 font-display text-3xl font-bold text-primary">{{ config().commercialMode === 'FREE' ? 'Plateforme gratuite' : 'Commission' }}</h2>
         @if (config().commercialMode === 'FREE') {
           <p class="mt-4 leading-7 text-text-secondary">Coliclic ne prélève aucuns frais et ne conserve pas les fonds. Le voyageur et l’expéditeur organisent directement le règlement convenu.</p>
+          <a routerLink="/aide/reglement-du-transport" class="mt-3 inline-block text-sm font-semibold text-primary underline">Comment régler le transport</a>
         } @else {
           <p class="mt-4 leading-7 text-text-secondary">Le paiement est présenté comme géré par la plateforme. Une commission de {{ config().platformFeeRate | percent:'1.0-2' }} est déduite du montant convenu avec le voyageur.</p>
           <p class="mt-4 rounded-xl border border-accent/30 bg-accent/10 p-4 text-sm leading-6 text-primary" role="note">Ce mode ne doit pas être activé en production avant la mise en service effective du paiement et du remboursement.</p>

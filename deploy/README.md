@@ -1,5 +1,24 @@
 # Consulter les logs de préproduction
 
+## Lancer le référencement de Coliclic
+
+Avant la promotion, exécuter `npm run build` puis `npm run test:ssr` dans `front-office`. Mesurer l’accueil et `/comment-ca-marche` sur mobile avec Lighthouse. Examiner le coût de l’image d’accueil et vérifier que les vidéos sont chargées à la demande. Vérifier la propriété Domaine `coliclic.com` dans Google Search Console avec l’enregistrement TXT qu’elle fournit.
+
+Depuis un réseau externe, après déploiement, contrôler les réponses suivantes avec `curl -sS -D - -o /dev/null` et sans désactiver la validation TLS.
+
+| URL | Résultat attendu |
+| --- | --- |
+| `https://coliclic.com/` | `200`, aucun `X-Robots-Tag: noindex` ni `noindex` dans le HTML |
+| `http://coliclic.com/tarifs?qa=1`, `http://www.coliclic.com/tarifs?qa=1`, `https://www.coliclic.com/tarifs?qa=1` | `301` vers `https://coliclic.com/tarifs?qa=1` |
+| `https://coliclic.com/robots.txt` | `200`, autorise l’exploration et déclare le sitemap de production |
+| `https://coliclic.com/sitemap.xml` | `200`, XML avec les huit URL publiques canoniques |
+| `https://coliclic.com/url-inconnue-seo` | `404` |
+| `https://preprod.coliclic.com/` | `200` avec `X-Robots-Tag: noindex` |
+
+Une fois les contrôles réussis, soumettre `https://coliclic.com/sitemap.xml` dans Search Console et utiliser le test d’URL en direct pour l’accueil, `/comment-ca-marche` et `/tarifs`.
+
+Pendant les 30 premiers jours, relever chaque semaine les pages indexées, impressions, clics et requêtes. Lorsque l’attribution organique est disponible, suivre les événements `search_started` et `request_submitted`. Dès que les données réelles le permettent, vérifier au 75ᵉ percentile un LCP ≤ 2,5 s, un INP ≤ 200 ms et un CLS ≤ 0,1, sur mobile et ordinateur. À J+30, croiser les recherches par origine et destination avec les trajets publiés. Ajouter au sitemap une page par axe retenu si les départs sont récurrents et que la page apporte des informations propres à cet axe. Y intégrer un lien vers la recherche préfiltrée.
+
 ## Vérifier l’indexabilité après déploiement
 
 La préproduction reste accessible aux testeurs, mais ses réponses portent

@@ -94,3 +94,7 @@ jobs:
       - name: Build front-office
         working-directory: front-office
         run: npm run build
+
+      - name: Test SEO on the SSR build
+        working-directory: front-office
+        run: npm run test:ssr

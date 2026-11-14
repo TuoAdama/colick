@@ -39,7 +39,7 @@ class DeploymentIndexabilityConfigurationTest {
 
         assertThat(server)
                 .contains("app.get('/robots.txt'")
-                .contains(".type('text/plain').send('User-agent: *\\nAllow: /\\n')");
+                .contains(".type('text/plain').send(`User-agent: *\\nAllow: /\\n${sitemap}`)");
     }
 
     @Test
