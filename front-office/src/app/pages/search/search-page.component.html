@@ -191,20 +191,22 @@
       </aside>
 
       <section class="flex w-full flex-col gap-4 lg:w-3/4" aria-live="polite" aria-label="Résultats de recherche">
-        @if (hasSearched && !isLoading && !errorMessage) {
-          <div class="mb-2 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div class="flex min-w-0 items-center justify-between gap-2">
+        <div class="mb-2 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div class="flex min-w-0 items-center justify-between gap-2">
+            @if (hasSearched && !isLoading && !errorMessage) {
               <p class="min-w-0 text-xs leading-relaxed text-text-secondary md:text-[15px]">
-              {{ isCatalog ? catalogTotal : trips.length }} trajet{{ (isCatalog ? catalogTotal : trips.length) > 1 ? 's' : '' }} trouvé{{ (isCatalog ? catalogTotal : trips.length) > 1 ? 's' : '' }}
-              @if (resultRouteLabel()) {
-                <span class="hidden md:inline"> pour <strong class="text-primary">{{ resultRouteLabel() }}</strong></span>
-              }
+                {{ isCatalog ? catalogTotal : trips.length }} trajet{{ (isCatalog ? catalogTotal : trips.length) > 1 ? 's' : '' }} trouvé{{ (isCatalog ? catalogTotal : trips.length) > 1 ? 's' : '' }}
+                @if (resultRouteLabel()) {
+                  <span class="hidden md:inline"> pour <strong class="text-primary">{{ resultRouteLabel() }}</strong></span>
+                }
               </p>
-              <button type="button" class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-white md:hidden" (click)="toggleMobileFilters()" [attr.aria-expanded]="areMobileFiltersOpen" aria-controls="mobile-search-filters" data-testid="mobile-filters-toggle">
-                <span aria-hidden="true">☷</span><span>Filtres</span>
-                @if (activeFilterCount > 0) { <span class="rounded-full bg-accent px-1.5 py-0.5" data-testid="active-filter-count">{{ activeFilterCount }}</span> }
-              </button>
-            </div>
+            }
+            <button type="button" class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-white md:hidden" (click)="toggleMobileFilters()" [attr.aria-expanded]="areMobileFiltersOpen" aria-controls="mobile-search-filters" data-testid="mobile-filters-toggle">
+              <span aria-hidden="true">☷</span><span>Filtres</span>
+              @if (activeFilterCount > 0) { <span class="rounded-full bg-accent px-1.5 py-0.5" data-testid="active-filter-count">{{ activeFilterCount }}</span> }
+            </button>
+          </div>
+          @if (hasSearched && !isLoading && !errorMessage) {
             <label class="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-[#E8E8EC] bg-white px-3 text-xs text-text-secondary md:hidden">Trier par :
               <select aria-label="Trier les résultats" class="min-w-0 flex-1 bg-transparent text-right font-bold text-primary" [(ngModel)]="sort" (change)="onFilterChange()">
                 @for (option of sortOptions; track option.value) { <option [value]="option.value">{{ option.label }}</option> }
@@ -215,8 +217,8 @@
                 @for (option of sortOptions; track option.value) { <option [value]="option.value">{{ option.label }}</option> }
               </select>
             </label>
-          </div>
-        }
+          }
+        </div>
 
         @if (isLoading) {
           <div class="flex flex-col items-center justify-center rounded-xl border border-[#E8E8EC] bg-white py-16" role="status">

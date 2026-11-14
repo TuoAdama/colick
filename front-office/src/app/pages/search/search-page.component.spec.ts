@@ -484,6 +484,30 @@ describe('SearchPageComponent', () => {
     expect(panel).toBeNull();
   });
 
+  it('keeps the mobile filters entry point available before searching and after an error', () => {
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    let toggle = host.querySelector('[data-testid="mobile-filters-toggle"]') as HTMLButtonElement;
+    expect(toggle).not.toBeNull();
+    expect(host.querySelectorAll('[data-testid="mobile-filters-toggle"]').length).toBe(1);
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(host.querySelector('[data-testid="mobile-filters-panel"]')).not.toBeNull();
+    component.closeMobileFilters();
+
+    component.errorMessage = 'La recherche a échoué';
+    fixture.detectChanges();
+    toggle = host.querySelector('[data-testid="mobile-filters-toggle"]') as HTMLButtonElement;
+    expect(toggle).not.toBeNull();
+    expect(host.querySelectorAll('[data-testid="mobile-filters-toggle"]').length).toBe(1);
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(host.querySelector('[data-testid="mobile-filters-panel"]')).not.toBeNull();
+  });
+
   it('shows the active price filter count and the complete departure sort label', () => {
     setQueryParams({ mode: 'all', minPrice: '10', maxPrice: '20' });
     fixture.detectChanges();
