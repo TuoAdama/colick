@@ -67,9 +67,10 @@ services:
       traefik.http.routers.colick-preprod-back-office.tls: "true"
       traefik.http.routers.colick-preprod-back-office.tls.certresolver: "letsencrypt"
       traefik.http.routers.colick-preprod-back-office.priority: "100"
-      traefik.http.routers.colick-preprod-back-office.middlewares: "colick-preprod-noindex@docker"
+      traefik.http.routers.colick-preprod-back-office.middlewares: "colick-preprod-hsts@docker,colick-preprod-noindex@docker"
       traefik.http.services.colick-preprod-back-office.loadbalancer.server.port: "8080"
       traefik.http.middlewares.colick-preprod-noindex.headers.customresponseheaders.X-Robots-Tag: "noindex"
+      traefik.http.middlewares.colick-preprod-hsts.headers.customresponseheaders.Strict-Transport-Security: "max-age=86400"
     restart: unless-stopped
 
   front-office:
@@ -78,6 +79,18 @@ services:
     environment:
       SSR_API_BASE_URL: "http://back-office:8080/api"
       AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME:-COLICLIC_AUTH}
+      SSR_CSP_REPORT_ONLY: >-
+        default-src 'self';
+        base-uri 'self';
+        object-src 'none';
+        form-action 'self';
+        script-src 'self' https://accounts.google.com/gsi/client;
+        style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style https://fonts.googleapis.com https://api.fontshare.com;
+        font-src 'self' https://fonts.gstatic.com https://cdn.fontshare.com;
+        img-src 'self' data: blob:;
+        connect-src 'self' https://accounts.google.com/gsi/;
+        frame-src https://accounts.google.com/gsi/;
+        media-src 'self';
     depends_on:
       back-office:
         condition: service_healthy
@@ -97,8 +110,14 @@ services:
       traefik.http.routers.colick-preprod-front-office.entrypoints: "websecure"
       traefik.http.routers.colick-preprod-front-office.tls: "true"
       traefik.http.routers.colick-preprod-front-office.tls.certresolver: "letsencrypt"
-      traefik.http.routers.colick-preprod-front-office.middlewares: "colick-preprod-noindex@docker"
+      traefik.http.routers.colick-preprod-front-office.middlewares: "colick-preprod-hsts@docker,colick-preprod-noindex@docker"
       traefik.http.services.colick-preprod-front-office.loadbalancer.server.port: "4000"
+      traefik.http.routers.colick-preprod-http.rule: "Host(`preprod.coliclic.com`)"
+      traefik.http.routers.colick-preprod-http.entrypoints: "web"
+      traefik.http.routers.colick-preprod-http.middlewares: "colick-preprod-redirect-https@docker"
+      traefik.http.routers.colick-preprod-http.service: "noop@internal"
+      traefik.http.middlewares.colick-preprod-redirect-https.redirectscheme.scheme: "https"
+      traefik.http.middlewares.colick-preprod-redirect-https.redirectscheme.permanent: "true"
     restart: unless-stopped
 
 volumes:

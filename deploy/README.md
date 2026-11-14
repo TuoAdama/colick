@@ -76,3 +76,31 @@ Après chaque tentative de déploiement, le serveur conserve au maximum trois re
 Une release activée avec succès contient le marqueur `.deployment-success`. Pour rester compatible avec les anciennes releases, un répertoire sans `deployment.log` est également considéré comme fonctionnel. Les tentatives échouées, identifiées par leur `deployment.log`, ne comptent pas dans le quota et sont conservées pour permettre le diagnostic.
 
 La purge intervient uniquement après l'activation ou la fin du rollback. Une erreur de nettoyage est signalée dans les logs du déploiement sans remettre en cause l'état sain de l'application.
+
+## Vérifier les protections HTTP en préproduction
+
+Après déploiement, lancer `python3 deploy/check-preprod-http.py` depuis la racine du dépôt.
+Le script vérifie la redirection permanente avec conservation de la requête, le HSTS
+`max-age=86400`, la CSP en mode rapport sur les trois pages SSR et les en-têtes sur
+l’API, `/health` et les vidéos. En local, fournir les correspondances `--connect-to`
+vers le Traefik de test, `--insecure` pour son certificat autosigné et `--other-host`
+pour vérifier qu’un nom extérieur à préprod échappe à la redirection.
+
+Dans Chrome, ouvrir `/`, `/login` et `/search?mode=all` dans un profil sans extension.
+Dans la console, relever la page, la directive, la ressource et l’action pour chaque
+violation en mode rapport. La politique est fournie par `SSR_CSP_REPORT_ONLY` dans le
+Compose de préprod et ses diagnostics sont consultés dans le navigateur.
+
+| Pages | Directive observée en revue locale | Source |
+| --- | --- | --- |
+| Les trois pages | `script-src-elem` (`inline`) | Contrat Angular `ng-event-dispatch-contract` et appel inline `__jsaction_bootstrap` pour l’hydratation |
+| Les trois pages | `script-src-attr` (`inline`) | Gestionnaires d’événements inline, dont `onload` sur la feuille de style Angular |
+
+Le test local a confirmé le chargement des polices, la pagination du catalogue de
+20 à 40 trajets et la lecture des deux vidéos. Un script inline de test a produit
+un message dans la console et s’est exécuté. Le script Google s’est chargé, mais
+l’iframe du bouton a répondu 403 dans le test Chrome local. Après déploiement,
+confirmer l’entrypoint HTTP `web` sur le Traefik partagé et rejouer les contrôles
+sur le domaine public, dont l’ouverture du sélecteur et l’ouverture de session
+avec un compte Google de test. Relever les violations avant d’envisager une CSP
+bloquante.
