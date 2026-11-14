@@ -1,5 +1,32 @@
 # Consulter les logs de préproduction
 
+## Vérifier l’indexabilité après déploiement
+
+La préproduction reste accessible aux testeurs, mais ses réponses portent
+`X-Robots-Tag: noindex`. `robots.txt` autorise l’exploration pour que les
+moteurs puissent lire cette directive.
+
+```bash
+TRIP_REF=TRP-2026-000001
+curl -sSI https://preprod.coliclic.com/ | grep -i '^x-robots-tag:'
+curl -sSI 'https://preprod.coliclic.com/search?mode=all' | grep -i '^x-robots-tag:'
+curl -sSI "https://preprod.coliclic.com/trips/ref/$TRIP_REF" | grep -i '^x-robots-tag:'
+curl -sSI https://preprod.coliclic.com/robots.txt
+curl -sS https://preprod.coliclic.com/robots.txt
+curl -sSI https://coliclic.com/ | grep -i '^x-robots-tag:'
+```
+
+Les trois pages préprod doivent afficher `X-Robots-Tag: noindex`; `/robots.txt`
+doit avoir le type `text/plain` et contenir `User-agent: *` puis `Allow: /`.
+La dernière commande ne doit rien afficher : la règle ne s’applique pas au
+domaine de production.
+
+Si des URL préprod apparaissent déjà dans Google Search Console, inspecter
+chaque URL après déploiement et lancer le test d’URL en direct. Vérifier que
+Google peut explorer la page et détecte `noindex`, puis suivre la validation de
+l’exclusion dans le rapport d’indexation. Ne supprimer aucun trajet de
+production avant d’avoir identifié et signalé les éventuelles données de test.
+
 Le script `logs.sh` est copié dans chaque release et doit être lancé depuis la release active :
 
 ```bash

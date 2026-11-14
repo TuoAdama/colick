@@ -39,7 +39,8 @@ export class SeoService {
   updateMetadata(seo: SeoMetadata, url = this.router.url): void {
     this.title.setTitle(seo.title);
     this.meta.updateTag({ name: 'description', content: seo.description });
-    this.meta.updateTag({ name: 'robots', content: seo.index === false ? 'noindex, nofollow' : 'index, follow' });
+    const indexable = seo.index !== false && !this.isPreprodHost();
+    this.meta.updateTag({ name: 'robots', content: indexable ? 'index, follow' : 'noindex, nofollow' });
     const canonicalUrl = this.canonicalUrl(url);
     const imageUrl = new URL(seo.image ?? DEFAULT_OG_IMAGE, canonicalUrl).href;
     const tags: MetaDefinition[] = [
@@ -76,6 +77,12 @@ export class SeoService {
 
   private canonicalUrl(url: string): string {
     return new URL(url.split(/[?#]/)[0] || '/', this.request?.url ?? this.document.URL).href;
+  }
+
+  private isPreprodHost(): boolean {
+    const host = this.request?.headers.get('host')
+      ?? (this.request ? new URL(this.request.url).host : this.document.location?.host);
+    return host?.toLowerCase().split(':')[0] === 'preprod.coliclic.com';
   }
 
   private updateStructuredData(data?: Record<string, unknown>): void {
