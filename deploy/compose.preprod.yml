@@ -67,7 +67,9 @@ services:
       traefik.http.routers.colick-preprod-back-office.tls: "true"
       traefik.http.routers.colick-preprod-back-office.tls.certresolver: "letsencrypt"
       traefik.http.routers.colick-preprod-back-office.priority: "100"
+      traefik.http.routers.colick-preprod-back-office.middlewares: "colick-preprod-noindex@docker"
       traefik.http.services.colick-preprod-back-office.loadbalancer.server.port: "8080"
+      traefik.http.middlewares.colick-preprod-noindex.headers.customresponseheaders.X-Robots-Tag: "noindex"
     restart: unless-stopped
 
   front-office:
@@ -95,6 +97,7 @@ services:
       traefik.http.routers.colick-preprod-front-office.entrypoints: "websecure"
       traefik.http.routers.colick-preprod-front-office.tls: "true"
       traefik.http.routers.colick-preprod-front-office.tls.certresolver: "letsencrypt"
+      traefik.http.routers.colick-preprod-front-office.middlewares: "colick-preprod-noindex@docker"
       traefik.http.services.colick-preprod-front-office.loadbalancer.server.port: "4000"
     restart: unless-stopped
 

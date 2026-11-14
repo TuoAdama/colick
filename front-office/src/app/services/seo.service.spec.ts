@@ -1,3 +1,4 @@
+import { REQUEST } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
@@ -10,7 +11,10 @@ describe('SeoService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [{ provide: Router, useValue: { url: '/cgu?source=footer' } }],
+      providers: [
+        { provide: Router, useValue: { url: '/cgu?source=footer' } },
+        { provide: REQUEST, useValue: new Request('https://coliclic.com/cgu?source=footer') },
+      ],
     });
     service = TestBed.inject(SeoService);
     title = TestBed.inject(Title);
@@ -62,5 +66,39 @@ describe('SeoService', () => {
     expect(meta.getTag('name="description"')?.content).toBe(DEFAULT_SEO.description);
     expect(meta.getTag('name="robots"')?.content).toBe('index, follow');
     expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href.endsWith('/cgu')).toBeTrue();
+  });
+
+  it('marks every public page noindex on preprod while preserving its canonical URL', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: Router, useValue: { url: '/' } },
+        { provide: REQUEST, useValue: new Request('https://preprod.coliclic.com/') },
+      ],
+    });
+    service = TestBed.inject(SeoService);
+    meta = TestBed.inject(Meta);
+
+    const routes = [
+      { url: '/', title: 'Accueil' },
+      { url: '/search?mode=all', title: 'Catalogue' },
+      { url: '/trips/ref/TRP-2026-000001', title: 'Fiche trajet' },
+    ];
+
+    for (const route of routes) {
+      service.updateMetadata({ title: route.title, description: 'Page publique.' }, route.url);
+
+      expect(meta.getTag('name="robots"')?.content).toBe('noindex, nofollow');
+      expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href)
+        .toBe(`https://preprod.coliclic.com${route.url.split('?')[0]}`);
+    }
+  });
+
+  it('keeps production public pages indexable', () => {
+    service.updateMetadata({ title: 'Accueil', description: 'Page publique.' }, '/');
+
+    expect(meta.getTag('name="robots"')?.content).toBe('index, follow');
+    expect(document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href)
+      .toBe('https://coliclic.com/');
   });
 });

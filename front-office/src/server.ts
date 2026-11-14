@@ -21,6 +21,10 @@ app.get('/health', (_req, res) => {
   res.status(200).type('text/plain').send('ok');
 });
 
+app.get('/robots.txt', (_req, res) => {
+  res.status(200).type('text/plain').send('User-agent: *\nAllow: /\n');
+});
+
 /**
  * Example Express Rest API endpoints can be defined here.
  * Uncomment and define endpoints as necessary.
