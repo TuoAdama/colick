@@ -1,0 +1,6 @@
+__pycache__/
+.venv/
+target/
+output/*.wav
+output/review/
+output/*-sources.zip
