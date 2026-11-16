@@ -116,6 +116,11 @@ h3 {
   color: #6b7280;
 }
 
+.meeting-point {
+  margin-top: .5rem;
+  overflow-wrap: anywhere;
+}
+
 .stop-label {
   margin-bottom: 4px;
 }

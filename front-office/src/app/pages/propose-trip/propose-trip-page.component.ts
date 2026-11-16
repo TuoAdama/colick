@@ -41,6 +41,9 @@ export class ProposeTripPageComponent implements OnInit {
   /** Selected departure location */
   departure: Location | null = null;
 
+  meetingPoint = '';
+  readonly meetingPointMaxLength = 255;
+
   /** Selected destination location */
   destination: Location | null = null;
 
@@ -114,7 +117,8 @@ export class ProposeTripPageComponent implements OnInit {
       this.maxWeight !== null &&
       this.maxWeight >= 1 &&
       this.pricePerKilo !== null &&
-      this.pricePerKilo >= 0
+      this.pricePerKilo >= 0 &&
+      this.meetingPoint.length <= this.meetingPointMaxLength
     );
   }
 
@@ -217,6 +221,7 @@ export class ProposeTripPageComponent implements OnInit {
 
     const payload: CreateTripDto = {
       departureAddress: this.formatLocation(this.departure!),
+      meetingPoint: this.meetingPoint.trim(),
       destination: this.formatLocation(this.destination!),
       departureTime: this.departureTime,
       arrivalTime: this.arrivalTime,
@@ -274,6 +279,7 @@ export class ProposeTripPageComponent implements OnInit {
 
   private populateForm(trip: Trip): void {
     this.departureQuery = trip.departureAddress;
+    this.meetingPoint = trip.meetingPoint ?? '';
     this.destinationQuery = trip.destination;
     this.departure = this.createLocationFromAddress(trip.departureAddress);
     this.destination = this.createLocationFromAddress(trip.destination);

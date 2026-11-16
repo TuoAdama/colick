@@ -20,6 +20,7 @@ public class TripResponse {
     private String travelerName;
     private String travelerPhotoUrl;
     private String departureAddress;
+    private String meetingPoint;
     private String destination;
     private LocalDateTime departureTime;
     private LocalDateTime arrivalTime;
@@ -71,6 +72,7 @@ public class TripResponse {
                 .travelerName(trip.getTraveler().getFirstName() + " " + trip.getTraveler().getLastName())
                 .travelerPhotoUrl(trip.getTraveler().getPhotoUrl())
                 .departureAddress(trip.getDepartureAddress())
+                .meetingPoint(trip.getMeetingPoint())
                 .destination(trip.getDestination())
                 .departureTime(trip.getDepartureTime())
                 .arrivalTime(trip.getArrivalTime())

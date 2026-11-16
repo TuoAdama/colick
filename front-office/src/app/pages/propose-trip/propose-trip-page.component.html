@@ -109,6 +109,26 @@
                     (cleared)="onDepartureCleared()"
                   />
 
+                  <div>
+                    <label for="meetingPoint" class="block text-sm font-medium text-text-primary mb-1.5">
+                      Point de rendez-vous (facultatif)
+                    </label>
+                    <input
+                      id="meetingPoint"
+                      name="meetingPoint"
+                      type="text"
+                      [(ngModel)]="meetingPoint"
+                      [maxlength]="meetingPointMaxLength"
+                      [disabled]="!canEditTrip"
+                      placeholder="Ex. Gare de Lyon, hall 2"
+                      aria-describedby="meetingPointHint"
+                      class="block w-full rounded-xl border border-gray-200 bg-bg-secondary px-4 py-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
+                    />
+                    <p id="meetingPointHint" class="mt-1.5 text-sm text-text-secondary">
+                      Indiquez une adresse ou un lieu pour la remise du colis. Ce lieu sera visible sur l’annonce publique.
+                    </p>
+                  </div>
+
                   <!-- Destination autocomplete — pre-filled in edit mode -->
                   <app-autocomplete
                     label="Destination *"

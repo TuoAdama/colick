@@ -293,6 +293,7 @@ class TripServiceImplTest {
     void updateTrip_shouldUpdateActiveTripAndNotifyAcceptedBookingSenders() {
         UpdateTripRequest request = new UpdateTripRequest();
         request.setDepartureAddress("Lyon");
+        request.setMeetingPoint("  Gare de Lyon-Part-Dieu  ");
         request.setDestination("Dakar");
         request.setInstantAcceptance(true);
 
@@ -322,6 +323,7 @@ class TripServiceImplTest {
         TripResponse response = tripService.updateTrip(10L, request, traveler);
 
         assertThat(response.getDepartureAddress()).isEqualTo("Lyon");
+        assertThat(response.getMeetingPoint()).isEqualTo("Gare de Lyon-Part-Dieu");
         assertThat(response.getDestination()).isEqualTo("Dakar");
         assertThat(response.isInstantAcceptance()).isTrue();
         verify(bookingRepository).findByTripAndStatus(sampleTrip, TripBooking.BookingStatus.ACCEPTED);

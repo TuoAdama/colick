@@ -103,6 +103,25 @@ describe('TripDetailPageComponent', () => {
     } });
   });
 
+  it('shows the meeting point as text under departure for anonymous visitors', () => {
+    trip.meetingPoint = 'Gare de Lyon, <b>hall 2</b>';
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const meetingPoint = host.querySelector('.itinerary .stop:first-child .meeting-point');
+    expect(meetingPoint?.textContent).toContain('Point de rendez-vous');
+    expect(meetingPoint?.textContent).toContain('Gare de Lyon, <b>hall 2</b>');
+    expect(meetingPoint?.querySelector('b')).toBeNull();
+    expect(host.querySelector('.conditions')?.textContent).toContain('Horaire de remise à convenir');
+    expect(service.getMyBookings).not.toHaveBeenCalled();
+  });
+
+  it('keeps the existing handoff instructions when the trip has no meeting point', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('.meeting-point')).toBeNull();
+    expect(host.querySelector('.conditions')?.textContent).toContain('Les détails de la remise du colis seront discutés avec le voyageur.');
+  });
+
   it('switches the approval wording for instant acceptance', () => {
     trip.instantAcceptance = true;
     fixture.detectChanges();

@@ -31,7 +31,14 @@
             @for (stop of [{ label: 'Départ', icon: 'flight_takeoff', date: trip.departureTime, address: trip.departureAddress }, { label: 'Arrivée', icon: 'location_on', date: trip.arrivalTime, address: trip.destination }]; track stop.label) {
               <div class="stop">
                 <span class="icon-circle route-icon"><span class="material-symbols-outlined" aria-hidden="true">{{ stop.icon }}</span></span>
-                <div class="stop-content"><p class="muted stop-label">{{ stop.label }}</p><time [attr.datetime]="stop.date"><span class="stop-date">{{ formatDate(stop.date) }}</span><span class="stop-time">{{ formatTime(stop.date) }}</span></time><p class="muted address">{{ stop.address }}</p></div>
+                <div class="stop-content">
+                  <p class="muted stop-label">{{ stop.label }}</p>
+                  <time [attr.datetime]="stop.date"><span class="stop-date">{{ formatDate(stop.date) }}</span><span class="stop-time">{{ formatTime(stop.date) }}</span></time>
+                  <p class="muted address">{{ stop.address }}</p>
+                  @if ($first && trip.meetingPoint) {
+                    <p class="meeting-point"><strong>Point de rendez-vous</strong><br>{{ trip.meetingPoint }}</p>
+                  }
+                </div>
               </div>
             }
           </section>
@@ -49,7 +56,18 @@
           <section class="detail-card conditions" aria-labelledby="conditions-title">
             <h2 id="conditions-title">À savoir</h2>
             <div class="condition"><span class="icon-circle neutral"><span class="material-symbols-outlined" aria-hidden="true">group</span></span><div><h3>{{ trip.instantAcceptance ? 'Confirmation instantanée' : 'Sur accord du voyageur' }}</h3><p class="muted">{{ trip.instantAcceptance ? 'Votre demande de réservation sera acceptée automatiquement.' : 'Votre demande de réservation sera soumise au voyageur.' }}</p></div></div>
-            <div class="condition"><span class="icon-circle neutral"><span class="material-symbols-outlined" aria-hidden="true">chat</span></span><div><h3>Remise à convenir</h3><p class="muted">Les détails de la remise du colis seront discutés avec le voyageur.</p></div></div>
+            <div class="condition">
+              <span class="icon-circle neutral"><span class="material-symbols-outlined" aria-hidden="true">chat</span></span>
+              <div>
+                @if (trip.meetingPoint) {
+                  <h3>Horaire de remise à convenir</h3>
+                  <p class="muted">Convenez avec le voyageur de l’heure à laquelle lui remettre le colis.</p>
+                } @else {
+                  <h3>Remise à convenir</h3>
+                  <p class="muted">Les détails de la remise du colis seront discutés avec le voyageur.</p>
+                }
+              </div>
+            </div>
           </section>
         </div>
         <aside class="detail-card booking-summary" aria-label="Réservation" data-testid="trip-booking-summary">

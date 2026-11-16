@@ -34,6 +34,9 @@ public class Trip {
     @Column(nullable = false)
     private String departureAddress;
 
+    @Column(length = 255)
+    private String meetingPoint;
+
     @Column(nullable = false)
     private String destination;
 

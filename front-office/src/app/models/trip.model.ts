@@ -3,6 +3,7 @@
  */
 export interface CreateTripDto {
   departureAddress: string;
+  meetingPoint?: string;
   destination: string;
   departureTime: string;
   arrivalTime: string;
@@ -29,6 +30,7 @@ export interface Trip {
   travelerRatingAverage?: number | null;
   travelerRatingCount?: number;
   departureAddress: string;
+  meetingPoint?: string | null;
   destination: string;
   departureTime: string;
   arrivalTime: string;
