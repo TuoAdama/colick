@@ -89,6 +89,7 @@ public class TripServiceImpl implements TripService {
         Trip trip = Trip.builder()
                 .traveler(traveler)
                 .departureAddress(request.getDepartureAddress())
+                .meetingPoint(normalizeMeetingPoint(request.getMeetingPoint()))
                 .destination(request.getDestination())
                 .departureTime(request.getDepartureTime())
                 .arrivalTime(request.getArrivalTime())
@@ -140,6 +141,7 @@ public class TripServiceImpl implements TripService {
         boolean arrivalChanged = request.getArrivalTime() != null
                 && !request.getArrivalTime().equals(trip.getArrivalTime());
         if (request.getDepartureAddress() != null) trip.setDepartureAddress(request.getDepartureAddress());
+        if (request.getMeetingPoint() != null) trip.setMeetingPoint(normalizeMeetingPoint(request.getMeetingPoint()));
         if (request.getDestination() != null) trip.setDestination(request.getDestination());
         if (request.getDepartureTime() != null) trip.setDepartureTime(request.getDepartureTime());
         if (request.getArrivalTime() != null) trip.setArrivalTime(request.getArrivalTime());
@@ -162,6 +164,10 @@ public class TripServiceImpl implements TripService {
         }
         notifyAcceptedBookingSendersAboutTripUpdate(savedTrip);
         return toTripResponse(savedTrip);
+    }
+
+    private static String normalizeMeetingPoint(String meetingPoint) {
+        return meetingPoint == null || meetingPoint.isBlank() ? null : meetingPoint.strip();
     }
 
     @Override

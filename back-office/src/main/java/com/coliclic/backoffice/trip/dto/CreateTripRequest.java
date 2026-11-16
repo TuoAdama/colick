@@ -4,6 +4,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -20,6 +21,9 @@ public class CreateTripRequest {
 
     @NotBlank
     private String destination;
+
+    @Size(max = 255)
+    private String meetingPoint;
 
     @NotNull
     @Future

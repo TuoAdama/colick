@@ -1,6 +1,7 @@
 package com.coliclic.backoffice.trip.dto;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -16,6 +17,11 @@ public class UpdateTripRequest {
     private String departureAddress;
 
     private String destination;
+
+    /** A blank value clears the point; null leaves it unchanged. */
+    @Size(max = 255)
+    private String meetingPoint;
+
 
     private LocalDateTime departureTime;
 

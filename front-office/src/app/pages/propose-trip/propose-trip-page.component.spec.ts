@@ -73,6 +73,7 @@ describe('ProposeTripPageComponent', () => {
       travelerId: 1,
       travelerName: 'Ada',
       departureAddress: 'Paris, France',
+      meetingPoint: 'Gare de Lyon, hall 2',
       destination: "Abidjan, Côte d'Ivoire",
       departureTime: '2099-05-10T08:00:00',
       arrivalTime: '2099-05-10T16:00:00',
@@ -115,9 +116,10 @@ describe('ProposeTripPageComponent', () => {
     expect(mobileAlert?.textContent?.trim()).toBe(component.errorMessage);
   }
 
-  it('creates a trip in creation mode and redirects to trips management with a success flag', () => {
+  it('creates a trip with a meeting point and redirects to trips management with a success flag', async () => {
     setRouteId();
     fixture.detectChanges();
+    await fixture.whenStable();
 
     component.departure = { id: 1, name: 'Paris', country: 'France', isoCode: 'FR', type: 'CITY' };
     component.destination = { id: 2, name: 'Abidjan', country: "Côte d'Ivoire", isoCode: 'CI', type: 'CITY' };
@@ -127,10 +129,17 @@ describe('ProposeTripPageComponent', () => {
     component.pricePerKilo = 15;
     component.instantAcceptance = true;
 
+    const meetingPoint = fixture.nativeElement.querySelector('#meetingPoint') as HTMLInputElement;
+    expect(meetingPoint.maxLength).toBe(255);
+    expect(meetingPoint.labels?.[0].textContent).toContain('Point de rendez-vous (facultatif)');
+    expect(fixture.nativeElement.querySelector('#meetingPointHint').textContent).toContain('visible sur l’annonce publique');
+    meetingPoint.value = '  Gare de Lyon, hall 2  ';
+    meetingPoint.dispatchEvent(new Event('input'));
     component.submit();
 
     expect(tripServiceMock.createTrip).toHaveBeenCalledWith({
       departureAddress: 'Paris, France',
+      meetingPoint: 'Gare de Lyon, hall 2',
       destination: "Abidjan, Côte d'Ivoire",
       departureTime: '2099-05-10T08:00',
       arrivalTime: '2099-05-10T16:00',
@@ -143,9 +152,10 @@ describe('ProposeTripPageComponent', () => {
     });
   });
 
-  it('loads an active trip in edit mode, pre-fills the form and updates it', () => {
+  it('pre-fills the meeting point in edit mode and lets the traveler clear it', async () => {
     setRouteId('12');
     fixture.detectChanges();
+    await fixture.whenStable();
 
     expect(tripServiceMock.getTripById).toHaveBeenCalledWith(12);
     expect(component.isEditMode).toBeTrue();
@@ -164,11 +174,16 @@ describe('ProposeTripPageComponent', () => {
     expect(autocompleteComponents[1].componentInstance.initialQuery).toBe("Abidjan, Côte d'Ivoire");
     expect(autocompleteComponents[1].componentInstance.query).toBe("Abidjan, Côte d'Ivoire");
 
+    const meetingPoint = fixture.nativeElement.querySelector('#meetingPoint') as HTMLInputElement;
+    expect(meetingPoint.value).toBe('Gare de Lyon, hall 2');
+    meetingPoint.value = '';
+    meetingPoint.dispatchEvent(new Event('input'));
     component.maxWeight = 25;
     component.submit();
 
     expect(tripServiceMock.updateTrip).toHaveBeenCalledWith(12, {
       departureAddress: 'Paris, France',
+      meetingPoint: '',
       destination: "Abidjan, Côte d'Ivoire",
       departureTime: component.departureTime,
       arrivalTime: component.arrivalTime,
