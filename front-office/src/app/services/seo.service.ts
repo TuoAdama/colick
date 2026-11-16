@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, REQUEST, inject } from '@angular/core';
 import { Meta, MetaDefinition, Title } from '@angular/platform-browser';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
+import { PREPROD_HOST } from '../seo.config';
 
 export interface SeoRouteData {
   title: string;
@@ -18,7 +19,7 @@ export interface SeoMetadata extends SeoRouteData {
 export const DEFAULT_SEO: SeoRouteData = {
   title: 'Coliclic - Envoyez vos colis avec des voyageurs de confiance',
   description: 'Coliclic met en relation expéditeurs et voyageurs pour transporter des colis.',
-  index: true,
+  index: false,
 };
 
 export const DEFAULT_OG_IMAGE = '/og-coliclic.png';
@@ -33,13 +34,18 @@ export class SeoService {
 
   update(snapshot: ActivatedRouteSnapshot): void {
     const leaf = this.deepestChild(snapshot);
-    this.updateMetadata((leaf.data['seo'] as SeoMetadata | undefined) ?? DEFAULT_SEO, this.router.url);
+    const seo = (leaf.routeConfig?.data?.['seo'] as SeoMetadata | undefined) ?? DEFAULT_SEO;
+    this.applyMetadata(seo, this.router.url, seo.index === true);
   }
 
-  updateMetadata(seo: SeoMetadata, url = this.router.url): void {
+  updateMetadata(seo: Omit<SeoMetadata, 'index'>, url = this.router.url): void {
+    this.applyMetadata(seo, url, false);
+  }
+
+  private applyMetadata(seo: SeoMetadata, url: string, routeAllowsIndexing: boolean): void {
     this.title.setTitle(seo.title);
     this.meta.updateTag({ name: 'description', content: seo.description });
-    const indexable = seo.index !== false && !this.isPreprodHost();
+    const indexable = routeAllowsIndexing && !this.isPreprodHost();
     this.meta.updateTag({ name: 'robots', content: indexable ? 'index, follow' : 'noindex, nofollow' });
     const canonicalUrl = this.canonicalUrl(url);
     const imageUrl = new URL(seo.image ?? DEFAULT_OG_IMAGE, canonicalUrl).href;
@@ -76,13 +82,15 @@ export class SeoService {
   }
 
   private canonicalUrl(url: string): string {
-    return new URL(url.split(/[?#]/)[0] || '/', this.request?.url ?? this.document.URL).href;
+    const canonical = new URL(url.split(/[?#]/)[0] || '/', this.request?.url ?? this.document.URL);
+    canonical.pathname = canonical.pathname.replace(/\/+$/, '') || '/';
+    return canonical.href;
   }
 
   private isPreprodHost(): boolean {
     const host = this.request?.headers.get('host')
       ?? (this.request ? new URL(this.request.url).host : this.document.location?.host);
-    return host?.toLowerCase().split(':')[0] === 'preprod.coliclic.com';
+    return host?.toLowerCase().split(':')[0] === PREPROD_HOST;
   }
 
   private updateStructuredData(data?: Record<string, unknown>): void {
@@ -92,7 +100,7 @@ export class SeoService {
     const script = this.document.createElement('script');
     script.type = 'application/ld+json';
     script.setAttribute('data-coliclic-structured-data', 'true');
-    script.textContent = JSON.stringify(data);
+    script.textContent = JSON.stringify(data).replace(/</g, '\\u003c');
     this.document.head.appendChild(script);
   }
 }
