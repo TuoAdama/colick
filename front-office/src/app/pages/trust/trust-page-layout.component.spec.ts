@@ -52,17 +52,16 @@ describe('TrustPageLayoutComponent', () => {
     expect(host.querySelector('aside[role="note"]')).toBeNull();
   });
 
-  it('explains which address an individual editor must publish', async () => {
+  it('keeps the legal notice editor section free of address placeholders and guidance', async () => {
     await harness.navigateByUrl('/mentions-legales', TrustPageComponent);
     const host = harness.routeNativeElement as HTMLElement;
     const editorText = host.querySelector('#editeur')?.textContent ?? '';
 
     expect(host.querySelector('aside[role="note"]')).toBeNull();
     expect(editorText).not.toContain('à renseigner avant la mise en production');
-    expect(editorText).toContain('Si l’édition du service est exercée à titre professionnel');
-    expect(editorText).toContain('indiquer son domicile et son numéro de téléphone, même sans société');
-    expect(editorText).toContain('à titre non professionnel');
-    expect(editorText).toContain('en indiquant le nom et l’adresse de son hébergeur');
+    expect(editorText).not.toContain('à titre professionnel');
+    expect(editorText).not.toContain('à titre non professionnel');
+    expect(editorText).toContain('Coliclic est édité par Adama Tuo, personne physique.');
   });
 
   it('keeps the document route when navigating to a section', async () => {
