@@ -81,6 +81,16 @@ Les endpoints `GET /api/admin/users`, `/{id}`, `/{id}/trips` et `/{id}/bookings`
 accepte aussi `q`. Les inscriptions et activités les plus récentes sont affichées
 en premier, avec les dates inconnues en dernier.
 
+La rubrique `/admin/trips` liste tous les trajets publiés, tous statuts confondus.
+La fiche d’un trajet donne accès au compte du voyageur et à ses réservations
+associées. Les fiches de réservation affichent les coordonnées du destinataire
+et, si elle est disponible, la photo protégée du colis. Les listes de trajets
+et de réservations sont paginées par 20 éléments.
+
+Les endpoints sous `/api/admin/trips` exigent le rôle `ADMIN`. L’annulation
+d’un trajet actif le retire du catalogue, conserve son historique et avertit
+les expéditeurs ayant une réservation en attente ou acceptée.
+
 - Possibilité de consulter les recherches qui ont été créées
 - Interface pour afficher les demandes associées à une recherche
 - Possibilité de consulter les infos qui ont été créées par les voyage

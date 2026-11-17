@@ -31,6 +31,11 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
             @Param("userId") Long userId,
             Pageable pageable);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "traveler")
+    @Query("select trip from Trip trip "
+            + "order by case when trip.createdAt is null then 1 else 0 end, trip.createdAt desc, trip.id desc")
+    Page<Trip> findAllForAdmin(Pageable pageable);
+
     long countByTraveler(User traveler);
 
     @Query("select trip.traveler.id as userId, count(trip) as activityCount from Trip trip "
