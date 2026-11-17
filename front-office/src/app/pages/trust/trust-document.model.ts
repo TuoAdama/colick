@@ -24,7 +24,6 @@ export interface TrustDocument {
   slug: TrustDocumentSlug;
   title: string;
   description: string;
-  version: string;
   updatedAt: string;
   updatedAtLabel: string;
   notice?: string;

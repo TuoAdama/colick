@@ -9,7 +9,6 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     slug: 'about',
     title: 'À propos de Coliclic',
     description: 'Découvrez la mission de Coliclic et son rôle dans la mise en relation entre expéditeurs et voyageurs.',
-    version: '1.0',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
     sections: [
@@ -51,7 +50,6 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     slug: 'help',
     title: 'Centre d’aide',
     description: 'Réponses aux questions fréquentes sur les trajets, réservations, colis et comptes Coliclic.',
-    version: '1.0',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
     sections: [
@@ -86,7 +84,6 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     slug: 'transport-payment',
     title: 'Comment régler le transport ?',
     description: 'Découvrez les modalités de règlement du transport sur Coliclic.',
-    version: '1.0',
     updatedAt: '2026-11-13',
     updatedAtLabel: '13 novembre 2026',
     sections: [
@@ -120,7 +117,6 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     slug: 'terms',
     title: 'Conditions générales d’utilisation',
     description: 'Règles applicables à l’utilisation de la plateforme Coliclic.',
-    version: '1.0',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
     sections: [
@@ -144,7 +140,6 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     slug: 'privacy',
     title: 'Politique de confidentialité',
     description: 'Informations sur les données personnelles traitées par Coliclic et sur vos droits.',
-    version: '1.0',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
     sections: [
@@ -166,12 +161,10 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     slug: 'legal-notice',
     title: 'Mentions légales',
     description: 'Informations relatives à l’éditeur et à l’hébergement de Coliclic.',
-    version: '1.0',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
-    notice: 'Les mentions légales doivent être complétées avec l’adresse de l’éditeur et les coordonnées vérifiées de l’hébergeur avant la mise en production.',
     sections: [
-      { id: 'editeur', title: 'Éditeur', paragraphs: ['Coliclic est édité par Adama Tuo, personne physique. Adresse de l’éditeur : à renseigner avant la mise en production. Contact : support@atuo.fr.'] },
+      { id: 'editeur', title: 'Éditeur', paragraphs: ['Coliclic est édité par Adama Tuo, personne physique. Contact : support@atuo.fr.'] },
       { id: 'publication', title: 'Direction de la publication', paragraphs: ['Le directeur de la publication est Adama Tuo.'] },
       { id: 'hebergement', title: 'Hébergement', paragraphs: ['Le nom, la raison sociale, l’adresse et les coordonnées de l’hébergeur devront être renseignés avant la mise en production.'] },
       { id: 'contact', title: 'Contact', paragraphs: ['Pour toute question sur le service ou la protection des données, écrivez à support@atuo.fr.'] },
@@ -186,7 +179,6 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     slug: 'security',
     title: 'Sécurité et objets interdits',
     description: 'Conseils de sécurité, règles d’emballage et catégories d’objets refusés sur Coliclic.',
-    version: '1.0',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
     sections: [
@@ -208,7 +200,6 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     slug: 'cancellation-disputes',
     title: 'Annulation et litiges',
     description: 'Règles d’annulation, de remboursement et de traitement des réclamations sur Coliclic.',
-    version: '1.0',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
     notice: 'Le médiateur de la consommation et ses coordonnées doivent être ajoutés avant toute mise en production.',
