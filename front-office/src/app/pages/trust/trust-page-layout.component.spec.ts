@@ -4,8 +4,10 @@ import { TestBed } from '@angular/core/testing';
 import { NavigationEnd, provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { filter, firstValueFrom } from 'rxjs';
+import { routes } from '../../app.routes';
 import { FREE_APP_CONFIG, PublicAppConfig } from '../../models/app-config.model';
 import { AppConfigService } from '../../services/app-config.service';
+import { ContactService } from '../../services/contact.service';
 import { TRUST_DOCUMENTS } from './trust-documents';
 import { TrustPageComponent } from './trust-page.component';
 
@@ -21,10 +23,12 @@ describe('TrustPageLayoutComponent', () => {
           { path: 'a-propos', component: TrustPageComponent, data: { trustSlug: 'about' } },
           { path: 'aide/reglement-du-transport', component: TrustPageComponent, data: { trustSlug: 'transport-payment' } },
           { path: 'annulation-litiges', component: TrustPageComponent, data: { trustSlug: 'cancellation-disputes' } },
+          routes.find(route => route.path === 'annulation-litiges/formulaire')!,
           { path: 'cgu', component: TrustPageComponent, data: { trustSlug: 'terms' } },
           { path: 'mentions-legales', component: TrustPageComponent, data: { trustSlug: 'legal-notice' } },
         ]),
         { provide: AppConfigService, useValue: { config } },
+        { provide: ContactService, useValue: {} },
       ],
     }).compileComponents();
 
@@ -50,6 +54,27 @@ describe('TrustPageLayoutComponent', () => {
     const host = harness.routeNativeElement as HTMLElement;
 
     expect(host.querySelector('aside[role="note"]')).toBeNull();
+  });
+
+  it('links the claims section to the dedicated public form and removes the warning', async () => {
+    await harness.navigateByUrl('/annulation-litiges', TrustPageComponent);
+    const host = harness.routeNativeElement as HTMLElement;
+    const formLink = host.querySelector<HTMLAnchorElement>('#reclamation a');
+    const router = TestBed.inject(Router);
+
+    expect(host.querySelector('aside[role="note"]')).toBeNull();
+    expect(host.textContent).not.toContain('avant toute mise en production');
+    expect(host.querySelector('#reclamation')?.textContent).toContain('par e-mail');
+    expect(formLink?.getAttribute('href')).toBe('/annulation-litiges/formulaire');
+
+    const navigationEnd = firstValueFrom(router.events.pipe(filter(event => event instanceof NavigationEnd)));
+    formLink!.click();
+    await navigationEnd;
+    harness.detectChanges();
+
+    expect(router.url).toBe('/annulation-litiges/formulaire');
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('Formulaire de litige');
+    expect(harness.routeNativeElement?.querySelector('#contact-subject')).toBeNull();
   });
 
   it('keeps the legal notice editor section free of address placeholders and guidance', async () => {

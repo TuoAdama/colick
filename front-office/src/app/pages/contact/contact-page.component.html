@@ -1,9 +1,14 @@
 <section class="min-h-screen bg-background-primary pb-16 pt-28 sm:pb-20 sm:pt-32">
   <div class="mx-auto max-w-2xl px-4 sm:px-6">
     <div class="text-center">
-      <span class="inline-flex rounded-full bg-accent/10 px-4 py-1.5 text-sm font-semibold text-accent">{{ isProfileReport ? 'Signalement confidentiel' : 'Une question ?' }}</span>
-      <h1 class="mt-5 font-display text-4xl font-bold tracking-tight text-primary sm:text-5xl">{{ isProfileReport ? 'Signaler un profil' : 'Nous contacter' }}</h1>
-      <p class="mt-5 text-base leading-7 text-text-secondary sm:text-lg">{{ isProfileReport ? 'Décrivez précisément la situation. Les références du profil seront jointes automatiquement au message.' : 'Notre équipe est à votre écoute. Envoyez-nous votre message, nous vous répondrons dès que possible.' }}</p>
+      @if (isDispute) {
+        <h1 class="font-display text-4xl font-bold tracking-tight text-primary sm:text-5xl">Formulaire de litige</h1>
+        <p class="mt-5 text-base leading-7 text-text-secondary sm:text-lg">Décrivez la situation. Le support Coliclic vous répondra à l’adresse e-mail indiquée.</p>
+      } @else {
+        <span class="inline-flex rounded-full bg-accent/10 px-4 py-1.5 text-sm font-semibold text-accent">{{ isProfileReport ? 'Signalement confidentiel' : 'Une question ?' }}</span>
+        <h1 class="mt-5 font-display text-4xl font-bold tracking-tight text-primary sm:text-5xl">{{ isProfileReport ? 'Signaler un profil' : 'Nous contacter' }}</h1>
+        <p class="mt-5 text-base leading-7 text-text-secondary sm:text-lg">{{ isProfileReport ? 'Décrivez précisément la situation. Les références du profil seront jointes automatiquement au message.' : 'Notre équipe est à votre écoute. Envoyez-nous votre message, nous vous répondrons dès que possible.' }}</p>
+      }
     </div>
 
     <div class="mt-10 rounded-2xl border border-border bg-white p-6 shadow-sm sm:p-8">
@@ -22,20 +27,33 @@
           @if (contactForm.controls.email.touched && contactForm.controls.email.hasError('email')) { <p class="mt-1 text-xs text-error">Le format de l’email est invalide.</p> }
           @if (contactForm.controls.email.touched && contactForm.controls.email.hasError('maxlength')) { <p class="mt-1 text-xs text-error">L’email est trop long.</p> }
         </div>
+        @if (isDispute) {
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div>
+              <label for="contact-trip-reference" class="mb-1.5 block text-sm font-medium text-text-secondary">Référence du trajet (facultative)</label>
+              <input id="contact-trip-reference" type="text" formControlName="tripReference" [maxlength]="referenceMaxLength" class="w-full rounded-xl border border-gray-200 bg-background-secondary px-4 py-3 text-text-primary transition focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/50" />
+            </div>
+            <div>
+              <label for="contact-booking-reference" class="mb-1.5 block text-sm font-medium text-text-secondary">Référence de la réservation (facultative)</label>
+              <input id="contact-booking-reference" type="text" formControlName="bookingReference" [maxlength]="referenceMaxLength" class="w-full rounded-xl border border-gray-200 bg-background-secondary px-4 py-3 text-text-primary transition focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/50" />
+            </div>
+          </div>
+        } @else {
+          <div>
+            <label for="contact-subject" class="mb-1.5 block text-sm font-medium text-text-secondary">Sujet</label>
+            <input id="contact-subject" type="text" formControlName="subject" maxlength="150" class="w-full rounded-xl border border-gray-200 bg-background-secondary px-4 py-3 text-text-primary transition focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/50" />
+            @if (contactForm.controls.subject.touched && contactForm.controls.subject.hasError('required')) { <p class="mt-1 text-xs text-error">Le sujet est requis.</p> }
+            @if (contactForm.controls.subject.touched && contactForm.controls.subject.hasError('maxlength')) { <p class="mt-1 text-xs text-error">Le sujet ne peut pas dépasser 150 caractères.</p> }
+          </div>
+        }
         <div>
-          <label for="contact-subject" class="mb-1.5 block text-sm font-medium text-text-secondary">Sujet</label>
-          <input id="contact-subject" type="text" formControlName="subject" maxlength="150" class="w-full rounded-xl border border-gray-200 bg-background-secondary px-4 py-3 text-text-primary transition focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/50" />
-          @if (contactForm.controls.subject.touched && contactForm.controls.subject.hasError('required')) { <p class="mt-1 text-xs text-error">Le sujet est requis.</p> }
-          @if (contactForm.controls.subject.touched && contactForm.controls.subject.hasError('maxlength')) { <p class="mt-1 text-xs text-error">Le sujet ne peut pas dépasser 150 caractères.</p> }
-        </div>
-        <div>
-          <label for="contact-message" class="mb-1.5 block text-sm font-medium text-text-secondary">Message</label>
-          <textarea id="contact-message" rows="7" formControlName="message" maxlength="5000" class="w-full resize-y rounded-xl border border-gray-200 bg-background-secondary px-4 py-3 text-text-primary transition focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/50"></textarea>
-          @if (contactForm.controls.message.touched && contactForm.controls.message.hasError('required')) { <p class="mt-1 text-xs text-error">Le message est requis.</p> }
-          @if (contactForm.controls.message.touched && contactForm.controls.message.hasError('maxlength')) { <p class="mt-1 text-xs text-error">Le message ne peut pas dépasser 5 000 caractères.</p> }
+          <label for="contact-message" class="mb-1.5 block text-sm font-medium text-text-secondary">{{ isDispute ? 'Description des faits' : 'Message' }}</label>
+          <textarea id="contact-message" rows="7" formControlName="message" [maxlength]="messageMaxLength" class="w-full resize-y rounded-xl border border-gray-200 bg-background-secondary px-4 py-3 text-text-primary transition focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/50"></textarea>
+          @if (contactForm.controls.message.touched && contactForm.controls.message.hasError('required')) { <p class="mt-1 text-xs text-error">{{ isDispute ? 'Décrivez les faits.' : 'Le message est requis.' }}</p> }
+          @if (contactForm.controls.message.touched && contactForm.controls.message.hasError('maxlength')) { <p class="mt-1 text-xs text-error">{{ isDispute ? 'La description ne peut pas dépasser 4 700 caractères.' : 'Le message ne peut pas dépasser 5 000 caractères.' }}</p> }
         </div>
         <button type="submit" [disabled]="contactForm.invalid || isLoading" class="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50">
-          {{ isLoading ? 'Envoi en cours…' : 'Envoyer le message' }}
+          @if (isLoading) { Envoi en cours… } @else if (isDispute) { Envoyer la réclamation } @else { Envoyer le message }
         </button>
       </form>
     </div>

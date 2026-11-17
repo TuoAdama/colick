@@ -13,6 +13,7 @@ export interface TrustSection {
   title: string;
   paragraphs?: (string | readonly (string | { strong: string })[])[];
   bullets?: string[];
+  action?: TrustRelatedDocument;
 }
 
 export interface TrustRelatedDocument {
@@ -26,7 +27,6 @@ export interface TrustDocument {
   description: string;
   updatedAt: string;
   updatedAtLabel: string;
-  notice?: string;
   sections: TrustSection[];
   related: TrustRelatedDocument[];
 }

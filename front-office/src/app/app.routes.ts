@@ -73,6 +73,19 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'annulation-litiges/formulaire',
+    data: {
+      contactMode: 'dispute',
+      seo: {
+        title: 'Formulaire de litige | Coliclic',
+        description: 'Déposez une réclamation auprès du support Coliclic.',
+        index: false,
+      },
+    },
+    loadComponent: () =>
+      import('./pages/contact/contact-page.component').then((m) => m.ContactPageComponent),
+  },
+  {
     path: 'tarifs',
     data: {
       seo: {
