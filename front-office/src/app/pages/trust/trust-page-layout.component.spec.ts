@@ -22,6 +22,7 @@ describe('TrustPageLayoutComponent', () => {
           { path: 'aide/reglement-du-transport', component: TrustPageComponent, data: { trustSlug: 'transport-payment' } },
           { path: 'annulation-litiges', component: TrustPageComponent, data: { trustSlug: 'cancellation-disputes' } },
           { path: 'cgu', component: TrustPageComponent, data: { trustSlug: 'terms' } },
+          { path: 'confidentialite', component: TrustPageComponent, data: { trustSlug: 'privacy' } },
         ]),
         { provide: AppConfigService, useValue: { config } },
       ],
@@ -98,6 +99,19 @@ describe('TrustPageLayoutComponent', () => {
     expect(helpText).toContain('ne reçoit pas le code automatiquement');
   });
 
+  it('links privacy rights guidance to the contact form', async () => {
+    await harness.navigateByUrl('/confidentialite', TrustPageComponent);
+    const host = harness.routeNativeElement as HTMLElement;
+    const rightsSection = host.querySelector('#droits');
+    const contactLink = rightsSection?.querySelector<HTMLAnchorElement>('a');
+
+    expect(rightsSection?.textContent).toContain('Pour exercer ces droits, utilisez le formulaire « Nous contacter »');
+    expect(contactLink?.textContent).toBe('formulaire « Nous contacter »');
+    expect(contactLink?.getAttribute('href')).toBe('/contact');
+    expect(rightsSection?.textContent).toContain('Si votre démarche auprès de Coliclic n’aboutit pas');
+    expect(rightsSection?.textContent).toContain('adresser une réclamation à la CNIL');
+  });
+
   it('shows commercial terms that match the active configuration', async () => {
     await harness.navigateByUrl('/cgu', TrustPageComponent);
     let host = harness.routeNativeElement as HTMLElement;
@@ -137,6 +151,8 @@ describe('TrustPageLayoutComponent', () => {
     host = harness.routeNativeElement as HTMLElement;
     expect(host.querySelector('#reglement-direct')?.textContent).toContain('Vous réglez le transport directement avec lui');
     expect(host.textContent).toContain('Wero');
+    expect(Array.from(host.querySelectorAll('#moyen-de-paiement strong')).map((element) => element.textContent))
+      .toEqual(['Wero', 'virement instantané', 'PayPal']);
 
     config.set({
       ...FREE_APP_CONFIG,

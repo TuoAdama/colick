@@ -38,8 +38,10 @@
                   @for (part of paragraph; track $index) {
                     @if (isText(part)) {
                       <ng-container>{{ part }}</ng-container>
-                    } @else {
+                    } @else if (isStrongPart(part)) {
                       <strong class="font-bold text-primary">{{ part.strong }}</strong>
+                    } @else if (isLinkPart(part)) {
+                      <a [routerLink]="part.link.route" class="font-semibold text-primary underline decoration-secondary underline-offset-2 hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary">{{ part.link.label }}</a>
                     }
                   }
                 }

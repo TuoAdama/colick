@@ -154,7 +154,11 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
       { id: 'finalites', title: 'Finalités et bases légales', paragraphs: ['Les données sont utilisées pour créer et sécuriser le compte, exécuter le service demandé, faciliter les échanges et réservations, envoyer les notifications utiles, répondre au support et prévenir les abus. Selon le traitement, la base légale est l’exécution du contrat, l’obligation légale ou l’intérêt légitime de sécuriser le service.'] },
       { id: 'destinataires', title: 'Destinataires', paragraphs: ['Les données sont accessibles aux personnes autorisées chez Coliclic et, dans la limite nécessaire, aux prestataires d’hébergement, de messagerie, d’envoi d’e-mails ou SMS et d’authentification Google. Les informations nécessaires à une réservation sont partagées avec l’autre utilisateur concerné.'] },
       { id: 'conservation', title: 'Durées de conservation', paragraphs: ['Une matrice détaillée sera publiée après vérification des durées réellement appliquées aux comptes, réservations, messages, fichiers, journaux techniques et demandes de support. Les données ne seront pas annoncées comme supprimées automatiquement tant que ce mécanisme n’est pas vérifié.'] },
-      { id: 'droits', title: 'Vos droits', paragraphs: ['Vous pouvez demander l’accès, la rectification, l’effacement, la limitation ou la portabilité de vos données et vous opposer à certains traitements. L’adresse de contact dédiée sera ajoutée avant publication. Vous pouvez également saisir la CNIL.'] },
+      { id: 'droits', title: 'Vos droits', paragraphs: [[
+        'Vous pouvez demander l’accès, la rectification, l’effacement, la limitation ou la portabilité de vos données et vous opposer à certains traitements. Pour exercer ces droits, utilisez le ',
+        { link: { label: 'formulaire « Nous contacter »', route: '/contact' } },
+        '. Si votre démarche auprès de Coliclic n’aboutit pas, vous pouvez adresser une réclamation à la CNIL.',
+      ]] },
       { id: 'cookies', title: 'Cookies et traceurs', paragraphs: ['Coliclic utilise les mécanismes strictement nécessaires à l’authentification et à la sécurité. Aucun traceur publicitaire ou de mesure d’audience ne doit être activé sans audit et, lorsque la loi l’exige, consentement préalable.'] },
     ],
     related: [

@@ -11,9 +11,14 @@ export type TrustDocumentSlug =
 export interface TrustSection {
   id: string;
   title: string;
-  paragraphs?: (string | readonly (string | { strong: string })[])[];
+  paragraphs?: (string | readonly TrustParagraphPart[])[];
   bullets?: string[];
 }
+
+export type TrustParagraphPart =
+  | string
+  | { strong: string }
+  | { link: { label: string; route: string } };
 
 export interface TrustRelatedDocument {
   label: string;
