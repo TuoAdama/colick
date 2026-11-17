@@ -147,7 +147,6 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     version: '1.0',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
-    notice: 'Projet en attente de la matrice définitive de conservation des données et de la validation juridique.',
     sections: [
       { id: 'responsable', title: 'Responsable du traitement', paragraphs: ['Le responsable du traitement est Adama Tuo, personne physique éditant et exploitant Coliclic. Pour toute demande relative à vos données personnelles, vous pouvez écrire à support@atuo.fr.'] },
       { id: 'donnees', title: 'Données traitées', bullets: ['Identité, coordonnées, photo de profil et données de compte.', 'Trajets, demandes de colis, réservations et justificatifs associés.', 'Messages, avis, alertes et demandes envoyées au support.', 'Données techniques nécessaires à la sécurité et au fonctionnement du service.'] },
