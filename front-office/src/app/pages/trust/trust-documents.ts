@@ -147,14 +147,13 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     version: '1.0',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
-    notice: 'Projet en attente de l’identité définitive du responsable de traitement, de la matrice de conservation et de la validation juridique.',
     sections: [
-      { id: 'responsable', title: 'Responsable du traitement', paragraphs: ['L’identité et les coordonnées définitives du responsable du traitement seront publiées après l’immatriculation de l’éditeur. Aucune mise en production ne doit intervenir avant cette étape.'] },
+      { id: 'responsable', title: 'Responsable du traitement', paragraphs: ['Le responsable du traitement est Adama Tuo, personne physique éditant et exploitant Coliclic. Pour toute demande relative à vos données personnelles, vous pouvez écrire à support@atuo.fr.'] },
       { id: 'donnees', title: 'Données traitées', bullets: ['Identité, coordonnées, photo de profil et données de compte.', 'Trajets, demandes de colis, réservations et justificatifs associés.', 'Messages, avis, alertes et demandes envoyées au support.', 'Données techniques nécessaires à la sécurité et au fonctionnement du service.'] },
       { id: 'finalites', title: 'Finalités et bases légales', paragraphs: ['Les données sont utilisées pour créer et sécuriser le compte, exécuter le service demandé, faciliter les échanges et réservations, envoyer les notifications utiles, répondre au support et prévenir les abus. Selon le traitement, la base légale est l’exécution du contrat, l’obligation légale ou l’intérêt légitime de sécuriser le service.'] },
       { id: 'destinataires', title: 'Destinataires', paragraphs: ['Les données sont accessibles aux personnes autorisées chez Coliclic et, dans la limite nécessaire, aux prestataires d’hébergement, de messagerie, d’envoi d’e-mails ou SMS et d’authentification Google. Les informations nécessaires à une réservation sont partagées avec l’autre utilisateur concerné.'] },
       { id: 'conservation', title: 'Durées de conservation', paragraphs: ['Une matrice détaillée sera publiée après vérification des durées réellement appliquées aux comptes, réservations, messages, fichiers, journaux techniques et demandes de support. Les données ne seront pas annoncées comme supprimées automatiquement tant que ce mécanisme n’est pas vérifié.'] },
-      { id: 'droits', title: 'Vos droits', paragraphs: ['Vous pouvez demander l’accès, la rectification, l’effacement, la limitation ou la portabilité de vos données et vous opposer à certains traitements. L’adresse de contact dédiée sera ajoutée avant publication. Vous pouvez également saisir la CNIL.'] },
+      { id: 'droits', title: 'Vos droits', paragraphs: ['Vous pouvez demander l’accès, la rectification, l’effacement, la limitation ou la portabilité de vos données et vous opposer à certains traitements. Pour exercer vos droits, écrivez à support@atuo.fr. Vous pouvez également saisir la CNIL.'] },
       { id: 'cookies', title: 'Cookies et traceurs', paragraphs: ['Coliclic utilise les mécanismes strictement nécessaires à l’authentification et à la sécurité. Aucun traceur publicitaire ou de mesure d’audience ne doit être activé sans audit et, lorsque la loi l’exige, consentement préalable.'] },
     ],
     related: [
@@ -170,12 +169,12 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     version: '1.0',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
-    notice: 'Publication bloquée : la société éditrice n’est pas encore immatriculée et les informations obligatoires ne sont pas disponibles.',
+    notice: 'Les mentions légales doivent être complétées avec l’adresse de l’éditeur et les coordonnées vérifiées de l’hébergeur avant la mise en production.',
     sections: [
-      { id: 'editeur', title: 'Éditeur', paragraphs: ['La dénomination, la forme juridique, le capital social, le numéro SIREN/RCS et l’adresse du siège devront être renseignés et contrôlés avant la mise en production.'] },
-      { id: 'publication', title: 'Direction de la publication', paragraphs: ['Le nom du directeur ou de la directrice de la publication devra être renseigné avant la mise en production.'] },
+      { id: 'editeur', title: 'Éditeur', paragraphs: ['Coliclic est édité par Adama Tuo, personne physique. Adresse de l’éditeur : à renseigner avant la mise en production. Contact : support@atuo.fr.'] },
+      { id: 'publication', title: 'Direction de la publication', paragraphs: ['Le directeur de la publication est Adama Tuo.'] },
       { id: 'hebergement', title: 'Hébergement', paragraphs: ['Le nom, la raison sociale, l’adresse et les coordonnées de l’hébergeur devront être renseignés avant la mise en production.'] },
-      { id: 'contact', title: 'Contact', paragraphs: ['Pour toute question actuelle sur le service, utilisez le formulaire de contact Coliclic. Une adresse dédiée à la protection des données sera publiée avant le lancement.'] },
+      { id: 'contact', title: 'Contact', paragraphs: ['Pour toute question sur le service ou la protection des données, écrivez à support@atuo.fr.'] },
     ],
     related: [
       { label: 'Politique de confidentialité', route: '/confidentialite' },
