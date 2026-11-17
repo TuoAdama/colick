@@ -41,6 +41,7 @@ describe('PricingPageComponent', () => {
     render();
 
     expect(fixture.nativeElement.textContent).toContain('Plateforme gratuite');
+    expect(fixture.nativeElement.textContent).not.toContain('Version 1.0');
     expect(fixture.componentInstance.grossAmount()).toBe(50);
     expect(fixture.componentInstance.feeAmount()).toBe(0);
     expect(fixture.componentInstance.netAmount()).toBe(50);
@@ -56,6 +57,7 @@ describe('PricingPageComponent', () => {
     render();
 
     expect(fixture.nativeElement.textContent).toContain('Commission');
+    expect(fixture.nativeElement.textContent).not.toContain('Version 1.0');
     expect(fixture.componentInstance.feeAmount()).toBeCloseTo(3.5, 5);
     expect(fixture.componentInstance.netAmount()).toBeCloseTo(46.5, 5);
   });

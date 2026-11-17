@@ -32,12 +32,13 @@ describe('TrustPageLayoutComponent', () => {
     await harness.navigateByUrl('/a-propos', TrustPageComponent);
   });
 
-  it('renders the title, version, update date and anchored summary', () => {
+  it('renders the title, update date and anchored summary without a version label', () => {
     const host = harness.routeNativeElement as HTMLElement;
     const summaryLinks = Array.from(host.querySelectorAll('nav[aria-label="Sommaire de la page"] a'));
 
     expect(host.querySelector('h1')?.textContent).toContain('À propos de Coliclic');
-    expect(host.textContent).toContain('Version 1.0');
+    expect(host.textContent).not.toContain('Version 1.0');
+    expect(host.textContent).toContain('Mise à jour le');
     expect(host.querySelector('time')?.getAttribute('datetime')).toBe('2026-09-14');
     expect(summaryLinks.length).toBe(TRUST_DOCUMENTS.about.sections.length);
     expect(summaryLinks[0].getAttribute('href')).toBe('/a-propos#mission');
@@ -56,6 +57,8 @@ describe('TrustPageLayoutComponent', () => {
     const host = harness.routeNativeElement as HTMLElement;
     const editorText = host.querySelector('#editeur')?.textContent ?? '';
 
+    expect(host.querySelector('aside[role="note"]')).toBeNull();
+    expect(editorText).not.toContain('à renseigner avant la mise en production');
     expect(editorText).toContain('Si l’édition du service est exercée à titre professionnel');
     expect(editorText).toContain('indiquer son domicile et son numéro de téléphone, même sans société');
     expect(editorText).toContain('à titre non professionnel');

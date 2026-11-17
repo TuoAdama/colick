@@ -5,7 +5,7 @@
       <h1 class="mt-4 font-display text-4xl font-bold tracking-tight text-primary sm:text-5xl">{{ document().title }}</h1>
       <p class="mt-5 text-lg leading-8 text-text-secondary">{{ document().description }}</p>
       <p class="mt-4 text-sm text-text-muted">
-        Version {{ document().version }} · Mise à jour le
+        Mise à jour le
         <time [attr.datetime]="document().updatedAt">{{ document().updatedAtLabel }}</time>
       </p>
     </header>
