@@ -22,6 +22,7 @@ describe('TrustPageLayoutComponent', () => {
           { path: 'aide/reglement-du-transport', component: TrustPageComponent, data: { trustSlug: 'transport-payment' } },
           { path: 'annulation-litiges', component: TrustPageComponent, data: { trustSlug: 'cancellation-disputes' } },
           { path: 'cgu', component: TrustPageComponent, data: { trustSlug: 'terms' } },
+          { path: 'mentions-legales', component: TrustPageComponent, data: { trustSlug: 'legal-notice' } },
         ]),
         { provide: AppConfigService, useValue: { config } },
       ],
@@ -48,6 +49,17 @@ describe('TrustPageLayoutComponent', () => {
     const host = harness.routeNativeElement as HTMLElement;
 
     expect(host.querySelector('aside[role="note"]')).toBeNull();
+  });
+
+  it('explains which address an individual editor must publish', async () => {
+    await harness.navigateByUrl('/mentions-legales', TrustPageComponent);
+    const host = harness.routeNativeElement as HTMLElement;
+    const editorText = host.querySelector('#editeur')?.textContent ?? '';
+
+    expect(editorText).toContain('Si l’édition du service est exercée à titre professionnel');
+    expect(editorText).toContain('indiquer son domicile et son numéro de téléphone, même sans société');
+    expect(editorText).toContain('à titre non professionnel');
+    expect(editorText).toContain('en indiquant le nom et l’adresse de son hébergeur');
   });
 
   it('keeps the document route when navigating to a section', async () => {

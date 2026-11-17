@@ -169,9 +169,9 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     version: '1.0',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
-    notice: 'Les mentions légales doivent être complétées avec l’adresse de l’éditeur et les coordonnées vérifiées de l’hébergeur avant la mise en production.',
+    notice: 'Les mentions légales doivent être complétées avec les coordonnées de l’éditeur et celles vérifiées de l’hébergeur avant la mise en production.',
     sections: [
-      { id: 'editeur', title: 'Éditeur', paragraphs: ['Coliclic est édité par Adama Tuo, personne physique. Adresse de l’éditeur : à renseigner avant la mise en production. Contact : support@atuo.fr.'] },
+      { id: 'editeur', title: 'Éditeur', paragraphs: ['Coliclic est édité par Adama Tuo, personne physique. Si l’édition du service est exercée à titre professionnel, les mentions doivent indiquer son domicile et son numéro de téléphone, même sans société. Si elle est exercée à titre non professionnel, l’éditeur peut préserver son anonymat auprès du public en indiquant le nom et l’adresse de son hébergeur, à condition de lui avoir communiqué ses informations d’identification. Contact : support@atuo.fr.'] },
       { id: 'publication', title: 'Direction de la publication', paragraphs: ['Le directeur de la publication est Adama Tuo.'] },
       { id: 'hebergement', title: 'Hébergement', paragraphs: ['Le nom, la raison sociale, l’adresse et les coordonnées de l’hébergeur devront être renseignés avant la mise en production.'] },
       { id: 'contact', title: 'Contact', paragraphs: ['Pour toute question sur le service ou la protection des données, écrivez à support@atuo.fr.'] },
