@@ -166,7 +166,7 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     sections: [
       { id: 'editeur', title: 'Éditeur', paragraphs: ['Coliclic est édité par Adama Tuo, personne physique. Contact : support@atuo.fr.'] },
       { id: 'publication', title: 'Direction de la publication', paragraphs: ['Le directeur de la publication est Adama Tuo.'] },
-      { id: 'hebergement', title: 'Hébergement', paragraphs: ['Le nom, la raison sociale, l’adresse et les coordonnées de l’hébergeur devront être renseignés avant la mise en production.'] },
+      { id: 'hebergement', title: 'Hébergement', paragraphs: ['Le site est hébergé par Contabo GmbH, Welfenstrasse 22, 81541 Munich, Allemagne. E-mail : info@contabo.com. Fax : +49 89 216 658 62.'] },
       { id: 'contact', title: 'Contact', paragraphs: ['Pour toute question sur le service ou la protection des données, écrivez à support@atuo.fr.'] },
     ],
     related: [
