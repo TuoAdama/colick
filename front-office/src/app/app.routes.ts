@@ -103,7 +103,7 @@ export const routes: Routes = [
       path: 'aide/reglement-du-transport',
       trustSlug: 'transport-payment',
       title: 'Comment régler le transport ? | Coliclic',
-      description: 'Découvrez comment convenir du règlement du transport avec le voyageur en mode gratuit.',
+      description: 'Découvrez les modalités de règlement du transport sur Coliclic.',
       index: true,
     },
     {

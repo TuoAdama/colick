@@ -1,20 +1,30 @@
 import { ViewportScroller } from '@angular/common';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { NavigationEnd, provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { filter, firstValueFrom } from 'rxjs';
+import { FREE_APP_CONFIG, PublicAppConfig } from '../../models/app-config.model';
+import { AppConfigService } from '../../services/app-config.service';
 import { TRUST_DOCUMENTS } from './trust-documents';
 import { TrustPageComponent } from './trust-page.component';
 
 describe('TrustPageLayoutComponent', () => {
   let harness: RouterTestingHarness;
+  let config: ReturnType<typeof signal<PublicAppConfig>>;
 
   beforeEach(async () => {
+    config = signal(FREE_APP_CONFIG);
     await TestBed.configureTestingModule({
-      providers: [provideRouter([
-        { path: 'a-propos', component: TrustPageComponent, data: { trustSlug: 'about' } },
-        { path: 'cgu', component: TrustPageComponent, data: { trustSlug: 'terms' } },
-      ])],
+      providers: [
+        provideRouter([
+          { path: 'a-propos', component: TrustPageComponent, data: { trustSlug: 'about' } },
+          { path: 'aide/reglement-du-transport', component: TrustPageComponent, data: { trustSlug: 'transport-payment' } },
+          { path: 'annulation-litiges', component: TrustPageComponent, data: { trustSlug: 'cancellation-disputes' } },
+          { path: 'cgu', component: TrustPageComponent, data: { trustSlug: 'terms' } },
+        ]),
+        { provide: AppConfigService, useValue: { config } },
+      ],
     }).compileComponents();
 
     harness = await RouterTestingHarness.create();
@@ -86,5 +96,71 @@ describe('TrustPageLayoutComponent', () => {
     expect(helpText).toContain('envoyé par e-mail à l’adresse du compte de l’expéditeur');
     expect(helpText).toContain('Le contact du destinataire saisi dans la demande');
     expect(helpText).toContain('ne reçoit pas le code automatiquement');
+  });
+
+  it('shows commercial terms that match the active configuration', async () => {
+    await harness.navigateByUrl('/cgu', TrustPageComponent);
+    let host = harness.routeNativeElement as HTMLElement;
+    let paymentText = host.querySelector('#paiement')?.textContent ?? '';
+
+    expect(paymentText).toContain('Le voyageur fixe son prix au kilo');
+    expect(paymentText).toContain('règlement est convenu directement entre les utilisateurs');
+    expect(paymentText).not.toContain('frais applicables');
+
+    config.set({
+      ...FREE_APP_CONFIG,
+      commercialMode: 'COMMISSION',
+      platformFeeRate: 0.07,
+      features: { platformPayment: true, platformFee: true },
+      contentVariant: 'commission',
+    });
+    harness.detectChanges();
+    host = harness.routeNativeElement as HTMLElement;
+    paymentText = host.querySelector('#paiement')?.textContent ?? '';
+
+    expect(paymentText).toContain('Le voyageur fixe son prix au kilo');
+    expect(paymentText).toContain('frais applicables sont présentés lors de la réservation');
+    expect(paymentText).not.toContain('règlement est convenu directement entre les utilisateurs');
+    expect(paymentText).not.toMatch(/En mode gratuit|En mode commission/i);
+  });
+
+  it('adapts the role, reimbursement and transport payment documents to the active configuration', async () => {
+    await harness.navigateByUrl('/a-propos', TrustPageComponent);
+    let host = harness.routeNativeElement as HTMLElement;
+    expect(host.querySelector('#role')?.textContent).toContain('règlement du transport est organisé directement');
+
+    await harness.navigateByUrl('/annulation-litiges', TrustPageComponent);
+    host = harness.routeNativeElement as HTMLElement;
+    expect(host.querySelector('#remboursement')?.textContent).toContain('ne détient aucun fonds');
+
+    await harness.navigateByUrl('/aide/reglement-du-transport', TrustPageComponent);
+    host = harness.routeNativeElement as HTMLElement;
+    expect(host.querySelector('#reglement-direct')?.textContent).toContain('Vous réglez le transport directement avec lui');
+    expect(host.textContent).toContain('Wero');
+
+    config.set({
+      ...FREE_APP_CONFIG,
+      commercialMode: 'COMMISSION',
+      platformFeeRate: 0.07,
+      features: { platformPayment: true, platformFee: true },
+      contentVariant: 'commission',
+    });
+    await harness.navigateByUrl('/a-propos', TrustPageComponent);
+    harness.detectChanges();
+    host = harness.routeNativeElement as HTMLElement;
+    expect(host.querySelector('#role')?.textContent).toContain('conditions affichées lors de la réservation');
+
+    await harness.navigateByUrl('/annulation-litiges', TrustPageComponent);
+    host = harness.routeNativeElement as HTMLElement;
+    expect(host.querySelector('#remboursement')?.textContent).toContain('remboursement intégral du paiement et des frais de plateforme');
+    expect(host.querySelector('#remboursement')?.textContent).not.toContain('ne détient aucun fonds');
+
+    await harness.navigateByUrl('/aide/reglement-du-transport', TrustPageComponent);
+    host = harness.routeNativeElement as HTMLElement;
+    const paymentPageText = host.textContent ?? '';
+    expect(paymentPageText).toContain('Le paiement est présenté comme géré par la plateforme');
+    expect(paymentPageText).not.toContain('Vous réglez le transport directement avec lui');
+    expect(paymentPageText).not.toContain('Wero');
+    expect(paymentPageText).not.toMatch(/En mode gratuit|En mode commission/i);
   });
 });

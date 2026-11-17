@@ -1,4 +1,5 @@
-import { TrustDocument, TrustDocumentSlug } from './trust-document.model';
+import { CommercialContentVariant } from '../../models/app-config.model';
+import { TrustDocument, TrustDocumentSlug, TrustSection } from './trust-document.model';
 
 const DRAFT_DATE = '2026-09-14';
 const DRAFT_DATE_LABEL = '14 septembre 2026';
@@ -36,7 +37,7 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
         title: 'Le rôle de Coliclic',
         paragraphs: [
           'Coliclic agit comme intermédiaire technique de mise en relation. La plateforme n’est pas le transporteur du colis et ne devient pas partie au contrat de transport conclu entre les utilisateurs.',
-          'Les utilisateurs restent responsables des informations publiées, de l’emballage, de la conformité du colis, des formalités douanières et, lorsque le mode gratuit est actif, du règlement organisé entre eux.',
+          'Les utilisateurs restent responsables des informations publiées, de l’emballage, de la conformité du colis et des formalités douanières.',
         ],
       },
     ],
@@ -84,7 +85,7 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
   'transport-payment': {
     slug: 'transport-payment',
     title: 'Comment régler le transport ?',
-    description: 'Le règlement du transport en mode gratuit sur Coliclic.',
+    description: 'Découvrez les modalités de règlement du transport sur Coliclic.',
     version: '1.0',
     updatedAt: '2026-11-13',
     updatedAtLabel: '13 novembre 2026',
@@ -92,7 +93,7 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
       {
         id: 'reglement-direct',
         title: 'Le règlement avec le voyageur',
-        paragraphs: ['En mode gratuit, Coliclic vous met en relation avec un voyageur. Vous réglez le transport directement avec lui. Coliclic n’encaisse pas le règlement et ne facture pas de frais de service.'],
+        paragraphs: ['Coliclic vous met en relation avec un voyageur. Vous réglez le transport directement avec lui. Coliclic n’encaisse pas le règlement et ne facture pas de frais de service.'],
       },
       {
         id: 'moyen-de-paiement',
@@ -127,7 +128,7 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
       { id: 'compte', title: 'Compte utilisateur', paragraphs: ['Chaque utilisateur fournit des informations exactes, protège ses accès et informe Coliclic de toute utilisation non autorisée. Un compte peut être suspendu en cas de fraude, de danger ou de violation de ces conditions.'] },
       { id: 'intermediation', title: 'Intermédiation', paragraphs: ['Coliclic fournit un service de mise en relation et n’est pas transporteur. Le voyageur et l’expéditeur décident librement de conclure leur opération et restent responsables de son exécution.'] },
       { id: 'annonces', title: 'Trajets, colis et réservations', paragraphs: ['Les annonces et demandes doivent être loyales, complètes et conformes à la loi. Le voyageur peut accepter ou refuser une demande soumise à approbation. Les objets interdits ou non déclarés ne doivent jamais être remis.'] },
-      { id: 'paiement', title: 'Tarifs et règlement', paragraphs: ['Le voyageur fixe son prix au kilo. En mode gratuit, Coliclic ne collecte aucun fonds. En mode commission, les montants et frais affichés lors de la réservation constituent les conditions applicables à cette réservation.'] },
+      { id: 'paiement', title: 'Tarifs et règlement', paragraphs: ['Le voyageur fixe son prix au kilo. Coliclic ne collecte ni ne conserve les fonds ; le règlement est convenu directement entre les utilisateurs.'] },
       { id: 'remise', title: 'Remise et livraison', paragraphs: ['Le code de validation contribue à constater la remise. Il ne constitue ni une assurance, ni une expertise sur l’état ou la conformité du colis.'] },
       { id: 'responsabilite', title: 'Responsabilités', paragraphs: ['Chaque utilisateur répond de ses déclarations, de ses actes et du respect des règles de transport et de douane. Coliclic ne garantit ni le comportement d’un utilisateur, ni la conservation du colis, et ne fournit aucune assurance ou indemnisation.'] },
       { id: 'avis', title: 'Avis et contenus', paragraphs: ['Les avis doivent relater une expérience réelle, sans contenu illicite, injurieux ou trompeur. Coliclic peut retirer un contenu ou limiter un compte pour protéger la plateforme et ses utilisateurs.'] },
@@ -215,7 +216,7 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     sections: [
       { id: 'expediteur', title: 'Annulation par l’expéditeur', paragraphs: ['L’expéditeur peut annuler une réservation en attente ou acceptée tant que la livraison n’a pas été confirmée. Après livraison, une contestation suit la procédure de réclamation.'] },
       { id: 'voyageur', title: 'Annulation par le voyageur', paragraphs: ['Le voyageur peut annuler un trajet actif. Les expéditeurs ayant une demande en attente ou acceptée sont alors informés et les codes de validation associés sont invalidés.'] },
-      { id: 'remboursement', title: 'Remboursement', paragraphs: ['En mode gratuit, Coliclic ne détient aucun fonds et ne peut pas rembourser un règlement organisé directement entre utilisateurs. En mode commission, une annulation admissible avant livraison ouvre droit au remboursement intégral du paiement et des frais de plateforme. Ce mode ne doit pas être activé tant que ce remboursement n’est pas techniquement opérationnel.'] },
+      { id: 'remboursement', title: 'Remboursement', paragraphs: ['Coliclic ne détient aucun fonds et ne peut pas rembourser un règlement organisé directement entre utilisateurs. Tout remboursement éventuel doit être convenu entre eux.'] },
       { id: 'reclamation', title: 'Déposer une réclamation', bullets: ['Contactez le support dès que possible.', 'Indiquez les références du trajet et de la réservation.', 'Joignez les échanges, photographies, reçus et autres justificatifs disponibles.', 'Laissez à Coliclic un délai raisonnable pour examiner la demande et répondre.'] },
       { id: 'mediation', title: 'Médiation', paragraphs: ['Après une réclamation écrite restée sans solution, un consommateur pourra saisir gratuitement le médiateur compétent. Son identité, son adresse et son site internet seront ajoutés avant publication.'] },
     ],
@@ -226,3 +227,71 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     ],
   },
 };
+
+interface CommercialParagraphs {
+  aboutRole: string;
+  termsPayment: string;
+  cancellationRefund: string;
+}
+
+const COMMERCIAL_PARAGRAPHS: Record<CommercialContentVariant, CommercialParagraphs> = {
+  free: {
+    aboutRole: 'Le règlement du transport est organisé directement entre les utilisateurs.',
+    termsPayment: 'Le voyageur fixe son prix au kilo. Coliclic ne collecte ni ne conserve les fonds ; le règlement est convenu directement entre les utilisateurs.',
+    cancellationRefund: 'Coliclic ne détient aucun fonds et ne peut pas rembourser un règlement organisé directement entre utilisateurs. Tout remboursement éventuel doit être convenu entre eux.',
+  },
+  commission: {
+    aboutRole: 'Le règlement du transport suit les conditions affichées lors de la réservation.',
+    termsPayment: 'Le voyageur fixe son prix au kilo. Le paiement et les frais applicables sont présentés lors de la réservation.',
+    cancellationRefund: 'Une annulation admissible avant la livraison ouvre droit au remboursement intégral du paiement et des frais de plateforme. Les paiements via la plateforme ne doivent pas être proposés en production tant que ce remboursement n’est pas techniquement opérationnel.',
+  },
+};
+
+export function trustDocumentFor(
+  slug: TrustDocumentSlug,
+  variant: CommercialContentVariant,
+): TrustDocument {
+  const document = TRUST_DOCUMENTS[slug];
+  const copy = COMMERCIAL_PARAGRAPHS[variant];
+
+  if (slug === 'transport-payment') {
+    return variant === 'free' ? document : {
+      ...document,
+      description: 'Découvrez comment le paiement et les frais du transport sont présentés lors de la réservation.',
+      sections: document.sections.map((section) => {
+        if (section.id === 'reglement-direct') {
+          return { ...section, title: 'Le paiement de la réservation', paragraphs: ['Le paiement est présenté comme géré par la plateforme. Le voyageur fixe son prix au kilo et les frais applicables sont indiqués avant la réservation.'] };
+        }
+        if (section.id === 'moyen-de-paiement') {
+          return { ...section, title: 'Les modalités du paiement', paragraphs: ['Les modalités et le montant total sont affichés lors de la réservation.'] };
+        }
+        if (section.id === 'confirmation') {
+          return { ...section, paragraphs: ['La réservation et le paiement suivent les conditions présentées avant sa confirmation.'] };
+        }
+        return section;
+      }),
+    };
+  }
+
+  const paragraphBySection: Partial<Record<string, string>> = slug === 'about'
+    ? { role: copy.aboutRole }
+    : slug === 'terms'
+      ? { paiement: copy.termsPayment }
+      : slug === 'cancellation-disputes'
+        ? { remboursement: copy.cancellationRefund }
+        : {};
+
+  if (!Object.keys(paragraphBySection).length) return document;
+
+  return {
+    ...document,
+    sections: document.sections.map((section: TrustSection) => {
+      const paragraph = paragraphBySection[section.id];
+      if (!paragraph) return section;
+      if (slug === 'about') {
+        return { ...section, paragraphs: [...(section.paragraphs ?? []), paragraph] };
+      }
+      return { ...section, paragraphs: [paragraph] };
+    }),
+  };
+}
