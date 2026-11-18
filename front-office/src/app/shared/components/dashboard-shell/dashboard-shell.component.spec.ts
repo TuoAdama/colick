@@ -47,9 +47,11 @@ describe('DashboardShellComponent', () => {
     fixture.componentInstance.openMobileMenu();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelectorAll('a[href="/admin/users"]').length).toBe(0);
+    expect(fixture.nativeElement.querySelectorAll('a[href="/admin/disputes"]').length).toBe(0);
     authServiceMock.getUser.and.returnValue({ ...original, role: 'ADMIN' });
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelectorAll('a[href="/admin/users"]').length).toBe(2);
+    expect(fixture.nativeElement.querySelectorAll('a[href="/admin/disputes"]').length).toBe(2);
     authServiceMock.getUser.and.returnValue(original);
   });
 

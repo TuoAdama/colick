@@ -90,6 +90,8 @@ describe('AppComponent', () => {
       '/admin/users/7',
       '/admin/users/7/trips?page=1',
       '/admin/users/7/bookings',
+      '/admin/disputes',
+      '/admin/disputes/7?page=1',
       '/trips',
       '/trips/42/reservations/7/profile',
       '/propose',

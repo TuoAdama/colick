@@ -253,6 +253,8 @@ export const routes: Routes = [
           { path: 'users/:id/trips', data: { kind: 'trips' }, loadComponent: () => import('./pages/admin/admin-user-activity-page.component').then(m => m.AdminUserActivityPageComponent) },
           { path: 'users/:id/bookings', data: { kind: 'bookings' }, loadComponent: () => import('./pages/admin/admin-user-activity-page.component').then(m => m.AdminUserActivityPageComponent) },
           { path: 'users/:id', loadComponent: () => import('./pages/admin/admin-user-detail-page.component').then(m => m.AdminUserDetailPageComponent) },
+          { path: 'disputes', loadComponent: () => import('./pages/admin/admin-disputes-page.component').then(m => m.AdminDisputesPageComponent) },
+          { path: 'disputes/:id', loadComponent: () => import('./pages/admin/admin-dispute-detail-page.component').then(m => m.AdminDisputeDetailPageComponent) },
         ],
       },
       {

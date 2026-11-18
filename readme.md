@@ -81,6 +81,18 @@ Les endpoints `GET /api/admin/users`, `/{id}`, `/{id}/trips` et `/{id}/bookings`
 accepte aussi `q`. Les inscriptions et activités les plus récentes sont affichées
 en premier, avec les dates inconnues en dernier.
 
+La rubrique **Litiges** (`/admin/disputes`) affiche les réclamations reçues via
+le formulaire public `/annulation-litiges/formulaire`. Elle présente les dossiers
+les plus récents en premier, par pages de 20. Chaque dossier donne accès à la
+description complète, à l’e-mail du déclarant et aux références qu’il a renseignées.
+
+Le formulaire enregistre le dossier via `POST /api/disputes` avant de notifier
+le support par e-mail. Si la notification échoue, le dossier reste consultable.
+La table `disputes` est créée par la mise à jour de schéma Hibernate. Les anciens
+e-mails de réclamation ne sont pas importés. La liste et le détail
+(`GET /api/admin/disputes` et `GET /api/admin/disputes/{id}`) exigent le rôle
+`ADMIN` et sont en lecture seule.
+
 - Possibilité de consulter les recherches qui ont été créées
 - Interface pour afficher les demandes associées à une recherche
 - Possibilité de consulter les infos qui ont été créées par les voyage

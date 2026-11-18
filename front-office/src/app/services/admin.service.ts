@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { AdminBooking, AdminPage, AdminTrip, AdminUser, AdminUserDetail } from '../models/admin.model';
+import { AdminBooking, AdminDisputeDetail, AdminDisputeSummary, AdminPage, AdminTrip, AdminUser, AdminUserDetail } from '../models/admin.model';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -21,5 +21,16 @@ export class AdminService {
 
   bookings(id: number, page = 0) {
     return this.http.get<AdminPage<AdminBooking>>(`${this.base}/${id}/bookings`, { params: { page, size: 20 } });
+  }
+
+  disputes(page: number) {
+    return this.http.get<AdminPage<AdminDisputeSummary>>('/api/admin/disputes', {
+      params: { page, size: 20 },
+      transferCache: false,
+    });
+  }
+
+  dispute(id: string) {
+    return this.http.get<AdminDisputeDetail>(`/api/admin/disputes/${encodeURIComponent(id)}`, { transferCache: false });
   }
 }
