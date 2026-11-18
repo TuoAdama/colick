@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,18 @@ public interface TripBookingRepository extends JpaRepository<TripBooking, Long> 
     Page<TripBooking> findAdminHistory(
             @Param("userId") Long userId,
             Pageable pageable);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "sender")
+    @Query("select booking from TripBooking booking where booking.trip.id = :tripId "
+            + "order by case when booking.createdAt is null then 1 else 0 end, booking.createdAt desc, booking.id desc")
+    Page<TripBooking> findByTripForAdmin(@Param("tripId") Long tripId, Pageable pageable);
+
+    Optional<TripBooking> findByIdAndTripId(Long id, Long tripId);
+
+    @Query("select sum(booking.weight) from TripBooking booking "
+            + "where booking.trip.id = :tripId and booking.status = :status")
+    Optional<BigDecimal> sumWeightByTripAndStatus(@Param("tripId") Long tripId,
+                                                 @Param("status") TripBooking.BookingStatus status);
 
     List<TripBooking> findByTrip(Trip trip);
 

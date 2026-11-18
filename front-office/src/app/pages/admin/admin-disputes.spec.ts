@@ -6,6 +6,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { ContactPageComponent } from '../contact/contact-page.component';
 import { AdminDisputeDetailPageComponent } from './admin-dispute-detail-page.component';
 import { AdminDisputesPageComponent } from './admin-disputes-page.component';
+import { AdminLayoutComponent } from './admin-layout.component';
 
 describe('Dispute submission and administration', () => {
   const summary = {
@@ -25,8 +26,12 @@ describe('Dispute submission and administration', () => {
       provideHttpClientTesting(),
       provideRouter([
         { path: 'annulation-litiges/formulaire', component: ContactPageComponent, data: { contactMode: 'dispute' } },
-        { path: 'admin/disputes', component: AdminDisputesPageComponent },
-        { path: 'admin/disputes/:id', component: AdminDisputeDetailPageComponent },
+        {
+          path: 'admin', component: AdminLayoutComponent, children: [
+            { path: 'disputes', component: AdminDisputesPageComponent },
+            { path: 'disputes/:id', component: AdminDisputeDetailPageComponent },
+          ],
+        },
       ]),
     ] });
     http = TestBed.inject(HttpTestingController);
@@ -47,7 +52,8 @@ describe('Dispute submission and administration', () => {
     harness.detectChanges();
     expect(harness.routeNativeElement!.textContent).toContain('Votre réclamation a bien été envoyée.');
 
-    await harness.navigateByUrl('/admin/disputes?page=1', AdminDisputesPageComponent);
+    await harness.navigateByUrl('/admin/disputes?page=1', AdminLayoutComponent);
+    expect(harness.routeNativeElement!.querySelector('nav a[href="/admin/disputes"]')?.textContent).toContain('Litiges');
     http.expectOne('/api/admin/disputes?page=1&size=20').flush(page);
     harness.detectChanges();
     expect(harness.routeNativeElement!.querySelector('tbody')!.textContent).toContain(summary.email);
@@ -55,22 +61,22 @@ describe('Dispute submission and administration', () => {
     expect(detailLink.textContent).toContain('Voir le détail');
     expect(detailLink.getAttribute('href')).toBe('/admin/disputes/7?page=1');
 
-    await harness.navigateByUrl(detailLink.getAttribute('href')!, AdminDisputeDetailPageComponent);
+    await harness.navigateByUrl(detailLink.getAttribute('href')!, AdminLayoutComponent);
     http.expectOne('/api/admin/disputes/7').flush({ ...summary, description });
     harness.detectChanges();
     expect(harness.routeNativeElement!.textContent).toContain(description);
     expect(harness.routeNativeElement!.textContent).toContain('Non renseignée');
-    const backLink = harness.routeNativeElement!.querySelector<HTMLAnchorElement>('a')!;
+    const backLink = harness.routeNativeElement!.querySelector<HTMLAnchorElement>('section > a')!;
     expect(backLink.getAttribute('href')).toBe('/admin/disputes?page=1');
 
-    await harness.navigateByUrl(backLink.getAttribute('href')!, AdminDisputesPageComponent);
+    await harness.navigateByUrl(backLink.getAttribute('href')!, AdminLayoutComponent);
     http.expectOne('/api/admin/disputes?page=1&size=20').flush(page);
     harness.detectChanges();
     expect(harness.routeNativeElement!.textContent).toContain('Page 2 sur 2');
   });
 
   it('shows loading, an error and an empty list after retry', async () => {
-    await harness.navigateByUrl('/admin/disputes', AdminDisputesPageComponent);
+    await harness.navigateByUrl('/admin/disputes', AdminLayoutComponent);
     expect(harness.routeNativeElement!.querySelector('[role="status"]')!.textContent).toContain('Chargement');
     http.expectOne('/api/admin/disputes?page=0&size=20').flush(null, { status: 500, statusText: 'Error' });
     harness.detectChanges();
@@ -84,7 +90,7 @@ describe('Dispute submission and administration', () => {
   });
 
   it('shows when a dossier no longer exists', async () => {
-    await harness.navigateByUrl('/admin/disputes/999', AdminDisputeDetailPageComponent);
+    await harness.navigateByUrl('/admin/disputes/999', AdminLayoutComponent);
     http.expectOne('/api/admin/disputes/999').flush(null, { status: 404, statusText: 'Not Found' });
     harness.detectChanges();
     expect(harness.routeNativeElement!.querySelector('[role="alert"]')!.textContent).toContain('Litige introuvable.');

@@ -1,0 +1,92 @@
+<section class="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+  <a routerLink="/admin/trips" [queryParams]="listQuery()" class="text-sm font-semibold text-primary underline">
+    ← Tous les trajets publiés
+  </a>
+  @if (message()) { <p role="status" class="mt-4 font-semibold text-primary">{{ message() }}</p> }
+  @let result = detail();
+  @switch (result.state) {
+    @case ('loading') { <p role="status" class="mt-6">Chargement du trajet…</p> }
+    @case ('error') {
+      <div role="alert" class="mt-6 rounded-xl border border-border p-5">
+        <p>{{ result.message }}</p>
+        <button type="button" class="mt-3 font-semibold text-primary underline" (click)="reloadTrip()">Réessayer</button>
+      </div>
+    }
+    @case ('ready') {
+      @let data = result.data;
+      @let trip = data.publication.trip;
+      <header class="my-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="text-sm text-text-secondary">{{ trip.reference }} · {{ status(trip.status) }}</p>
+          <h1 class="mt-2 break-words text-3xl font-bold text-primary">{{ trip.departureAddress }} → {{ trip.destination }}</h1>
+        </div>
+        @if (trip.status === 'ACTIVE') {
+          <app-admin-trip-cancellation [trip]="trip" (cancelled)="tripCancelled()" (refresh)="reloadTrip()" />
+        }
+      </header>
+      <dl class="grid gap-5 rounded-2xl border border-border bg-background-secondary p-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div><dt class="text-sm text-text-secondary">Voyageur</dt>
+          <dd><a class="font-semibold text-primary underline" [routerLink]="['/admin/users', data.publication.travelerId]">{{ data.publication.travelerName }}</a></dd></div>
+        <div><dt class="text-sm text-text-secondary">Date de publication</dt><dd>{{ date(data.publication.createdAt) }}</dd></div>
+        <div><dt class="text-sm text-text-secondary">Point de rendez-vous</dt><dd class="break-words">{{ data.meetingPoint || 'Non renseigné' }}</dd></div>
+        <div><dt class="text-sm text-text-secondary">Départ prévu</dt><dd>{{ date(trip.departureTime) }}</dd></div>
+        <div><dt class="text-sm text-text-secondary">Arrivée prévue</dt><dd>{{ date(trip.arrivalTime) }}</dd></div>
+        <div><dt class="text-sm text-text-secondary">Mode d’acceptation</dt><dd>{{ data.instantAcceptance ? 'Automatique' : 'Sur approbation du voyageur' }}</dd></div>
+        <div><dt class="text-sm text-text-secondary">Poids maximal</dt><dd>{{ trip.maxWeight }} kg</dd></div>
+        @if (data.availableWeight != null) {
+          <div><dt class="text-sm text-text-secondary">Poids disponible</dt><dd>{{ data.availableWeight }} kg</dd></div>
+        }
+        <div><dt class="text-sm text-text-secondary">Tarif au kilo</dt><dd>{{ trip.pricePerKilo }} €/kg</dd></div>
+      </dl>
+
+      <h2 class="mb-4 mt-8 text-xl font-bold text-primary">Réservations associées</h2>
+      @let bookingResult = bookings();
+      @switch (bookingResult.state) {
+        @case ('loading') { <p role="status">Chargement des réservations…</p> }
+        @case ('error') {
+          <div role="alert" class="rounded-xl border border-border p-5">
+            <p>{{ bookingResult.message }}</p>
+            <button type="button" class="mt-3 font-semibold text-primary underline" (click)="reloadBookings()">Réessayer</button>
+          </div>
+        }
+        @case ('ready') {
+          @let page = bookingResult.data;
+          @if (page.items.length === 0) {
+            <p class="rounded-xl border border-border p-6">{{ page.totalElements ? 'Aucune réservation sur cette page.' : 'Aucune réservation associée.' }}</p>
+          } @else {
+            <div class="overflow-x-auto rounded-2xl border border-border bg-background-secondary" tabindex="0"
+                 role="region" aria-label="Réservations associées">
+              <table class="w-full text-left text-sm">
+                <thead class="border-b border-border bg-background-primary text-text-secondary">
+                  <tr>
+                    <th scope="col" class="p-4">Colis</th>
+                    <th scope="col" class="p-4">Expéditeur</th>
+                    <th scope="col" class="p-4">Date de réservation</th>
+                    <th scope="col" class="p-4">Poids</th>
+                    <th scope="col" class="p-4">Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (booking of page.items; track booking.id) {
+                    <tr class="border-b border-border last:border-0">
+                      <th scope="row" class="min-w-36 p-4">
+                        <a class="font-semibold text-primary underline" [routerLink]="['/admin/trips', trip.id, 'bookings', booking.id]"
+                           [queryParams]="{ listPage: listQuery().page, listSort: listQuery().sort, page: page.page }">{{ booking.title }}</a>
+                      </th>
+                      <td class="p-4">{{ booking.senderName }}</td>
+                      <td class="whitespace-nowrap p-4">{{ date(booking.createdAt) }}</td>
+                      <td class="whitespace-nowrap p-4">{{ booking.weight == null ? 'Non renseigné' : booking.weight + ' kg' }}</td>
+                      <td class="p-4">{{ status(booking.status) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+          <app-admin-pagination [page]="page.page" [totalPages]="page.totalPages" [totalElements]="page.totalElements"
+                                (pageChange)="changePage($event)" />
+        }
+      }
+    }
+  }
+</section>

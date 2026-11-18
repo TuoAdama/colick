@@ -106,7 +106,8 @@ test('unknown routes return 404 and operational pages render noindex', async () 
     assert.match(response.body, /<title>Page introuvable \| Coliclic<\/title>/);
     assert.match(response.body, /<meta name="robots" content="noindex, nofollow">/);
   }
-  for (const path of ['/search?mode=all&departure=Paris', '/travelers/7', '/login', '/dashboard']) {
+  for (const path of ['/search?mode=all&departure=Paris', '/travelers/7', '/login', '/dashboard',
+    '/admin/trips', '/admin/trips/7', '/admin/trips/7/bookings/4']) {
     const response = await get(path);
     assert.equal(response.status, 200, path);
     assert.match(response.body, /<meta name="robots" content="noindex, nofollow">/);

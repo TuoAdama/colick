@@ -50,6 +50,42 @@ export interface AdminBooking {
   status: string;
 }
 
+export interface AdminPublishedTrip {
+  trip: AdminTrip;
+  travelerId: number;
+  travelerName: string;
+  createdAt?: string;
+}
+
+export type AdminTripSort = 'created_asc' | 'created_desc';
+
+export interface AdminTripDetail {
+  publication: AdminPublishedTrip;
+  meetingPoint?: string;
+  instantAcceptance: boolean;
+  availableWeight?: number;
+}
+
+export interface AdminTripBooking {
+  id: number;
+  title: string;
+  senderId: number;
+  senderName: string;
+  weight?: number;
+  status: string;
+  createdAt?: string;
+}
+
+export interface AdminTripBookingDetail {
+  booking: AdminTripBooking;
+  tripId: number;
+  tripReference: string;
+  description?: string;
+  recipientContact: string;
+  hasPhoto: boolean;
+  deliveredAt?: string;
+}
+
 export interface AdminDisputeSummary {
   id: number;
   receivedAt: string;
