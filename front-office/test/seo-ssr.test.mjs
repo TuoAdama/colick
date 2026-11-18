@@ -121,3 +121,11 @@ test('preprod serves the same public content with noindex and omits the sitemap'
   assert.equal((await get('/robots.txt', preprod)).body, 'User-agent: *\nAllow: /\n');
   assert.equal((await get('/sitemap.xml', preprod)).status, 404);
 });
+
+test('the dispute form renders on direct access without being indexed', async () => {
+  const { status, body } = await get('/annulation-litiges/formulaire');
+  assert.equal(status, 200);
+  assert.match(body, /<meta name="robots" content="noindex, nofollow">/);
+  assert.match(body, /<h1[^>]*>Formulaire de litige<\/h1>/);
+  assert.match(body, /id="contact-booking-reference"/);
+});

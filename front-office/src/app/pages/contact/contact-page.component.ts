@@ -4,6 +4,8 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Va
 import { ContactService } from '../../services/contact.service';
 import { ActivatedRoute } from '@angular/router';
 
+const DISPUTE_SUBJECT = '[Litige] Réclamation';
+
 function requiredTrimmed(control: AbstractControl<string>): ValidationErrors | null {
   return control.value.trim() ? null : { required: true };
 }
@@ -22,10 +24,16 @@ export class ContactPageComponent implements OnInit {
   private reportTripId?: number;
   isProfileReport = false;
 
+  readonly isDispute = this.route?.snapshot.data['contactMode'] === 'dispute';
+  readonly referenceMaxLength = 100;
+  // Leave room for both labeled references in the 5,000-character API message.
+  readonly messageMaxLength = this.isDispute ? 4700 : 5000;
   readonly contactForm = this.fb.nonNullable.group({
     email: ['', [requiredTrimmed, Validators.email, Validators.maxLength(254)]],
-    subject: ['', [requiredTrimmed, Validators.maxLength(150)]],
-    message: ['', [requiredTrimmed, Validators.maxLength(5000)]],
+    subject: [this.isDispute ? DISPUTE_SUBJECT : '', [requiredTrimmed, Validators.maxLength(150)]],
+    message: ['', [requiredTrimmed, Validators.maxLength(this.messageMaxLength)]],
+    tripReference: ['', Validators.maxLength(this.referenceMaxLength)],
+    bookingReference: ['', Validators.maxLength(this.referenceMaxLength)],
   });
 
   isLoading = false;
@@ -34,7 +42,7 @@ export class ContactPageComponent implements OnInit {
 
   ngOnInit(): void {
     const params = this.route?.snapshot.queryParamMap;
-    if (!params) return;
+    if (this.isDispute || !params) return;
     const travelerId = Number(params.get('travelerId'));
     const tripId = Number(params.get('tripId'));
     if (params.get('type') === 'report' && Number.isInteger(travelerId) && travelerId > 0) {
@@ -54,19 +62,28 @@ export class ContactPageComponent implements OnInit {
     this.isLoading = true;
     this.successMessage = '';
     this.errorMessage = '';
+    const { email, subject, message, tripReference, bookingReference } = this.contactForm.getRawValue();
     const payload = this.isProfileReport
       ? {
-          ...this.contactForm.getRawValue(),
+          email, subject, message,
           category: 'PROFILE_REPORT' as const,
           travelerId: this.reportTravelerId,
           ...(this.reportTripId && { tripId: this.reportTripId }),
         }
-      : this.contactForm.getRawValue();
+      : { email, subject, message };
+    if (this.isDispute) {
+      const references: string[] = [];
+      if (tripReference.trim()) references.push(`Référence du trajet : ${tripReference.trim()}`);
+      if (bookingReference.trim()) references.push(`Référence de la réservation : ${bookingReference.trim()}`);
+      payload.message = [...references, message.trim()].join('\n\n');
+    }
     this.contactService.send(payload).subscribe({
       next: () => {
         this.isLoading = false;
         this.contactForm.reset();
-        this.successMessage = 'Votre message a bien été envoyé. Notre équipe vous répondra dès que possible.';
+        this.successMessage = this.isDispute
+          ? 'Votre réclamation a bien été envoyée. Notre équipe vous répondra par e-mail.'
+          : 'Votre message a bien été envoyé. Notre équipe vous répondra dès que possible.';
       },
       error: (error: { status?: number }) => {
         this.isLoading = false;

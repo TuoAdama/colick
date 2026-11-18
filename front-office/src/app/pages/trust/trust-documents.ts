@@ -202,12 +202,22 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
     description: 'Règles d’annulation, de remboursement et de traitement des réclamations sur Coliclic.',
     updatedAt: DRAFT_DATE,
     updatedAtLabel: DRAFT_DATE_LABEL,
-    notice: 'Le médiateur de la consommation et ses coordonnées doivent être ajoutés avant toute mise en production.',
     sections: [
       { id: 'expediteur', title: 'Annulation par l’expéditeur', paragraphs: ['L’expéditeur peut annuler une réservation en attente ou acceptée tant que la livraison n’a pas été confirmée. Après livraison, une contestation suit la procédure de réclamation.'] },
       { id: 'voyageur', title: 'Annulation par le voyageur', paragraphs: ['Le voyageur peut annuler un trajet actif. Les expéditeurs ayant une demande en attente ou acceptée sont alors informés et les codes de validation associés sont invalidés.'] },
       { id: 'remboursement', title: 'Remboursement', paragraphs: ['Coliclic ne détient aucun fonds et ne peut pas rembourser un règlement organisé directement entre utilisateurs. Tout remboursement éventuel doit être convenu entre eux.'] },
-      { id: 'reclamation', title: 'Déposer une réclamation', bullets: ['Contactez le support dès que possible.', 'Indiquez les références du trajet et de la réservation.', 'Joignez les échanges, photographies, reçus et autres justificatifs disponibles.', 'Laissez à Coliclic un délai raisonnable pour examiner la demande et répondre.'] },
+      {
+        id: 'reclamation',
+        title: 'Déposer une réclamation',
+        paragraphs: [
+          'Décrivez la situation et indiquez les références du trajet et de la réservation si vous les avez.',
+          [
+            'Conservez vos échanges, photos et reçus. Le support pourra vous demander ces justificatifs par e-mail. ',
+            { label: 'Ouvrir le formulaire de litige', route: '/annulation-litiges/formulaire' },
+            '.',
+          ],
+        ],
+      },
       { id: 'mediation', title: 'Médiation', paragraphs: ['Après une réclamation écrite restée sans solution, un consommateur pourra saisir gratuitement le médiateur compétent. Son identité, son adresse et son site internet seront ajoutés avant publication.'] },
     ],
     related: [
