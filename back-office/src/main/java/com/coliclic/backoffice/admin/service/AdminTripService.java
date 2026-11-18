@@ -5,12 +5,14 @@ import com.coliclic.backoffice.admin.dto.AdminPublishedTripResponse;
 import com.coliclic.backoffice.admin.dto.AdminTripBookingDetailResponse;
 import com.coliclic.backoffice.admin.dto.AdminTripBookingResponse;
 import com.coliclic.backoffice.admin.dto.AdminTripDetailResponse;
+import com.coliclic.backoffice.exception.BadRequestException;
 import com.coliclic.backoffice.exception.ResourceNotFoundException;
 import com.coliclic.backoffice.file.FileStorageService;
 import com.coliclic.backoffice.trip.entity.Trip;
 import com.coliclic.backoffice.trip.entity.TripBooking;
 import com.coliclic.backoffice.trip.repository.TripBookingRepository;
 import com.coliclic.backoffice.trip.repository.TripRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,8 +32,15 @@ public class AdminTripService {
         this.storage = storage;
     }
 
-    public AdminPage<AdminPublishedTripResponse> trips(int page, int size) {
-        return AdminPage.from(trips.findAllForAdmin(AdminPagination.of(page, size))
+    public AdminPage<AdminPublishedTripResponse> trips(int page, int size, String sort) {
+        Sort.Direction direction = switch (sort) {
+            case null -> Sort.Direction.DESC;
+            case "created_asc" -> Sort.Direction.ASC;
+            case "created_desc" -> Sort.Direction.DESC;
+            default -> throw new BadRequestException("Tri par date de création invalide.");
+        };
+        var order = Sort.by(direction, "createdAt").and(Sort.by(Sort.Direction.DESC, "id"));
+        return AdminPage.from(trips.findAllForAdmin(AdminPagination.of(page, size).withSort(order))
                 .map(AdminPublishedTripResponse::from));
     }
 

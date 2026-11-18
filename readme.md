@@ -82,12 +82,15 @@ accepte aussi `q`. Les inscriptions et activités les plus récentes sont affich
 en premier, avec les dates inconnues en dernier.
 
 La rubrique `/admin/trips` liste tous les trajets publiés, tous statuts confondus.
+La colonne « La date de création » permet d’inverser le tri. La liste affiche
+les trajets les plus récents en premier par défaut et les dates inconnues en dernier.
 La fiche d’un trajet donne accès au compte du voyageur et à ses réservations
 associées. Les fiches de réservation affichent les coordonnées du destinataire
 et, si elle est disponible, la photo protégée du colis. Les listes de trajets
 et de réservations sont paginées par 20 éléments.
 
-Les endpoints sous `/api/admin/trips` exigent le rôle `ADMIN`. L’annulation
+Les endpoints sous `/api/admin/trips` exigent le rôle `ADMIN`. La liste accepte
+le paramètre `sort` (`created_desc` par défaut, ou `created_asc`). L’annulation
 d’un trajet actif le retire du catalogue, conserve son historique et avertit
 les expéditeurs ayant une réservation en attente ou acceptée.
 

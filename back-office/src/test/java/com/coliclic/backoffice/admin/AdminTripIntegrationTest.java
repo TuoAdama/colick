@@ -71,6 +71,7 @@ class AdminTripIntegrationTest {
         LocalDateTime publication = LocalDateTime.of(2026, 1, 1, 10, 0);
         Trip first = trip(traveler, "FIRST", Trip.TripStatus.COMPLETED, publication);
         Trip second = trip(traveler, "SECOND", Trip.TripStatus.CANCELLED, publication);
+        Trip older = trip(traveler, "OLDER", Trip.TripStatus.ACTIVE, publication.minusDays(1));
         em.flush();
         em.createNativeQuery("update trips set created_at = null where id = :id")
                 .setParameter("id", legacy.getId()).executeUpdate();
@@ -78,21 +79,33 @@ class AdminTripIntegrationTest {
 
         mvc.perform(read("").param("size", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(3))
-                .andExpect(jsonPath("$.totalPages").value(3))
+                .andExpect(jsonPath("$.totalElements").value(4))
+                .andExpect(jsonPath("$.totalPages").value(4))
                 .andExpect(jsonPath("$.items[0].trip.id").value(second.getId()))
                 .andExpect(jsonPath("$.items[0].trip.status").value("CANCELLED"))
                 .andExpect(jsonPath("$.items[0].travelerId").value(traveler.getId()));
         mvc.perform(read("").param("size", "1").param("page", "1"))
                 .andExpect(jsonPath("$.items[0].trip.id").value(first.getId()));
         mvc.perform(read("").param("size", "1").param("page", "2"))
+                .andExpect(jsonPath("$.items[0].trip.id").value(older.getId()));
+        mvc.perform(read("").param("size", "1").param("page", "3"))
                 .andExpect(jsonPath("$.items[0].trip.id").value(legacy.getId()))
                 .andExpect(jsonPath("$.items[0].createdAt").doesNotExist());
-        mvc.perform(read("").param("page", "3").param("size", "1"))
+        mvc.perform(read("").param("size", "2").param("sort", "created_asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].trip.id").value(older.getId()))
+                .andExpect(jsonPath("$.items[1].trip.id").value(second.getId()));
+        mvc.perform(read("").param("size", "2").param("sort", "created_asc").param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].trip.id").value(first.getId()))
+                .andExpect(jsonPath("$.items[1].trip.id").value(legacy.getId()));
+        mvc.perform(read("").param("page", "4").param("size", "1"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty());
         mvc.perform(read("").param("page", "-1")).andExpect(status().isBadRequest());
         mvc.perform(read("").param("size", "101")).andExpect(status().isBadRequest());
         mvc.perform(read("").param("page", "invalid")).andExpect(status().isBadRequest());
+        mvc.perform(read("").param("sort", "departure_asc")).andExpect(status().isBadRequest());
+        mvc.perform(read("").param("sort", "")).andExpect(status().isBadRequest());
     }
 
     @Test

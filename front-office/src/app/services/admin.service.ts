@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
   AdminBooking, AdminPage, AdminPublishedTrip, AdminTrip, AdminTripBooking, AdminTripBookingDetail,
-  AdminTripDetail, AdminUser, AdminUserDetail,
+  AdminTripDetail, AdminTripSort, AdminUser, AdminUserDetail,
 } from '../models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -27,9 +27,9 @@ export class AdminService {
     return this.http.get<AdminPage<AdminBooking>>(`${this.base}/${id}/bookings`, { params: { page, size: 20 } });
   }
 
-  publishedTrips(page: number) {
+  publishedTrips(page: number, sort: AdminTripSort) {
     return this.http.get<AdminPage<AdminPublishedTrip>>(this.tripsBase, {
-      params: { page, size: 20 }, transferCache: false,
+      params: { page, size: 20, sort }, transferCache: false,
     });
   }
 

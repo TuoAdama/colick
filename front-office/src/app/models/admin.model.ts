@@ -57,6 +57,8 @@ export interface AdminPublishedTrip {
   createdAt?: string;
 }
 
+export type AdminTripSort = 'created_asc' | 'created_desc';
+
 export interface AdminTripDetail {
   publication: AdminPublishedTrip;
   meetingPoint?: string;

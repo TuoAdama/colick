@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subject, map, startWith, switchMap, tap } from 'rxjs';
 import { AdminService } from '../../services/admin.service';
 import { adminDate, statusLabel } from './admin-display';
-import { adminPageIndex, adminRequest } from './admin-request';
+import { adminPageIndex, adminRequest, adminTripSortParam } from './admin-request';
 
 @Component({
   standalone: true,
@@ -19,8 +19,9 @@ export class AdminTripBookingPageComponent {
   readonly tripId = toSignal(this.route.paramMap.pipe(map(params => Number(params.get('id')))),
     { initialValue: 0 });
   readonly returnQuery = toSignal(this.route.queryParamMap.pipe(map(params => ({
-    listPage: adminPageIndex(params.get('listPage')), page: adminPageIndex(params.get('page')),
-  }))), { initialValue: { listPage: 0, page: 0 } });
+    listPage: adminPageIndex(params.get('listPage')), listSort: adminTripSortParam(params.get('listSort')),
+    page: adminPageIndex(params.get('page')),
+  }))), { initialValue: { listPage: 0, listSort: null, page: 0 } });
   readonly photoUnavailable = signal(false);
   readonly date = adminDate;
   readonly status = statusLabel;

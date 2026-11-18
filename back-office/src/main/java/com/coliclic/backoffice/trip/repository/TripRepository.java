@@ -33,7 +33,7 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "traveler")
     @Query("select trip from Trip trip "
-            + "order by case when trip.createdAt is null then 1 else 0 end, trip.createdAt desc, trip.id desc")
+            + "order by case when trip.createdAt is null then 1 else 0 end")
     Page<Trip> findAllForAdmin(Pageable pageable);
 
     long countByTraveler(User traveler);

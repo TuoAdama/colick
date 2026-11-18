@@ -5,7 +5,7 @@ import { Subject, combineLatest, distinctUntilChanged, map, startWith, switchMap
 import { AdminService } from '../../services/admin.service';
 import { adminDate, statusLabel } from './admin-display';
 import { AdminPaginationComponent } from './admin-pagination.component';
-import { adminPageIndex, adminRequest } from './admin-request';
+import { adminPageIndex, adminRequest, adminTripSortParam } from './admin-request';
 import { AdminTripCancellationComponent } from './admin-trip-cancellation.component';
 
 @Component({
@@ -21,8 +21,9 @@ export class AdminTripDetailPageComponent {
   private readonly refreshBookings = new Subject<void>();
   private readonly id$ = this.route.paramMap.pipe(map(params => Number(params.get('id'))), distinctUntilChanged());
   private readonly page$ = this.route.queryParamMap.pipe(map(params => adminPageIndex(params.get('page'))), distinctUntilChanged());
-  readonly listPage = toSignal(this.route.queryParamMap.pipe(map(params => adminPageIndex(params.get('listPage')))),
-    { initialValue: 0 });
+  readonly listQuery = toSignal(this.route.queryParamMap.pipe(map(params => ({
+    page: adminPageIndex(params.get('listPage')), sort: adminTripSortParam(params.get('listSort')),
+  }))), { initialValue: { page: 0, sort: null } });
   readonly date = adminDate;
   readonly status = statusLabel;
   readonly message = signal('');

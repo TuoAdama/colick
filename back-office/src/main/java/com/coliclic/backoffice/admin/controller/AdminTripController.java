@@ -44,8 +44,9 @@ public class AdminTripController {
 
     @GetMapping
     public AdminPage<AdminPublishedTripResponse> trips(@RequestParam(defaultValue = "0") int page,
-                                                      @RequestParam(defaultValue = "20") int size) {
-        return service.trips(page, size);
+                                                      @RequestParam(defaultValue = "20") int size,
+                                                      @RequestParam(required = false) String sort) {
+        return service.trips(page, size, sort);
     }
 
     @GetMapping("/{id}")

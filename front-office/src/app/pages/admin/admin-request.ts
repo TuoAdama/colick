@@ -20,3 +20,7 @@ export function adminPageIndex(value: string | null): number {
   const page = Number(value);
   return Number.isInteger(page) && page >= 0 && page <= 2_147_483_647 ? page : 0;
 }
+
+export function adminTripSortParam(value: string | null): 'created_asc' | null {
+  return value === 'created_asc' ? value : null;
+}
