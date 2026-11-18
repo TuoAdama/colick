@@ -1,6 +1,7 @@
 package com.coliclic.backoffice.email;
 
 import jakarta.mail.Session;
+import jakarta.mail.Message.RecipientType;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -51,5 +52,40 @@ class EmailServiceTemplateIntegrationTest {
         verify(mailSender).send(mimeMessage);
         assertThat(mimeMessage.getContent().toString())
                 .contains("href=\"https://app.coliclic.com/trips/10/reservations/1\"");
+    }
+
+    @Test
+    void rendersDisputeNotificationAsHtmlAndKeepsReplyTo() throws Exception {
+        MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        emailService.sendDisputeNotification(42, "ada@example.com", "Colis endommagé.\n\n<b>Voir la photo</b>",
+                "TRIP-1", "BOOK-2", "https://preprod.coliclic.example/admin/disputes/42");
+
+        verify(mailSender).send(mimeMessage);
+        mimeMessage.saveChanges();
+        assertThat(mimeMessage.isMimeType("text/html")).isTrue();
+        assertThat(mimeMessage.getSubject()).isEqualTo("[Contact] [Litige] Réclamation");
+        assertThat(mimeMessage.getRecipients(RecipientType.TO)).extracting(Object::toString)
+                .containsExactly("support@coliclic.app");
+        assertThat(mimeMessage.getReplyTo()).extracting(Object::toString).containsExactly("ada@example.com");
+        assertThat(mimeMessage.getContent().toString())
+                .contains("Dossier n° 42", "ada@example.com", "TRIP-1", "BOOK-2", "Voir le dossier",
+                        "href=\"https://preprod.coliclic.example/admin/disputes/42\"")
+                .containsPattern("Colis endommagé\\.</span><br[^>]*><span></span><br[^>]*><span>&lt;b&gt;Voir la photo&lt;/b&gt;")
+                .doesNotContain("<b>Voir la photo</b>");
+    }
+
+    @Test
+    void omitsMissingReferencesFromDisputeNotification() throws Exception {
+        MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        emailService.sendDisputeNotification(42, "ada@example.com", "Colis endommagé.", null, null,
+                "https://coliclic.example/admin/disputes/42");
+
+        verify(mailSender).send(mimeMessage);
+        assertThat(mimeMessage.getContent().toString())
+                .doesNotContain("Référence du trajet", "Référence de la réservation");
     }
 }

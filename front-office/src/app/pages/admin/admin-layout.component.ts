@@ -10,6 +10,8 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
          class="rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/10">Utilisateurs</a>
       <a routerLink="/admin/trips" routerLinkActive="bg-primary/10 text-primary" [ariaCurrentWhenActive]="true"
          class="rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/10">Trajets publiés</a>
+      <a routerLink="/admin/disputes" routerLinkActive="bg-primary/10 text-primary" [ariaCurrentWhenActive]="true"
+         class="rounded-xl px-4 py-2 text-sm font-semibold hover:bg-primary/10">Litiges</a>
     </nav>
     <router-outlet />
   `,

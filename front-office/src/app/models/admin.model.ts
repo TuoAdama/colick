@@ -85,3 +85,15 @@ export interface AdminTripBookingDetail {
   hasPhoto: boolean;
   deliveredAt?: string;
 }
+
+export interface AdminDisputeSummary {
+  id: number;
+  receivedAt: string;
+  email: string;
+  tripReference?: string;
+  bookingReference?: string;
+}
+
+export interface AdminDisputeDetail extends AdminDisputeSummary {
+  description: string;
+}

@@ -247,7 +247,7 @@ export const routes: Routes = [
         canActivate: [adminGuard],
         canActivateChild: [adminGuard],
         loadComponent: () => import('./pages/admin/admin-layout.component').then(m => m.AdminLayoutComponent),
-        data: { seo: { title: 'Administration | Coliclic', description: 'Gestion des utilisateurs et des trajets publiés.', index: false } },
+        data: { seo: { title: 'Administration | Coliclic', description: 'Gestion des utilisateurs, des trajets publiés et des litiges.', index: false } },
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'users' },
           { path: 'users', loadComponent: () => import('./pages/admin/admin-users-page.component').then(m => m.AdminUsersPageComponent) },
@@ -257,6 +257,8 @@ export const routes: Routes = [
           { path: 'trips', loadComponent: () => import('./pages/admin/admin-trips-page.component').then(m => m.AdminTripsPageComponent) },
           { path: 'trips/:id/bookings/:bookingId', loadComponent: () => import('./pages/admin/admin-trip-booking-page.component').then(m => m.AdminTripBookingPageComponent) },
           { path: 'trips/:id', loadComponent: () => import('./pages/admin/admin-trip-detail-page.component').then(m => m.AdminTripDetailPageComponent) },
+          { path: 'disputes', loadComponent: () => import('./pages/admin/admin-disputes-page.component').then(m => m.AdminDisputesPageComponent) },
+          { path: 'disputes/:id', loadComponent: () => import('./pages/admin/admin-dispute-detail-page.component').then(m => m.AdminDisputeDetailPageComponent) },
         ],
       },
       {

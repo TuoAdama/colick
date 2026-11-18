@@ -4,8 +4,6 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Va
 import { ContactService } from '../../services/contact.service';
 import { ActivatedRoute } from '@angular/router';
 
-const DISPUTE_SUBJECT = '[Litige] Réclamation';
-
 function requiredTrimmed(control: AbstractControl<string>): ValidationErrors | null {
   return control.value.trim() ? null : { required: true };
 }
@@ -26,11 +24,10 @@ export class ContactPageComponent implements OnInit {
 
   readonly isDispute = this.route?.snapshot.data['contactMode'] === 'dispute';
   readonly referenceMaxLength = 100;
-  // Leave room for both labeled references in the 5,000-character API message.
   readonly messageMaxLength = this.isDispute ? 4700 : 5000;
   readonly contactForm = this.fb.nonNullable.group({
     email: ['', [requiredTrimmed, Validators.email, Validators.maxLength(254)]],
-    subject: [this.isDispute ? DISPUTE_SUBJECT : '', [requiredTrimmed, Validators.maxLength(150)]],
+    subject: ['', this.isDispute ? [] : [requiredTrimmed, Validators.maxLength(150)]],
     message: ['', [requiredTrimmed, Validators.maxLength(this.messageMaxLength)]],
     tripReference: ['', Validators.maxLength(this.referenceMaxLength)],
     bookingReference: ['', Validators.maxLength(this.referenceMaxLength)],
@@ -71,13 +68,15 @@ export class ContactPageComponent implements OnInit {
           ...(this.reportTripId && { tripId: this.reportTripId }),
         }
       : { email, subject, message };
-    if (this.isDispute) {
-      const references: string[] = [];
-      if (tripReference.trim()) references.push(`Référence du trajet : ${tripReference.trim()}`);
-      if (bookingReference.trim()) references.push(`Référence de la réservation : ${bookingReference.trim()}`);
-      payload.message = [...references, message.trim()].join('\n\n');
-    }
-    this.contactService.send(payload).subscribe({
+    const submission = this.isDispute
+      ? this.contactService.submitDispute({
+          email,
+          description: message.trim(),
+          tripReference: tripReference.trim() || undefined,
+          bookingReference: bookingReference.trim() || undefined,
+        })
+      : this.contactService.send(payload);
+    submission.subscribe({
       next: () => {
         this.isLoading = false;
         this.contactForm.reset();

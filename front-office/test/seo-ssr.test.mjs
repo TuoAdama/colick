@@ -130,3 +130,12 @@ test('the dispute form renders on direct access without being indexed', async ()
   assert.match(body, /<h1[^>]*>Formulaire de litige<\/h1>/);
   assert.match(body, /id="contact-booking-reference"/);
 });
+
+test('dispute administration pages are not indexed or cached', async () => {
+  for (const path of ['/admin/disputes', '/admin/disputes/7?page=1']) {
+    const { status, headers, body } = await get(path);
+    assert.equal(status, 200, path);
+    assert.match(headers['cache-control'], /private, no-store/);
+    assert.match(body, /<meta name="robots" content="noindex, nofollow">/);
+  }
+});
