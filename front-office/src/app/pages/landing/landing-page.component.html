@@ -112,6 +112,30 @@
     </div>
   </section>
 }
+<section
+  id="alerte-trajet"
+  class="shell grid items-center gap-[clamp(24px,4vw,64px)] pb-[clamp(56px,7vw,96px)] md:grid-cols-2"
+  aria-labelledby="trip-alert-title"
+  appLandingReveal
+>
+  <div>
+    <h2 id="trip-alert-title" class="max-w-[17ch] font-display text-[clamp(32px,3.8vw,52px)] font-bold leading-[1.2] tracking-tight">
+      Vous ne trouvez pas de trajet ?
+    </h2>
+    <p class="mt-5 max-w-[42ch] text-[clamp(16px,1.6vw,22px)] leading-normal text-text-secondary">
+      Créez une alerte pour être prévenu par e-mail dès qu’un trajet correspondant est disponible.
+    </p>
+    <a routerLink="/search" class="search-submit mt-7 px-7 text-center md:w-fit">Rechercher un trajet</a>
+  </div>
+  <img
+    class="mx-auto block h-auto w-full max-md:max-w-[440px]"
+    src="/images/landing-trip-alert.webp"
+    alt=""
+    width="736"
+    height="560"
+    loading="lazy"
+  >
+</section>
 <section id="securite" class="bg-background-primary py-14 lg:py-20">
   <div class="mx-auto max-w-[1140px] px-4 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-3xl text-center">

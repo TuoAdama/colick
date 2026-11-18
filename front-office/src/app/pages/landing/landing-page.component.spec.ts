@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter, Router, UrlTree } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
 import { TripService } from '../../services/trip.service';
+import { LandingRevealDirective } from './landing-motion.directive';
 import { LandingPageComponent } from './landing-page.component';
 
 describe('LandingPageComponent', () => {
@@ -86,7 +88,7 @@ describe('LandingPageComponent', () => {
   });
 
   for (const mode of ['send', 'transport'] as const) {
-    it(`shows both journey videos after the recommendations in ${mode} mode`, () => {
+    it(`shows both journey videos before the trip alert in ${mode} mode`, () => {
       fixture.detectChanges();
       component.selectMode(mode);
       fixture.detectChanges();
@@ -94,7 +96,9 @@ describe('LandingPageComponent', () => {
       const host = fixture.nativeElement as HTMLElement;
       const travelerSection = host.querySelector('.recommendations')?.nextElementSibling;
       const senderSection = travelerSection?.nextElementSibling;
-      expect(senderSection?.nextElementSibling?.id).toBe('securite');
+      const alertSection = senderSection?.nextElementSibling;
+      expect(alertSection?.id).toBe('alerte-trajet');
+      expect(alertSection?.nextElementSibling?.id).toBe('securite');
 
       for (const { section, titleId, title, assetPath } of [
         { section: travelerSection, titleId: 'traveler-video-title', title: 'Le parcours voyageur', assetPath: '/videos/parcours-voyageur-v1' },
@@ -117,6 +121,33 @@ describe('LandingPageComponent', () => {
       }
     });
   }
+
+  it('explains the trip alert and links to the trip search form', () => {
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const alertSection = host.querySelector('#alerte-trajet');
+    const link = alertSection?.querySelector('a');
+    const illustration = alertSection?.querySelector('img');
+
+    expect(alertSection?.getAttribute('aria-labelledby')).toBe('trip-alert-title');
+    expect(alertSection?.querySelector('h2#trip-alert-title')?.textContent?.trim()).toBe('Vous ne trouvez pas de trajet ?');
+    expect(alertSection?.querySelector('p')?.textContent?.trim()).toBe(
+      'Créez une alerte pour être prévenu par e-mail dès qu’un trajet correspondant est disponible.'
+    );
+    expect(link?.textContent).toBe('Rechercher un trajet');
+    expect(link?.getAttribute('href')).toBe('/search');
+    expect(illustration?.getAttribute('src')).toBe('/images/landing-trip-alert.webp');
+    expect(illustration?.getAttribute('alt')).toBe('');
+    expect(illustration?.getAttribute('loading')).toBe('lazy');
+  });
+
+  it('uses the landing scroll reveal for the trip alert section', () => {
+    fixture.detectChanges();
+
+    const alertSection = fixture.debugElement.query(By.css('#alerte-trajet'));
+    expect(alertSection.providerTokens).toContain(LandingRevealDirective);
+  });
 
   it('marks departure and destination as required in both landing search forms', () => {
     fixture.detectChanges();
