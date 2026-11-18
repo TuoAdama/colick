@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -18,11 +19,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.thymeleaf.exceptions.TemplateProcessingException;
 
 import java.time.Instant;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -35,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = "app.frontend.base-url=https://preprod.coliclic.example/")
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class DisputeIntegrationTest {
@@ -61,18 +66,17 @@ class DisputeIntegrationTest {
         disputes.deleteAll();
     }
 
-    @Test
-    void publicSubmissionIsSavedAndCanBeReadByAnAdministratorEvenIfEmailFails() throws Exception {
+    @ParameterizedTest
+    @MethodSource("notificationFailures")
+    void publicSubmissionIsSavedAndCanBeReadByAnAdministratorEvenIfEmailFails(RuntimeException failure) throws Exception {
         doAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             Dispute saved = disputes.findAll().getFirst();
-            assertThat(invocation.getArgument(0, String.class)).isEqualTo(EMAIL);
-            assertThat(invocation.getArgument(1, String.class)).isEqualTo("[Litige] Réclamation");
-            assertThat(invocation.getArgument(2, String.class))
-                    .contains("Dossier n°" + saved.getId(), "Référence du trajet : TRIP-1", DESCRIPTION)
-                    .doesNotContain("Référence de la réservation");
-            throw new MailSendException("Mailbox unavailable");
-        }).when(emailService).sendContactMessage(anyString(), anyString(), anyString());
+            assertThat(invocation.getArguments()).containsExactly(
+                    saved.getId(), EMAIL, DESCRIPTION, "TRIP-1", null,
+                    "https://preprod.coliclic.example/admin/disputes/" + saved.getId());
+            throw failure;
+        }).when(emailService).sendDisputeNotification(anyLong(), anyString(), anyString(), any(), any(), anyString());
 
         mvc.perform(submission(VALID_SUBMISSION).with(csrf())).andExpect(status().isNoContent());
         long id = disputes.findAll().getFirst().getId();
@@ -90,6 +94,11 @@ class DisputeIntegrationTest {
                 .andExpect(jsonPath("$.description").value(DESCRIPTION))
                 .andExpect(jsonPath("$.tripReference").value("TRIP-1"))
                 .andExpect(jsonPath("$.bookingReference").doesNotExist());
+    }
+
+    static Stream<RuntimeException> notificationFailures() {
+        return Stream.of(new MailSendException("Mailbox unavailable"),
+                new TemplateProcessingException("Failed to render dispute template"));
     }
 
     @Test

@@ -52,18 +52,22 @@ public class EmailService {
 
     /** Sends a public contact request to the support inbox without persisting its content. */
     public void sendContactMessage(String senderEmail, String subject, String body) {
-        MimeMessage message = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
-            helper.setTo(supportEmail);
-            helper.setFrom(fromAddress);
-            helper.setReplyTo(senderEmail);
-            helper.setSubject("[Contact] " + subject);
-            helper.setText("Email : " + senderEmail + "\n\nSujet : " + subject + "\n\nMessage :\n" + body, false);
-            mailSender.send(message);
-        } catch (MessagingException ex) {
-            throw new IllegalStateException(localizedMessages.get("error.email.sendFailed"), ex);
-        }
+        sendMimeEmail(supportEmail, senderEmail, "[Contact] " + subject,
+                "Email : " + senderEmail + "\n\nSujet : " + subject + "\n\nMessage :\n" + body, false);
+    }
+
+    public void sendDisputeNotification(long id, String senderEmail, String description,
+                                        String tripReference, String bookingReference, String disputeUrl) {
+        // The support notification is in French, regardless of the submitter's locale.
+        Context context = new Context(Locale.FRENCH);
+        context.setVariable("id", id);
+        context.setVariable("senderEmail", senderEmail);
+        context.setVariable("descriptionLines", description.lines().toList());
+        context.setVariable("tripReference", tripReference);
+        context.setVariable("bookingReference", bookingReference);
+        context.setVariable("disputeUrl", disputeUrl);
+        String htmlBody = templateEngine.process("email/dispute-notification", context);
+        sendMimeEmail(supportEmail, senderEmail, "[Contact] [Litige] Réclamation", htmlBody, true);
     }
 
     public void sendSignupActivationEmail(String to, String firstName, String confirmUrl) {
@@ -312,14 +316,20 @@ public class EmailService {
         Context context = new Context(locale);
         variables.forEach(context::setVariable);
         String htmlBody = templateEngine.process(templateName, context);
+        sendMimeEmail(to, null, localizedMessages.getForLocale(locale, subjectCode), htmlBody, true);
+    }
 
+    private void sendMimeEmail(String to, String replyTo, String subject, String body, boolean html) {
         MimeMessage message = mailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
             helper.setTo(to);
-            helper.setSubject(localizedMessages.getForLocale(locale, subjectCode));
-            helper.setText(htmlBody, true);
             helper.setFrom(fromAddress);
+            if (replyTo != null) {
+                helper.setReplyTo(replyTo);
+            }
+            helper.setSubject(subject);
+            helper.setText(body, html);
             mailSender.send(message);
         } catch (MessagingException ex) {
             throw new IllegalStateException(localizedMessages.get("error.email.sendFailed"), ex);

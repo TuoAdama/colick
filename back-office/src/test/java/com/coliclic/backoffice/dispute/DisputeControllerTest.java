@@ -27,7 +27,7 @@ class DisputeControllerTest {
         var messages = mock(LocalizedMessages.class);
         when(limiter.check(anyString(), anyString())).thenReturn(RateLimitDecision.allowedDecision());
         when(repository.save(any(Dispute.class))).thenThrow(new DataAccessResourceFailureException("Offline"));
-        var controller = new DisputeController(repository, limiter, email, messages);
+        var controller = new DisputeController(repository, limiter, email, messages, "https://coliclic.example");
 
         assertThatThrownBy(() -> controller.submit(
                 new DisputeRequest("ada@example.com", "Mon colis est introuvable.", null, null),

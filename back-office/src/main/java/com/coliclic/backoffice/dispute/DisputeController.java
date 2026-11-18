@@ -8,14 +8,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
-import org.springframework.mail.MailException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Instant;
 
@@ -27,13 +28,16 @@ public class DisputeController {
     private final ContactRateLimiter rateLimiter;
     private final EmailService emailService;
     private final LocalizedMessages messages;
+    private final String frontendBaseUrl;
 
     public DisputeController(DisputeRepository disputes, ContactRateLimiter rateLimiter,
-                             EmailService emailService, LocalizedMessages messages) {
+                             EmailService emailService, LocalizedMessages messages,
+                             @Value("${app.frontend.base-url}") String frontendBaseUrl) {
         this.disputes = disputes;
         this.rateLimiter = rateLimiter;
         this.emailService = emailService;
         this.messages = messages;
+        this.frontendBaseUrl = frontendBaseUrl;
     }
 
     @PostMapping("/disputes")
@@ -56,15 +60,12 @@ public class DisputeController {
 
         // The repository transaction has committed before we attempt delivery.
         try {
-            StringBuilder body = new StringBuilder("Dossier n°").append(dispute.getId()).append("\n\n");
-            if (dispute.getTripReference() != null) {
-                body.append("Référence du trajet : ").append(dispute.getTripReference()).append("\n\n");
-            }
-            if (dispute.getBookingReference() != null) {
-                body.append("Référence de la réservation : ").append(dispute.getBookingReference()).append("\n\n");
-            }
-            emailService.sendContactMessage(email, "[Litige] Réclamation", body.append(dispute.getDescription()).toString());
-        } catch (MailException | IllegalStateException ex) {
+            String disputeUrl = UriComponentsBuilder.fromUriString(frontendBaseUrl)
+                    .pathSegment("admin", "disputes", dispute.getId().toString())
+                    .toUriString();
+            emailService.sendDisputeNotification(dispute.getId(), email, dispute.getDescription(),
+                    dispute.getTripReference(), dispute.getBookingReference(), disputeUrl);
+        } catch (RuntimeException ex) {
             log.warn("Could not send the support email for dispute {} ({})", dispute.getId(), ex.getClass().getSimpleName());
         }
     }
