@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.Locale;
 
 @Service
 @Transactional(readOnly = true)
@@ -32,7 +34,7 @@ public class AdminTripService {
         this.storage = storage;
     }
 
-    public AdminPage<AdminPublishedTripResponse> trips(int page, int size, String sort) {
+    public AdminPage<AdminPublishedTripResponse> trips(int page, int size, String sort, LocalDate createdFrom, String query) {
         Sort.Direction direction = switch (sort) {
             case null -> Sort.Direction.DESC;
             case "created_asc" -> Sort.Direction.ASC;
@@ -40,7 +42,9 @@ public class AdminTripService {
             default -> throw new BadRequestException("Tri par date de création invalide.");
         };
         var order = Sort.by(direction, "createdAt").and(Sort.by(Sort.Direction.DESC, "id"));
-        return AdminPage.from(trips.findAllForAdmin(AdminPagination.of(page, size).withSort(order))
+        var start = createdFrom == null ? null : createdFrom.atStartOfDay();
+        var q = query.strip().toLowerCase(Locale.ROOT);
+        return AdminPage.from(trips.findAllForAdmin(start, q, AdminPagination.of(page, size).withSort(order))
                 .map(AdminPublishedTripResponse::from));
     }
 

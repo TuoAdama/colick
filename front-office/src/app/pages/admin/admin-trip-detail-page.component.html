@@ -71,7 +71,7 @@
                     <tr class="border-b border-border last:border-0">
                       <th scope="row" class="min-w-36 p-4">
                         <a class="font-semibold text-primary underline" [routerLink]="['/admin/trips', trip.id, 'bookings', booking.id]"
-                           [queryParams]="{ listPage: listQuery().page, listSort: listQuery().sort, page: page.page }">{{ booking.title }}</a>
+                           [queryParams]="{ listPage: listQuery().page, listSort: listQuery().sort, listCreatedFrom: listQuery().createdFrom, listQ: listQuery().q, page: page.page }">{{ booking.title }}</a>
                       </th>
                       <td class="p-4">{{ booking.senderName }}</td>
                       <td class="whitespace-nowrap p-4">{{ date(booking.createdAt) }}</td>
