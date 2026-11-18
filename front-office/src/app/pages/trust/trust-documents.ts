@@ -211,9 +211,12 @@ export const TRUST_DOCUMENTS: Record<TrustDocumentSlug, TrustDocument> = {
         title: 'Déposer une réclamation',
         paragraphs: [
           'Décrivez la situation et indiquez les références du trajet et de la réservation si vous les avez.',
-          'Conservez vos échanges, photos et reçus. Le support pourra vous demander ces justificatifs par e-mail.',
+          [
+            'Conservez vos échanges, photos et reçus. Le support pourra vous demander ces justificatifs par e-mail. ',
+            { label: 'Ouvrir le formulaire de litige', route: '/annulation-litiges/formulaire' },
+            '.',
+          ],
         ],
-        action: { label: 'Ouvrir le formulaire de litige', route: '/annulation-litiges/formulaire' },
       },
       { id: 'mediation', title: 'Médiation', paragraphs: ['Après une réclamation écrite restée sans solution, un consommateur pourra saisir gratuitement le médiateur compétent. Son identité, son adresse et son site internet seront ajoutés avant publication.'] },
     ],

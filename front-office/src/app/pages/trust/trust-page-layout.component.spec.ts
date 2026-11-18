@@ -56,15 +56,16 @@ describe('TrustPageLayoutComponent', () => {
     expect(host.querySelector('aside[role="note"]')).toBeNull();
   });
 
-  it('links the claims section to the dedicated public form and removes the warning', async () => {
+  it('links to the public form from the supporting documents paragraph', async () => {
     await harness.navigateByUrl('/annulation-litiges', TrustPageComponent);
     const host = harness.routeNativeElement as HTMLElement;
-    const formLink = host.querySelector<HTMLAnchorElement>('#reclamation a');
+    const formLink = host.querySelector<HTMLAnchorElement>('#reclamation p > a');
     const router = TestBed.inject(Router);
 
     expect(host.querySelector('aside[role="note"]')).toBeNull();
     expect(host.textContent).not.toContain('avant toute mise en production');
-    expect(host.querySelector('#reclamation')?.textContent).toContain('par e-mail');
+    expect(formLink?.parentElement?.textContent?.trim()).toContain('par e-mail. Ouvrir le formulaire de litige.');
+    expect(host.querySelector('#reclamation > a')).toBeNull();
     expect(formLink?.getAttribute('href')).toBe('/annulation-litiges/formulaire');
 
     const navigationEnd = firstValueFrom(router.events.pipe(filter(event => event instanceof NavigationEnd)));

@@ -8,12 +8,13 @@ export type TrustDocumentSlug =
   | 'security'
   | 'cancellation-disputes';
 
+export type TrustParagraphPart = string | { strong: string } | TrustRelatedDocument;
+
 export interface TrustSection {
   id: string;
   title: string;
-  paragraphs?: (string | readonly (string | { strong: string })[])[];
+  paragraphs?: (string | readonly TrustParagraphPart[])[];
   bullets?: string[];
-  action?: TrustRelatedDocument;
 }
 
 export interface TrustRelatedDocument {

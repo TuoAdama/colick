@@ -1,7 +1,7 @@
 import { ViewportScroller } from '@angular/common';
 import { Component, inject, input } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { TrustDocument } from './trust-document.model';
+import { TrustDocument, TrustParagraphPart, TrustRelatedDocument } from './trust-document.model';
 
 @Component({
   selector: 'app-trust-page-layout',
@@ -16,6 +16,10 @@ export class TrustPageLayoutComponent {
 
   isText(value: unknown): value is string {
     return typeof value === 'string';
+  }
+
+  isLink(part: Exclude<TrustParagraphPart, string>): part is TrustRelatedDocument {
+    return 'route' in part;
   }
 
   reScrollActiveSection(sectionId: string): void {
