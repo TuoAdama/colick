@@ -32,10 +32,11 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
             @Param("userId") Long userId,
             Pageable pageable);
 
+    // PostgreSQL needs an explicit type for the JDBC parameter used in the null check.
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "traveler")
     @Query("""
             select trip from Trip trip join trip.traveler traveler
-            where (:createdFrom is null or trip.createdAt >= :createdFrom)
+            where (cast(:createdFrom as LocalDateTime) is null or trip.createdAt >= :createdFrom)
               and (:q = '' or locate(:q, lower(trip.reference)) > 0
                 or locate(:q, lower(concat(traveler.firstName, ' ', traveler.lastName))) > 0)
             order by case when trip.createdAt is null then 1 else 0 end
