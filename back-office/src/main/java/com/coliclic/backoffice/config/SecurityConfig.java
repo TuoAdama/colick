@@ -90,6 +90,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/trips/catalog", "/trips/landing-feed").permitAll()
                 .requestMatchers(HttpMethod.GET, "/trips/reference/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/parcel-requests").permitAll()
+                .requestMatchers("/admin/trips", "/admin/trips/**").hasRole("ADMIN")
                 .requestMatchers(
                     "/swagger-ui.html",
                     "/swagger-ui/**",

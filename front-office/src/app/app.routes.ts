@@ -246,13 +246,17 @@ export const routes: Routes = [
         path: 'admin',
         canActivate: [adminGuard],
         canActivateChild: [adminGuard],
-        data: { seo: { title: 'Administration | Coliclic', description: 'Consultation des utilisateurs et de leur activité.', index: false } },
+        loadComponent: () => import('./pages/admin/admin-layout.component').then(m => m.AdminLayoutComponent),
+        data: { seo: { title: 'Administration | Coliclic', description: 'Gestion des utilisateurs et des trajets publiés.', index: false } },
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'users' },
           { path: 'users', loadComponent: () => import('./pages/admin/admin-users-page.component').then(m => m.AdminUsersPageComponent) },
           { path: 'users/:id/trips', data: { kind: 'trips' }, loadComponent: () => import('./pages/admin/admin-user-activity-page.component').then(m => m.AdminUserActivityPageComponent) },
           { path: 'users/:id/bookings', data: { kind: 'bookings' }, loadComponent: () => import('./pages/admin/admin-user-activity-page.component').then(m => m.AdminUserActivityPageComponent) },
           { path: 'users/:id', loadComponent: () => import('./pages/admin/admin-user-detail-page.component').then(m => m.AdminUserDetailPageComponent) },
+          { path: 'trips', loadComponent: () => import('./pages/admin/admin-trips-page.component').then(m => m.AdminTripsPageComponent) },
+          { path: 'trips/:id/bookings/:bookingId', loadComponent: () => import('./pages/admin/admin-trip-booking-page.component').then(m => m.AdminTripBookingPageComponent) },
+          { path: 'trips/:id', loadComponent: () => import('./pages/admin/admin-trip-detail-page.component').then(m => m.AdminTripDetailPageComponent) },
         ],
       },
       {
