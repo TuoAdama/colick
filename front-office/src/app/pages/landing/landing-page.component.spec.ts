@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter, Router, UrlTree } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
 import { TripService } from '../../services/trip.service';
+import { LandingRevealDirective } from './landing-motion.directive';
 import { LandingPageComponent } from './landing-page.component';
 
 describe('LandingPageComponent', () => {
@@ -138,6 +140,13 @@ describe('LandingPageComponent', () => {
     expect(illustration?.getAttribute('src')).toBe('/images/landing-trip-alert.webp');
     expect(illustration?.getAttribute('alt')).toBe('');
     expect(illustration?.getAttribute('loading')).toBe('lazy');
+  });
+
+  it('uses the landing scroll reveal for the trip alert section', () => {
+    fixture.detectChanges();
+
+    const alertSection = fixture.debugElement.query(By.css('#alerte-trajet'));
+    expect(alertSection.providerTokens).toContain(LandingRevealDirective);
   });
 
   it('marks departure and destination as required in both landing search forms', () => {
