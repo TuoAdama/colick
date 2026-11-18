@@ -20,8 +20,9 @@ export class AdminTripBookingPageComponent {
     { initialValue: 0 });
   readonly returnQuery = toSignal(this.route.queryParamMap.pipe(map(params => ({
     listPage: adminPageIndex(params.get('listPage')), listSort: adminTripSortParam(params.get('listSort')),
+    listCreatedFrom: params.get('listCreatedFrom'), listQ: params.get('listQ'),
     page: adminPageIndex(params.get('page')),
-  }))), { initialValue: { listPage: 0, listSort: null, page: 0 } });
+  }))), { requireSync: true });
   readonly photoUnavailable = signal(false);
   readonly date = adminDate;
   readonly status = statusLabel;

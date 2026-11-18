@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -31,10 +32,17 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
             @Param("userId") Long userId,
             Pageable pageable);
 
+    // PostgreSQL needs an explicit type for the JDBC parameter used in the null check.
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "traveler")
-    @Query("select trip from Trip trip "
-            + "order by case when trip.createdAt is null then 1 else 0 end")
-    Page<Trip> findAllForAdmin(Pageable pageable);
+    @Query("""
+            select trip from Trip trip join trip.traveler traveler
+            where (cast(:createdFrom as LocalDateTime) is null or trip.createdAt >= :createdFrom)
+              and (:q = '' or locate(:q, lower(trip.reference)) > 0
+                or locate(:q, lower(concat(traveler.firstName, ' ', traveler.lastName))) > 0)
+            order by case when trip.createdAt is null then 1 else 0 end
+            """)
+    Page<Trip> findAllForAdmin(@Param("createdFrom") LocalDateTime createdFrom, @Param("q") String query,
+                              Pageable pageable);
 
     long countByTraveler(User traveler);
 

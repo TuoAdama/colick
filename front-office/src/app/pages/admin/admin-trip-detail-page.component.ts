@@ -23,7 +23,8 @@ export class AdminTripDetailPageComponent {
   private readonly page$ = this.route.queryParamMap.pipe(map(params => adminPageIndex(params.get('page'))), distinctUntilChanged());
   readonly listQuery = toSignal(this.route.queryParamMap.pipe(map(params => ({
     page: adminPageIndex(params.get('listPage')), sort: adminTripSortParam(params.get('listSort')),
-  }))), { initialValue: { page: 0, sort: null } });
+    createdFrom: params.get('listCreatedFrom'), q: params.get('listQ'),
+  }))), { requireSync: true });
   readonly date = adminDate;
   readonly status = statusLabel;
   readonly message = signal('');

@@ -106,8 +106,41 @@ describe('Administration des trajets', () => {
     expect(header.getAttribute('aria-sort')).toBe('descending');
   });
 
-  it('links the trip, its traveler and booking and preserves both page numbers and the trip sort', async () => {
-    await harness.navigateByUrl('/admin/trips/18?listPage=2&listSort=created_asc&page=1');
+  it('applies and resets both filters, keeping them on subsequent pages and in detail links', async () => {
+    await harness.navigateByUrl('/admin/trips?page=1&sort=created_asc');
+    http.expectOne(tripList(1, 'created_asc')).flush(page([publication], 1));
+    await harness.fixture.whenStable();
+    const date = element().querySelector<HTMLInputElement>('input[name="createdFrom"]')!;
+    const query = element().querySelector<HTMLInputElement>('input[name="q"]')!;
+    date.value = '2026-11-17';
+    date.dispatchEvent(new Event('input'));
+    query.value = '  Martin  ';
+    query.dispatchEvent(new Event('input'));
+    button('Filtrer').click();
+    await harness.fixture.whenStable();
+    const filters = '&createdFrom=2026-11-17&q=Martin';
+    http.expectOne(tripList(0, 'created_asc') + filters).flush(page([publication], 0));
+    harness.detectChanges();
+
+    button('Suivant').click();
+    await harness.fixture.whenStable();
+    http.expectOne(tripList(1, 'created_asc') + filters).flush(page([publication], 1));
+    harness.detectChanges();
+    expect(link('Consulter').getAttribute('href'))
+      .toBe('/admin/trips/18?listPage=1&listSort=created_asc&listCreatedFrom=2026-11-17&listQ=Martin');
+
+    button('Réinitialiser').click();
+    await harness.fixture.whenStable();
+    http.expectOne(tripList(0, 'created_asc')).flush(page([publication], 0));
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    expect(date.value).toBe('');
+    expect(query.value).toBe('');
+  });
+
+  it('links the trip, its traveler and booking and preserves pagination, sort and filters', async () => {
+    const listContext = 'listPage=2&listSort=created_asc&listCreatedFrom=2026-11-17&listQ=Martin';
+    await harness.navigateByUrl('/admin/trips/18?' + listContext + '&page=1');
     http.expectOne(`${base}/18`).flush({ publication, meetingPoint: 'Gare du Nord', availableWeight: 8, instantAcceptance: true });
     http.expectOne(paginated(`${base}/18/bookings`, 1)).flush(page([booking], 1));
     harness.detectChanges();
@@ -115,8 +148,9 @@ describe('Administration des trajets', () => {
     expect(element().textContent).toContain('Automatique');
     expect(element().textContent).toContain('Retirée');
     expect(link('Ada Martin').getAttribute('href')).toBe('/admin/users/7');
-    expect(link('Tous les trajets publiés').getAttribute('href')).toBe('/admin/trips?page=2&sort=created_asc');
-    expect(link('Documents').getAttribute('href')).toBe('/admin/trips/18/bookings/42?listPage=2&listSort=created_asc&page=1');
+    expect(link('Tous les trajets publiés').getAttribute('href'))
+      .toBe('/admin/trips?page=2&sort=created_asc&createdFrom=2026-11-17&q=Martin');
+    expect(link('Documents').getAttribute('href')).toBe('/admin/trips/18/bookings/42?' + listContext + '&page=1');
 
     await harness.navigateByUrl(link('Documents').getAttribute('href')!);
     const request = http.expectOne(`${base}/18/bookings/42`);
@@ -130,7 +164,7 @@ describe('Administration des trajets', () => {
     expect(element().textContent).toContain('Documents imprimés');
     expect(element().querySelector('img')?.getAttribute('src')).toBe(`${base}/18/bookings/42/photo`);
     expect(link('Éloïse Durand').getAttribute('href')).toBe('/admin/users/9');
-    expect(link('Retour au trajet').getAttribute('href')).toBe('/admin/trips/18?listPage=2&listSort=created_asc&page=1');
+    expect(link('Retour au trajet').getAttribute('href')).toBe('/admin/trips/18?' + listContext + '&page=1');
   });
 
   it('cancels from the list only after confirmation and refreshes the current page', async () => {

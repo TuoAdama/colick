@@ -11,6 +11,7 @@ import com.coliclic.backoffice.trip.service.TripService;
 import com.coliclic.backoffice.user.entity.User;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -27,6 +28,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/admin/trips")
@@ -45,8 +48,11 @@ public class AdminTripController {
     @GetMapping
     public AdminPage<AdminPublishedTripResponse> trips(@RequestParam(defaultValue = "0") int page,
                                                       @RequestParam(defaultValue = "20") int size,
-                                                      @RequestParam(required = false) String sort) {
-        return service.trips(page, size, sort);
+                                                      @RequestParam(required = false) String sort,
+                                                      @RequestParam(required = false)
+                                                      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdFrom,
+                                                      @RequestParam(defaultValue = "") String q) {
+        return service.trips(page, size, sort, createdFrom, q);
     }
 
     @GetMapping("/{id}")

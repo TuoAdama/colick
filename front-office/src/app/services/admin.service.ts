@@ -28,9 +28,12 @@ export class AdminService {
     return this.http.get<AdminPage<AdminBooking>>(`${this.base}/${id}/bookings`, { params: { page, size: 20 } });
   }
 
-  publishedTrips(page: number, sort: AdminTripSort) {
+  publishedTrips(page: number, sort: AdminTripSort, createdFrom: string | null, q: string | null) {
+    const params: Record<string, string | number> = { page, size: 20, sort };
+    if (createdFrom) params['createdFrom'] = createdFrom;
+    if (q) params['q'] = q;
     return this.http.get<AdminPage<AdminPublishedTrip>>(this.tripsBase, {
-      params: { page, size: 20, sort }, transferCache: false,
+      params, transferCache: false,
     });
   }
 

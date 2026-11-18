@@ -12,8 +12,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +30,19 @@ class AdminTripServiceTest {
     @Mock TripBookingRepository bookings;
     @Mock FileStorageService storage;
     @InjectMocks AdminTripService service;
+
+    @Test
+    void passesTheInclusiveDateAndNormalizedSearchToThePagedQuery() {
+        var date = LocalDate.of(2026, 1, 10);
+        var order = Sort.by(Sort.Direction.ASC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id"));
+        var paging = PageRequest.of(1, 2, order);
+        when(trips.findAllForAdmin(date.atStartOfDay(), "ada martin", paging)).thenReturn(Page.empty(paging));
+
+        var result = service.trips(1, 2, "created_asc", date, "  ADA Martin  ");
+
+        assertThat(result.page()).isEqualTo(1);
+        assertThat(result.items()).isEmpty();
+    }
 
     @Test
     void activeTripWithNoReservedWeightKeepsFullCapacity() {

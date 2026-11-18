@@ -109,6 +109,38 @@ class AdminTripIntegrationTest {
     }
 
     @Test
+    void filtersByCreationDateAndTravelerNameOrReferenceBeforePagination() throws Exception {
+        User martin = account("Martin");
+        User durand = account("Durand");
+        var start = LocalDateTime.of(2026, 1, 10, 0, 0);
+        Trip boundary = trip(martin, "ABC-100", Trip.TripStatus.ACTIVE, start);
+        Trip newer = trip(martin, "XYZ-200", Trip.TripStatus.CANCELLED, start.plusDays(1));
+        trip(martin, "OLD", Trip.TripStatus.ACTIVE, start.minusSeconds(1));
+        Trip legacy = trip(martin, "UNKNOWN", Trip.TripStatus.ACTIVE, start.plusDays(2));
+        trip(durand, "OTHER", Trip.TripStatus.ACTIVE, start.plusDays(3));
+        em.flush();
+        em.createNativeQuery("update trips set created_at = null where id = :id")
+                .setParameter("id", legacy.getId()).executeUpdate();
+        em.clear();
+
+        mvc.perform(read("").param("createdFrom", "2026-01-10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(3));
+        mvc.perform(read("").param("q", "  aDA mar "))
+                .andExpect(jsonPath("$.totalElements").value(4));
+        mvc.perform(read("").param("q", "bc-10"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].trip.id").value(boundary.getId()));
+        mvc.perform(read("").param("createdFrom", "2026-01-10").param("q", "martin").param("size", "1"))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.items[0].trip.id").value(newer.getId()));
+        mvc.perform(read("").param("createdFrom", "2026-01-10").param("q", "martin").param("size", "1").param("page", "1"))
+                .andExpect(jsonPath("$.items[0].trip.id").value(boundary.getId()));
+        mvc.perform(read("").param("createdFrom", "2026-02-30")).andExpect(status().isBadRequest());
+    }
+
+    @Test
     void exposesTripDetailsAndOnlyBookingsAssociatedWithThatTrip() throws Exception {
         User traveler = account("traveler");
         User sender = account("sender");
