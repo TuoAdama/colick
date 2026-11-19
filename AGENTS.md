@@ -11,6 +11,8 @@
 8. Ouvre une PR avec une description claire
 
 ## Conventions
+- Déclare chaque nouvelle variable d’environnement dans tous les modèles versionnés (`.env.example` et les fichiers `.env.*.example`).
+- Dans les modèles de préproduction et de production, indique uniquement le nom des variables sensibles, sans `=` ni valeur.
 - Tests : Junit
 - Branches : feat/<issue-id>-<short-description>, fix/<issue-id>-<short-description>
 - Ne touche jamais directement à `main` ou `preprod`
