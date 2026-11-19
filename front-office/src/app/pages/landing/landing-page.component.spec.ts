@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router, UrlTree } from '@angular/router';
-import { RouterTestingHarness } from '@angular/router/testing';
 import { Subject, of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
@@ -67,56 +66,6 @@ describe('LandingPageComponent', () => {
     authServiceMock.getUser.and.returnValue(null);
     tripServiceMock.getLandingFeed.calls.reset();
     tripServiceMock.getLandingFeed.and.returnValue(of([]));
-  });
-
-  for (const [id, asset] of [
-    ['1', 'handoff.svg'],
-    ['2', 'packed.svg'],
-    ['3', 'route.svg'],
-    ['4', 'traveler-480.webp'],
-    ['5', 'delivery.svg'],
-  ]) {
-    it(`opens illustration ${id} from the landing URL`, async () => {
-      router.resetConfig([{ path: '', component: LandingPageComponent }]);
-      const harness = await RouterTestingHarness.create(`/?illustration=${id}`);
-      const landing = harness.routeNativeElement!;
-      const photo = landing.querySelector<HTMLImageElement>('app-landing-visual img');
-
-      expect(photo?.getAttribute('src')).toBe(`/images/landing-illustrations/${asset}`);
-      expect(photo?.alt).toBeTruthy();
-      expect(landing.querySelector('.hero-route') !== null).toBe(id !== '3' && id !== '4');
-      expect(landing.querySelector('.photo-ring') !== null).toBe(id !== '4');
-      expect(landing.querySelector('nav .preview-link[aria-current]')?.getAttribute('href')).toBe(`/?illustration=${id}`);
-      if (id === '4') {
-        expect(photo?.closest('.full-frame-window')).toBeTruthy();
-        expect(photo?.srcset).toContain('traveler-360.webp 360w');
-        expect(photo?.srcset).toContain('traveler-880.webp 880w');
-        expect(photo?.sizes).toContain('96px');
-      }
-    });
-  }
-
-  it('shows the photo for an unknown illustration and preserves unrelated parameters when switching', async () => {
-    router.resetConfig([{ path: '', component: LandingPageComponent }]);
-    const harness = await RouterTestingHarness.create('/?mode=transport&illustration=01');
-    const landing = harness.routeNativeElement!;
-    const links = landing.querySelectorAll<HTMLAnchorElement>('.preview-link');
-    const imageSource = () => landing.querySelector('app-landing-visual img')?.getAttribute('src');
-
-    expect(imageSource()).toBe('/images/landing-handoff.webp');
-    expect(links.length).toBe(6);
-
-    links[2].click();
-    await harness.fixture.whenStable();
-    harness.detectChanges();
-    expect(router.url).toBe('/?mode=transport&illustration=2');
-    expect(imageSource()).toBe('/images/landing-illustrations/packed.svg');
-
-    links[0].click();
-    await harness.fixture.whenStable();
-    harness.detectChanges();
-    expect(router.url).toBe('/?mode=transport');
-    expect(imageSource()).toBe('/images/landing-handoff.webp');
   });
 
   it('shows a transport search form with route and desired date fields', () => {
@@ -453,11 +402,19 @@ describe('LandingPageComponent', () => {
     expect(geolocationMock.getCurrentPosition).not.toHaveBeenCalled();
   });
 
-  it('shows the validated headline, local image and a single shared form', () => {
+  it('shows the validated headline, responsive hero illustration and a single shared form', () => {
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('Expédiez vos colis avec des voyageurs de confiance');
-    expect(fixture.nativeElement.querySelector('.hero-photo img').getAttribute('src')).toBe('/images/landing-handoff.webp');
-    expect(fixture.nativeElement.querySelectorAll('form').length).toBe(1);
+    const landing = fixture.nativeElement as HTMLElement;
+    const image = landing.querySelector<HTMLImageElement>('img.hero-visual')!;
+
+    expect(landing.querySelector('h1')?.textContent).toBe('Expédiez vos colis avec des voyageurs de confiance');
+    expect(image.getAttribute('src')).toBe('/images/landing-regard-complice-480.webp');
+    expect(image.srcset).toBe(
+      '/images/landing-regard-complice-360.webp 360w, /images/landing-regard-complice-480.webp 480w, /images/landing-regard-complice-880.webp 880w',
+    );
+    expect(image.sizes).toBe('(min-width: 1024px) 440px, (min-width: 768px) 120px, (max-height: 640px) 96px, 112px');
+    expect(image.alt).toContain('voyageuse');
+    expect(landing.querySelectorAll('form').length).toBe(1);
   });
 
   it('shows an empty state and no invented trips', () => {

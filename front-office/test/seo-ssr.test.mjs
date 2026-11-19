@@ -56,11 +56,13 @@ function get(path, host = 'coliclic.com') {
   });
 }
 
-test('production SSR serves the current hero photo for illustration preview links', async () => {
-  const { status, body } = await get('/?illustration=4');
-  assert.equal(status, 200);
-  assert.match(body, /src="\/images\/landing-handoff\.webp"/);
-  assert.doesNotMatch(body, /Aperçus du visuel principal|src="\/images\/landing-illustrations\//);
+test('production SSR serves the responsive hero illustration on the landing page', async () => {
+  for (const path of ['/', '/?illustration=4']) {
+    const { status, body } = await get(path);
+    assert.equal(status, 200);
+    assert.match(body, /src="\/images\/landing-regard-complice-480\.webp"/);
+    assert.match(body, /srcset="[^"]*landing-regard-complice-360\.webp 360w,[^"]*landing-regard-complice-880\.webp 880w"/);
+  }
 });
 
 test('the launch pages render indexable HTML with distinct metadata and canonical URLs', async () => {

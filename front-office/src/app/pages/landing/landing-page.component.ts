@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, PLATFORM_ID, ElementRef, inject, isDevMode } from '@angular/core';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, ElementRef, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -11,9 +11,7 @@ import { LocationService } from '../../services/location.service';
 import { TripService } from '../../services/trip.service';
 import { CommercialContentService } from '../../services/commercial-content.service';
 
-import { LandingParallaxDirective, LandingRevealDirective } from './landing-motion.directive';
-import { LANDING_ILLUSTRATIONS, LandingIllustration } from './landing-illustrations';
-import { LandingVisualComponent } from './landing-visual.component';
+import { LandingRevealDirective } from './landing-motion.directive';
 
 type AutocompleteField = 'departure' | 'destination';
 type LandingMode = 'send' | 'transport';
@@ -41,7 +39,7 @@ interface LandingTripCard {
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [FormsModule, RouterLink, LandingVisualComponent, LandingRevealDirective, LandingParallaxDirective],
+  imports: [FormsModule, RouterLink, LandingRevealDirective],
   templateUrl: './landing-page.component.html',
   styleUrl: './landing-page.component.css',
 })
@@ -77,9 +75,6 @@ export class LandingPageComponent implements OnInit, OnDestroy {
   activeMode: LandingMode = 'send';
   trips: LandingTripCard[] = [];
 
-  readonly illustrations = isDevMode() ? LANDING_ILLUSTRATIONS : null;
-  illustration?: LandingIllustration;
-
   readonly journeyVideos = [
     {
       titleId: 'traveler-video-title',
@@ -107,7 +102,6 @@ export class LandingPageComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.route.queryParamMap.subscribe((params) => {
         this.activeMode = params.get('mode') === 'transport' ? 'transport' : 'send';
-        this.illustration = this.illustrations?.find(({ id }) => id === params.get('illustration'));
       })
     );
     this.setupAutocomplete();
