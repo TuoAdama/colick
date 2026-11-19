@@ -70,11 +70,11 @@ describe('LandingPageComponent', () => {
   });
 
   for (const [id, asset] of [
-    ['1', 'handoff'],
-    ['2', 'packed'],
-    ['3', 'route'],
-    ['4', 'traveler'],
-    ['5', 'delivery'],
+    ['1', 'handoff.svg'],
+    ['2', 'packed.svg'],
+    ['3', 'route.svg'],
+    ['4', 'traveler-480.webp'],
+    ['5', 'delivery.svg'],
   ]) {
     it(`opens illustration ${id} from the landing URL`, async () => {
       router.resetConfig([{ path: '', component: LandingPageComponent }]);
@@ -82,10 +82,17 @@ describe('LandingPageComponent', () => {
       const landing = harness.routeNativeElement!;
       const photo = landing.querySelector<HTMLImageElement>('app-landing-visual img');
 
-      expect(photo?.getAttribute('src')).toBe(`/images/landing-illustrations/${asset}.svg`);
+      expect(photo?.getAttribute('src')).toBe(`/images/landing-illustrations/${asset}`);
       expect(photo?.alt).toBeTruthy();
-      expect(landing.querySelector('.hero-route') !== null).toBe(id !== '3');
+      expect(landing.querySelector('.hero-route') !== null).toBe(id !== '3' && id !== '4');
+      expect(landing.querySelector('.photo-ring') !== null).toBe(id !== '4');
       expect(landing.querySelector('nav .preview-link[aria-current]')?.getAttribute('href')).toBe(`/?illustration=${id}`);
+      if (id === '4') {
+        expect(photo?.closest('.full-frame-window')).toBeTruthy();
+        expect(photo?.srcset).toContain('traveler-360.webp 360w');
+        expect(photo?.srcset).toContain('traveler-880.webp 880w');
+        expect(photo?.sizes).toContain('96px');
+      }
     });
   }
 
