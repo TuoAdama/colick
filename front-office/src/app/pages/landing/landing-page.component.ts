@@ -11,8 +11,7 @@ import { LocationService } from '../../services/location.service';
 import { TripService } from '../../services/trip.service';
 import { CommercialContentService } from '../../services/commercial-content.service';
 
-import { LandingParallaxDirective, LandingRevealDirective } from './landing-motion.directive';
-import { LandingVisualComponent } from './landing-visual.component';
+import { LandingRevealDirective } from './landing-motion.directive';
 
 type AutocompleteField = 'departure' | 'destination';
 type LandingMode = 'send' | 'transport';
@@ -40,7 +39,7 @@ interface LandingTripCard {
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [FormsModule, RouterLink, LandingVisualComponent, LandingRevealDirective, LandingParallaxDirective],
+  imports: [FormsModule, RouterLink, LandingRevealDirective],
   templateUrl: './landing-page.component.html',
   styleUrl: './landing-page.component.css',
 })

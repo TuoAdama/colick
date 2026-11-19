@@ -402,11 +402,19 @@ describe('LandingPageComponent', () => {
     expect(geolocationMock.getCurrentPosition).not.toHaveBeenCalled();
   });
 
-  it('shows the validated headline, local image and a single shared form', () => {
+  it('shows the validated headline, responsive hero illustration and a single shared form', () => {
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('Expédiez vos colis avec des voyageurs de confiance');
-    expect(fixture.nativeElement.querySelector('.hero-photo img').getAttribute('src')).toBe('/images/landing-handoff.webp');
-    expect(fixture.nativeElement.querySelectorAll('form').length).toBe(1);
+    const landing = fixture.nativeElement as HTMLElement;
+    const image = landing.querySelector<HTMLImageElement>('img.hero-visual')!;
+
+    expect(landing.querySelector('h1')?.textContent).toBe('Expédiez vos colis avec des voyageurs de confiance');
+    expect(image.getAttribute('src')).toBe('/images/landing-regard-complice-480.webp');
+    expect(image.srcset).toBe(
+      '/images/landing-regard-complice-360.webp 360w, /images/landing-regard-complice-480.webp 480w, /images/landing-regard-complice-880.webp 880w',
+    );
+    expect(image.sizes).toBe('(min-width: 1024px) 440px, (min-width: 768px) 120px, (max-height: 640px) 96px, 112px');
+    expect(image.alt).toContain('voyageuse');
+    expect(landing.querySelectorAll('form').length).toBe(1);
   });
 
   it('shows an empty state and no invented trips', () => {

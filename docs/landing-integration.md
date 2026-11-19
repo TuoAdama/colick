@@ -1,6 +1,6 @@
 # Landing Angular
 
-La route `/` reprend la landing validée : « Expédiez vos colis avec des voyageurs de confiance », graisse 500, fond blanc, accents orange, photo circulaire locale et recherche prioritaire. La photo mesure 112 px sur mobile (96 px sur écran compact), 120 px sur tablette et jusqu’à 440 px sur desktop. La navigation connectée, les règles des modes commerciaux et le footer de l’application sont conservés.
+La route `/` reprend la landing validée avec le titre « Expédiez vos colis avec des voyageurs de confiance » en graisse 500, un fond blanc, des accents orange, l’illustration « Le regard complice » et la recherche prioritaire. L’illustration mesure 112 px sur mobile (96 px sur écran compact), 120 px sur tablette et jusqu’à 440 px sur desktop. Le navigateur choisit parmi trois WebP locaux de 360, 480 et 880 px selon la taille d’affichage et la densité de l’écran. La navigation connectée et le footer suivent les règles de l’application, dont les modes commerciaux.
 
 ## Lancer en local
 
@@ -18,7 +18,7 @@ Ouvrir http://localhost:4201/. Le proxy local utilise l’API déjà lancée sur
 - Un formulaire partagé conserve villes et date entre Envoyer et Voyager. Recherches via le routeur Angular vers `/search` ou `/parcel-search` ; date facultative, villes obligatoires, saisie libre autorisée et suggestions au clavier après 250 ms.
 - Trois recommandations réelles au maximum, sans géolocalisation. Le pays est déduit du fuseau horaire connu ; il est omis sinon. Chargement, liste vide, erreur et Réessayer après échec ou délai de 8 s. Pas de données fictives.
 - Un propriétaire ouvre la gestion de son trajet ; les autres utilisateurs ouvrent la réservation par référence avec `source=landing_recommended` et l’URL de retour. Les profils restent accessibles séparément.
-- Animation d’entrée du titre et de la photo, dessin du trajet et vol unique de l’avion. Révélation des recommandations au scroll et parallaxe desktop. Les directives s’initialisent uniquement après le rendu navigateur et libèrent leurs observateurs et écouteurs à la sortie de la page. `prefers-reduced-motion` désactive les mouvements et laisse le contenu visible.
+- Animation d’entrée du titre et de l’illustration. Les sections se révèlent au défilement ou au focus. La directive de révélation s’initialise après le rendu navigateur et libère ses observateurs et écouteurs à la sortie de la page. `prefers-reduced-motion` désactive les mouvements et laisse le contenu visible.
 
 ## Validation
 

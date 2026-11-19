@@ -1,31 +1,27 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { LandingParallaxDirective, LandingRevealDirective } from './landing-motion.directive';
+import { LandingRevealDirective } from './landing-motion.directive';
 
 @Component({
   standalone: true,
-  imports: [LandingRevealDirective, LandingParallaxDirective],
-  template: '<section class="hero"><div appLandingParallax><img alt="Test"></div><article appLandingReveal><a href="#">Profil</a></article></section>',
+  imports: [LandingRevealDirective],
+  template: '<article appLandingReveal><a href="#">Profil</a></article>',
 })
 class MotionHost {}
 
-describe('Landing motion directives', () => {
+describe('LandingRevealDirective', () => {
   let reduced: boolean;
-  let desktop: boolean;
   let preferenceChanged: () => void;
-  let desktopChanged: () => void;
   let callback: IntersectionObserverCallback;
   let disconnect: jasmine.Spy;
-  let raf: jasmine.Spy;
-  let frame: FrameRequestCallback;
   let preferenceRemove: jasmine.Spy;
 
   beforeEach(() => {
-    reduced = false; desktop = true;
+    reduced = false;
     preferenceRemove = jasmine.createSpy('remove preference listener');
-    spyOn(window, 'matchMedia').and.callFake(query => ({
-      get matches() { return query.includes('reduced-motion') ? reduced : desktop; },
-      addEventListener: (_type: string, fn: () => void) => { if (query.includes('reduced-motion')) preferenceChanged = fn; else desktopChanged = fn; },
+    spyOn(window, 'matchMedia').and.callFake(() => ({
+      get matches() { return reduced; },
+      addEventListener: (_type: string, fn: () => void) => { preferenceChanged = fn; },
       removeEventListener: preferenceRemove,
     } as unknown as MediaQueryList));
     disconnect = jasmine.createSpy('disconnect');
@@ -33,8 +29,6 @@ describe('Landing motion directives', () => {
       callback = fn;
       return { observe: () => {}, unobserve: () => {}, disconnect } as unknown as IntersectionObserver;
     });
-    raf = spyOn(window, 'requestAnimationFrame').and.callFake(fn => { frame = fn; return 1; });
-    spyOn(window, 'cancelAnimationFrame');
     TestBed.configureTestingModule({ imports: [MotionHost] });
   });
 
@@ -43,7 +37,7 @@ describe('Landing motion directives', () => {
     const article = fixture.nativeElement.querySelector('article') as HTMLElement;
     spyOn(article, 'getBoundingClientRect').and.returnValue({ top: 2000 } as DOMRect);
     fixture.detectChanges();
-    return { fixture, article, photo: fixture.nativeElement.querySelector('img') as HTMLImageElement };
+    return { fixture, article };
   }
 
   it('reveals cards on scroll and keyboard focus, and disconnects on route exit', () => {
@@ -58,23 +52,12 @@ describe('Landing motion directives', () => {
     fixture.destroy();
     expect(disconnect).toHaveBeenCalled();
     expect(preferenceRemove).toHaveBeenCalled();
-    expect(window.cancelAnimationFrame).toHaveBeenCalledWith(1);
   });
 
-  it('keeps cards visible and schedules no parallax with reduced motion', () => {
+  it('keeps cards visible with reduced motion', () => {
     reduced = true;
     const { fixture, article } = render();
     expect(article.classList.contains('scroll-reveal')).toBeFalse();
-    expect(raf).not.toHaveBeenCalled();
-    fixture.destroy();
-  });
-
-  it('clears desktop parallax immediately when the viewport becomes a tablet', () => {
-    const { fixture, photo } = render();
-    frame(0);
-    expect(photo.style.getPropertyValue('--photo-zoom')).toBe('1.02');
-    desktop = false; desktopChanged();
-    expect(photo.style.getPropertyValue('--photo-zoom')).toBe('');
     fixture.destroy();
   });
 
