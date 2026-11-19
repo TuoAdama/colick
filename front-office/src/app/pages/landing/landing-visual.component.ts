@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { LandingIllustration } from './landing-illustrations';
 
 @Component({
   selector: 'app-landing-visual',
@@ -6,4 +7,6 @@ import { Component } from '@angular/core';
   templateUrl: './landing-visual.component.html',
   styleUrl: './landing-visual.component.css',
 })
-export class LandingVisualComponent {}
+export class LandingVisualComponent {
+  @Input() illustration?: LandingIllustration;
+}

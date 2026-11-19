@@ -56,6 +56,13 @@ function get(path, host = 'coliclic.com') {
   });
 }
 
+test('production SSR serves the current hero photo for illustration preview links', async () => {
+  const { status, body } = await get('/?illustration=3');
+  assert.equal(status, 200);
+  assert.match(body, /src="\/images\/landing-handoff\.webp"/);
+  assert.doesNotMatch(body, /Aperçus du visuel principal|src="\/images\/landing-illustrations\//);
+});
+
 test('the launch pages render indexable HTML with distinct metadata and canonical URLs', async () => {
   const titles = new Set();
   const descriptions = new Set();

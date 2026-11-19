@@ -3,6 +3,8 @@
 .hero-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .photo-window { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; }
 .photo-window img { transform: translateY(var(--photo-shift, 0px)) scale(var(--photo-zoom, 1.02)); }
+.illustration-window { background: #fff5e9; }
+.illustration-window img { object-fit: contain; transform: none; }
 .photo-ring { position: absolute; inset: -12px; width: calc(100% + 24px); height: calc(100% + 24px); fill: none; stroke: #FB8500; stroke-width: 3; stroke-linecap: round; }
 .hero-route { pointer-events: none; position: absolute; inset: 0; width: 100%; height: 100%; color: #FB8500; z-index: 3; overflow: visible; }
 .route-track { stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 7 10; }

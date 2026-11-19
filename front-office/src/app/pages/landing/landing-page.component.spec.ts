@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router, UrlTree } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { Subject, of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
@@ -66,6 +67,49 @@ describe('LandingPageComponent', () => {
     authServiceMock.getUser.and.returnValue(null);
     tripServiceMock.getLandingFeed.calls.reset();
     tripServiceMock.getLandingFeed.and.returnValue(of([]));
+  });
+
+  for (const [id, asset] of [
+    ['1', 'handoff'],
+    ['2', 'packed'],
+    ['3', 'route'],
+    ['4', 'traveler'],
+    ['5', 'delivery'],
+  ]) {
+    it(`opens illustration ${id} from the landing URL`, async () => {
+      router.resetConfig([{ path: '', component: LandingPageComponent }]);
+      const harness = await RouterTestingHarness.create(`/?illustration=${id}`);
+      const landing = harness.routeNativeElement!;
+      const photo = landing.querySelector<HTMLImageElement>('app-landing-visual img');
+
+      expect(photo?.getAttribute('src')).toBe(`/images/landing-illustrations/${asset}.svg`);
+      expect(photo?.alt).toBeTruthy();
+      expect(landing.querySelector('.hero-route') !== null).toBe(id !== '3');
+      expect(landing.querySelector('nav .preview-link[aria-current]')?.getAttribute('href')).toBe(`/?illustration=${id}`);
+    });
+  }
+
+  it('shows the photo for an unknown illustration and preserves unrelated parameters when switching', async () => {
+    router.resetConfig([{ path: '', component: LandingPageComponent }]);
+    const harness = await RouterTestingHarness.create('/?mode=transport&illustration=01');
+    const landing = harness.routeNativeElement!;
+    const links = landing.querySelectorAll<HTMLAnchorElement>('.preview-link');
+    const imageSource = () => landing.querySelector('app-landing-visual img')?.getAttribute('src');
+
+    expect(imageSource()).toBe('/images/landing-handoff.webp');
+    expect(links.length).toBe(6);
+
+    links[2].click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(router.url).toBe('/?mode=transport&illustration=2');
+    expect(imageSource()).toBe('/images/landing-illustrations/packed.svg');
+
+    links[0].click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(router.url).toBe('/?mode=transport');
+    expect(imageSource()).toBe('/images/landing-handoff.webp');
   });
 
   it('shows a transport search form with route and desired date fields', () => {

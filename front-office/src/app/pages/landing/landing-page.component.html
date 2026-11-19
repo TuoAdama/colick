@@ -14,7 +14,7 @@
 
 <section class="hero shell" aria-labelledby="hero-title">
   <h1 id="hero-title" class="hero-title">Expédiez vos colis avec des voyageurs de <span class="text-accent">confiance</span></h1>
-  <app-landing-visual class="hero-visual" appLandingParallax />
+  <app-landing-visual class="hero-visual" appLandingParallax [illustration]="illustration" />
 
   <section class="search-section" aria-label="Rechercher un trajet">
     <div class="mode-tabs" role="tablist" aria-label="Que souhaitez-vous faire ?">
@@ -58,6 +58,21 @@
     </div>
   </section>
 </section>
+@if (illustrations) {
+  <nav
+    class="shell mb-4 flex flex-wrap gap-2 text-sm
+      [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center [&_a]:rounded-lg [&_a]:border [&_a]:border-[#ffd6a6] [&_a]:px-3
+      [&_a:hover]:bg-[#fff0dc] [&_a[aria-current]]:border-[#b85a00] [&_a[aria-current]]:bg-[#fff0dc] [&_a[aria-current]]:font-bold"
+    aria-label="Aperçus du visuel principal"
+  >
+    <a class="preview-link" routerLink="." [queryParams]="{ illustration: null }"
+      queryParamsHandling="merge" [attr.aria-current]="illustration ? null : 'true'">Photo actuelle</a>
+    @for (preview of illustrations; track preview.id) {
+      <a class="preview-link" routerLink="." [queryParams]="{ illustration: preview.id }"
+        queryParamsHandling="merge" [attr.aria-current]="illustration?.id === preview.id ? 'true' : null">{{ preview.label }}</a>
+    }
+  </nav>
+}
 <section class="recommendations shell" aria-labelledby="trips-title">
   <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end" appLandingReveal>
     <div><p class="eyebrow">Les prochains départs</p><h2 id="trips-title" class="section-title">Un voyage, <span class="text-accent">des possibilités.</span></h2></div>
