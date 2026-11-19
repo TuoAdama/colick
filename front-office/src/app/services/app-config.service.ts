@@ -52,6 +52,7 @@ export class AppConfigService {
     return {
       ...(isCommission ? config : FREE_APP_CONFIG),
       ...(analyticsMeasurementId ? { analyticsMeasurementId } : {}),
+      contactTurnstileSiteKey: config?.contactTurnstileSiteKey?.trim() || null,
     };
   }
 

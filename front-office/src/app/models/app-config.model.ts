@@ -3,6 +3,7 @@ export type CommercialContentVariant = 'free' | 'commission';
 
 export interface PublicAppConfig {
   analyticsMeasurementId?: string | null;
+  contactTurnstileSiteKey?: string | null;
   commercialMode: CommercialMode;
   platformFeeRate: number;
   features: {

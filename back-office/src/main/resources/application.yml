@@ -106,6 +106,9 @@ app:
     from-address: ${MAIL_FROM_ADDRESS:noreply@coliclic.app}
     support-email: ${MAIL_SUPPORT_EMAIL:support@coliclic.app}
   contact:
+    turnstile:
+      site-key: ${TURNSTILE_SITE_KEY:}
+      secret-key: ${TURNSTILE_SECRET_KEY:}
     rate-limit:
       email-limit: ${CONTACT_RATE_LIMIT_EMAIL:3}
       ip-limit: ${CONTACT_RATE_LIMIT_IP:10}
