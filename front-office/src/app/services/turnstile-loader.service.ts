@@ -2,7 +2,6 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
 
 export interface Turnstile {
-  ready(callback: () => void): void;
   render(container: HTMLElement, options: {
     sitekey: string;
     language: string;
@@ -16,6 +15,11 @@ export interface Turnstile {
   remove(widgetId: string): void;
 }
 
+type TurnstileWindow = Window & {
+  turnstile?: Turnstile;
+  onColiclicTurnstileLoad?: () => void;
+};
+
 @Injectable({ providedIn: 'root' })
 export class TurnstileLoaderService {
   private readonly document = inject(DOCUMENT);
@@ -23,23 +27,29 @@ export class TurnstileLoaderService {
 
   load(): Promise<Turnstile> {
     return this.loading ??= new Promise<Turnstile>((resolve, reject) => {
+      const browser = this.document.defaultView as TurnstileWindow | null;
+      if (!browser) {
+        reject(new Error('Turnstile requires a browser'));
+        return;
+      }
+
       const script = this.document.createElement('script');
       const fail = () => {
+        delete browser.onColiclicTurnstileLoad;
         script.remove();
         reject(new Error('Turnstile could not be loaded'));
       };
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      browser.onColiclicTurnstileLoad = () => {
+        if (!browser.turnstile) {
+          fail();
+          return;
+        }
+        delete browser.onColiclicTurnstileLoad;
+        resolve(browser.turnstile);
+      };
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onColiclicTurnstileLoad';
       script.async = true;
       script.onerror = fail;
-      script.onload = () => {
-        const browser = this.document.defaultView as (Window & { turnstile?: Turnstile }) | null;
-        const api = browser?.turnstile;
-        if (api) {
-          api.ready(() => resolve(api));
-        } else {
-          fail();
-        }
-      };
       this.document.head.append(script);
     }).catch((error: unknown) => {
       this.loading = undefined;
