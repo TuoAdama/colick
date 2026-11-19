@@ -3,6 +3,7 @@ package com.coliclic.backoffice.contact.controller;
 import com.coliclic.backoffice.auth.ratelimit.RateLimitDecision;
 import com.coliclic.backoffice.contact.dto.ContactRequest;
 import com.coliclic.backoffice.contact.ratelimit.ContactRateLimiter;
+import com.coliclic.backoffice.contact.TurnstileVerifier;
 import com.coliclic.backoffice.email.EmailService;
 import com.coliclic.backoffice.exception.TooManyRequestsException;
 import com.coliclic.backoffice.i18n.LocalizedMessages;
@@ -12,10 +13,12 @@ import com.coliclic.backoffice.trip.repository.TripRepository;
 import com.coliclic.backoffice.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 public class ContactController {
@@ -24,15 +27,17 @@ public class ContactController {
     private final LocalizedMessages localizedMessages;
     private final UserRepository userRepository;
     private final TripRepository tripRepository;
+    private final TurnstileVerifier turnstileVerifier;
 
     public ContactController(EmailService emailService, ContactRateLimiter rateLimiter,
                              LocalizedMessages localizedMessages, UserRepository userRepository,
-                             TripRepository tripRepository) {
+                             TripRepository tripRepository, TurnstileVerifier turnstileVerifier) {
         this.emailService = emailService;
         this.rateLimiter = rateLimiter;
         this.localizedMessages = localizedMessages;
         this.userRepository = userRepository;
         this.tripRepository = tripRepository;
+        this.turnstileVerifier = turnstileVerifier;
     }
 
     @PostMapping("/contact")
@@ -40,6 +45,10 @@ public class ContactController {
         RateLimitDecision decision = rateLimiter.check(request.getEmail(), servletRequest.getRemoteAddr());
         if (!decision.allowed()) {
             throw new TooManyRequestsException(localizedMessages.get("error.contact.tooManyRequests"), decision.retryAfterSeconds());
+        }
+        if (!turnstileVerifier.verify(request.getTurnstileToken())) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    localizedMessages.get("error.contact.turnstile.invalid"));
         }
         String subject = request.getSubject().trim();
         String body = request.getMessage().trim();

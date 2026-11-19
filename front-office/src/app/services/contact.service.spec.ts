@@ -16,7 +16,7 @@ describe('ContactService', () => {
   afterEach(() => httpMock.verify());
 
   it('posts the contact request to the public endpoint', () => {
-    const request = { email: 'ada@example.com', subject: 'Question', message: 'Bonjour' };
+    const request = { email: 'ada@example.com', subject: 'Question', message: 'Bonjour', turnstileToken: 'verified-token' };
     service.send(request).subscribe();
 
     const httpRequest = httpMock.expectOne('/api/contact');

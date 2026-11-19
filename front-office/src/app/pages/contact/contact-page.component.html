@@ -52,7 +52,20 @@
           @if (contactForm.controls.message.touched && contactForm.controls.message.hasError('required')) { <p class="mt-1 text-xs text-error">{{ isDispute ? 'Décrivez les faits.' : 'Le message est requis.' }}</p> }
           @if (contactForm.controls.message.touched && contactForm.controls.message.hasError('maxlength')) { <p class="mt-1 text-xs text-error">{{ isDispute ? 'La description ne peut pas dépasser 4 700 caractères.' : 'Le message ne peut pas dépasser 5 000 caractères.' }}</p> }
         </div>
-        <button type="submit" [disabled]="contactForm.invalid || isLoading" class="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50">
+        @if (!isDispute) {
+          <div>
+            <div #turnstileContainer></div>
+            @if (turnstileError()) {
+              <p class="text-sm text-error" role="alert">{{ turnstileError() }}</p>
+              @if (turnstileSiteKey) {
+                <button type="button" class="mt-2 text-sm font-semibold text-primary underline" (click)="startTurnstile()">Relancer la vérification</button>
+              }
+            } @else if (!turnstileToken()) {
+              <p class="text-sm text-text-secondary" role="status">Vérification anti-spam en cours…</p>
+            }
+          </div>
+        }
+        <button type="submit" [disabled]="contactForm.invalid || isLoading || (!isDispute && !turnstileToken())" class="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50">
           @if (isLoading) { Envoi en cours… } @else if (isDispute) { Envoyer la réclamation } @else { Envoyer le message }
         </button>
       </form>

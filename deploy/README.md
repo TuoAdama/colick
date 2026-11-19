@@ -1,5 +1,20 @@
 # Consulter les logs de préproduction
 
+## Configurer Turnstile pour le formulaire de contact
+
+En local, renseigner les deux variables dans `.env.local`. Docker Compose les
+transmet au back-office. Les clés de test Cloudflare qui acceptent la
+vérification locale sont `1x00000000000000000000AA` (publique) et
+`1x0000000000000000000000000000000AA` (secrète).
+
+Avant de déployer, créer un widget Cloudflare Turnstile de type Managed pour
+chaque environnement, avec le nom d’hôte correspondant (`preprod.coliclic.com`
+ou `coliclic.com`). Ajouter `TURNSTILE_SITE_KEY` et `TURNSTILE_SECRET_KEY` au secret
+GitHub Actions `ENV_FILE` de chaque environnement. Le workflow le transmet au
+back-office via `.runtime.env`. Seule la clé publique est exposée par
+`/api/public/app-config`. Le formulaire exige une vérification valide pour
+envoyer un message.
+
 ## Lancer le référencement de Coliclic
 
 Avant la promotion, exécuter `npm run build` puis `npm run test:ssr` dans `front-office`. Mesurer l’accueil et `/comment-ca-marche` sur mobile avec Lighthouse. Examiner le coût de l’image d’accueil et vérifier que les vidéos sont chargées à la demande. Vérifier la propriété Domaine `coliclic.com` dans Google Search Console avec l’enregistrement TXT qu’elle fournit.

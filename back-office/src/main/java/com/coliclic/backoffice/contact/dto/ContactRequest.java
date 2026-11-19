@@ -24,6 +24,10 @@ public class ContactRequest {
     @Size(max = 5000)
     private String message;
 
+    @NotBlank
+    @Size(max = 2048)
+    private String turnstileToken;
+
     private Category category = Category.GENERAL;
 
     private Long travelerId;
