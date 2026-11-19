@@ -21,6 +21,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -30,19 +31,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class ContactControllerIntegrationTest {
+    private static final String VALID_REQUEST = """
+            {"email":"ada@example.com","subject":"Question","message":"Bonjour","turnstileToken":"verified-token"}
+            """;
+
     @Autowired private MockMvc mockMvc;
     @MockitoBean private EmailService emailService;
     @MockitoBean private ContactRateLimiter rateLimiter;
     @MockitoBean private UserRepository userRepository;
     @MockitoBean private TripRepository tripRepository;
+    @MockitoBean private TurnstileVerifier turnstileVerifier;
 
     @Test
     void publicContactRequest_requiresCsrfButNotAuthentication() throws Exception {
         when(rateLimiter.check(any(), any())).thenReturn(RateLimitDecision.allowedDecision());
+        when(turnstileVerifier.verify("verified-token")).thenReturn(true);
 
         mockMvc.perform(post("/api/contact").with(SecurityMockMvcRequestPostProcessors.csrf())
                         .contextPath("/api").servletPath("/contact").contentType("application/json")
-                        .content("{\"email\":\"ada@example.com\",\"subject\":\"Question\",\"message\":\"Bonjour\"}"))
+                        .content(VALID_REQUEST))
                 .andExpect(status().isNoContent());
         verify(emailService).sendContactMessage("ada@example.com", "Question", "Bonjour");
     }
@@ -64,14 +71,38 @@ class ContactControllerIntegrationTest {
     }
 
     @Test
+    void contactRequestWithoutTurnstileToken_isRejected() throws Exception {
+        mockMvc.perform(post("/api/contact").with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .contextPath("/api").servletPath("/contact").contentType("application/json")
+                        .content("""
+                                {"email":"ada@example.com","subject":"Question","message":"Bonjour"}
+                                """))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(turnstileVerifier, emailService);
+    }
+
+    @Test
+    void refusedTurnstileToken_preventsSendingEmail() throws Exception {
+        when(rateLimiter.check(any(), any())).thenReturn(RateLimitDecision.allowedDecision());
+        when(turnstileVerifier.verify("verified-token")).thenReturn(false);
+
+        mockMvc.perform(post("/api/contact").with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .contextPath("/api").servletPath("/contact").contentType("application/json")
+                        .content(VALID_REQUEST))
+                .andExpect(status().isUnprocessableEntity());
+        verifyNoInteractions(emailService);
+    }
+
+    @Test
     void rateLimitedContactRequest_returnsRetryAfter() throws Exception {
         when(rateLimiter.check(any(), any())).thenReturn(RateLimitDecision.rejected(42));
 
         mockMvc.perform(post("/api/contact").with(SecurityMockMvcRequestPostProcessors.csrf())
                         .contextPath("/api").servletPath("/contact").contentType("application/json")
-                        .content("{\"email\":\"ada@example.com\",\"subject\":\"Question\",\"message\":\"Bonjour\"}"))
+                        .content(VALID_REQUEST))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(header().string("Retry-After", "42"));
+        verifyNoInteractions(turnstileVerifier);
     }
 
     @Test
@@ -80,6 +111,7 @@ class ContactControllerIntegrationTest {
                 .email("ada@example.com").password("encoded").build();
         Trip trip = Trip.builder().id(12L).traveler(traveler).build();
         when(rateLimiter.check(any(), any())).thenReturn(RateLimitDecision.allowedDecision());
+        when(turnstileVerifier.verify("verified-token")).thenReturn(true);
         when(userRepository.findById(7L)).thenReturn(Optional.of(traveler));
         when(tripRepository.findById(12L)).thenReturn(Optional.of(trip));
 
@@ -88,7 +120,7 @@ class ContactControllerIntegrationTest {
                         .content("""
                                 {"email":"reporter@example.com","subject":"Comportement préoccupant",
                                  "message":"Merci de vérifier ce profil.","category":"PROFILE_REPORT",
-                                 "travelerId":7,"tripId":12}
+                                 "travelerId":7,"tripId":12,"turnstileToken":"verified-token"}
                                 """))
                 .andExpect(status().isNoContent());
 

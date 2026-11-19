@@ -8,24 +8,26 @@ public record PublicAppConfigResponse(
         BigDecimal platformFeeRate,
         Features features,
         String contentVariant,
-        String analyticsMeasurementId
+        String analyticsMeasurementId,
+        String contactTurnstileSiteKey
 ) {
     public record Features(boolean platformPayment, boolean platformFee) {
     }
 
     public static PublicAppConfigResponse from(CommercialProperties properties) {
-        return from(properties, null);
+        return from(properties, null, null);
     }
 
     public static PublicAppConfigResponse from(CommercialProperties properties,
-                                               String analyticsMeasurementId) {
+                                               String analyticsMeasurementId, String contactTurnstileSiteKey) {
         CommercialMode mode = properties.getMode();
         return new PublicAppConfigResponse(
                 mode,
                 mode.getPlatformFeeRate(),
                 new Features(mode.isPlatformPaymentEnabled(), mode.isPlatformFeeEnabled()),
                 mode.getContentVariant(),
-                analyticsMeasurementId
+                analyticsMeasurementId,
+                contactTurnstileSiteKey
         );
     }
 }

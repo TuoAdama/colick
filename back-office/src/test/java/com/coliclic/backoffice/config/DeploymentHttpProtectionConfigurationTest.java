@@ -55,7 +55,10 @@ class DeploymentHttpProtectionConfigurationTest {
 
         assertThat(environment(preprod, "front-office").get("SSR_CSP_REPORT_ONLY"))
                 .isInstanceOfSatisfying(String.class, policy -> assertThat(policy)
-                        .contains("script-src 'self' https://accounts.google.com/gsi/client;", "media-src 'self';")
+                        .contains(
+                                "script-src 'self' https://accounts.google.com/gsi/client https://challenges.cloudflare.com;",
+                                "frame-src https://accounts.google.com/gsi/ https://challenges.cloudflare.com;",
+                                "media-src 'self';")
                         .doesNotContain("unsafe-eval"));
         assertThat(environment(preprod, "back-office")).doesNotContainKey("SSR_CSP_REPORT_ONLY");
         assertThat(environment(production, "front-office")).doesNotContainKey("SSR_CSP_REPORT_ONLY");

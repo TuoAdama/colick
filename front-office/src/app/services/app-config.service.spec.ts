@@ -11,6 +11,7 @@ const COMMISSION_CONFIG: PublicAppConfig = {
   platformFeeRate: 0.07,
   features: { platformPayment: true, platformFee: true },
   contentVariant: 'commission',
+  contactTurnstileSiteKey: 'public-key',
 };
 
 describe('AppConfigService', () => {
@@ -53,6 +54,15 @@ describe('AppConfigService', () => {
     expect(service.config().commercialMode).toBe('FREE');
     expect(service.config().platformFeeRate).toBe(0);
     expect(service.config().features.platformPayment).toBeFalse();
+  });
+
+  it('retains the public Turnstile key in free mode', async () => {
+    const initialization = service.initialize();
+    httpTesting.expectOne('/api/public/app-config').flush({ commercialMode: 'FREE', contactTurnstileSiteKey: ' public-key ' });
+
+    await initialization;
+
+    expect(service.config().contactTurnstileSiteKey).toBe('public-key');
   });
 
   it('reuses transferred SSR state without another request', async () => {

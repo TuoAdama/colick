@@ -3,20 +3,30 @@ import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { ContactPageComponent } from './contact-page.component';
 import { ContactService } from '../../services/contact.service';
+import { AppConfigService } from '../../services/app-config.service';
+import { Turnstile, TurnstileLoaderService } from '../../services/turnstile-loader.service';
 
 describe('ContactPageComponent', () => {
   let fixture: ComponentFixture<ContactPageComponent>;
   let component: ContactPageComponent;
   const contactServiceMock = jasmine.createSpyObj<ContactService>('ContactService', ['send', 'submitDispute']);
+  let turnstile: jasmine.SpyObj<Turnstile>;
+  let loader: jasmine.SpyObj<TurnstileLoaderService>;
   let route: { snapshot: { data: { contactMode?: string }; queryParamMap: ReturnType<typeof convertToParamMap> } };
 
   beforeEach(async () => {
     route = { snapshot: { data: {}, queryParamMap: convertToParamMap({}) } };
+    turnstile = jasmine.createSpyObj<Turnstile>('Turnstile', ['render', 'reset', 'remove']);
+    turnstile.render.and.returnValue('widget-id');
+    loader = jasmine.createSpyObj<TurnstileLoaderService>('TurnstileLoaderService', ['load']);
+    loader.load.and.resolveTo(turnstile);
     await TestBed.configureTestingModule({
       imports: [ContactPageComponent],
       providers: [
         { provide: ContactService, useValue: contactServiceMock },
         { provide: ActivatedRoute, useValue: route },
+        { provide: AppConfigService, useValue: { config: () => ({ contactTurnstileSiteKey: 'public-key' }) } },
+        { provide: TurnstileLoaderService, useValue: loader },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(ContactPageComponent);
@@ -46,17 +56,36 @@ describe('ContactPageComponent', () => {
     expect(component.contactForm.controls.message.hasError('required')).toBeTrue();
   });
 
-  it('submits a valid form, clears it, and displays confirmation', () => {
+  it('waits for Turnstile, sends its token, and resets the widget after submission', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
     component.contactForm.patchValue({ email: 'ada@example.com', subject: 'Question', message: 'Bonjour' });
 
     component.onSubmit();
+    expect(contactServiceMock.send).not.toHaveBeenCalled();
+    const options = turnstile.render.calls.mostRecent().args[1];
+    expect(options.sitekey).toBe('public-key');
+    options.callback('expired-token');
+    options['expired-callback']();
+    component.onSubmit();
+    expect(contactServiceMock.send).not.toHaveBeenCalled();
 
-    expect(contactServiceMock.send).toHaveBeenCalledWith({ email: 'ada@example.com', subject: 'Question', message: 'Bonjour' });
+    options.callback('verified-token');
+    component.onSubmit();
+
+    expect(contactServiceMock.send).toHaveBeenCalledOnceWith({
+      email: 'ada@example.com', subject: 'Question', message: 'Bonjour', turnstileToken: 'verified-token',
+    });
+    expect(turnstile.reset).toHaveBeenCalledOnceWith('widget-id');
+    expect(component.turnstileToken()).toBe('');
     expect(component.contactForm.getRawValue()).toEqual({ email: '', subject: '', message: '', tripReference: '', bookingReference: '' });
     expect(component.successMessage).toContain('bien été envoyé');
+    fixture.destroy();
+    expect(turnstile.remove).toHaveBeenCalledOnceWith('widget-id');
   });
 
   it('keeps form values and displays a rate-limit error', () => {
+    component.turnstileToken.set('verified-token');
     contactServiceMock.send.and.returnValue(throwError(() => ({ status: 429 })));
     component.contactForm.patchValue({ email: 'ada@example.com', subject: 'Question', message: 'Bonjour' });
 
@@ -67,6 +96,7 @@ describe('ContactPageComponent', () => {
   });
 
   it('displays a technical error while preserving the form', () => {
+    component.turnstileToken.set('verified-token');
     contactServiceMock.send.and.returnValue(throwError(() => ({ status: 500 })));
     component.contactForm.patchValue({ email: 'ada@example.com', subject: 'Question', message: 'Bonjour' });
 
@@ -83,15 +113,38 @@ describe('ContactPageComponent', () => {
     expect(component.contactForm.controls.message.hasError('maxlength')).toBeTrue();
   });
 
+  it('requires a fresh token after an anti-spam rejection and preserves the message', async () => {
+    contactServiceMock.send.and.returnValue(throwError(() => ({ status: 422 })));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const options = turnstile.render.calls.mostRecent().args[1];
+    component.contactForm.patchValue({ email: 'ada@example.com', subject: 'Question', message: 'Bonjour' });
+
+    options.callback('rejected-token');
+    component.onSubmit();
+    component.onSubmit();
+
+    expect(contactServiceMock.send).toHaveBeenCalledTimes(1);
+    expect(component.errorMessage).toContain('vérification anti-spam');
+    expect(component.contactForm.controls.message.value).toBe('Bonjour');
+    expect(turnstile.reset).toHaveBeenCalledOnceWith('widget-id');
+
+    contactServiceMock.send.and.returnValue(of(void 0));
+    options.callback('new-token');
+    component.onSubmit();
+    expect(contactServiceMock.send.calls.mostRecent().args[0].turnstileToken).toBe('new-token');
+  });
+
   it('still includes the context when reporting a traveler profile', () => {
     route.snapshot.queryParamMap = convertToParamMap({ type: 'report', travelerId: '7', tripId: '12' });
     fixture.detectChanges();
+    component.turnstileToken.set('verified-token');
     component.contactForm.patchValue({ email: 'ada@example.com', message: 'Merci de vérifier ce profil.' });
     component.onSubmit();
 
     expect(contactServiceMock.send).toHaveBeenCalledOnceWith({
       email: 'ada@example.com', subject: 'Signalement d’un profil voyageur', message: 'Merci de vérifier ce profil.',
-      category: 'PROFILE_REPORT', travelerId: 7, tripId: 12,
+      category: 'PROFILE_REPORT', travelerId: 7, tripId: 12, turnstileToken: 'verified-token',
     });
   });
 
@@ -124,6 +177,7 @@ describe('ContactPageComponent', () => {
       response.complete();
       fixture.detectChanges();
 
+      expect(loader.load).not.toHaveBeenCalled();
       expect(component.contactForm.getRawValue()).toEqual({
         email: '', subject: '', message: '', tripReference: '', bookingReference: '',
       });

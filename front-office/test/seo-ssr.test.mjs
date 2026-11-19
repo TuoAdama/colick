@@ -26,7 +26,9 @@ before(async () => {
     if (path === '/api/trips/catalog') {
       return res.end(JSON.stringify({ items: [], totalElements: 0, page: 0, size: 20, hasNext: false }));
     }
-    if (path === '/api/public/app-config') return res.end('{}');
+    if (path === '/api/public/app-config') {
+      return res.end(JSON.stringify({ contactTurnstileSiteKey: 'contact-test-site-key' }));
+    }
     res.writeHead(401).end('{}');
   }).listen(0, '127.0.0.1');
   await new Promise(resolve => api.once('listening', resolve));
@@ -129,6 +131,16 @@ test('the dispute form renders on direct access without being indexed', async ()
   assert.match(body, /<meta name="robots" content="noindex, nofollow">/);
   assert.match(body, /<h1[^>]*>Formulaire de litige<\/h1>/);
   assert.match(body, /id="contact-booking-reference"/);
+  assert.doesNotMatch(body, /Vérification anti-spam/);
+});
+
+test('the contact form transfers the public key and waits for browser verification', async () => {
+  const { status, body } = await get('/contact');
+  assert.equal(status, 200);
+  assert.match(body, /"contactTurnstileSiteKey":"contact-test-site-key"/);
+  assert.match(body, /Vérification anti-spam en cours/);
+  assert.match(body, /<button\b[^>]*type="submit"[^>]*disabled/);
+  assert.doesNotMatch(body, /challenges\.cloudflare\.com\/turnstile/);
 });
 
 test('dispute administration pages are not indexed or cached', async () => {
