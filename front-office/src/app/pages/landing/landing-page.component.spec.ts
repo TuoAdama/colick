@@ -98,7 +98,6 @@ describe('LandingPageComponent', () => {
       const senderSection = travelerSection?.nextElementSibling;
       const alertSection = senderSection?.nextElementSibling;
       expect(alertSection?.id).toBe('alerte-trajet');
-      expect(alertSection?.nextElementSibling?.id).toBe('securite');
 
       for (const { section, titleId, title, assetPath } of [
         { section: travelerSection, titleId: 'traveler-video-title', title: 'Le parcours voyageur', assetPath: '/videos/parcours-voyageur-v1' },
@@ -147,6 +146,26 @@ describe('LandingPageComponent', () => {
 
     const alertSection = fixture.debugElement.query(By.css('#alerte-trajet'));
     expect(alertSection.providerTokens).toContain(LandingRevealDirective);
+  });
+
+  it('shows travelers the parcel search link and responsive illustration after the trip alert', () => {
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const section = host.querySelector<HTMLElement>('#colis-a-transporter');
+    const link = section?.querySelector('a');
+    const image = section?.querySelector('img');
+
+    expect(section?.previousElementSibling?.id).toBe('alerte-trajet');
+    expect(section?.nextElementSibling?.id).toBe('securite');
+    expect(section?.getAttribute('aria-labelledby')).toBe('traveler-parcel-title');
+    expect(section?.querySelector('h2#traveler-parcel-title')?.textContent?.trim()).toBe('Un peu de place dans vos bagages ?');
+    expect(section?.querySelector('p')?.textContent?.trim()).toBe('Trouvez sur Coliclic des colis à emporter vers votre destination.');
+    expect(link?.textContent).toBe('Trouver des colis');
+    expect(link?.getAttribute('href')).toBe('/parcel-search');
+    expect(image?.getAttribute('srcset')).toBe('/images/landing-traveler-parcel-480.webp 480w, /images/landing-traveler-parcel-960.webp 960w');
+    expect(image?.getAttribute('alt')).toBe('');
+    expect(image?.getAttribute('loading')).toBe('lazy');
   });
 
   it('marks departure and destination as required in both landing search forms', () => {
