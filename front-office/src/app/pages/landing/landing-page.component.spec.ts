@@ -137,7 +137,7 @@ describe('LandingPageComponent', () => {
     );
     expect(link?.textContent).toBe('Rechercher un trajet');
     expect(link?.getAttribute('href')).toBe('/search');
-    expect(illustration?.getAttribute('src')).toBe('/images/landing-trip-alert.webp');
+    expect(illustration?.getAttribute('src')).toBe('/images/landing-trip-alert-white.webp');
     expect(illustration?.getAttribute('alt')).toBe('');
     expect(illustration?.getAttribute('loading')).toBe('lazy');
   });
@@ -419,8 +419,19 @@ describe('LandingPageComponent', () => {
 
   it('shows an empty state and no invented trips', () => {
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Aucun trajet disponible');
-    expect(fixture.nativeElement.querySelector('[data-testid="landing-trip-card-link"]')).toBeNull();
+    const landing = fixture.nativeElement as HTMLElement;
+    const emptyState = landing.querySelector('.recommendations [aria-busy] > p')!;
+
+    expect(emptyState.textContent).toContain('Aucun trajet disponible');
+    expect(getComputedStyle(emptyState).backgroundColor).toBe('rgb(255, 255, 255)');
+    expect(landing.querySelector('[data-testid="landing-trip-card-link"]')).toBeNull();
+  });
+
+  it('uses a white background for the security section', () => {
+    fixture.detectChanges();
+    const securitySection = (fixture.nativeElement as HTMLElement).querySelector('#securite')!;
+
+    expect(getComputedStyle(securitySection).backgroundColor).toBe('rgb(255, 255, 255)');
   });
 
   it('times out the feed after eight seconds and retries', fakeAsync(() => {
@@ -434,6 +445,7 @@ describe('LandingPageComponent', () => {
     expect(component.isTripsLoading).toBeFalse();
     tripServiceMock.getLandingFeed.and.returnValue(of([]));
     const retry = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button: any) => button.textContent.trim() === 'Réessayer') as HTMLButtonElement;
+    expect(getComputedStyle(retry.parentElement!).backgroundColor).toBe('rgb(255, 255, 255)');
     retry.click();
     expect(component.tripsError).toBeFalse();
     expect(component.trips).toEqual([]);
