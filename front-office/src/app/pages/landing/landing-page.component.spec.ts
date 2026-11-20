@@ -136,6 +136,7 @@ describe('LandingPageComponent', () => {
     );
     expect(link?.textContent).toBe('Rechercher un trajet');
     expect(link?.getAttribute('href')).toBe('/search');
+    expect(illustration?.nextElementSibling).toBe(link);
     expect(illustration?.getAttribute('src')).toBe('/images/landing-trip-alert.webp');
     expect(illustration?.getAttribute('alt')).toBe('');
     expect(illustration?.getAttribute('loading')).toBe('lazy');
