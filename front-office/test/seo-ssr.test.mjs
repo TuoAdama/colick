@@ -67,6 +67,26 @@ test('production SSR serves the responsive hero illustration on the landing page
   }
 });
 
+test('the landing page offers parcel search and serves the traveler illustration', async () => {
+  const landing = await get('/');
+  assert.equal(landing.status, 200);
+  const section = landing.body.match(/<section\b[^>]*id="colis-a-transporter"[^>]*>[\s\S]*?<\/section>/)?.[0];
+  assert.ok(section);
+  assert.match(section, /href="\/parcel-search"[^>]*>Trouver des colis<\/a>/);
+
+  const search = await get('/parcel-search');
+  assert.equal(search.status, 200);
+  assert.match(search.body, /id="parcel-search-title"/);
+
+  for (const width of [480, 960]) {
+    const path = `/images/landing-traveler-parcel-${width}.webp`;
+    assert.ok(section.includes(path), path);
+    const image = await get(path);
+    assert.equal(image.status, 200, path);
+    assert.equal(image.headers['content-type'], 'image/webp', path);
+  }
+});
+
 test('the launch pages render indexable HTML with distinct metadata and canonical URLs', async () => {
   const titles = new Set();
   const descriptions = new Set();

@@ -123,27 +123,53 @@
 }
 <section
   id="alerte-trajet"
-  class="shell grid items-center gap-[clamp(24px,4vw,64px)] pb-[clamp(56px,7vw,96px)] md:grid-cols-2"
+  class="shell grid items-center gap-[clamp(24px,4vw,64px)] pb-[clamp(56px,7vw,96px)] md:grid-cols-2 md:grid-rows-[1fr_auto_auto_1fr] md:gap-y-0"
   aria-labelledby="trip-alert-title"
   appLandingReveal
 >
-  <div>
+  <div class="md:col-start-1 md:row-start-2">
     <h2 id="trip-alert-title" class="max-w-[17ch] font-display text-[clamp(32px,3.8vw,52px)] font-bold leading-[1.2] tracking-tight">
       Vous ne trouvez pas de trajet ?
     </h2>
     <p class="mt-5 max-w-[42ch] text-[clamp(16px,1.6vw,22px)] leading-normal text-text-secondary">
       Créez une alerte pour être prévenu par e-mail dès qu’un trajet correspondant est disponible.
     </p>
-    <a routerLink="/search" class="search-submit mt-7 px-7 text-center md:w-fit">Rechercher un trajet</a>
   </div>
   <img
-    class="mx-auto block h-auto w-full max-md:max-w-[440px]"
+    class="mx-auto block h-auto w-full max-md:max-w-[440px] md:col-start-2 md:row-start-1 md:row-span-4"
     src="/images/landing-trip-alert.webp"
     alt=""
     width="736"
     height="560"
     loading="lazy"
   >
+  <a routerLink="/search" class="search-submit px-7 text-center md:col-start-1 md:row-start-3 md:mt-7 md:w-fit">Rechercher un trajet</a>
+</section>
+<section
+  id="colis-a-transporter"
+  class="shell grid items-center gap-[clamp(24px,4vw,64px)] pb-[clamp(56px,7vw,96px)] md:grid-cols-2 md:grid-rows-[1fr_auto_auto_1fr] md:gap-y-0"
+  aria-labelledby="traveler-parcel-title"
+  appLandingReveal
+>
+  <div class="md:col-start-2 md:row-start-2">
+    <h2 id="traveler-parcel-title" class="max-w-[18ch] font-display text-[clamp(32px,3.8vw,52px)] font-bold leading-[1.2] tracking-tight">
+      Un peu de place dans vos bagages ?
+    </h2>
+    <p class="mt-5 max-w-[42ch] text-[clamp(16px,1.6vw,22px)] leading-normal text-text-secondary">
+      Trouvez sur Coliclic des colis à emporter vers votre destination.
+    </p>
+  </div>
+  <img
+    class="mx-auto block h-auto w-full max-md:max-w-[440px] md:col-start-1 md:row-start-1 md:row-span-4"
+    src="/images/landing-traveler-parcel-480.webp"
+    srcset="/images/landing-traveler-parcel-480.webp 480w, /images/landing-traveler-parcel-960.webp 960w"
+    sizes="(min-width: 1376px) 608px, (min-width: 768px) 45vw, (min-width: 480px) 440px, calc(100vw - 40px)"
+    alt=""
+    width="960"
+    height="640"
+    loading="lazy"
+  >
+  <a routerLink="/parcel-search" class="search-submit px-7 text-center md:col-start-2 md:row-start-3 md:mt-7 md:w-fit">Trouver des colis</a>
 </section>
 <section id="securite" class="bg-background-primary py-14 lg:py-20">
   <div class="mx-auto max-w-[1140px] px-4 sm:px-6 lg:px-8">
