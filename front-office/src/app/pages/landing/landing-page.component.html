@@ -77,9 +77,9 @@
     @if (isTripsLoading) {
       @for (item of [1, 2, 3]; track item) { <div class="skeleton h-[268px] rounded-[18px] border border-[#eee9e2] p-6" aria-hidden="true"><span></span><span></span><span></span><span></span></div> }
     } @else if (tripsError) {
-      <div class="col-span-full rounded-2xl border border-[#ece9e4] bg-[#fffcf8] px-6 py-10 text-center text-sm text-text-secondary"><p>Les trajets n’ont pas pu être chargés.</p><button type="button" class="mx-auto mt-4 block rounded-lg border border-accent/50 bg-white px-5 py-2.5 font-semibold text-primary" (click)="reloadTrips()">Réessayer</button></div>
+      <div class="col-span-full rounded-2xl border border-[#ece9e4] bg-white px-6 py-10 text-center text-sm text-text-secondary"><p>Les trajets n’ont pas pu être chargés.</p><button type="button" class="mx-auto mt-4 block rounded-lg border border-accent/50 bg-white px-5 py-2.5 font-semibold text-primary" (click)="reloadTrips()">Réessayer</button></div>
     } @else if (trips.length === 0) {
-      <p class="col-span-full rounded-2xl border border-[#ece9e4] bg-[#fffcf8] px-6 py-10 text-center text-sm text-text-secondary">Aucun trajet disponible pour le moment.</p>
+      <p class="col-span-full rounded-2xl border border-[#ece9e4] bg-white px-6 py-10 text-center text-sm text-text-secondary">Aucun trajet disponible pour le moment.</p>
     } @else {
       @for (trip of trips; track trip.id; let index = $index) {
         <article class="trip-card relative rounded-[18px] border border-[#ece9e4] bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-card" appLandingReveal [style.--delay]="index * 90 + 'ms'">
@@ -137,7 +137,7 @@
   </div>
   <img
     class="mx-auto block h-auto w-full max-md:max-w-[440px] md:col-start-2 md:row-start-1 md:row-span-4"
-    src="/images/landing-trip-alert.webp"
+    src="/images/landing-trip-alert-white.webp"
     alt=""
     width="736"
     height="560"
@@ -171,7 +171,7 @@
   >
   <a routerLink="/parcel-search" class="search-submit px-7 text-center md:col-start-2 md:row-start-3 md:mt-7 md:w-fit">Trouver des colis</a>
 </section>
-<section id="securite" class="bg-background-primary py-14 lg:py-20">
+<section id="securite" class="bg-white py-14 lg:py-20">
   <div class="mx-auto max-w-[1140px] px-4 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-3xl text-center">
       <h2 class="font-display text-3xl sm:text-[34px] font-bold text-primary tracking-tight">
