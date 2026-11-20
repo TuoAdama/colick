@@ -1,0 +1,92 @@
+<section class="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+  <h1 class="mb-6 text-3xl font-bold text-primary">Trajets publiés</h1>
+  <form class="mb-6 flex flex-col gap-3 rounded-2xl border border-border bg-background-secondary p-4 md:flex-row md:items-end"
+        aria-label="Filtres des trajets publiés" (ngSubmit)="applyFilters()">
+    <label class="flex min-w-0 flex-col gap-1 text-sm font-semibold">
+      Date de création (à partir du)
+      <input type="date" name="createdFrom" [(ngModel)]="createdFromInput"
+             class="min-w-0 min-h-11 rounded-xl border border-border bg-background-primary px-3 py-2 font-normal" />
+    </label>
+    <label class="flex min-w-0 flex-1 flex-col gap-1 text-sm font-semibold">
+      Nom du voyageur ou référence
+      <input type="search" name="q" [(ngModel)]="queryInput"
+             class="min-w-0 min-h-11 rounded-xl border border-border bg-background-primary px-3 py-2 font-normal" />
+    </label>
+    <div class="flex flex-wrap gap-2">
+      <button type="submit" class="min-h-11 rounded-xl bg-primary px-4 py-2 font-semibold text-white">Filtrer</button>
+      <button type="button" class="min-h-11 rounded-xl border border-border px-4 py-2 font-semibold text-primary"
+              (click)="resetFilters()">Réinitialiser</button>
+    </div>
+  </form>
+  @let applied = criteria();
+  @if (message()) { <p role="status" class="mb-4 font-semibold text-primary">{{ message() }}</p> }
+  @let result = trips();
+  <div class="overflow-x-auto rounded-2xl border border-border bg-background-secondary" tabindex="0"
+       role="region" aria-label="Liste des trajets publiés">
+    <table class="w-full text-left text-sm">
+      <thead class="border-b border-border bg-background-primary text-text-secondary">
+        <tr>
+          <th scope="col" class="p-4" [attr.aria-sort]="applied.sort === 'created_asc' ? 'ascending' : 'descending'">
+            <button type="button" class="inline-flex items-center gap-2 whitespace-nowrap text-primary hover:underline"
+                    (click)="toggleSort()">
+              La date de création
+              <span aria-hidden="true">{{ applied.sort === 'created_asc' ? '↑' : '↓' }}</span>
+            </button>
+          </th>
+          <th scope="col" class="p-4">Itinéraire</th>
+          <th scope="col" class="p-4">Départ prévu</th>
+          <th scope="col" class="p-4">Voyageur</th>
+          <th scope="col" class="p-4">Statut</th>
+          <th scope="col" class="p-4">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @switch (result.state) {
+          @case ('loading') {
+            <tr><td colspan="6" class="p-6"><p role="status">Chargement des trajets…</p></td></tr>
+          }
+          @case ('error') {
+            <tr><td colspan="6" class="p-6">
+              <p role="alert">{{ result.message }}</p>
+              <button type="button" class="mt-3 font-semibold text-primary underline" (click)="reload()">Réessayer</button>
+            </td></tr>
+          }
+          @case ('ready') {
+            @let data = result.data;
+            @if (data.items.length === 0) {
+              <tr><td colspan="6" class="p-6">{{
+                data.totalElements ? 'Aucun trajet sur cette page.' :
+                  (applied.createdFrom || applied.q ? 'Aucun trajet ne correspond aux filtres.' : 'Aucun trajet publié.')
+              }}</td></tr>
+            } @else {
+              @for (publication of data.items; track publication.trip.id) {
+                @let trip = publication.trip;
+                <tr class="border-b border-border last:border-0">
+                  <td class="whitespace-nowrap p-4">{{ date(publication.createdAt) }}</td>
+                  <th scope="row" class="min-w-40 p-4">{{ trip.departureAddress }} → {{ trip.destination }}</th>
+                  <td class="whitespace-nowrap p-4">{{ date(trip.departureTime) }}</td>
+                  <td class="p-4">{{ publication.travelerName }}</td>
+                  <td class="p-4">{{ status(trip.status) }}</td>
+                  <td class="min-w-40 p-4">
+                    <div class="flex flex-wrap gap-2">
+                      <a class="font-semibold text-primary underline" [routerLink]="['/admin/trips', trip.id]"
+                         [queryParams]="{ listPage: data.page, listSort: applied.sort, listCreatedFrom: applied.createdFrom, listQ: applied.q }"
+                         [attr.aria-label]="'Consulter le trajet ' + trip.reference">Consulter</a>
+                      @if (trip.status === 'ACTIVE') {
+                        <app-admin-trip-cancellation [trip]="trip" (cancelled)="tripCancelled(trip.reference)" (refresh)="reload()" />
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (result.state === 'ready') {
+    <app-admin-pagination [page]="result.data.page" [totalPages]="result.data.totalPages"
+                          [totalElements]="result.data.totalElements" (pageChange)="changePage($event)" />
+  }
+</section>

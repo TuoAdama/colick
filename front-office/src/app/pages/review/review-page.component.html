@@ -1,0 +1,285 @@
+<section class="min-h-screen bg-bg-primary pt-24 pb-16">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mb-8">
+      <span class="inline-flex items-center gap-2 rounded-full bg-secondary/10 px-4 py-1.5 text-sm font-semibold text-secondary">
+        <span class="w-2 h-2 rounded-full bg-secondary" aria-hidden="true"></span>
+        Avis voyageur
+      </span>
+      <h1 class="mt-4 text-3xl font-bold text-text-primary sm:text-4xl">Partagez votre expérience</h1>
+      <p class="mt-3 text-base text-text-secondary sm:text-lg">
+        Votre note aide les prochains expéditeurs à choisir un voyageur de confiance.
+      </p>
+    </div>
+
+    @if (loadState === 'loading') {
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]" role="status" aria-live="polite">
+        <div class="hero-gradient rounded-3xl p-6 text-white shadow-lg">
+          <div class="w-12 h-12 rounded-2xl bg-white/15 animate-pulse"></div>
+          <div class="mt-6 h-4 w-28 rounded-full bg-white/20 animate-pulse"></div>
+          <div class="mt-3 h-8 w-40 rounded-full bg-white/20 animate-pulse"></div>
+          <div class="mt-6 space-y-3">
+            <div class="h-4 w-full rounded-full bg-white/15 animate-pulse"></div>
+            <div class="h-4 w-5/6 rounded-full bg-white/15 animate-pulse"></div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl bg-white p-8 shadow-lg">
+          <div class="flex flex-col items-center justify-center py-12 text-center">
+            <div class="w-12 h-12 border-4 border-secondary/30 border-t-secondary rounded-full animate-spin"></div>
+            <p class="mt-4 text-base font-medium text-text-primary">Chargement du lien sécurisé...</p>
+            <p class="mt-2 text-sm text-text-secondary">Nous préparons les informations du voyageur.</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (loadState === 'error') {
+      <div class="rounded-3xl bg-white p-6 shadow-lg sm:p-8" role="alert">
+        <div class="flex flex-col items-center text-center">
+          <div class="w-16 h-16 bg-error/10 rounded-2xl flex items-center justify-center">
+            <svg class="w-8 h-8 text-error" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <h2 class="mt-5 text-2xl font-semibold text-text-primary">Lien de notation indisponible</h2>
+          <p class="mt-3 max-w-xl text-text-secondary">{{ errorMessage }}</p>
+          <div class="mt-6 flex flex-col sm:flex-row gap-3">
+            <a
+              routerLink="/search"
+              class="inline-flex items-center justify-center px-5 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary/90 transition-colors"
+            >
+              Retour à la recherche
+            </a>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (loadState === 'ready' && reviewAccess) {
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] items-start">
+        <aside class="hero-gradient rounded-3xl p-6 text-white shadow-lg lg:sticky lg:top-28">
+          <div class="flex items-center justify-between gap-3">
+            <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white/90">
+              Évaluation sécurisée
+            </span>
+            @if (hasExistingReview) {
+              <span class="inline-flex items-center gap-1 rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-white">
+                Verrouillé
+              </span>
+            } @else {
+              <span class="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/90">
+                Actif
+              </span>
+            }
+          </div>
+
+          <div class="mt-8 flex items-center gap-4">
+            <app-user-avatar
+              [name]="reviewAccess.travelerName"
+              [photoUrl]="reviewAccess.travelerPhotoUrl"
+              sizeClasses="w-16 h-16"
+              textClasses="text-lg"
+            ></app-user-avatar>
+
+            <div class="min-w-0">
+              <p class="text-sm text-white/70">Voyageur évalué</p>
+              <h2 class="truncate text-2xl font-semibold">{{ reviewAccess.travelerName }}</h2>
+            </div>
+          </div>
+
+          <div class="mt-8 space-y-4">
+            <div class="rounded-2xl bg-white/10 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/70">Trajet</p>
+              <p class="mt-2 text-sm font-medium leading-6">
+                {{ reviewAccess.departureAddress }} → {{ reviewAccess.destination }}
+              </p>
+            </div>
+
+            <div class="rounded-2xl bg-white/10 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/70">Date du voyage</p>
+              <p class="mt-2 text-sm font-medium">
+                {{ formatDisplayDate(reviewAccess.departureTime) }}
+              </p>
+            </div>
+
+            <div class="rounded-2xl bg-white/10 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/70">Votre contribution</p>
+              <p class="mt-2 text-sm text-white/80">
+                Une note claire et honnête aide toute la communauté Coliclic à réserver en confiance.
+              </p>
+            </div>
+          </div>
+        </aside>
+
+        <div class="space-y-6">
+          @if (successMessage) {
+            <div class="rounded-2xl border border-success/20 bg-success/10 px-5 py-4 text-sm text-success">
+              {{ successMessage }}
+            </div>
+          }
+
+          @if (submitErrorMessage) {
+            <div class="rounded-2xl border border-error/20 bg-error/10 px-5 py-4 text-sm text-error" role="alert">
+              {{ submitErrorMessage }}
+            </div>
+          }
+
+          @if (hasExistingReview) {
+            <div class="rounded-3xl bg-white p-6 shadow-lg sm:p-8">
+              <div class="flex items-start gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-success/10 flex items-center justify-center shrink-0">
+                  <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-xl font-semibold text-text-primary">Avis déjà envoyé</h3>
+                  <p class="mt-2 text-sm text-text-secondary">
+                    Une seule note finale est autorisée pour cette réservation. Votre avis a bien été conservé.
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-8 grid gap-4 sm:grid-cols-2">
+                <div class="rounded-2xl bg-bg-secondary p-5">
+                  <p class="text-sm font-semibold text-text-primary">Votre note</p>
+                  <div class="mt-3 flex items-center gap-2" aria-label="Note enregistrée">
+                    @for (rating of ratingOptions; track rating) {
+                      <span
+                        class="text-2xl"
+                        [class.text-accent]="rating <= (reviewAccess.existingReview?.rating ?? 0)"
+                        [class.text-text-muted]="rating > (reviewAccess.existingReview?.rating ?? 0)"
+                      >
+                        ★
+                      </span>
+                    }
+                  </div>
+                  <p class="mt-3 text-sm text-text-secondary">
+                    {{ reviewAccess.existingReview?.rating ?? 0 }} / 5
+                  </p>
+                </div>
+
+                <div class="rounded-2xl bg-bg-secondary p-5">
+                  <p class="text-sm font-semibold text-text-primary">Commentaire</p>
+                  @if (reviewAccess.existingReview?.comment) {
+                    <p class="mt-3 text-sm leading-6 text-text-secondary">
+                      {{ reviewAccess.existingReview?.comment }}
+                    </p>
+                  } @else {
+                    <p class="mt-3 text-sm text-text-muted">
+                      Aucun commentaire supplémentaire n'a été laissé.
+                    </p>
+                  }
+                </div>
+              </div>
+
+              @if (reviewAccess.existingReview?.createdAt) {
+                <p class="mt-5 text-xs text-text-muted">
+                  Enregistré le {{ formatDisplayDate(reviewAccess.existingReview?.createdAt ?? '') }}
+                </p>
+              }
+
+              <div class="mt-8">
+                <a
+                  routerLink="/search"
+                  class="inline-flex items-center justify-center w-full sm:w-auto px-6 py-4 rounded-full border border-primary text-primary font-semibold hover:bg-primary hover:text-white transition-colors"
+                >
+                  Continuer la navigation
+                </a>
+              </div>
+            </div>
+          } @else {
+            <div class="rounded-3xl bg-white shadow-lg overflow-hidden">
+              <div class="border-b border-primary/10 px-6 py-5 sm:px-8">
+                <h3 class="text-xl font-semibold text-text-primary">Attribuez une note finale</h3>
+                <p class="mt-2 text-sm text-text-secondary">
+                  Prenez un instant pour évaluer la fiabilité, la communication et le respect du trajet.
+                </p>
+              </div>
+
+              <form [formGroup]="reviewForm" (ngSubmit)="onSubmit()" class="space-y-8 px-6 py-6 sm:px-8 sm:py-8">
+                <div class="rounded-2xl bg-bg-secondary p-5">
+                  <label class="block text-sm font-semibold text-text-primary mb-4">Votre note</label>
+                  <div class="flex flex-wrap items-center gap-3" role="radiogroup" aria-label="Choisir une note sur 5">
+                    @for (rating of ratingOptions; track rating) {
+                      <button
+                        type="button"
+                        class="w-12 h-12 rounded-full border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary/30"
+                        [class.border-accent]="selectedRating >= rating"
+                        [class.bg-accent]="selectedRating >= rating"
+                        [class.text-white]="selectedRating >= rating"
+                        [class.border-bg-secondary]="selectedRating < rating"
+                        [class.bg-white]="selectedRating < rating"
+                        [class.text-text-muted]="selectedRating < rating"
+                        [disabled]="hasExistingReview || isSubmitting"
+                        [attr.aria-checked]="selectedRating === rating"
+                        [attr.aria-label]="rating + ' étoile' + (rating > 1 ? 's' : '')"
+                        (click)="setRating(rating)"
+                      >
+                        ★
+                      </button>
+                    }
+                  </div>
+                  <p class="mt-3 text-sm text-text-secondary">
+                    @if (selectedRating > 0) {
+                      {{ selectedRating }} / 5
+                    } @else {
+                      Sélectionnez une note de 1 à 5 étoiles.
+                    }
+                  </p>
+                  @if (reviewForm.controls.rating.touched && reviewForm.controls.rating.invalid) {
+                    <p class="mt-2 text-xs text-error">Veuillez sélectionner une note entre 1 et 5.</p>
+                  }
+                </div>
+
+                <div>
+                  <label for="review-comment" class="block text-sm font-semibold text-text-primary mb-2">
+                    Commentaire (optionnel)
+                  </label>
+                  <textarea
+                    id="review-comment"
+                    rows="6"
+                    formControlName="comment"
+                    placeholder="Décrivez votre expérience avec ce voyageur."
+                    class="w-full rounded-2xl border border-primary/10 bg-bg-secondary px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
+                    [readonly]="hasExistingReview"
+                  ></textarea>
+                  <div class="mt-2 flex flex-col gap-2 text-xs text-text-secondary sm:flex-row sm:items-center sm:justify-between">
+                    <span>Votre commentaire reste facultatif.</span>
+                    <span class="text-text-muted">{{ remainingCommentCharacters }} caractères restants</span>
+                  </div>
+                  @if (reviewForm.controls.comment.touched && reviewForm.controls.comment.hasError('maxlength')) {
+                    <p class="mt-2 text-xs text-error">
+                      Le commentaire ne peut pas dépasser {{ maxCommentLength }} caractères.
+                    </p>
+                  }
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="submit"
+                    class="btn-primary w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                    [disabled]="reviewForm.invalid || isSubmitting || hasExistingReview"
+                  >
+                    @if (isSubmitting) {
+                      Envoi en cours...
+                    } @else {
+                      Envoyer mon avis
+                    }
+                  </button>
+
+                  <a
+                    routerLink="/search"
+                    class="inline-flex items-center justify-center w-full sm:w-auto px-6 py-4 rounded-full border border-primary text-primary font-semibold hover:bg-primary hover:text-white transition-colors"
+                  >
+                    Continuer la navigation
+                  </a>
+                </div>
+              </form>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</section>

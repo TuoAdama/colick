@@ -1,0 +1,13 @@
+.landing-header { background: white; border-color: transparent; }
+.landing-header nav { height: 80px; max-width: 1376px; padding-inline: 48px; }
+.landing-header nav > a { font-family: 'General Sans', sans-serif; font-size: 46px; letter-spacing: -.05em; }
+@media (max-width: 1023px) {
+  .landing-header nav { height: 72px; padding-inline: 24px; }
+  .landing-header nav > a { font-size: 40px; }
+}
+@media (max-width: 767px) {
+  .landing-header nav { height: 64px; padding-inline: 20px; }
+  .landing-header nav > a { font-size: 35px; }
+  .landing-header nav > .hidden { display: none; }
+}
+@media (max-width: 767px) and (max-height: 640px) { .landing-header nav { height: 56px; } }

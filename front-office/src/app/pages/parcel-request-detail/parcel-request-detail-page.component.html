@@ -1,0 +1,50 @@
+<div class="request-page">
+  <main class="request-column" aria-labelledby="request-title">
+    <a routerLink="/parcel-requests" class="back-link"><span aria-hidden="true">←</span> Mes besoins d’envoi</a>
+    @if (isLoading) {
+      <p role="status" class="notice">Chargement du besoin…</p>
+    } @else if (loadError) {
+      <div class="notice" role="alert"><h1 id="request-title">{{ loadError }}</h1>@if (!accessDenied) { <button type="button" (click)="load()">Réessayer</button> }</div>
+    } @else {
+    @if (request; as item) {
+      <header class="request-heading">
+        <div class="title-row">
+          <h1 id="request-title">{{ item.packageTitle }}</h1>
+          <div class="menu-area" #menuArea>
+            <button #menuTrigger type="button" class="menu-trigger" aria-label="Gérer ce besoin" aria-haspopup="menu" aria-controls="request-menu" [attr.aria-expanded]="menuOpen" [disabled]="busy" (click)="toggleMenu()" (keydown.arrowdown)="$event.preventDefault(); menuOpen || toggleMenu()">⋯</button>
+            @if (menuOpen) {
+              <div id="request-menu" class="request-menu" role="menu" aria-label="Actions du besoin" (keydown)="menuKeydown($event)">
+                @if (active) {
+                  <a role="menuitem" [routerLink]="['/parcel-requests', item.id, 'edit']" (click)="closeMenu()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5M3 21l5-1L21 7a2 2 0 0 0-5-5L4 16Z"/></svg>Modifier</a>
+                }
+                <button role="menuitem" type="button" class="danger" (click)="ask('remove')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg>Supprimer</button>
+              </div>
+            }
+          </div>
+        </div>
+        <span class="status" [attr.data-status]="item.status">{{ statusLabel(item.status) }}</span>
+        @if (item.createdAt) { <p class="published">Publié le {{ dateLabel(item.createdAt) }}</p> }
+      </header>
+      @if (actionError && !confirmation) { <p class="notice danger" role="alert">{{ actionError }}</p> }
+      <section class="detail-card" aria-label="Parcours souhaité">
+        <div class="route-cities">
+          <div class="place"><div><p class="city">{{ routeCity(item.departure) }}</p><p class="muted">{{ routeCountry(item.departure) }}</p></div></div>
+          <span class="route-arrow" aria-hidden="true">⟶</span>
+          <div class="place destination"><div><p class="city">{{ routeCity(item.destination) }}</p><p class="muted">{{ routeCountry(item.destination) }}</p></div></div>
+        </div>
+        <div class="field date-field"><div><p class="muted">Date souhaitée</p><p class="value">{{ dateLabel(item.desiredDate) }}</p></div></div>
+      </section>
+      <section class="detail-card parcel-card" aria-labelledby="parcel-title">
+        <h2 id="parcel-title">Votre colis</h2>
+        <div class="field"><div><p class="muted">Poids</p><p class="value">{{ item.weight | number:'1.0-2' }} kg</p></div></div>
+        <div class="field description-field"><div><p class="muted">Description</p><p class="description">{{ item.description || 'Aucune description fournie.' }}</p></div></div>
+        @if (item.packagePhotoUrl) { <img class="parcel-photo" [src]="item.packagePhotoUrl" [alt]="'Photo du colis ' + item.packageTitle" /> }
+      </section>
+      @if (active) {
+        <div class="detail-actions"><button type="button" class="primary-action" [disabled]="busy" (click)="closeRequest()">{{ busy ? 'Traitement…' : 'Marquer trouvée' }}</button><button type="button" class="cancel-action danger" [disabled]="busy" (click)="ask('cancel')">Annuler le besoin</button></div>
+      }
+    }
+    }
+  </main>
+</div>
+<app-confirm-modal [isOpen]="confirmation !== null" [title]="confirmation === 'remove' ? 'Supprimer ce besoin ?' : 'Annuler ce besoin ?'" [message]="confirmation === 'remove' ? 'Ce besoin sera retiré de vos listes et de la recherche. Vos conversations seront conservées.' : 'Ce besoin ne sera plus proposé aux voyageurs et restera dans votre historique.'" [confirmLabel]="confirmation === 'remove' ? 'Supprimer' : 'Annuler le besoin'" [isLoading]="busy" [errorMessage]="actionError" (confirmed)="confirmAction()" (cancelled)="dismissConfirmation()" />
