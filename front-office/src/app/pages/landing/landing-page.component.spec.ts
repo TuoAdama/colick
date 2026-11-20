@@ -163,6 +163,7 @@ describe('LandingPageComponent', () => {
     expect(section?.querySelector('p')?.textContent?.trim()).toBe('Trouvez sur Coliclic des colis à emporter vers votre destination.');
     expect(link?.textContent).toBe('Trouver des colis');
     expect(link?.getAttribute('href')).toBe('/parcel-search');
+    expect(image?.nextElementSibling).toBe(link);
     expect(image?.getAttribute('srcset')).toBe('/images/landing-traveler-parcel-480.webp 480w, /images/landing-traveler-parcel-960.webp 960w');
     expect(image?.getAttribute('alt')).toBe('');
     expect(image?.getAttribute('loading')).toBe('lazy');
