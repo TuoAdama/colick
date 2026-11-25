@@ -100,8 +100,8 @@ describe('LandingPageComponent', () => {
       expect(alertSection?.id).toBe('alerte-trajet');
 
       for (const { section, titleId, title, assetPath } of [
-        { section: travelerSection, titleId: 'traveler-video-title', title: 'Le parcours voyageur', assetPath: '/videos/parcours-voyageur-v1' },
-        { section: senderSection, titleId: 'sender-video-title', title: 'Le parcours expéditeur', assetPath: '/videos/parcours-expediteur-v1' },
+        { section: travelerSection, titleId: 'traveler-video-title', title: 'Le parcours voyageur', assetPath: '/videos/parcours-voyageur' },
+        { section: senderSection, titleId: 'sender-video-title', title: 'Le parcours expéditeur', assetPath: '/videos/parcours-expediteur' },
       ]) {
         const video = section?.querySelector('video');
         const source = video?.querySelector('source');
@@ -112,14 +112,32 @@ describe('LandingPageComponent', () => {
         expect(video?.controls).toBeTrue();
         expect(video?.playsInline).toBeTrue();
         expect(video?.autoplay).toBeFalse();
+        expect(video?.muted).toBeFalse();
         expect(video?.preload).toBe('none');
-        expect(video?.getAttribute('poster')).toBe(`${assetPath}.webp`);
+        expect(video?.getAttribute('poster')).toBe(`${assetPath}-v1.webp`);
         expect(source?.type).toBe('video/mp4');
-        expect(source?.getAttribute('src')).toBe(`${assetPath}.mp4`);
+        expect(source?.getAttribute('src')).toBe(`${assetPath}-v2.mp4`);
         expect(section?.querySelector('a, details')).toBeNull();
       }
     });
   }
+
+  it('decodes an audible narration for the full duration of both journeys', async () => {
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    const sources = Array.from(host.querySelectorAll<HTMLSourceElement>('video source'));
+    expect(sources.length).toBe(2);
+    const decoder = new OfflineAudioContext(1, 1, 24000);
+
+    for (const source of sources) {
+      const response = await fetch(source.src);
+      expect(response.ok).withContext(source.src).toBeTrue();
+      const audio = await decoder.decodeAudioData(await response.arrayBuffer());
+      expect(audio.duration).withContext(source.src).toBeCloseTo(35, 0);
+      expect(audio.getChannelData(0).some(sample => Math.abs(sample) > 0.01))
+        .withContext(source.src).toBeTrue();
+    }
+  });
 
   it('explains the trip alert and links to the trip search form', () => {
     fixture.detectChanges();
