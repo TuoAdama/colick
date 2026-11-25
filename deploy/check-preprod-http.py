@@ -71,7 +71,7 @@ def main():
         check_https(page, "text/html", 200, options, html=True)
     check_https("/api/trips/catalog", "application/json", 200, options)
     check_https("/health", "text/plain", 200, options)
-    for video in ("parcours-voyageur-v2", "parcours-expediteur-v2"):
+    for video in ("parcours-voyageur-v3", "parcours-expediteur-v3"):
         check_https(f"/videos/{video}.mp4", "video/mp4", 206, options, extra=("--range", "0-4095"))
 
 

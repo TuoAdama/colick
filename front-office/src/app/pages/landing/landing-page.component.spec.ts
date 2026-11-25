@@ -116,13 +116,13 @@ describe('LandingPageComponent', () => {
         expect(video?.preload).toBe('none');
         expect(video?.getAttribute('poster')).toBe(`${assetPath}-v1.webp`);
         expect(source?.type).toBe('video/mp4');
-        expect(source?.getAttribute('src')).toBe(`${assetPath}-v2.mp4`);
+        expect(source?.getAttribute('src')).toBe(`${assetPath}-v3.mp4`);
         expect(section?.querySelector('a, details')).toBeNull();
       }
     });
   }
 
-  it('decodes an audible narration for the full duration of both journeys', async () => {
+  it('plays background music below the narration level in both journeys', async () => {
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
     const sources = Array.from(host.querySelectorAll<HTMLSourceElement>('video source'));
@@ -134,8 +134,20 @@ describe('LandingPageComponent', () => {
       expect(response.ok).withContext(source.src).toBeTrue();
       const audio = await decoder.decodeAudioData(await response.arrayBuffer());
       expect(audio.duration).withContext(source.src).toBeCloseTo(35, 0);
-      expect(audio.getChannelData(0).some(sample => Math.abs(sample) > 0.01))
-        .withContext(source.src).toBeTrue();
+      const samples = audio.getChannelData(0);
+      const rms = (start: number, end: number) => {
+        const window = samples.subarray(start * audio.sampleRate, end * audio.sampleRate);
+        return Math.sqrt(window.reduce((sum, sample) => sum + sample * sample, 0) / window.length);
+      };
+      // Compare each spoken passage with the music in the pause immediately after it.
+      for (const [speechStart, speechEnd, pauseStart, pauseEnd] of [
+        [0.5, 1.5, 2.8, 3.05],
+        [15.5, 17.5, 19.42, 19.7],
+      ]) {
+        const music = rms(pauseStart, pauseEnd);
+        expect(music).withContext(source.src).toBeGreaterThan(0.005);
+        expect(rms(speechStart, speechEnd)).withContext(source.src).toBeGreaterThan(3 * music);
+      }
     }
   });
 
