@@ -116,7 +116,7 @@ describe('LandingPageComponent', () => {
         expect(video?.preload).toBe('none');
         expect(video?.getAttribute('poster')).toBe(`${assetPath}-v1.webp`);
         expect(source?.type).toBe('video/mp4');
-        expect(source?.getAttribute('src')).toBe(`${assetPath}-v3.mp4`);
+        expect(source?.getAttribute('src')).toBe(`${assetPath}-v4.mp4`);
         expect(section?.querySelector('a, details')).toBeNull();
       }
     });
@@ -139,10 +139,10 @@ describe('LandingPageComponent', () => {
         const window = samples.subarray(start * audio.sampleRate, end * audio.sampleRate);
         return Math.sqrt(window.reduce((sum, sample) => sum + sample * sample, 0) / window.length);
       };
-      // Compare each spoken passage with the music in the pause immediately after it.
+      // The v4 narrator pauses after the opening question and before the request screen.
       for (const [speechStart, speechEnd, pauseStart, pauseEnd] of [
-        [0.5, 1.5, 2.8, 3.05],
-        [15.5, 17.5, 19.42, 19.7],
+        [0.4, 1.35, 2.55, 3.12],
+        [15.3, 16.5, 19.1, 19.6],
       ]) {
         const music = rms(pauseStart, pauseEnd);
         expect(music).withContext(source.src).toBeGreaterThan(0.005);
