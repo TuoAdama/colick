@@ -1,0 +1,42 @@
+<div class="booking-page" aria-labelledby="sent-bookings-heading">
+  <div class="booking-column">
+    <header class="list-heading">
+      <h1 id="sent-bookings-heading">Demandes envoyées</h1>
+      <div class="list-toolbar">
+        <p class="muted" aria-live="polite">
+          @if (!isLoadingBookings && !actionError) {
+            {{ myBookings.length }} {{ myBookings.length === 1 ? 'demande' : 'demandes' }}
+          }
+        </p>
+        <a routerLink="/search" class="booking-link">Trouver un voyageur</a>
+      </div>
+    </header>
+
+    @if (actionError) {
+      <div class="booking-notice booking-error" role="alert">{{ actionError }}</div>
+    } @else if (isLoadingBookings) {
+      <div class="booking-notice" role="status">Chargement des demandes…</div>
+    } @else if (myBookings.length === 0) {
+      <div class="booking-notice">
+        <p>Vous n'avez envoyé aucune demande pour le moment.</p>
+        <a routerLink="/search" class="booking-link">Explorer les trajets</a>
+      </div>
+    } @else {
+      <ul class="booking-list" aria-label="Demandes envoyées">
+        @for (booking of myBookings; track booking.id) {
+          <li>
+            <a class="booking-card" [routerLink]="['/sent-bookings', booking.tripId, booking.id]"
+              [attr.aria-label]="booking.tripDepartureAddress + ' → ' + booking.tripDestination + ', ' + booking.title + ', ' + booking.weight + ' kg, ' + statusLabel(booking.status)">
+              <div class="booking-summary">
+                <p class="booking-route" [title]="booking.tripDepartureAddress + ' → ' + booking.tripDestination">{{ routeCity(booking.tripDepartureAddress) }} → {{ routeCity(booking.tripDestination) }}</p>
+                <p class="booking-parcel">{{ booking.title }} · {{ booking.weight | number:'1.0-2' }} kg</p>
+              </div>
+              <span class="booking-status" [attr.data-status]="booking.status">{{ statusLabel(booking.status) }}</span>
+              <svg class="booking-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7" /></svg>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>

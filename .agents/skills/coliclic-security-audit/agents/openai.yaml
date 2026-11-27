@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit de sécurité Coliclic"
+  short_description: "Auditer Angular, Spring Boot et les accès métier"
+  default_prompt: "Utilise $coliclic-security-audit pour auditer ce projet et produire un rapport de sécurité en français, sans modifier l’application."

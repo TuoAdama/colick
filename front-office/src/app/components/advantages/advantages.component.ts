@@ -1,0 +1,78 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { CommercialContentService } from '../../services/commercial-content.service';
+
+/**
+ * Advantage interface representing a platform benefit
+ */
+interface Advantage {
+  title: string;
+  description: string;
+  icon: string;
+  iconBgColor: string;
+  iconColor: string;
+}
+
+/**
+ * AdvantagesComponent - Displays the platform advantages and benefits.
+ * Shows features like competitive pricing, fast delivery, security, etc.
+ */
+@Component({
+  selector: 'app-advantages',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './advantages.component.html',
+})
+export class AdvantagesComponent {
+  private readonly commercialContent = inject(CommercialContentService);
+
+  /**
+   * List of platform advantages
+   */
+  get advantages(): Advantage[] {
+    return [
+      {
+        title: 'Prix compétitifs',
+        description: 'Comparez librement les tarifs au kilo proposés par les voyageurs.',
+        icon: 'price',
+        iconBgColor: 'bg-primary/10',
+        iconColor: 'text-primary',
+      },
+      {
+        title: 'Livraison rapide',
+        description: "Vos colis arrivent avec le voyageur, sans délai d'attente interminable.",
+        icon: 'fast',
+        iconBgColor: 'bg-secondary/10',
+        iconColor: 'text-secondary',
+      },
+      {
+        title: 'Confiance documentée',
+        description: this.commercialContent.content().advantageSecurityDescription,
+        icon: 'secure',
+        iconBgColor: 'bg-accent/10',
+        iconColor: 'text-accent',
+      },
+      {
+        title: 'Avis vérifiés',
+        description: 'Consultez les avis des autres utilisateurs pour choisir le bon voyageur.',
+        icon: 'reviews',
+        iconBgColor: 'bg-success/10',
+        iconColor: 'text-success',
+      },
+      {
+        title: 'Notifications',
+        description: 'Restez informé à chaque étape grâce aux notifications par e-mail.',
+        icon: 'notifications',
+        iconBgColor: 'bg-primary/10',
+        iconColor: 'text-primary',
+      },
+      {
+        title: 'Destinations publiées',
+        description: 'Recherchez les itinéraires réellement proposés par les voyageurs.',
+        icon: 'destinations',
+        iconBgColor: 'bg-secondary/10',
+        iconColor: 'text-secondary',
+      },
+    ];
+  }
+}
